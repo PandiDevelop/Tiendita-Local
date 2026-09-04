@@ -29,6 +29,44 @@ Abre `index.html` en cualquier navegador moderno. No requiere instalación ni co
 
 La app ya incluye configuración PWA, por lo que puede instalarse como una aplicación desde Chrome en Android una vez que se publique en un alojamiento web seguro (HTTPS): abre la dirección y elige **Instalar aplicación**. Funciona a pantalla completa y conserva los datos en el teléfono.
 
+## Sincronización entre trabajadores (en tiempo real)
+
+La app puede compartir una tienda entre varios dispositivos usando **Cloud Firestore** de Firebase. Cada tienda se vincula con un **código (PIN)**: quien lo tenga verá y editará la misma tienda en tiempo real. El dispositivo guarda además una copia local para funcionar sin conexión y sincroniza cuando vuelve a conectarse.
+
+### Configurar Firebase (una sola vez, 5 minutos)
+
+1. Crea un proyecto gratis en <https://console.firebase.google.com>.
+2. En el proyecto activa **Cloud Firestore** → *Crear base de datos* (modo prueba está bien para empezar).
+3. Ve a **Configuración del proyecto → Tus apps → Web (`</>`)** y registra una app. Copia el objeto `firebaseConfig`.
+4. En el archivo `firebase-config.js` de este proyecto sustituye `null` por ese objeto.
+5. Aplica las **reglas** de Firestore (ver más abajo) en *Base de datos → Reglas*.
+6. Guarda el cambio y publícalo (git commit + push). La sincronización queda activa en la web y en el APK.
+
+### Reglas de Firestore
+
+```js
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /stores/{storeKey} {
+      allow read, write: if true;
+    }
+  }
+}
+```
+
+> ⚠️ Estas reglas son abiertas a propósito (el PIN actúa como llave). Cualquiera que consiga el código puede leer/escribir esa tienda, así que usa códigos privados entre tu equipo. Para un control real por usuario se puede añadir autenticación más adelante.
+
+### Cómo se usa
+
+- Al crear o editar una tienda aparece un campo **"Código compartido"**. Escribe un código (ej. `aurora2026`) y listo: esa tienda queda sincronizada.
+- Un compañero desde su teléfono elige **Unirme a una tienda** y pega el mismo código.
+- Los **contadores de ventas** se fusionan con un criterio seguro (se conserva la mayor cantidad de cada fila), así que dos trabajadores pueden registrar ventas al mismo tiempo sin pisarse.
+- El **catálogo** usa "último guardado gana": si dos editan el mismo producto a la vez, gana el que guardó después.
+- En el modal de edición puedes **desvincular** la tienda (se queda solo en tu dispositivo; los compañeros conservan sus datos en la nube).
+
+> Límites prácticos: cada tienda vive en un documento de Firestore, adecuado para catálogos y ventas de una tienda pequeña. Si necesitas muchos miles de registros, el modelo se puede migrar a subcolecciones.
+
 ## Generar un APK
 
 No se necesita Android Studio ni Java. El sitio ya incluye manifest con íconos PNG y service worker, que es todo lo que necesitan los generadores de APK por web:
