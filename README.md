@@ -1,3 +1,4 @@
+[README.md](https://github.com/user-attachments/files/31848822/README.md)
 # Mi Tiendita
 
 Aplicación web local para gestionar una o varias tiendas, sin mezclar sus datos.
