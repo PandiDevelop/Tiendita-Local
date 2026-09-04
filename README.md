@@ -29,4 +29,13 @@ Abre `index.html` en cualquier navegador moderno. No requiere instalación ni co
 
 La app ya incluye configuración PWA, por lo que puede instalarse como una aplicación desde Chrome en Android una vez que se publique en un alojamiento web seguro (HTTPS): abre la dirección y elige **Instalar aplicación**. Funciona a pantalla completa y conserva los datos en el teléfono.
 
-Un APK requiere compilar un contenedor Android con Android Studio/Java y las herramientas de Android, que no están disponibles en este espacio de trabajo. La versión PWA es la alternativa lista para móvil y no necesita instalar desde un APK.
+## Generar un APK
+
+No se necesita Android Studio ni Java. El sitio ya incluye manifest con íconos PNG y service worker, que es todo lo que necesitan los generadores de APK por web:
+
+1. Publica la carpeta en GitHub Pages (o cualquier hosting HTTPS). La dirección debe quedar pública y con HTTPS.
+2. Entra a **[PWABuilder](https://www.pwabuilder.com)**, pega la URL del sitio y pulsa **Start**.
+3. Pulsa **Package for stores/android**, revisa las opciones y pulsa **Download package**. Se descargará un ZIP con el APK (y la opción de AAB para Google Play).
+4. Instala el APK directamente en el teléfono (permite "instalar desde orígenes desconocidos") o súbelo a la Play Store.
+
+> El APK generado es un contenedor de la PWA: abre el mismo sitio en pantalla completa. Para que funcione sin conexión y siempre actualizado, publica siempre la última versión en la URL de GitHub Pages antes de generar el APK.
