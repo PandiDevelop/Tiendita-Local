@@ -93,7 +93,11 @@ function syncApply(storeId, remote) {
   toSalesArr(remote.sales).forEach(rs => {
     const ls = sales.get(rs.id);
     if (ls) {
-      sales.set(rs.id, Object.assign({}, ls, { items: mergeItems(ls.items, rs.items), closed: ls.closed || !!rs.closed }));
+      sales.set(rs.id, Object.assign({}, ls, {
+        items: mergeItems(ls.items, rs.items),
+        closed: ls.closed || !!rs.closed,
+        by: rs.by || ls.by
+      }));
     } else {
       sales.set(rs.id, JSON.parse(JSON.stringify(rs)));
     }
@@ -357,7 +361,7 @@ window.render = function () {
   document.querySelectorAll('.sidebar .new-store, .mobile-head .new-store').forEach(btn => {
     if (btn.nextElementSibling && btn.nextElementSibling.classList.contains('sync-join')) return;
     const t = document.createElement('template');
-    t.innerHTML = `<button class="new-store sync-join" onclick="joinModal()">Unirme a una tienda</button>`;
+    t.innerHTML = `<button class="sync-join" onclick="joinModal()">Unirme a una tienda</button>`;
     btn.insertAdjacentElement('afterend', t.content.firstElementChild);
   });
   const cur = state.stores.length ? store() : null;
