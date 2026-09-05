@@ -8,6 +8,7 @@ const syncClientId =
 let DB = null;
 const SYNC_ON = {};   // storeId -> unsubscribe()
 const SYNC_TMR = {};  // storeId -> timeout
+const LAST_PUSH = {}; // storeId -> huella del último push (evita ecos y escrituras vacías)
 
 function syncReady() {
   if (DB) return true;
@@ -31,12 +32,22 @@ function syncKeyOf(pin) {
   for (let i = 0; i < str.length; i++) { h ^= str.charCodeAt(i); h = Math.imul(h, 0x01000193); }
   return 'st' + ('00000000' + (h >>> 0).toString(16)).slice(-8);
 }
-function syncPayload(s) {
-  return { name: s.name, image: s.image, products: s.products, sales: s.sales };
+
+// En Firestore los productos y ventas se guardan como MAPA {id: objeto}: al hacer
+// set(...,{merge:true}) cada clave se actualiza por separado, así dos dispositivos
+// pueden editar/crear productos distintos a la vez sin pisarse. Estos helpers
+// convierten ese mapa (o el formato antiguo de arreglo) a los arreglos locales.
+function toProductsArr(src) {
+  if (!src) return [];
+  return Array.isArray(src) ? JSON.parse(JSON.stringify(src)) : Object.keys(src).map(k => JSON.parse(JSON.stringify(src[k])));
+}
+function toSalesArr(src) {
+  if (!src) return [];
+  return Array.isArray(src) ? JSON.parse(JSON.stringify(src)) : Object.keys(src).map(k => JSON.parse(JSON.stringify(src[k])));
 }
 
 // Fusión segura de contadores: por fila (producto+promoción) gana la mayor
-// cantidad, igual que sumar lo registrado por cada trabajador sin pisarse.
+// cantidad, así dos trabajadores que registran a la vez no pierden ventas.
 function mergeItems(a, b) {
   const map = new Map();
   (a || []).forEach(i => map.set(i.productId + '|' + (i.promotionId || ''), JSON.parse(JSON.stringify(i))));
@@ -47,32 +58,54 @@ function mergeItems(a, b) {
   });
   return Array.from(map.values());
 }
+
+// Aplica lo que llega de la nube sin borrar datos locales: UNIÓN por id.
 function syncApply(storeId, remote) {
   if (!remote || remote.updatedBy === syncClientId) return;
   const s = state.stores.find(x => x.id === storeId);
   if (!s) return;
-  const mergedSales = (s.sales || []).map(local => {
-    const r = (remote.sales || []).find(x => String(x.id) === String(local.id));
-    return r ? Object.assign({}, local, { items: mergeItems(local.items, r.items) }) : local;
+
+  const products = new Map(s.products.map(p => [p.id, p]));
+  toProductsArr(remote.products).forEach(p => products.set(p.id, p));
+  s.products = Array.from(products.values());
+
+  const sales = new Map(s.sales.map(x => [x.id, x]));
+  toSalesArr(remote.sales).forEach(rs => {
+    const ls = sales.get(rs.id);
+    if (ls) {
+      sales.set(rs.id, Object.assign({}, ls, { items: mergeItems(ls.items, rs.items), closed: ls.closed || !!rs.closed }));
+    } else {
+      sales.set(rs.id, JSON.parse(JSON.stringify(rs)));
+    }
   });
-  (remote.sales || []).forEach(rs => {
-    if (!mergedSales.some(x => String(x.id) === String(rs.id))) mergedSales.push(JSON.parse(JSON.stringify(rs)));
-  });
-  if (remote.name) s.name = remote.name;
-  if (remote.image) s.image = remote.image;
-  s.products = JSON.parse(JSON.stringify(remote.products || s.products));
-  s.sales = mergedSales;
+  s.sales = Array.from(sales.values());
+
+  if (remote.name && remote.name !== s.name) s.name = remote.name;
+  if (remote.image && remote.image !== s.image) s.image = remote.image;
   save();
   render();
 }
+
+// Sube el estado local con merge:true. Cada producto/venta se graba bajo su propio
+// id, de modo que un push nunca elimina lo que escribió el otro dispositivo.
 async function pushSync(storeId) {
   const s = state.stores.find(x => x.id === storeId);
   if (!s || !s.syncKey || !DB) return;
+  const syncFp = JSON.stringify([s.name, s.image, s.products, s.sales]);
+  if (LAST_PUSH[storeId] === syncFp) return;
+  LAST_PUSH[storeId] = syncFp;
+  const products = {}, sales = {};
+  s.products.forEach(p => products[p.id] = p);
+  s.sales.forEach(x => sales[x.id] = x);
   try {
-    await DB.collection('stores').doc(s.syncKey).set(Object.assign(syncPayload(s), {
+    await DB.collection('stores').doc(s.syncKey).set({
+      name: s.name,
+      image: s.image,
+      products,
+      sales,
       updatedBy: syncClientId,
       updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-    }));
+    }, { merge: true });
   } catch (e) { console.warn('Push fallido:', e); }
 }
 function scheduleSync(storeId) {
@@ -106,16 +139,25 @@ async function activateSync(s, pin) {
       const r = snap.data();
       s.name = r.name || s.name;
       s.image = r.image || s.image;
-      s.products = JSON.parse(JSON.stringify(r.products || []));
-      s.sales = JSON.parse(JSON.stringify(r.sales || []));
+      s.products = toProductsArr(r.products);
+      s.sales = toSalesArr(r.sales);
       toast('Vinculado a la tienda compartida.');
     } else {
-      await ref.set(Object.assign(syncPayload(s), { updatedBy: syncClientId, updatedAt: firebase.firestore.FieldValue.serverTimestamp() }));
+      const products = {}, sales = {};
+      s.products.forEach(p => products[p.id] = p);
+      s.sales.forEach(x => sales[x.id] = x);
+      await ref.set({
+        name: s.name,
+        image: s.image,
+        products,
+        sales,
+        updatedBy: syncClientId,
+        updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+      }, { merge: true });
       toast('Sincronización activada. Comparte el código con tu equipo.');
     }
     s.syncKey = key;
     s.syncPin = pin;
-    s.shared = true;
     save(); render(); attachSync(s.id);
   } catch (e) { console.warn(e); toast('No se pudo sincronizar. Revisa tu conexión.'); }
 }
@@ -123,7 +165,7 @@ function deactivateSync(id) {
   const s = state.stores.find(x => x.id === id);
   if (!s) return;
   detachSync(id);
-  delete s.syncKey; delete s.syncPin; delete s.shared;
+  delete s.syncKey; delete s.syncPin;
   save(); render(); toast('Sincronización desactivada. La tienda queda solo en este dispositivo.');
 }
 
@@ -202,7 +244,15 @@ async function joinStore() {
     const snap = await DB.collection('stores').doc(key).get();
     if (!snap.exists) return toast('No existe una tienda con ese código.');
     const r = snap.data();
-    const s = { id: crypto.randomUUID(), name: r.name || 'Tienda compartida', image: r.image || defaultStoreImage, products: JSON.parse(JSON.stringify(r.products || [])), sales: JSON.parse(JSON.stringify(r.sales || [])), syncKey: key, syncPin: pin, shared: true };
+    const s = {
+      id: crypto.randomUUID(),
+      name: r.name || 'Tienda compartida',
+      image: r.image || defaultStoreImage,
+      products: toProductsArr(r.products),
+      sales: toSalesArr(r.sales),
+      syncKey: key,
+      syncPin: pin
+    };
     state.stores.push(s);
     state.activeStoreId = s.id;
     state.tab = 'inicio';
