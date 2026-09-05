@@ -142,10 +142,13 @@ function attachSync(storeId) {
   const s = state.stores.find(x => x.id === storeId);
   if (!s || !s.syncKey) return;
   SYNC_ON[storeId] = DB.collection('stores').doc(s.syncKey).onSnapshot(snap => {
-    if (snap.exists) {
-      const d = snap.data();
-      if (d.updatedBy !== syncClientId) syncApply(storeId, d);
+    if (!state.stores.find(x => x.id === storeId)) return;
+    if (!snap.exists || snap.data().deleted) {
+      removeLocalStore(storeId, 'Esta tienda fue borrada por otro dispositivo.');
+      return;
     }
+    const d = snap.data();
+    if (d.updatedBy !== syncClientId) syncApply(storeId, d);
   }, e => console.warn('Suscripción:', e));
 }
 function detachSync(storeId) {
@@ -182,8 +185,9 @@ async function activateSync(s, pin) {
       }, { merge: true });
       toast('Sincronización activada. Comparte el código con tu equipo.');
     } else {
-      const r = snap.data();
-      const isOwner = !r.createdBy || r.createdBy === syncClientId;
+const r = snap.data();
+    if (r.deleted) { toast('Esa tienda fue eliminada. Pide un código nuevo.'); return; }
+    const isOwner = !r.createdBy || r.createdBy === syncClientId;
       const prev = (r.members && r.members[syncClientId]) || (s.members && s.members[syncClientId]) || {};
       const upd = {};
       upd[syncClientId] = { name: syncName(), role: isOwner ? 'owner' : 'worker', joinedAt: prev.joinedAt || Date.now() };
@@ -220,6 +224,45 @@ function deactivateSync(id) {
   detachSync(id);
   delete s.syncKey; delete s.syncPin;
   save(); render(); toast('Sincronización desactivada. La tienda queda solo en este dispositivo.');
+}
+
+// Quita una tienda SOLO de este dispositivo (usado al borrar o al recibir el
+// aviso de que otro dispositivo la borró).
+function removeLocalStore(storeId, msg) {
+  if (!state.stores.find(x => x.id === storeId)) return;
+  detachSync(storeId);
+  delete SYNC_TMR[storeId]; delete LAST_PUSH[storeId];
+  state.stores = state.stores.filter(x => x.id !== storeId);
+  if (state.activeStoreId === storeId) {
+    state.activeStoreId = state.stores.length ? state.stores[0].id : null;
+    state.tab = 'inicio';
+  }
+  state.editingSaleId = null;
+  closeModal();
+  save(); render(); toast(msg);
+}
+
+// Borra una tienda: en este dispositivo siempre. Si estaba sincronizada, deja
+// una "lápida" en Firestore (deleted:true) con merge, de modo que los demás
+// dispositivos vinculados —aún los que hagan push después— la vean y la borren.
+async function deleteStore(id) {
+  const s = state.stores.find(x => x.id === id);
+  if (!s) return;
+  const shared = !!(s.syncKey && s.syncPin);
+  const q = shared
+    ? '¿Borrar la tienda "' + s.name + '"? Se borrará también en todos los dispositivos vinculados. No se puede deshacer.'
+    : '¿Borrar la tienda "' + s.name + '"? Esta acción no se puede deshacer.';
+  if (!confirm(q)) return;
+  if (DB && s.syncKey) {
+    try {
+      await DB.collection('stores').doc(s.syncKey).set({
+        deleted: true,
+        deletedBy: syncClientId,
+        deletedAt: firebase.firestore.FieldValue.serverTimestamp()
+      }, { merge: true });
+    } catch (e) { console.warn(e); toast('No se pudo avisar a los otros dispositivos.'); }
+  }
+  removeLocalStore(id, 'Tienda eliminada.');
 }
 
 // ===== Overrides que conservan el comportamiento original =====
@@ -278,6 +321,12 @@ window.storeModal = function (id) {
   }
   const actions = m.querySelector('.modal-actions');
   if (actions) actions.before(field);
+  if (s) {
+    const danger = document.createElement('div');
+    danger.className = 'field danger-field';
+    danger.innerHTML = `<div class="danger-zone"><span><b class="danger-t">Borrar tienda</b><br><span class="muted">Elimina esta tienda del dispositivo${s.syncKey ? ' y de todos los que tienen el código' : ''}. No se puede deshacer.</span></span><button class="button danger" onclick="deleteStore('${s.id}')">Borrar</button></div>`;
+    actions.before(danger);
+  }
 };
 
 // Al guardar una tienda: guarda tu nombre y, si hay código, activa/refresca la sincronización.
@@ -356,6 +405,7 @@ async function joinStore() {
     const snap = await DB.collection('stores').doc(key).get();
     if (!snap.exists) return toast('No existe una tienda con ese código.');
     const r = snap.data();
+    if (r.deleted) return toast('Esa tienda fue eliminada. Pide un código nuevo.');
     const members = {};
     members[syncClientId] = { name: syncName(), role: 'worker', joinedAt: Date.now() };
     await DB.collection('stores').doc(key).set({ members: members }, { merge: true });
