@@ -3,7 +3,11 @@ function shop(s) {
   const daily = state.editingSaleId
     ? s.sales.find(x => x.id === state.editingSaleId)
     : s.sales.find(x => x.date === today() && !x.closed);
-  return `<div class="mobile-head"><button class="menu-btn" onclick="toggleMenu()" aria-label="Abrir menú">☰</button><button class="new-store" onclick="storeModal()">＋ Nueva tienda</button></div><div class="topline"><div class="store-title">${img(s.image,'store-logo')}<div><div class="eyebrow">Tu tienda</div><h1>${esc(s.name)}</h1></div></div><button class="button secondary" onclick="storeModal('${s.id}')">⚙ Editar tienda</button></div><nav class="tabs">${[['inicio','Resumen'],['productos','Productos'],['inventario','Inventario'],['ventas','Ventas del día'],['historial','Historial']].map(([id,l])=>`<button class="tab ${state.tab===id?'active':''}" onclick="setTab('${id}')">${l}</button>`).join('')}</nav>${state.tab==='inicio'?dashboard(s,daily):state.tab==='productos'?products(s):state.tab==='inventario'?inventoryView(s):state.tab==='ventas'?sales(s,daily):history(s)}`;
+  let me; try { me = syncClientId; } catch (e) { me = 'local'; }
+  const owner = !s.syncKey || !s.createdBy || s.createdBy === me;
+  const tabs = [['inicio','Resumen'],['productos','Productos'],['inventario','Inventario'],['ventas','Ventas del día'],['historial','Historial']];
+  if (owner) tabs.push(['empleados','Empleados']);
+  return `<div class="mobile-head"><button class="menu-btn" onclick="toggleMenu()" aria-label="Abrir menú">☰</button><button class="new-store" onclick="storeModal()">＋ Nueva tienda</button></div><div class="topline"><div class="store-title">${img(s.image,'store-logo')}<div><div class="eyebrow">Tu tienda</div><h1>${esc(s.name)}</h1></div></div><button class="button secondary" onclick="storeModal('${s.id}')">⚙ Editar tienda</button></div><nav class="tabs">${tabs.map(([id,l])=>`<button class="tab ${state.tab===id?'active':''}" onclick="setTab('${id}')">${l}</button>`).join('')}</nav>${state.tab==='inicio'?dashboard(s,daily):state.tab==='productos'?products(s):state.tab==='inventario'?inventoryView(s):state.tab==='ventas'?sales(s,daily):state.tab==='empleados'?employeesView(s):history(s)}`;
 }
 function setTab(tab) { if (tab !== 'ventas') state.editingSaleId = null; state.tab = tab; save(); render(); }
 function startDay() {
@@ -56,16 +60,43 @@ function inventoryView(s) {
   const rows = s.products.map(p => {
     const has = base[p.id] != null;
     const buy = has ? base[p.id] : null;
-    const avail = has ? base[p.id] - (sold[p.id] || 0) : null;
+    const avail = has ? Math.max(0, base[p.id] - (sold[p.id] || 0)) : null;
     return `<tr><td class="product-name">${esc(p.name)}</td><td>${buy == null ? '—' : buy}</td><td>${avail == null ? '—' : avail}</td><td class="inv-actions"><button class="icon-btn" title="Agregar 1" onclick="invAdd('${p.id}',1)">+1</button><button class="icon-btn" title="Agregar 10" onclick="invAdd('${p.id}',10)">+10</button></td></tr>`;
   });
-  return `<div class="panel"><div class="panel-head"><div><h2>Inventario</h2><p class="muted">Repón existencias aquí. Las ventas las descuentan solas (pueden quedar en 0 o negativo si no hay suficiente; vender nunca está bloqueado).</p></div></div>${rows.length?`<table><thead><tr><th>Producto</th><th>Comprado</th><th>Disponible</th><th>Reponer</th></tr></thead><tbody>${rows.join('')}</tbody></table>`:`<div class="notice">Aún no hay productos en el catálogo.</div>`}</div>`;
+  return `<div class="panel"><div class="panel-head"><div><h2>Inventario</h2><p class="muted">Repón existencias aquí. Las ventas las descuentan solas; si vendes más que las existencias, el disponible simplemente se queda en 0 (vender nunca está bloqueado).</p></div></div>${rows.length?`<table><thead><tr><th>Producto</th><th>Comprado</th><th>Disponible</th><th>Reponer</th></tr></thead><tbody>${rows.join('')}</tbody></table>`:`<div class="notice">Aún no hay productos en el catálogo.</div>`}</div>`;
 }
 function invAdd(productId, n) {
   const s = store();
   s.inventory = s.inventory || {};
   s.inventory[productId] = (s.inventory[productId] || 0) + n;
   save(); render(); toast('Existencias aumentadas.');
+}
+// ---- Registro de empleados (solo lo ve el creador de la tienda) ----
+// Cada +/− en Ventas del día queda atribuido a quien lo tocó (item.who), de modo
+// que el creador ve un resumen de lo que registró cada trabajador.
+function employeesView(s) {
+  let me; try { me = syncClientId; } catch (e) { me = ''; }
+  const acc = {};
+  s.sales.forEach(x => x.items.forEach(i => {
+    if (!i.who) return;
+    Object.keys(i.who).forEach(uid => {
+      const q = i.who[uid]; if (!q) return;
+      const a = acc[uid] || (acc[uid] = { units: 0, money: 0, days: new Set() });
+      a.units += q; a.money += priceFor(i, s) * q; a.days.add(x.date);
+    });
+  }));
+  const nameOf = uid => {
+    const m = s.members && s.members[uid];
+    if (m && m.name) return m.name;
+    if (uid === me) { try { return syncName(); } catch (e) { return 'Trabajador'; } }
+    return 'Trabajador';
+  };
+  const rows = [];
+  Object.keys(s.members || {}).forEach(uid => rows.push({ uid, name: nameOf(uid), role: s.createdBy === uid ? 'Creador' : 'Trabajador', a: acc[uid] || null }));
+  Object.keys(acc).forEach(uid => { if (!rows.find(r => r.uid === uid)) rows.push({ uid, name: nameOf(uid), role: 'Trabajador', a: acc[uid] }); });
+  rows.sort((x, y) => (y.a ? y.a.money : 0) - (x.a ? x.a.money : 0)).sort((x, y) => (y.role === 'Creador' ? 1 : 0) - (x.role === 'Creador' ? 1 : 0));
+  const body = rows.length ? `<table><thead><tr><th>Empleado</th><th>Unidades vendidas</th><th>Producido</th><th>Días con ventas</th></tr></thead><tbody>${rows.map(r => `<tr><td class="product-name">${esc(r.name)}${r.role === 'Creador' ? ' <span class="tag">Creador</span>' : ''}</td><td>${r.a ? r.a.units : 0}</td><td><b>${money(r.a ? r.a.money : 0)}</b></td><td>${r.a ? r.a.days.size : 0}</td></tr>`).join('')}</tbody></table>` : `<div class="empty"><div class="emoji">👥</div><b>Aún no hay empleados</b><p>Cuando alguien se una con tu código y toque + en Ventas del día, aquí verás lo que registró.</p></div>`;
+  return `<div class="panel"><div class="panel-head"><div><h2>Registro de empleados</h2><p class="muted">Unidades y producido que cada quien registró al tocar + en Ventas del día.</p></div></div>${body}</div>`;
 }
 function setTab(tab) { if(tab!=='ventas')state.editingSaleId=null; if(tab==='inicio'){state.summaryPage=0;state.summaryDate=null;} state.tab=tab;save();render(); }
 render();

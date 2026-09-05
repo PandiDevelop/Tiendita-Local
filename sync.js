@@ -55,13 +55,23 @@ function toSalesArr(src) {
 
 // Fusión segura de contadores: por fila (producto+promoción) gana la mayor
 // cantidad, así dos trabajadores que registran a la vez no pierden ventas.
+// La atribución por ítem (item.who = {idDeDispositivo: cantidad}) se UNE con el
+// máximo por persona: cada quien "es dueño" de los + que tocó, aunque luego el
+// contador total lo suba otro dispositivo.
 function mergeItems(a, b) {
   const map = new Map();
   (a || []).forEach(i => map.set(i.productId + '|' + (i.promotionId || ''), JSON.parse(JSON.stringify(i))));
   (b || []).forEach(i => {
     const k = i.productId + '|' + (i.promotionId || '');
     const cur = map.get(k);
-    if (!cur || cur.qty < i.qty) map.set(k, JSON.parse(JSON.stringify(i)));
+    const win = (!cur || cur.qty < i.qty) ? JSON.parse(JSON.stringify(i)) : cur;
+    if ((cur && cur.who) || i.who) {
+      const w = {};
+      Object.keys(cur.who || {}).forEach(u => w[u] = cur.who[u]);
+      Object.keys(i.who || {}).forEach(u => w[u] = Math.max(w[u] || 0, i.who[u]));
+      win.who = w;
+    }
+    map.set(k, win);
   });
   return Array.from(map.values());
 }
@@ -104,8 +114,11 @@ function syncApply(storeId, remote) {
   });
   s.sales = Array.from(sales.values());
 
-  if (remote.name && remote.name !== s.name) s.name = remote.name;
-  if (remote.image && remote.image !== s.image) s.image = remote.image;
+  // Nombre e imagen solo los cambia quien CREÓ la tienda (o documentos antiguos
+  // sin creador). Un trabajador nunca reescribe la identidad de la tienda.
+  const metaOk = !remote.createdBy || (remote.updatedBy && remote.updatedBy === remote.createdBy);
+  if (metaOk && remote.name && remote.name !== s.name) s.name = remote.name;
+  if (metaOk && remote.image && remote.image !== s.image) s.image = remote.image;
   save();
   render();
 }
@@ -123,15 +136,18 @@ async function pushSync(storeId) {
   const products = {}, sales = {};
   s.products.forEach(p => products[p.id] = p);
   s.sales.forEach(x => sales[x.id] = x);
+  const payload = {
+    products,
+    sales,
+    updatedBy: syncClientId,
+    updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+  };
+  if (!s.createdBy || s.createdBy === syncClientId) {
+    payload.name = s.name;
+    payload.image = s.image;
+  }
   try {
-    await DB.collection('stores').doc(s.syncKey).set({
-      name: s.name,
-      image: s.image,
-      products,
-      sales,
-      updatedBy: syncClientId,
-      updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-    }, { merge: true });
+    await DB.collection('stores').doc(s.syncKey).set(payload, { merge: true });
   } catch (e) { console.warn('Push fallido:', e); }
 }
 function scheduleSync(storeId) {
@@ -282,12 +298,25 @@ window.save = function () {
 
 // Quién registró cada venta: se guarda en el día al cambiarlo, y se muestra
 // en Historial y en el panel de Ventas del día.
+// Además, cada +/− cuenta a quien lo tocó: item.who[miId] acumula la cantidad
+// neta (piso 0: si descuentas más de lo que sumaste, borra tu atribución).
 var changeQtyBase = changeQty;
 window.changeQty = function (sid, pid, promoid, d) {
-  const s = store();
-  const sale = s && s.sales.find(x => x.id === sid);
+  const em = store();
+  const sale = em && em.sales.find(x => x.id === sid);
   if (sale) sale.by = syncName();
   changeQtyBase(sid, pid, promoid, d);
+  if (d && em) {
+    const sale2 = em.sales.find(x => x.id === sid);
+    const row = sale2 && sale2.items.find(x => x.productId === pid && (x.promotionId || '') === (promoid || ''));
+    if (row) {
+      row.who = row.who || {};
+      const next = (row.who[syncClientId] || 0) + d;
+      if (next <= 0) delete row.who[syncClientId]; else row.who[syncClientId] = next;
+      if (!Object.keys(row.who).length) delete row.who;
+      save();
+    }
+  }
 };
 var editSaleBase = editSale;
 window.editSale = function (id) {
@@ -305,11 +334,14 @@ window.storeModal = function (id) {
   const m = document.querySelector('.modal');
   if (!m) return;
   const s = id ? state.stores.find(x => x.id === id) : null;
+  // Rol: solo quien CREÓ la tienda puede editar su nombre/imagen y borrarla para
+  // todo el equipo. Los trabajadores solo registran productos, ventas e inventario.
+  const employee = s && s.syncKey && s.createdBy && s.createdBy !== syncClientId;
   const field = document.createElement('div');
   field.className = 'field sync-field';
   if (s && s.syncKey) {
     const members = s.members || {};
-    const owner = s.createdBy === syncClientId;
+    const owner = !employee && (s.createdBy === syncClientId || !s.createdBy);
     const others = Object.keys(members).filter(x => x !== syncClientId);
     const list = others.map(x => {
       const mm = members[x];
@@ -323,9 +355,21 @@ window.storeModal = function (id) {
       : 'Sincronización desactivada: configura Firebase primero (ver README).';
     field.innerHTML = `<div class="label">Sincronización en tiempo real (opcional)</div><div class="image-picker"><div style="min-width:0;flex:1"><input id="sync-pin" maxlength="30" placeholder="Código compartido de la tienda"><input id="sync-name" maxlength="30" placeholder="Tu nombre (para ver quién registra las ventas)"><p class="muted">${hint}</p></div></div>`;
   }
+  if (employee) {
+    const ni = m.querySelector('#store-name');
+    const fi = m.querySelector('input[type=file]');
+    if (ni) ni.disabled = true;
+    if (fi) fi.disabled = true;
+    const note = document.createElement('p');
+    note.className = 'muted';
+    note.style.margin = '-6px 0 14px';
+    note.textContent = 'Solo el creador de la tienda puede editar el nombre y la imagen.';
+    const po = field.querySelector('.image-picker');
+    if (po) po.insertAdjacentElement('afterend', note);
+  }
   const actions = m.querySelector('.modal-actions');
   if (actions) actions.before(field);
-  if (s) {
+  if (s && !employee) {
     const danger = document.createElement('div');
     danger.className = 'field danger-field';
     danger.innerHTML = `<div class="danger-zone"><span><b class="danger-t">Borrar tienda</b><br><span class="muted">Elimina esta tienda del dispositivo${s.syncKey ? ' y de todos los que tienen el código' : ''}. No se puede deshacer.</span></span><button class="button danger" onclick="deleteStore('${s.id}')">Borrar</button></div>`;
@@ -333,7 +377,9 @@ window.storeModal = function (id) {
   }
 };
 
-// Al guardar una tienda: guarda tu nombre y, si hay código, activa/refresca la sincronización.
+// Al guardar una tienda: guarda tu nombre y, si hay código, activa/refresca la
+// sincronización. Si este dispositivo es un TRABAJADOR (no creó la tienda), el
+// nombre e imagen del formulario se ignoran: solo el creador los cambia.
 var saveStoreBase = saveStore;
 window.saveStore = async function (id) {
   const nameEl = document.getElementById('sync-name');
@@ -341,6 +387,12 @@ window.saveStore = async function (id) {
   if (name) syncSetName(name);
   const pinEl = document.getElementById('sync-pin');
   const pin = pinEl ? pinEl.value.trim() : '';
+  const target = state.stores.find(x => x.id === (id || state.activeStoreId));
+  const employee = target && target.syncKey && target.createdBy && target.createdBy !== syncClientId;
+  if (employee) {
+    save(); closeModal(); render(); toast('Tienda guardada.');
+    return;
+  }
   saveStoreBase(id);
   const s = state.stores.find(x => x.id === (id || state.activeStoreId));
   if (s && pin) await activateSync(s, pin);

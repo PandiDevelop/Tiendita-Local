@@ -61,8 +61,10 @@ service cloud.firestore {
 
 - Al crear o editar una tienda aparece un campo **"Código compartido"**. Escribe un código (ej. `aurora2026`) y listo: esa tienda queda sincronizada.
 - Un compañero desde su teléfono elige **Unirme a una tienda**, escribe su **nombre** y pega el mismo código.
+- **Roles automáticos**: la primera persona que activa la sincronización es el **creador** de la tienda; los que se unen con el código son **trabajadores**. Solo el creador puede editar el **nombre e imagen** de la tienda, **quitar trabajadores** y **borrarla**; los trabajadores registran productos, ventas y manejan inventario. Cuando un trabajador abre "Editar tienda", los campos de nombre e imagen aparecen deshabilitados con un aviso.
 - El creador puede ver en **Editar tienda** la lista de **trabajadores vinculados** y quitar a cualquiera con el botón ×. Quien sea quitado dejará de recibir cambios (y su dispositivo mostrará "Fuiste eliminado de esta tienda").
-- Los **contadores de ventas** se fusionan con un criterio seguro (se conserva la mayor cantidad de cada fila), así que dos trabajadores pueden registrar ventas al mismo tiempo sin pisarse.
+- **Registro de empleados**: en la pestaña **Empleados** (solo visible para el creador) se muestra un resumen por trabajador de **unidades vendidas**, **producido** y **días** en que registró. Se atribuye a quien tocó el **+** en Ventas del día (el **−** descuenta de la propia cuenta del que lo toca; la atribución nunca baja de cero).
+- Los **contadores de ventas** se fusionan con un criterio seguro (se conserva la mayor cantidad de cada fila), así que dos trabajadores pueden registrar ventas al mismo tiempo sin pisarse. La atribución de cada trabajador (quién tocó el +) también se une entre dispositivos.
 - El **catálogo** usa "último guardado gana": si dos editan el mismo producto a la vez, gana el que guardó después.
 - En el modal de edición puedes **desvincular** la tienda (se queda solo en tu dispositivo; los compañeros conservan sus datos en la nube).
 - En el modal de edición también puedes **Borrar la tienda**. Si estaba compartida, se borra de tu dispositivo y se avisa a todos los que tienen el código: los que estén en línea lo aplican al instante y los que estén desconectados, apenas vuelvan a conectarse. Advertencia: el código queda marcado como eliminado (no se puede reutilizar tal cual; para reusarlo, borra el documento correspondiente en la consola de Firebase).
@@ -77,6 +79,7 @@ Pestaña **Inventario**: refleja automáticamente los productos del catálogo. P
 
 - Si registras una venta (+1) y luego le restas (−1), el número vuelve al anterior.
 - Si no hay existencias registradas, sigue siendo posible vender: se muestra "—" y nada bloquea el registro.
+- El disponible **nunca es negativo**: si vendes más que las existencias, simplemente se queda en **0** (vender siempre está permitido).
 
 ## Generar un APK
 
