@@ -60,7 +60,7 @@ function monthPanel(s, mm) {
   const munits = mrec.reduce((a, x) => a + x.items.reduce((b, i) => b + i.qty, 0), 0);
   const mrev = mrec.reduce((a, x) => a + total(x, s), 0);
   const mlines = monthLines(s, mrec);
-  const empty = mrec.length ? (mlines.length ? `<tr><td colspan="3" class="muted">No se registraron ventas este mes.</td></tr>` : '') : '';
+  const empty = mrec.length ? (mlines.length ? '' : `<tr><td colspan="3" class="muted">No se registraron ventas este mes.</td></tr>`) : '';
   return `<div class="panel"><div class="panel-head"><div><h2>Resumen del mes</h2><p class="muted">Suma de todas las ventas del mes.</p></div></div><div class="day-tabs"><button class="day-nav" onclick="monthStep(-1)">← Mes anterior</button><b class="month-label">${monthLabel(mm)}</b><button class="day-nav" onclick="monthStep(1)">Siguiente mes →</button></div><div class="month-stats"><span>${mdays} día${mdays === 1 ? '' : 's'} con ventas</span><b>${munits} unidades vendidas</b><b>${money(mrev)} producido</b></div>${mrec.length ? `<table><thead><tr><th>Producto o promoción</th><th>Unidades</th><th>Producido</th></tr></thead><tbody>${mlines.map(x => `<tr><td class="product-name">${esc(x.name)}</td><td>${x.qty}</td><td><b>${money(x.value)}</b></td></tr>`).join('')}${empty}</tbody></table>` : `<div class="notice">No hay ventas registradas en ${monthLabel(mm).toLowerCase()}.</div>`}</div>`;
 }
 function dashboard(s) {
