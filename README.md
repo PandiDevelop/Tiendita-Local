@@ -14,6 +14,7 @@ Abre `index.html` en cualquier navegador moderno. No requiere instalación ni co
 - Cierre diario e historial editable.
 - Exportación de días cerrados a CSV, listo para abrir en Excel.
 - Total producido general y desglose acumulado por producto y promoción.
+- Resumen mensual debajo del resumen por día: suma de unidades, producido y días con ventas de todo el mes, con botones para navegar entre meses.
 
 ## Decisiones tomadas
 
