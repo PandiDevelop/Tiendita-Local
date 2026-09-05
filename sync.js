@@ -84,7 +84,11 @@ function syncApply(storeId, remote) {
   if (!s) return;
 
   const members = remote.members ? JSON.parse(JSON.stringify(remote.members)) : null;
-  const removed = remote.createdBy && remote.createdBy !== syncClientId && (!remote.members || !remote.members[syncClientId]);
+  // Solo se expulsa (se borra de este dispositivo) a un dispositivo que entró
+  // como TRABAJADOR (s.localRole) y que el creador quitó de members. Un dueño
+  // cuyo id de cliente local cambió (al limpiar datos del navegador/reinstalar)
+  // NO debe perder la tienda al recargar.
+  const removed = s.localRole === 'worker' && remote.createdBy && remote.createdBy !== syncClientId && (!remote.members || !remote.members[syncClientId]);
   if (removed) {
     removeLocalStore(storeId, 'Fuiste eliminado de esta tienda.');
     return;
@@ -160,10 +164,14 @@ function attachSync(storeId) {
   if (!s || !s.syncKey) return;
   SYNC_ON[storeId] = DB.collection('stores').doc(s.syncKey).onSnapshot(snap => {
     if (!state.stores.find(x => x.id === storeId)) return;
-    if (!snap.exists || snap.data().deleted) {
+    // SOLO se propaga un borrado EXPLÍCITO (deleted:true puesto por deleteStore).
+    // Un documento inexistente (borrado en consola, corte de red, limpieza) NO
+    // debe eliminar la copia local: recargar la página nunca pierde la tienda.
+    if (snap.exists && snap.data().deleted) {
       removeLocalStore(storeId, 'Esta tienda fue borrada por otro dispositivo.');
       return;
     }
+    if (!snap.exists) return;
     const d = snap.data();
     if (d.updatedBy !== syncClientId) syncApply(storeId, d);
   }, e => console.warn('Suscripción:', e));
@@ -200,6 +208,7 @@ async function activateSync(s, pin) {
         updatedBy: syncClientId,
         updatedAt: firebase.firestore.FieldValue.serverTimestamp()
       }, { merge: true });
+      s.localRole = 'owner';
       toast('Sincronización activada. Comparte el código con tu equipo.');
     } else {
 const r = snap.data();
@@ -214,6 +223,7 @@ const r = snap.data();
       s.createdBy = r.createdBy || syncClientId;
       Object.assign(s.members, upd);
       toast(isOwner ? 'Tienda actualizada y sincronización confirmada.' : 'Vinculado a la tienda compartida.');
+      s.localRole = isOwner ? 'owner' : 'worker';
     }
     s.syncKey = key;
     s.syncPin = pin;
@@ -477,6 +487,7 @@ async function joinStore() {
       createdBy: r.createdBy || null,
       members: JSON.parse(JSON.stringify(r.members || {}))
     };
+    s.localRole = 'worker';
     Object.assign(s.members, members);
     state.stores.push(s);
     state.activeStoreId = s.id;
