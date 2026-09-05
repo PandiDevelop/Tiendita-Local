@@ -72,31 +72,52 @@ function invAdd(productId, n) {
   save(); render(); toast('Existencias aumentadas.');
 }
 // ---- Registro de empleados (solo lo ve el creador de la tienda) ----
-// Cada +/− en Ventas del día queda atribuido a quien lo tocó (item.who), de modo
-// que el creador ve un resumen de lo que registró cada trabajador.
+// Cada +/− en Ventas del día queda atribuido a quien lo tocó (item.who). Cada
+// empleado trae un desplegable (▾) que muestra QUÉ vendió, separado por fechas.
 function employeesView(s) {
   let me; try { me = syncClientId; } catch (e) { me = ''; }
+  const sm = s.members || {};
+  const nameOf = uid => (sm[uid] && sm[uid].name) || (uid === me ? (() => { try { return syncName(); } catch (e) { return 'Trabajador'; } })() : 'Trabajador');
   const acc = {};
   s.sales.forEach(x => x.items.forEach(i => {
     if (!i.who) return;
     Object.keys(i.who).forEach(uid => {
       const q = i.who[uid]; if (!q) return;
-      const a = acc[uid] || (acc[uid] = { units: 0, money: 0, days: new Set() });
-      a.units += q; a.money += priceFor(i, s) * q; a.days.add(x.date);
+      const p = s.products.find(p => p.id === i.productId);
+      const pr = p && p.promos.find(z => z.id === i.promotionId);
+      const val = priceFor(i, s) * q;
+      const a = acc[uid] || (acc[uid] = { units: 0, money: 0, days: new Set(), detail: {} });
+      a.units += q; a.money += val; a.days.add(x.date);
+      const d = a.detail[x.date] || (a.detail[x.date] = { units: 0, money: 0, rows: {} });
+      d.units += q; d.money += val;
+      const key = i.productId + '|' + (i.promotionId || '');
+      const r = d.rows[key] || (d.rows[key] = { name: pr ? pr.label + ' · ' + p.name : (p ? p.name : 'Producto eliminado'), qty: 0, money: 0 });
+      r.qty += q; r.money += val;
     });
   }));
-  const nameOf = uid => {
-    const m = s.members && s.members[uid];
-    if (m && m.name) return m.name;
-    if (uid === me) { try { return syncName(); } catch (e) { return 'Trabajador'; } }
-    return 'Trabajador';
-  };
   const rows = [];
-  Object.keys(s.members || {}).forEach(uid => rows.push({ uid, name: nameOf(uid), role: s.createdBy === uid ? 'Creador' : 'Trabajador', a: acc[uid] || null }));
+  Object.keys(sm).forEach(uid => rows.push({ uid, name: nameOf(uid), role: s.createdBy === uid ? 'Creador' : 'Trabajador', a: acc[uid] || null }));
   Object.keys(acc).forEach(uid => { if (!rows.find(r => r.uid === uid)) rows.push({ uid, name: nameOf(uid), role: 'Trabajador', a: acc[uid] }); });
   rows.sort((x, y) => (y.a ? y.a.money : 0) - (x.a ? x.a.money : 0)).sort((x, y) => (y.role === 'Creador' ? 1 : 0) - (x.role === 'Creador' ? 1 : 0));
-  const body = rows.length ? `<table><thead><tr><th>Empleado</th><th>Unidades vendidas</th><th>Producido</th><th>Días con ventas</th></tr></thead><tbody>${rows.map(r => `<tr><td class="product-name">${esc(r.name)}${r.role === 'Creador' ? ' <span class="tag">Creador</span>' : ''}</td><td>${r.a ? r.a.units : 0}</td><td><b>${money(r.a ? r.a.money : 0)}</b></td><td>${r.a ? r.a.days.size : 0}</td></tr>`).join('')}</tbody></table>` : `<div class="empty"><div class="emoji">👥</div><b>Aún no hay empleados</b><p>Cuando alguien se una con tu código y toque + en Ventas del día, aquí verás lo que registró.</p></div>`;
-  return `<div class="panel"><div class="panel-head"><div><h2>Registro de empleados</h2><p class="muted">Unidades y producido que cada quien registró al tocar + en Ventas del día.</p></div></div>${body}</div>`;
+  const detail = a => {
+    if (!a) return '<p class="muted" style="margin:0">Todavía no registra ventas.</p>';
+    return Object.keys(a.detail).sort((x, y) => y.localeCompare(x)).map(dt => {
+      const d = a.detail[dt];
+      return `<div class="emp-date"><b>${formatDate(dt)}</b><span class="muted">${d.units} uds · ${money(d.money)}</span></div><div class="emp-items">${Object.keys(d.rows).map(k => `<div class="emp-item"><span>${esc(d.rows[k].name)}</span><b>${d.rows[k].qty} ×</b><span class="muted">${money(d.rows[k].money)}</span></div>`).join('')}</div>`;
+    }).join('');
+  };
+  const body = rows.length
+    ? `<table><thead><tr><th>Empleado</th><th>Unidades vendidas</th><th>Producido</th><th>Días con ventas</th><th></th></tr></thead><tbody>${rows.map(r => `<tr><td class="product-name">${esc(r.name)}${r.role === 'Creador' ? ' <span class="tag">Creador</span>' : ''}</td><td>${r.a ? r.a.units : 0}</td><td><b>${money(r.a ? r.a.money : 0)}</b></td><td>${r.a ? r.a.days.size : 0}</td><td><button class="icon-btn emp-toggle" ${r.a ? '' : 'disabled'} title="${r.a ? 'Ver qué vendió' : 'Sin ventas'}" onclick="toggleEmp(this)">▾</button></td></tr><tr class="emp-detail-row" style="display:none"><td colspan="5"><div class="emp-detail">${detail(r.a)}</div></td></tr>`).join('')}</tbody></table>`
+    : `<div class="empty"><div class="emoji">👥</div><b>Aún no hay empleados</b><p>Cuando alguien se una con tu código y toque + en Ventas del día, aquí verás lo que registró.</p></div>`;
+  return `<div class="panel"><div class="panel-head"><div><h2>Registro de empleados</h2><p class="muted">Unidades y producido que cada quien registró al tocar + en Ventas del día. Toca ▾ para ver el detalle por fecha.</p></div></div>${body}</div>`;
+}
+function toggleEmp(btn) {
+  const tr = btn.closest('tr');
+  const next = tr && tr.nextElementSibling;
+  if (!next || !next.classList.contains('emp-detail-row')) return;
+  const open = next.style.display !== 'none';
+  next.style.display = open ? 'none' : 'table-row';
+  btn.classList.toggle('open', !open);
 }
 function setTab(tab) { if(tab!=='ventas')state.editingSaleId=null; if(tab==='inicio'){state.summaryPage=0;state.summaryDate=null;} state.tab=tab;save();render(); }
 render();

@@ -86,10 +86,7 @@ function syncApply(storeId, remote) {
   const members = remote.members ? JSON.parse(JSON.stringify(remote.members)) : null;
   const removed = remote.createdBy && remote.createdBy !== syncClientId && (!remote.members || !remote.members[syncClientId]);
   if (removed) {
-    s.members = members || {};
-    delete s.syncKey; delete s.syncPin;
-    save(); render(); toast('Fuiste eliminado de esta tienda.');
-    detachSync(storeId);
+    removeLocalStore(storeId, 'Fuiste eliminado de esta tienda.');
     return;
   }
   if (members) s.members = members;
@@ -241,9 +238,30 @@ async function removeMember(storeId, memberId) {
 function deactivateSync(id) {
   const s = state.stores.find(x => x.id === id);
   if (!s) return;
+  // Solo el creador puede desactivar la sincronización. Un trabajador no puede
+  // dejar la tienda editable localmente: solo puede irse (leaveStore).
+  if (s.createdBy && s.createdBy !== syncClientId) return;
   detachSync(id);
   delete s.syncKey; delete s.syncPin;
   save(); render(); toast('Sincronización desactivada. La tienda queda solo en este dispositivo.');
+}
+
+// Un trabajador se DESVINCULA de la tienda compartida: se quita de la lista de
+// miembros (Firestore) y la tienda se elimina de este dispositivo. El creador
+// no necesita esto; tiene la × de desvincular en el mismo modal.
+async function leaveStore(id) {
+  const s = state.stores.find(x => x.id === id);
+  if (!s || !s.syncKey) return;
+  const q = '¿Quieres salir de la tienda "' + s.name + '"? Se eliminará de este dispositivo y dejarás de recibir sus cambios. No se puede deshacer.';
+  if (!confirm(q)) return;
+  if (DB) {
+    const upd = {};
+    upd[syncClientId] = firebase.firestore.FieldValue.delete();
+    try {
+      await DB.collection('stores').doc(s.syncKey).set({ members: upd }, { merge: true });
+    } catch (e) { console.warn('No se pudo avisar del retiro:', e); }
+  }
+  removeLocalStore(id, 'Te desvinculaste de la tienda.');
 }
 
 // Quita una tienda SOLO de este dispositivo (usado al borrar o al recibir el
@@ -347,7 +365,9 @@ window.storeModal = function (id) {
       const mm = members[x];
       return `<div style="display:flex;justify-content:space-between;align-items:center;gap:8px"><span>${esc(mm && mm.name ? mm.name : 'Trabajador')}</span>${owner ? `<button class="icon-btn" title="Quitar de la tienda" onclick="removeMember('${s.id}','${x}')">×</button>` : ''}</div>`;
     }).join('');
-    field.innerHTML = `<input type="hidden" id="sync-pin" value="${esc(s.syncPin || s.syncKey)}"><div class="label">Sincronización activa</div><div class="image-picker"><div style="min-width:0;flex:1"><strong style="letter-spacing:1.5px">${esc(s.syncPin || s.syncKey)}</strong><p class="muted">Comparte este código con tu equipo. Los cambios se ven en tiempo real.</p><input id="sync-name" maxlength="30" placeholder="Tu nombre" value="${esc(syncName() === SYNC_DEFAULT_NAME ? '' : syncName())}">${owner ? `<div class="label" style="margin-top:14px">Trabajadores vinculados</div>${others.length ? `<div style="display:grid;gap:6px">${list}</div>` : '<p class="muted">Aún no hay trabajadores vinculados.</p>'}` : ''}</div><button class="icon-btn" title="Desvincular" onclick="deactivateSync('${s.id}')">×</button></div>`;
+    // La × de desvincular es SOLO del creador (deja la tienda editable local):
+    // un trabajador no puede apagar la sincronización, solo puede irse (leaveStore).
+    field.innerHTML = `<input type="hidden" id="sync-pin" value="${esc(s.syncPin || s.syncKey)}"><div class="label">Sincronización activa</div><div class="image-picker"><div style="min-width:0;flex:1"><strong style="letter-spacing:1.5px">${esc(s.syncPin || s.syncKey)}</strong><p class="muted">Comparte este código con tu equipo. Los cambios se ven en tiempo real.</p><input id="sync-name" maxlength="30" placeholder="Tu nombre" value="${esc(syncName() === SYNC_DEFAULT_NAME ? '' : syncName())}">${owner ? `<div class="label" style="margin-top:14px">Trabajadores vinculados</div>${others.length ? `<div style="display:grid;gap:6px">${list}</div>` : '<p class="muted">Aún no hay trabajadores vinculados.</p>'}` : ''}</div>${owner ? `<button class="icon-btn" title="Desvincular" onclick="deactivateSync('${s.id}')">×</button>` : ''}</div>${employee ? `<button class="button secondary leave-btn" onclick="leaveStore('${s.id}')">Desvincularse de esta tienda</button>` : ''}`;
   } else {
     const ok = window.FIREBASE_CONFIG && window.FIREBASE_CONFIG.projectId;
     const hint = ok
@@ -360,12 +380,6 @@ window.storeModal = function (id) {
     const fi = m.querySelector('input[type=file]');
     if (ni) ni.disabled = true;
     if (fi) fi.disabled = true;
-    const note = document.createElement('p');
-    note.className = 'muted';
-    note.style.margin = '-6px 0 14px';
-    note.textContent = 'Solo el creador de la tienda puede editar el nombre y la imagen.';
-    const po = field.querySelector('.image-picker');
-    if (po) po.insertAdjacentElement('afterend', note);
   }
   const actions = m.querySelector('.modal-actions');
   if (actions) actions.before(field);
@@ -398,10 +412,11 @@ window.saveStore = async function (id) {
   if (s && pin) await activateSync(s, pin);
 };
 
-// Botón "Unirme a una tienda" en la pantalla de bienvenida.
+// Botón "Unirme a una tienda" en la pantalla de bienvenida, centrado debajo de
+// "Crear mi primera tienda" (el p va centrado porque queda fuera de .empty).
 var welcomeBase = welcome;
 window.welcome = function () {
-  return welcomeBase() + `<p style="margin-top:16px"><button class="button secondary" onclick="joinModal()">Unirme a una tienda</button></p>`;
+  return welcomeBase() + `<p style="margin:16px 0 0;text-align:center"><button class="button secondary" onclick="joinModal()">Unirme a una tienda</button></p>`;
 };
 
 // Añade "Unirme a una tienda" en el menú lateral y en el encabezado móvil,
