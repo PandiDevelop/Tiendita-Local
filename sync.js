@@ -9,6 +9,7 @@ let DB = null;
 const SYNC_ON = {};   // storeId -> unsubscribe()
 const SYNC_TMR = {};  // storeId -> timeout
 const LAST_PUSH = {}; // storeId -> huella del último push (evita ecos y escrituras vacías)
+const SYNC_DEFAULT_NAME = 'Trabajador';
 
 function syncReady() {
   if (DB) return true;
@@ -22,6 +23,12 @@ function syncReady() {
     console.warn('Firebase no disponible:', e);
     return false;
   }
+}
+function syncName() {
+  return localStorage.getItem('mi-tiendita-user') || SYNC_DEFAULT_NAME;
+}
+function syncSetName(v) {
+  localStorage.setItem('mi-tiendita-user', (v && v.trim()) ? v.trim() : SYNC_DEFAULT_NAME);
 }
 
 // FNV-1a sobre el PIN -> clave de documento DETERMINISTA (el mismo PIN siempre
@@ -60,10 +67,23 @@ function mergeItems(a, b) {
 }
 
 // Aplica lo que llega de la nube sin borrar datos locales: UNIÓN por id.
+// También detecta si este dispositivo fue expulsado de la tienda.
 function syncApply(storeId, remote) {
   if (!remote || remote.updatedBy === syncClientId) return;
   const s = state.stores.find(x => x.id === storeId);
   if (!s) return;
+
+  const members = remote.members ? JSON.parse(JSON.stringify(remote.members)) : null;
+  const removed = remote.createdBy && remote.createdBy !== syncClientId && (!remote.members || !remote.members[syncClientId]);
+  if (removed) {
+    s.members = members || {};
+    delete s.syncKey; delete s.syncPin;
+    save(); render(); toast('Fuiste eliminado de esta tienda.');
+    detachSync(storeId);
+    return;
+  }
+  if (members) s.members = members;
+  if (remote.createdBy && remote.createdBy !== s.createdBy) s.createdBy = remote.createdBy;
 
   const products = new Map(s.products.map(p => [p.id, p]));
   toProductsArr(remote.products).forEach(p => products.set(p.id, p));
@@ -88,6 +108,8 @@ function syncApply(storeId, remote) {
 
 // Sube el estado local con merge:true. Cada producto/venta se graba bajo su propio
 // id, de modo que un push nunca elimina lo que escribió el otro dispositivo.
+// La lista de "members" se guarda SOLO en las operaciones de alta/eliminación de
+// miembros (no aquí) para que el creador controle quién pertenece.
 async function pushSync(storeId) {
   const s = state.stores.find(x => x.id === storeId);
   if (!s || !s.syncKey || !DB) return;
@@ -129,37 +151,68 @@ function attachSync(storeId) {
 function detachSync(storeId) {
   if (SYNC_ON[storeId]) { SYNC_ON[storeId](); delete SYNC_ON[storeId]; }
 }
+function myMember(s) {
+  return {
+    name: syncName(),
+    role: (s && s.createdBy === syncClientId) ? 'owner' : 'worker',
+    joinedAt: (s && s.members && s.members[syncClientId] && s.members[syncClientId].joinedAt) || Date.now()
+  };
+}
 async function activateSync(s, pin) {
   if (!syncReady()) { toast('Configura Firebase primero (ver README).'); return; }
   const key = syncKeyOf(pin);
   const ref = DB.collection('stores').doc(key);
   try {
     const snap = await ref.get();
-    if (snap.exists) {
-      const r = snap.data();
-      s.name = r.name || s.name;
-      s.image = r.image || s.image;
-      s.products = toProductsArr(r.products);
-      s.sales = toSalesArr(r.sales);
-      toast('Vinculado a la tienda compartida.');
-    } else {
+    if (!snap.exists) {
       const products = {}, sales = {};
       s.products.forEach(p => products[p.id] = p);
       s.sales.forEach(x => sales[x.id] = x);
+      const members = {};
+      members[syncClientId] = { name: syncName(), role: 'owner', joinedAt: Date.now() };
       await ref.set({
         name: s.name,
         image: s.image,
         products,
         sales,
+        createdBy: syncClientId,
+        members,
         updatedBy: syncClientId,
         updatedAt: firebase.firestore.FieldValue.serverTimestamp()
       }, { merge: true });
       toast('Sincronización activada. Comparte el código con tu equipo.');
+    } else {
+      const r = snap.data();
+      const isOwner = !r.createdBy || r.createdBy === syncClientId;
+      const prev = (r.members && r.members[syncClientId]) || (s.members && s.members[syncClientId]) || {};
+      const upd = {};
+      upd[syncClientId] = { name: syncName(), role: isOwner ? 'owner' : 'worker', joinedAt: prev.joinedAt || Date.now() };
+      await ref.set({ members: upd }, { merge: true });
+      if (isOwner && !r.createdBy) await ref.set({ createdBy: syncClientId }, { merge: true });
+      s.members = JSON.parse(JSON.stringify(r.members || {}));
+      s.createdBy = r.createdBy || syncClientId;
+      Object.assign(s.members, upd);
+      toast(isOwner ? 'Tienda actualizada y sincronización confirmada.' : 'Vinculado a la tienda compartida.');
     }
     s.syncKey = key;
     s.syncPin = pin;
     save(); render(); attachSync(s.id);
   } catch (e) { console.warn(e); toast('No se pudo sincronizar. Revisa tu conexión.'); }
+}
+async function removeMember(storeId, memberId) {
+  const s = state.stores.find(x => x.id === storeId);
+  if (!s || !s.syncKey || !DB || memberId === syncClientId) return;
+  const members = Object.assign({}, s.members || {});
+  delete members[memberId];
+  s.members = members;
+  save(); render();
+  try {
+    const del = firebase.firestore.FieldValue.delete();
+    const upd = {};
+    upd[memberId] = del;
+    await DB.collection('stores').doc(s.syncKey).set({ members: upd }, { merge: true });
+    toast('Trabajador eliminado de la tienda.');
+  } catch (e) { console.warn(e); toast('No se pudo eliminar al trabajador.'); }
 }
 function deactivateSync(id) {
   const s = state.stores.find(x => x.id === id);
@@ -180,7 +233,25 @@ window.save = function () {
   state.stores.forEach(s => { if (s.syncKey) scheduleSync(s.id); });
 };
 
-// Añade la sección de sincronización al modal de tienda (crear/editar).
+// Quién registró cada venta: se guarda en el día al cambiarlo, y se muestra
+// en Historial y en el panel de Ventas del día.
+var changeQtyBase = changeQty;
+window.changeQty = function (sid, pid, promoid, d) {
+  const s = store();
+  const sale = s && s.sales.find(x => x.id === sid);
+  if (sale) sale.by = syncName();
+  changeQtyBase(sid, pid, promoid, d);
+};
+var editSaleBase = editSale;
+window.editSale = function (id) {
+  const s = store();
+  const sale = s && s.sales.find(x => x.id === id);
+  if (sale) sale.by = syncName();
+  editSaleBase(id);
+};
+
+// Añade la sección de sincronización al modal de tienda (crear/editar):
+// código, tu nombre y (si eres el creador) la lista de trabajadores con opción a quitar.
 var storeModalBase = storeModal;
 window.storeModal = function (id) {
   storeModalBase(id);
@@ -190,27 +261,36 @@ window.storeModal = function (id) {
   const field = document.createElement('div');
   field.className = 'field sync-field';
   if (s && s.syncKey) {
-    field.innerHTML = `<div class="label">Sincronización activa</div><div class="image-picker"><div style="min-width:0;flex:1"><strong style="letter-spacing:1.5px">${esc(s.syncPin || s.syncKey)}</strong><p class="muted">Comparte este código con tu equipo. Los cambios se ven en tiempo real.</p></div><button class="icon-btn" title="Desvincular" onclick="deactivateSync('${s.id}')">×</button></div>`;
+    const members = s.members || {};
+    const owner = s.createdBy === syncClientId;
+    const others = Object.keys(members).filter(x => x !== syncClientId);
+    const list = others.map(x => {
+      const mm = members[x];
+      return `<div style="display:flex;justify-content:space-between;align-items:center;gap:8px"><span>${esc(mm && mm.name ? mm.name : 'Trabajador')}</span>${owner ? `<button class="icon-btn" title="Quitar de la tienda" onclick="removeMember('${s.id}','${x}')">×</button>` : ''}</div>`;
+    }).join('');
+    field.innerHTML = `<input type="hidden" id="sync-pin" value="${esc(s.syncPin || s.syncKey)}"><div class="label">Sincronización activa</div><div class="image-picker"><div style="min-width:0;flex:1"><strong style="letter-spacing:1.5px">${esc(s.syncPin || s.syncKey)}</strong><p class="muted">Comparte este código con tu equipo. Los cambios se ven en tiempo real.</p><input id="sync-name" maxlength="30" placeholder="Tu nombre" value="${esc(syncName() === SYNC_DEFAULT_NAME ? '' : syncName())}">${owner ? `<div class="label" style="margin-top:14px">Trabajadores vinculados</div>${others.length ? `<div style="display:grid;gap:6px">${list}</div>` : '<p class="muted">Aún no hay trabajadores vinculados.</p>'}` : ''}</div><button class="icon-btn" title="Desvincular" onclick="deactivateSync('${s.id}')">×</button></div>`;
   } else {
     const ok = window.FIREBASE_CONFIG && window.FIREBASE_CONFIG.projectId;
     const hint = ok
       ? 'Quienes tengan el mismo código verán y editarán esta tienda en tiempo real.'
       : 'Sincronización desactivada: configura Firebase primero (ver README).';
-    field.innerHTML = `<div class="label">Sincronización en tiempo real (opcional)</div><div class="image-picker"><div style="min-width:0;flex:1"><input id="sync-pin" maxlength="30" placeholder="Código compartido de la tienda"><p class="muted">${hint}</p></div></div>`;
+    field.innerHTML = `<div class="label">Sincronización en tiempo real (opcional)</div><div class="image-picker"><div style="min-width:0;flex:1"><input id="sync-pin" maxlength="30" placeholder="Código compartido de la tienda"><input id="sync-name" maxlength="30" placeholder="Tu nombre (para ver quién registra las ventas)"><p class="muted">${hint}</p></div></div>`;
   }
   const actions = m.querySelector('.modal-actions');
   if (actions) actions.before(field);
 };
 
-// Al guardar una tienda con código, activa la sincronización.
+// Al guardar una tienda: guarda tu nombre y, si hay código, activa/refresca la sincronización.
 var saveStoreBase = saveStore;
 window.saveStore = async function (id) {
-  const el = document.getElementById('sync-pin');
-  const pin = el ? el.value.trim() : '';
+  const nameEl = document.getElementById('sync-name');
+  const name = nameEl ? nameEl.value.trim() : '';
+  if (name) syncSetName(name);
+  const pinEl = document.getElementById('sync-pin');
+  const pin = pinEl ? pinEl.value.trim() : '';
   saveStoreBase(id);
-  if (!pin) return;
   const s = state.stores.find(x => x.id === (id || state.activeStoreId));
-  if (s) await activateSync(s, pin);
+  if (s && pin) await activateSync(s, pin);
 };
 
 // Botón "Unirme a una tienda" en la pantalla de bienvenida.
@@ -220,7 +300,8 @@ window.welcome = function () {
 };
 
 // Añade "Unirme a una tienda" en el menú lateral y en el encabezado móvil,
-// para que un dispositivo que ya tiene tiendas también pueda unirse.
+// para que un dispositivo que ya tiene tiendas también pueda unirse, y muestra
+// quién registró cada venta.
 var renderBase = render;
 window.render = function () {
   renderBase();
@@ -230,20 +311,54 @@ window.render = function () {
     t.innerHTML = `<button class="new-store sync-join" onclick="joinModal()">Unirme a una tienda</button>`;
     btn.insertAdjacentElement('afterend', t.content.firstElementChild);
   });
+  const cur = state.stores.length ? store() : null;
+  if (cur) {
+    const closed = cur.sales.filter(x => x.closed).sort((a, b) => b.date.localeCompare(a.date));
+    const rows = document.querySelectorAll('.history-row');
+    rows.forEach((row, i) => {
+      const sale = closed[i];
+      if (sale && sale.by) {
+        const d = row.querySelector('.date');
+        if (d && !d.querySelector('.by-name')) {
+          const sp = document.createElement('span');
+          sp.className = 'tag by-name';
+          sp.textContent = sale.by;
+          d.appendChild(sp);
+        }
+      }
+    });
+    if (state.tab === 'ventas') {
+      const sale = cur.sales.find(x => x.id === state.editingSaleId);
+      const panel = document.querySelector('.panel');
+      if (sale && sale.by && panel && !panel.querySelector('.by-line')) {
+        const pj = document.createElement('div');
+        pj.className = 'muted by-line';
+        pj.textContent = 'Registrando: ' + sale.by;
+        panel.prepend(pj);
+      }
+    }
+  }
 };
 function joinModal() {
-  modal(`<h2>Unirme a una tienda</h2><div class="field"><label>¿Tienes el código de tu tienda?</label><input id="sync-pin" maxlength="30" placeholder="Código compartido" autofocus></div><p class="muted">Pega el código que te dio quien creó la tienda. Sus productos y ventas aparecerán aquí.</p><div class="modal-actions"><button class="button secondary" onclick="closeModal()">Cancelar</button><button class="button primary" onclick="joinStore()">Vincular</button></div>`);
+  const myName = syncName();
+  modal(`<h2>Unirme a una tienda</h2><div class="field"><label>Tu nombre</label><input id="sync-name" maxlength="30" placeholder="Cómo te llaman tus compañeros" ${myName === SYNC_DEFAULT_NAME ? 'autofocus' : ''}></div><div class="field"><label>¿Tienes el código de tu tienda?</label><input id="sync-pin" maxlength="30" placeholder="Código compartido" ${myName === SYNC_DEFAULT_NAME ? '' : 'autofocus'}></div><p class="muted">Pega el código que te dio quien creó la tienda. Sus productos y ventas aparecerán aquí.</p><div class="modal-actions"><button class="button secondary" onclick="closeModal()">Cancelar</button><button class="button primary" onclick="joinStore()">Vincular</button></div>`);
 }
 async function joinStore() {
-  const el = document.getElementById('sync-pin');
-  const pin = el ? el.value.trim() : '';
+  const pinEl = document.getElementById('sync-pin');
+  const nameEl = document.getElementById('sync-name');
+  const pin = pinEl ? pinEl.value.trim() : '';
+  const name = nameEl ? nameEl.value.trim() : '';
   if (!pin) return toast('Escribe el código.');
+  if (name) syncSetName(name);
   if (!syncReady()) return toast('Configura Firebase primero (ver README).');
   const key = syncKeyOf(pin);
   try {
     const snap = await DB.collection('stores').doc(key).get();
     if (!snap.exists) return toast('No existe una tienda con ese código.');
     const r = snap.data();
+    const members = {};
+    members[syncClientId] = { name: syncName(), role: 'worker', joinedAt: Date.now() };
+    await DB.collection('stores').doc(key).set({ members: members }, { merge: true });
     const s = {
       id: crypto.randomUUID(),
       name: r.name || 'Tienda compartida',
@@ -251,8 +366,11 @@ async function joinStore() {
       products: toProductsArr(r.products),
       sales: toSalesArr(r.sales),
       syncKey: key,
-      syncPin: pin
+      syncPin: pin,
+      createdBy: r.createdBy || null,
+      members: JSON.parse(JSON.stringify(r.members || {}))
     };
+    Object.assign(s.members, members);
     state.stores.push(s);
     state.activeStoreId = s.id;
     state.tab = 'inicio';
@@ -262,12 +380,13 @@ async function joinStore() {
 }
 
 // El registro abierto de un día usa un id determinista para que todos los
-// dispositivos editen la MISMA fila de ventas del mismo día.
+// dispositivos editen la MISMA fila de ventas del mismo día, y guarda quién lo abre.
 window.startDay = function () {
   const s = store();
   let sale = s.sales.find(x => x.date === today());
   if (sale) { syncSale(sale, s); sale.closed = false; }
   else { sale = { id: 'day-' + today(), date: today(), closed: false, items: [] }; syncSale(sale, s); s.sales.push(sale); }
+  sale.by = syncName();
   state.editingSaleId = sale.id;
   state.tab = 'ventas';
   save(); render(); toast('Registro de hoy abierto.');

@@ -3,7 +3,7 @@ function shop(s) {
   const daily = state.editingSaleId
     ? s.sales.find(x => x.id === state.editingSaleId)
     : s.sales.find(x => x.date === today() && !x.closed);
-  return `<div class="mobile-head"><button class="menu-btn" onclick="toggleMenu()" aria-label="Abrir menú">☰</button><button class="new-store" onclick="storeModal()">＋ Nueva tienda</button></div><div class="topline"><div class="store-title">${img(s.image,'store-logo')}<div><div class="eyebrow">Tu tienda</div><h1>${esc(s.name)}</h1></div></div><button class="button secondary" onclick="storeModal('${s.id}')">⚙ Editar tienda</button></div><nav class="tabs">${[['inicio','Resumen'],['productos','Productos'],['ventas','Ventas del día'],['historial','Historial']].map(([id,l])=>`<button class="tab ${state.tab===id?'active':''}" onclick="setTab('${id}')">${l}</button>`).join('')}</nav>${state.tab==='inicio'?dashboard(s,daily):state.tab==='productos'?products(s):state.tab==='ventas'?sales(s,daily):history(s)}`;
+  return `<div class="mobile-head"><button class="menu-btn" onclick="toggleMenu()" aria-label="Abrir menú">☰</button><button class="new-store" onclick="storeModal()">＋ Nueva tienda</button></div><div class="topline"><div class="store-title">${img(s.image,'store-logo')}<div><div class="eyebrow">Tu tienda</div><h1>${esc(s.name)}</h1></div></div><button class="button secondary" onclick="storeModal('${s.id}')">⚙ Editar tienda</button></div><nav class="tabs">${[['inicio','Resumen'],['productos','Productos'],['inventario','Inventario'],['ventas','Ventas del día'],['historial','Historial']].map(([id,l])=>`<button class="tab ${state.tab===id?'active':''}" onclick="setTab('${id}')">${l}</button>`).join('')}</nav>${state.tab==='inicio'?dashboard(s,daily):state.tab==='productos'?products(s):state.tab==='inventario'?inventoryView(s):state.tab==='ventas'?sales(s,daily):history(s)}`;
 }
 function setTab(tab) { if (tab !== 'ventas') state.editingSaleId = null; state.tab = tab; save(); render(); }
 function startDay() {
@@ -42,5 +42,30 @@ function history(s) {
   return `<div class="panel"><div class="panel-head"><div><h2>Historial de ventas</h2><p class="muted">Edita un día para añadir productos o promociones que olvidaste.</p></div></div>${closed.length?closed.map(x=>`<div class="history-row"><div><div class="date">${formatDate(x.date)} <span class="tag">Cerrado</span></div><div class="muted">${x.items.reduce((a,i)=>a+i.qty,0)} unidades · <span class="record-total">Total producido: ${money(total(x,s))}</span></div></div><div class="actions"><button class="button secondary" onclick="editSale('${x.id}')">Editar</button><button class="icon-btn" title="Exportar este día" onclick="exportExcel('${x.id}')">⇩</button><button class="icon-btn delete-record" title="Borrar registro" onclick="deleteSale('${x.id}')">×</button></div></div>`).join(''):`<div class="empty"><div class="emoji">📅</div><b>Aún no hay días finalizados</b><p>Al cerrar un día, quedará guardado aquí.</p></div>`}</div>`;
 }
 function deleteSale(id) { if(!confirm('¿Borrar este registro de ventas? Esta acción no se puede deshacer.'))return; const s=store();s.sales=s.sales.filter(x=>x.id!==id);if(state.editingSaleId===id)state.editingSaleId=null;save();render();toast('Registro eliminado.'); }
+
+// ---- Inventario (opcional): las existencias solo aumentan manualmente; las
+// ventas las restan de forma automática porque el disponible se CALCULA como
+// comprado - vendido. Por eso subir una venta y luego bajarla devuelve el número.
+function inventorySold(s) {
+  const t = {};
+  s.sales.forEach(x => x.items.forEach(i => { if (i.qty) t[i.productId] = (t[i.productId] || 0) + i.qty; }));
+  return t;
+}
+function inventoryView(s) {
+  const sold = inventorySold(s), base = s.inventory || {};
+  const rows = s.products.map(p => {
+    const has = base[p.id] != null;
+    const buy = has ? base[p.id] : null;
+    const avail = has ? base[p.id] - (sold[p.id] || 0) : null;
+    return `<tr><td class="product-name">${esc(p.name)}</td><td>${buy == null ? '—' : buy}</td><td>${avail == null ? '—' : avail}</td><td class="inv-actions"><button class="icon-btn" title="Agregar 1" onclick="invAdd('${p.id}',1)">+1</button><button class="icon-btn" title="Agregar 10" onclick="invAdd('${p.id}',10)">+10</button></td></tr>`;
+  });
+  return `<div class="panel"><div class="panel-head"><div><h2>Inventario</h2><p class="muted">Repón existencias aquí. Las ventas las descuentan solas (pueden quedar en 0 o negativo si no hay suficiente; vender nunca está bloqueado).</p></div></div>${rows.length?`<table><thead><tr><th>Producto</th><th>Comprado</th><th>Disponible</th><th>Reponer</th></tr></thead><tbody>${rows.join('')}</tbody></table>`:`<div class="notice">Aún no hay productos en el catálogo.</div>`}</div>`;
+}
+function invAdd(productId, n) {
+  const s = store();
+  s.inventory = s.inventory || {};
+  s.inventory[productId] = (s.inventory[productId] || 0) + n;
+  save(); render(); toast('Existencias aumentadas.');
+}
 function setTab(tab) { if(tab!=='ventas')state.editingSaleId=null; if(tab==='inicio'){state.summaryPage=0;state.summaryDate=null;} state.tab=tab;save();render(); }
 render();

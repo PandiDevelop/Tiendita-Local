@@ -60,12 +60,22 @@ service cloud.firestore {
 ### Cómo se usa
 
 - Al crear o editar una tienda aparece un campo **"Código compartido"**. Escribe un código (ej. `aurora2026`) y listo: esa tienda queda sincronizada.
-- Un compañero desde su teléfono elige **Unirme a una tienda** y pega el mismo código.
+- Un compañero desde su teléfono elige **Unirme a una tienda**, escribe su **nombre** y pega el mismo código.
+- El creador puede ver en **Editar tienda** la lista de **trabajadores vinculados** y quitar a cualquiera con el botón ×. Quien sea quitado dejará de recibir cambios (y su dispositivo mostrará "Fuiste eliminado de esta tienda").
 - Los **contadores de ventas** se fusionan con un criterio seguro (se conserva la mayor cantidad de cada fila), así que dos trabajadores pueden registrar ventas al mismo tiempo sin pisarse.
 - El **catálogo** usa "último guardado gana": si dos editan el mismo producto a la vez, gana el que guardó después.
 - En el modal de edición puedes **desvincular** la tienda (se queda solo en tu dispositivo; los compañeros conservan sus datos en la nube).
+- Cada día de ventas guarda **quién lo registró**: se ve junto a la fecha en el Historial y en el panel de Ventas del día.
 
 > Límites prácticos: cada tienda vive en un documento de Firestore, adecuado para catálogos y ventas de una tienda pequeña. Si necesitas muchos miles de registros, el modelo se puede migrar a subcolecciones.
+> Nota: la expulsión de un trabajador es una medida práctica; si alguien conoce el código, puede volver a vincularse. Para un control estricto por usuario haría falta autenticación (futuro).
+
+### Inventario (opcional)
+
+Pestaña **Inventario**: refleja automáticamente los productos del catálogo. Puedes **subir existencias** con los botones +1 / +10 (o tocar el producto y guardar). Las **ventas descuentan solas** porque el disponible se calcula como *comprado − vendido*:
+
+- Si registras una venta (+1) y luego le restas (−1), el número vuelve al anterior.
+- Si no hay existencias registradas, sigue siendo posible vender: se muestra "—" y nada bloquea el registro.
 
 ## Generar un APK
 
