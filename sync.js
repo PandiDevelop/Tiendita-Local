@@ -176,6 +176,19 @@ var welcomeBase = welcome;
 window.welcome = function () {
   return welcomeBase() + `<p style="margin-top:16px"><button class="button secondary" onclick="joinModal()">Unirme a una tienda</button></p>`;
 };
+
+// Añade "Unirme a una tienda" en el menú lateral y en el encabezado móvil,
+// para que un dispositivo que ya tiene tiendas también pueda unirse.
+var renderBase = render;
+window.render = function () {
+  renderBase();
+  document.querySelectorAll('.sidebar .new-store, .mobile-head .new-store').forEach(btn => {
+    if (btn.nextElementSibling && btn.nextElementSibling.classList.contains('sync-join')) return;
+    const t = document.createElement('template');
+    t.innerHTML = `<button class="new-store sync-join" onclick="joinModal()">Unirme a una tienda</button>`;
+    btn.insertAdjacentElement('afterend', t.content.firstElementChild);
+  });
+};
 function joinModal() {
   modal(`<h2>Unirme a una tienda</h2><div class="field"><label>¿Tienes el código de tu tienda?</label><input id="sync-pin" maxlength="30" placeholder="Código compartido" autofocus></div><p class="muted">Pega el código que te dio quien creó la tienda. Sus productos y ventas aparecerán aquí.</p><div class="modal-actions"><button class="button secondary" onclick="closeModal()">Cancelar</button><button class="button primary" onclick="joinStore()">Vincular</button></div>`);
 }
@@ -216,3 +229,7 @@ function syncInit() {
   state.stores.forEach(s => { if (s.syncKey) attachSync(s.id); });
 }
 syncInit();
+
+// Re-renderiza para aplicar los botones "Unirme" del menú lateral/encabezado
+// (la primera render ocurre antes de que este script cargue).
+render();
