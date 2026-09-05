@@ -433,20 +433,6 @@ window.render = function () {
   });
   const cur = state.stores.length ? store() : null;
   if (cur) {
-    const closed = cur.sales.filter(x => x.closed).sort((a, b) => b.date.localeCompare(a.date));
-    const rows = document.querySelectorAll('.history-row');
-    rows.forEach((row, i) => {
-      const sale = closed[i];
-      if (sale && sale.by) {
-        const d = row.querySelector('.date');
-        if (d && !d.querySelector('.by-name')) {
-          const sp = document.createElement('span');
-          sp.className = 'tag by-name';
-          sp.textContent = sale.by;
-          d.appendChild(sp);
-        }
-      }
-    });
     if (state.tab === 'ventas') {
       const sale = cur.sales.find(x => x.id === state.editingSaleId);
       const panel = document.querySelector('.panel');
