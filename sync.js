@@ -433,8 +433,14 @@ window.welcome = function () {
 // para que un dispositivo que ya tiene tiendas también pueda unirse, y muestra
 // quién registró cada venta.
 var renderBase = render;
+let lastTabsScroll = 0;
+document.addEventListener('scroll', function (e) {
+  if (e.target && e.target.classList && e.target.classList.contains('tabs')) lastTabsScroll = e.target.scrollLeft;
+}, true);
 window.render = function () {
   renderBase();
+  const tabs = document.querySelector('.tabs');
+  if (tabs) tabs.scrollLeft = lastTabsScroll;
   document.querySelectorAll('.sidebar .new-store, .mobile-head .new-store').forEach(btn => {
     if (btn.nextElementSibling && btn.nextElementSibling.classList.contains('sync-join')) return;
     const t = document.createElement('template');
