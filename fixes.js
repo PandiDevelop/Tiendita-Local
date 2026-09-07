@@ -3,7 +3,7 @@ function shop(s) {
   if (state.tab === 'ventas') state.tab = 'inicio';
   let me; try { me = syncClientId; } catch (e) { me = 'local'; }
   const owner = !s.syncKey || !s.createdBy || s.createdBy === me;
-  const tabs = [['inicio','Inicio'],['productos','Productos'],['inventario','Inventario'],['historial','Historial']];
+  const tabs = [['inicio','Inicio'],['productos','Catálogo'],['inventario','Inventario'],['historial','Historial']];
   if (owner) tabs.push(['empleados','Empleados']);
   return `<div class="mobile-head"><button class="menu-btn" onclick="toggleMenu()" aria-label="Abrir menú">☰</button><button class="new-store" onclick="storeModal()">＋ Nueva tienda</button></div><div class="topline"><div class="store-title">${img(s.image,'store-logo')}<div><div class="eyebrow">Tu tienda</div><h1>${esc(s.name)}</h1></div></div><button class="button secondary" onclick="storeModal('${s.id}')">⚙ Editar tienda</button></div><nav class="tabs">${tabs.map(([id,l])=>`<button class="tab ${state.tab===id?'active':''}" onclick="setTab('${id}')">${l}</button>`).join('')}</nav>${state.tab==='inicio'?dashboard(s):state.tab==='productos'?products(s):state.tab==='inventario'?inventoryView(s):state.tab==='empleados'?employeesView(s):history(s)}`;
 }
@@ -19,11 +19,13 @@ function editSale(id) { const s=store(),sale=s.sales.find(x=>x.id===id); syncSal
 // Conserva la identidad de cada promoción al editarla, para no perder sus ventas históricas.
 function promoInput(pr={label:'',price:''}) { return `<div class="promo-input"><input class="promo-label" data-promo-id="${pr.id||''}" value="${esc(pr.label||'')}" maxlength="70" placeholder="Nombre de la promoción"><input class="promo-price" value="${pr.price??''}" min="0" type="number" placeholder="Precio"><button class="icon-btn" onclick="this.parentElement.remove()">×</button></div>`; }
 function saveProduct(id) {
-  const s=store(), name=$('#product-name').value.trim(), price=Number($('#product-price').value), labels=[...document.querySelectorAll('.promo-label')], prices=[...document.querySelectorAll('.promo-price')];
+  const s=store(), name=$('#product-name').value.trim(), price=Number($('#product-price').value), image=($('#product-image-data').value.trim()||defaultProductImage), qtyRaw=$('#product-qty').value.trim(), labels=[...document.querySelectorAll('.promo-label')], prices=[...document.querySelectorAll('.promo-price')];
   const promos=labels.map((x,n)=>({id:x.dataset.promoId||crypto.randomUUID(),label:x.value.trim(),price:Number(prices[n].value)})).filter(x=>x.label&&Number.isFinite(x.price)&&x.price>=0);
   if(!name)return toast('Escribe el nombre del producto.');
   if(!Number.isFinite(price)||price<0)return toast('Añade un precio válido.');
-  if(id)Object.assign(s.products.find(p=>p.id===id),{name,price,promos}); else s.products.push({id:crypto.randomUUID(),name,price,promos});
+  let pid;
+  if(id){Object.assign(s.products.find(p=>p.id===id),{name,price,image,promos});pid=id;} else {pid=crypto.randomUUID();s.products.push({id:pid,name,price,image,promos});}
+  if(qtyRaw!==''){const q=Number(qtyRaw);if(Number.isFinite(q)&&q>=0){s.inventory=s.inventory||{};s.inventory[pid]=q;}}
   save();closeModal();render();toast('Producto guardado.');
 }
 function summaryDates(s) { return [...new Set(s.sales.map(x=>x.date))].sort((a,b)=>b.localeCompare(a)); }
@@ -70,7 +72,7 @@ function dashboard(s) {
   records.forEach(x=>x.items.forEach(i=>{if(!i.qty)return;const p=s.products.find(p=>p.id===i.productId),pr=p?.promos.find(z=>z.id===i.promotionId),name=pr?.label||p?.name||'Producto eliminado',key=i.productId+'-'+(i.promotionId||'');let line=lines.find(z=>z.key===key);if(!line){line={key,name,qty:0,value:0};lines.push(line)}line.qty+=i.qty;line.value+=priceFor(i,s)*i.qty}));
   lines.sort((a,b)=>b.value-a.value);
   const mm = state.summaryMonth || monthOf(selected);
-  return `<div class="panel register-cta"><div class="panel-head"><div><h2>Registrar una venta</h2><p class="muted">Cada venta se guarda con fecha, hora y el empleado que la registra.</p></div><button class="button primary" onclick="saleModal()">＋ Registrar venta</button></div></div><div class="grid"><div class="card stat"><div class="muted">Productos registrados</div><div class="value">${s.products.length}</div><div class="small">En tu catálogo</div></div><div class="card stat"><div class="muted">Unidades vendidas</div><div class="value">${units}</div><div class="small">Del ${formatDate(selected)}</div></div><div class="card stat accent"><div class="muted">Total producido</div><div class="value">${money(revenue)}</div><div class="small">Del ${formatDate(selected)}</div></div></div><div class="panel"><div class="panel-head"><div><h2>Resumen por día</h2><p class="muted">Consulta hasta cinco días por página.</p></div><button class="button primary" onclick="saleModal()">＋ Registrar venta</button></div>${dates.length?`<div class="day-tabs">${state.summaryPage>0?`<button class="day-nav" onclick="summaryPage(-1)">← Más recientes</button>`:''}${shown.map(d=>`<button class="day-tab ${d===selected?'active':''}" onclick="selectSummaryDate('${d}')">${formatDate(d)}</button>`).join('')}${(state.summaryPage||0)<pages-1?`<button class="day-nav" onclick="summaryPage(1)">Anteriores →</button>`:''}</div><table><thead><tr><th>Producto o promoción</th><th>Unidades</th><th>Producido</th></tr></thead><tbody>${lines.length?lines.map(x=>`<tr><td class="product-name">${esc(x.name)}</td><td>${x.qty}</td><td><b>${money(x.value)}</b></td></tr>`).join(''):`<tr><td colspan="3" class="muted">No se registraron ventas este día.</td></tr>`}</tbody></table>`:`<div class="notice">Cuando registres ventas, aquí verás el detalle diario.</div>`}</div>${monthPanel(s, mm)}`;
+  return `${salePanel(s)}<div class="grid"><div class="card stat"><div class="muted">Productos registrados</div><div class="value">${s.products.length}</div><div class="small">En tu catálogo</div></div><div class="card stat"><div class="muted">Unidades vendidas</div><div class="value">${units}</div><div class="small">Del ${formatDate(selected)}</div></div><div class="card stat accent"><div class="muted">Total producido</div><div class="value">${money(revenue)}</div><div class="small">Del ${formatDate(selected)}</div></div></div><div class="panel"><div class="panel-head"><div><h2>Resumen por día</h2><p class="muted">Consulta hasta cinco días por página.</p></div><button class="button primary" onclick="saleGo()">＋ Registrar venta</button></div>${dates.length?`<div class="day-tabs">${state.summaryPage>0?`<button class="day-nav" onclick="summaryPage(-1)">← Más recientes</button>`:''}${shown.map(d=>`<button class="day-tab ${d===selected?'active':''}" onclick="selectSummaryDate('${d}')">${formatDate(d)}</button>`).join('')}${(state.summaryPage||0)<pages-1?`<button class="day-nav" onclick="summaryPage(1)">Anteriores →</button>`:''}</div><table><thead><tr><th>Producto o promoción</th><th>Unidades</th><th>Producido</th></tr></thead><tbody>${lines.length?lines.map(x=>`<tr><td class="product-name">${esc(x.name)}</td><td>${x.qty}</td><td><b>${money(x.value)}</b></td></tr>`).join(''):`<tr><td colspan="3" class="muted">No se registraron ventas este día.</td></tr>`}</tbody></table>`:`<div class="notice">Cuando registres ventas, aquí verás el detalle diario.</div>`}</div>${monthPanel(s, mm)}`;
 }
 function history(s) {
   const sales=[...s.sales].sort((a,b)=>(b.date||'').localeCompare(a.date||'')||(b.time||'').localeCompare(a.time||''));
@@ -179,37 +181,56 @@ function itemLabel(i, s) {
   return pr ? pr.label + ' · ' + p.name : (p ? p.name : 'Producto eliminado');
 }
 function currentName() { try { return syncName(); } catch (e) { return 'Trabajador'; } }
-function saleModal() {
-  const s = store();
-  if (!s.products.length) { toast('Primero agrega productos al catálogo.'); return; }
-  modal(`<h2>Registrar venta</h2><div class="field"><label>Empleado que registra</label><input id="sale-employee" maxlength="40" placeholder="Tu nombre" value="${esc(currentName())}"></div><div class="field"><label>Elige un producto</label><select id="sale-product" onchange="addSaleItem(this)"><option value="">Selecciona un producto…</option>${s.products.map(p=>`<option value="${p.id}">${esc(p.name)} — ${money(p.price)}</option>`).join('')}</select></div><div class="field"><label>Productos de esta venta</label><div id="sale-lines"><p class="muted" style="margin:0">Selecciona un producto arriba para añadirlo, luego elige la cantidad.</p></div></div><div class="modal-actions"><button class="button secondary" onclick="closeModal()">Cancelar</button><button class="button primary" onclick="registerSale()">Registrar venta</button></div>`);
+function saleGo(){const e=document.getElementById('sale-panel')||document.querySelector('.register-cta');if(e){e.scrollIntoView({behavior:'smooth',block:'start'});const se=document.getElementById('sale-product');if(se)se.focus();}}
+function salePanel(s){
+  if(!s.products.length)return `<div class="panel register-cta" id="sale-panel"><div class="panel-head"><div><h2>Registrar una venta</h2><p class="muted">Primero agrega productos al catálogo para poder registrarlos.</p></div><button class="button primary" onclick="setTab('productos')">Ir al catálogo</button></div></div>`;
+  return `<div class="panel register-cta" id="sale-panel"><div class="panel-head"><div><h2>Registrar una venta</h2><p class="muted">Elige un producto, anota la cantidad y guárdala. Puedes repetir el mismo producto y aplicar promociones.</p></div></div><div class="sale-builder"><div class="field"><label>Empleado que registra</label><input id="sale-employee" maxlength="40" placeholder="Tu nombre" value="${esc(currentName())}"></div><label class="sale-pick-label">Producto</label><select id="sale-product" onchange="addSaleLine(this)"><option value="">Selecciona un producto…</option>${s.products.map(p=>`<option value="${p.id}">${esc(p.name)}</option>`).join('')}</select><div id="sale-lines" class="sale-lines"></div><div class="sale-total"><span>Total de la venta</span><b id="sale-total">${money(0)}</b></div><button class="button primary sale-save" onclick="registerSale()">Guardar venta</button></div></div>`;
 }
-function addSaleItem(sel) {
-  const s = store(), pid = sel.value;
-  if (!pid) return;
-  let dup = false;
-  document.querySelectorAll('.sale-line').forEach(l => { if (l.dataset.pid === pid) dup = true; });
-  if (dup) { toast('Ese producto ya está en la venta.'); sel.value = ''; return; }
-  const p = s.products.find(x => x.id === pid);
-  let q = '';
-  for (let n = 1; n <= 99; n++) q += `<option value="${n}">${n}</option>`;
-  sel.value = '';
-  const hint = document.querySelector('#sale-lines .muted');
-  if (hint) hint.remove();
-  $('#sale-lines').insertAdjacentHTML('beforeend', `<div class="sale-line" data-pid="${pid}"><span class="sale-line-name">${esc(p.name)}</span><select class="sale-qty">${q}</select><span class="sale-line-price">${money(p.price)}</span><button class="icon-btn" type="button" title="Quitar" onclick="this.parentElement.remove()">×</button></div>`);
+function addSaleLine(sel){
+  const s=store(),pid=sel.value;
+  if(!pid)return;
+  sel.value='';
+  const p=s.products.find(x=>x.id===pid);if(!p)return;
+  const line=document.createElement('div');
+  line.className='sale-builder-line';
+  line.dataset.pid=pid;line.dataset.price=p.price;
+  const promos=(p.promos||[]).filter(x=>Number.isFinite(x.price));
+  const promoDrop=promos.length?`<div class="sale-promo"><select class="sale-promo-select" onchange="changeLinePrice(this)"><option value="${p.price}">Precio normal · ${money(p.price)}</option>${promos.map(pr=>`<option value="${pr.price}">${esc(pr.label)} · ${money(pr.price)}</option>`).join('')}</select></div>`:'';
+  line.innerHTML=`<div class="sale-builder-head"><div class="sale-brand">${img(p.image||defaultProductImage,'product-image-sale')}<div class="sale-builder-name">${esc(p.name)}</div></div><button class="icon-btn sale-del" title="Quitar" onclick="this.closest('.sale-builder-line').remove();updateSaleTotal()">×</button></div><div class="sale-builder-price">${money(p.price)} <span class="muted">c/u</span></div>${promoDrop}<div class="sale-builder-qty"><button type="button" class="qty-btn" onclick="stepQty(this,-1)">−</button><input class="qty-input" type="number" min="0" value="0" inputmode="numeric" oninput="updateSaleTotal()"><button type="button" class="qty-btn" onclick="stepQty(this,1)">+</button></div>`;
+  document.getElementById('sale-lines').appendChild(line);
+  updateSaleTotal();
+}
+function changeLinePrice(sel){
+  const line=sel.closest('.sale-builder-line'),v=Number(sel.value);
+  line.dataset.price=v;
+  const el=line.querySelector('.sale-builder-price');
+  if(el)el.innerHTML=`${money(v)} <span class="muted">c/u</span>`;
+  updateSaleTotal();
+}
+function stepQty(btn,d){
+  const inp=btn.parentElement.querySelector('.qty-input');
+  inp.value=Math.max(0,(+inp.value||0)+d);
+  updateSaleTotal();
+}
+function updateSaleTotal(){
+  let t=0;
+  document.querySelectorAll('.sale-builder-line').forEach(l=>{const q=+l.querySelector('.qty-input').value||0;t+=q*(+l.dataset.price||0);});
+  const el=document.getElementById('sale-total');
+  if(el)el.textContent=money(t);
 }
 function registerSale() {
   const s = store();
   const emp = ($('#sale-employee').value.trim() || currentName()).trim() || 'Trabajador';
   const items = [];
-  document.querySelectorAll('.sale-line').forEach(l => {
-    const pid = l.dataset.pid, qty = +l.querySelector('.sale-qty').value;
-    if (pid && qty > 0) items.push({ productId: pid, promotionId: null, qty });
+  document.querySelectorAll('.sale-builder-line').forEach(l => {
+    const qty = +l.querySelector('.qty-input').value;
+    const pr = +l.dataset.price;
+    if (qty > 0) items.push({ productId: l.dataset.pid, promotionId: null, qty, price: pr });
   });
-  if (!items.length) return toast('Añade al menos un producto con cantidad.');
+  if (!items.length) return toast('Añade al menos un producto con cantidad mayor a cero.');
   const now = new Date();
   s.sales.push({ id: crypto.randomUUID(), date: today(), time: now.toTimeString().slice(0, 5), employee: emp, items });
-  save(); closeModal(); render(); toast('Venta registrada.');
+  save(); render(); toast('Venta registrada.');
 }
 function exportExcel() {
   const s = store(), sales = s.sales;
