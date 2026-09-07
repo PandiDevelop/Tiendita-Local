@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useStore } from '../store';
-import { DEFAULT_STORE_IMAGE, esc, syncClientId, syncGenPin, syncName, syncSetName, uid } from '../lib/core';
+import { DEFAULT_STORE_IMAGE, compressImage, esc, syncClientId, syncGenPin, syncName, syncSetName, uid } from '../lib/core';
 import { deactivateSyncFn, leaveStoreFn, deleteStoreFn, removeMemberFn } from '../lib/sync';
 import { Image, Modal } from '../ui';
 import type { Member } from '../types';
@@ -23,9 +23,7 @@ export function StoreModal({ editing, onClose }: { editing?: boolean; onClose: (
 
   function onFile(f: File | undefined) {
     if (!f) return;
-    const r = new FileReader();
-    r.onload = () => setImage(String(r.result || ''));
-    r.readAsDataURL(f);
+    compressImage(f, 600, 0.85).then((data) => setImage(data));
   }
 
   function renderAgain() { force((n) => n + 1); }

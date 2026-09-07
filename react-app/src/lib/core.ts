@@ -191,6 +191,38 @@ export function storeCats(s: Store): string[] {
   return cats;
 }
 
+// Redimensiona y comprime una foto del dispositivo para que quepa en
+// localStorage y en el documento de Firestore (límite ~1 MiB).
+export function compressImage(file: File, maxSize = 480, quality = 0.82): Promise<string> {
+  return new Promise((resolve) => {
+    const reader = new FileReader();
+    reader.onload = () => {
+      const img = document.createElement('img');
+      img.onload = () => {
+        const scale = Math.min(1, maxSize / Math.max(img.width, img.height));
+        const w = Math.max(1, Math.round(img.width * scale));
+        const h = Math.max(1, Math.round(img.height * scale));
+        const canvas = document.createElement('canvas');
+        canvas.width = w;
+        canvas.height = h;
+        const ctx = canvas.getContext('2d');
+        if (!ctx) { resolve(String(reader.result || '')); return; }
+        ctx.drawImage(img, 0, 0, w, h);
+        try {
+          resolve(canvas.toDataURL('image/jpeg', quality));
+        } catch (e) {
+          console.warn('Compresión fallida:', e);
+          resolve(String(reader.result || ''));
+        }
+      };
+      img.onerror = () => resolve(String(reader.result || ''));
+      img.src = String(reader.result || '');
+    };
+    reader.onerror = () => resolve('');
+    reader.readAsDataURL(file);
+  });
+}
+
 export function catLabel(p: Product): string {
   return (p.category || '').trim() || 'Sin categoría';
 }

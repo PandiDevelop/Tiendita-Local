@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useStore } from '../store';
-import { DEFAULT_PRODUCT_IMAGE, storeCats, uid } from '../lib/core';
+import { DEFAULT_PRODUCT_IMAGE, compressImage, storeCats, uid } from '../lib/core';
 import { Dropdown } from '../Dropdown';
 import { Image, Modal } from '../ui';
 import type { Promo } from '../types';
@@ -22,9 +22,7 @@ export function ProductForm({ editingId, onClose }: { editingId?: string; onClos
 
   function onFile(f: File | undefined) {
     if (!f) return;
-    const r = new FileReader();
-    r.onload = () => setImage(String(r.result || ''));
-    r.readAsDataURL(f);
+    compressImage(f).then((data) => setImage(data));
   }
 
   function save() {
