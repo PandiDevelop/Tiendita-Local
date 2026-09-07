@@ -65,7 +65,7 @@ function products(s){
     const open=catOpen(s,g.name);
     const rows=g.list.map(p=>{
       const base=inv[p.id],avail=(base==null)?'—':Math.max(0,base-(sold[p.id]||0));
-      return `<tr><td class="cat-bar"><div class="product-cell">${img(p.image||defaultProductImage,'product-image-cell')}<div class="product-name">${esc(p.name)}</div></div></td><td>${money(p.price)}</td><td>${avail}</td><td>${p.promos.length?`<div class="promo-stack">${p.promos.map(x=>`<span class="promotion">${esc(x.label)} · ${money(x.price)}</span>`).join('')}</div>`:'<span class="muted">—</span>'}</td><td><div class="actions"><button class="icon-btn" onclick="productModal('${p.id}')">✎</button><button class="icon-btn" onclick="deleteProduct('${p.id}')">×</button></div></td></tr>`;
+      return `<tr><td class="cat-bar"><div class="product-cell"><div class="product-name">${esc(p.name)}</div>${img(p.image||defaultProductImage,'product-image-cell')}</div></td><td>${money(p.price)}</td><td>${avail}</td><td>${p.promos.length?`<div class="promo-stack">${p.promos.map(x=>`<span class="promotion">${esc(x.label)} · ${money(x.price)}</span>`).join('')}</div>`:'<span class="muted">—</span>'}</td><td><div class="actions"><button class="icon-btn" onclick="productModal('${p.id}')">✎</button><button class="icon-btn" onclick="deleteProduct('${p.id}')">×</button></div></td></tr>`;
     }).join('');
     return `<div class="cat-group"><button class="cat-head" data-cat="${esc(g.name)}" onclick="toggleCat(this.dataset.cat)"><span class="cat-caret">${open?'▾':'▸'}</span><b>${esc(g.name)}</b><span class="muted">· ${g.list.length} producto${g.list.length===1?'':'s'}</span></button><div class="cat-body" style="display:${open?'block':'none'}">${rows?`<table><thead><tr><th>Producto</th><th>Precio</th><th>Disponible</th><th>Promociones</th><th></th></tr></thead><tbody>${rows}</tbody></table>`:`<div class="notice">Sin productos en esta categoría todavía.</div>`}</div></div>`;
   }).join('');
@@ -145,7 +145,7 @@ function history(s) {
     const dayMoney=list.reduce((a,x)=>a+total(x,s),0);
     return `<div class="history-day"><div class="history-day-title"><b>${formatDate(d)}</b><span class="muted">${list.length} venta${list.length===1?'':'s'} · ${dayUnits} unidades · ${money(dayMoney)}</span></div><table class="history-table"><thead><tr><th>Fecha</th><th>Hora</th><th>Productos</th><th>Precio</th><th>Empleado</th><th></th></tr></thead><tbody>${list.map(x=>{
       const u=saleUnits(x),t=total(x,s);
-      return `<tr><td>${shortDate(x.date)}</td><td>${esc(x.time||'—')}</td><td>${u}</td><td><b>${money(t)}</b></td><td>${esc(x.employee||'—')}</td><td><button class="button secondary sale-details-btn" title="Ver detalles de la venta" onclick="toggleSale(this)">Detalles <span class="sale-caret">▾</span></button></td></tr><tr class="sale-detail-row" style="display:none"><td colspan="6"><div class="sale-detail">${saleDetail(x,s)}</div></td></tr>`;
+      return `<tr><td>${shortDate(x.date)}</td><td>${esc(x.time||'—')}</td><td>${u}</td><td><b>${money(t)}</b></td><td>${esc(x.employee||'—')}</td><td><button class="icon-btn emp-toggle sale-details-btn" title="Ver detalles de la venta" onclick="toggleSale(this)"><span class="sale-caret">▾</span></button></td></tr><tr class="sale-detail-row" style="display:none"><td colspan="6"><div class="sale-detail">${saleDetail(x,s)}</div></td></tr>`;
     }).join('')}</tbody></table></div>`;
   }).join('')}</div>`;
 }
