@@ -31,6 +31,15 @@ function syncSetName(v) {
   localStorage.setItem('mi-tiendita-user', (v && v.trim()) ? v.trim() : SYNC_DEFAULT_NAME);
 }
 
+// Genera un código de vinculación automático (6 caracteres legibles, sin
+// caracteres ambiguos como 0/O o 1/I).
+function syncGenPin() {
+  const chars = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789';
+  let p = '';
+  for (let i = 0; i < 6; i++) p += chars[Math.floor(Math.random() * chars.length)];
+  return p;
+}
+
 // FNV-1a sobre el PIN -> clave de documento DETERMINISTA (el mismo PIN siempre
 // produce el mismo documento en todos los dispositivos).
 function syncKeyOf(pin) {
@@ -383,7 +392,7 @@ window.storeModal = function (id) {
     const hint = ok
       ? 'Quienes tengan el mismo código verán y editarán esta tienda en tiempo real.'
       : 'Sincronización desactivada: configura Firebase primero (ver README).';
-    field.innerHTML = `<div class="label">Sincronización en tiempo real (opcional)</div><div class="image-picker"><div style="min-width:0;flex:1"><input id="sync-pin" maxlength="30" placeholder="Código compartido de la tienda"><input id="sync-name" maxlength="30" placeholder="Tu nombre (para ver quién registra las ventas)"><p class="muted">${hint}</p></div></div>`;
+    field.innerHTML = `<div class="label">Sincronización en tiempo real (opcional)</div><div class="image-picker"><div style="min-width:0;flex:1;display:grid;gap:12px"><div><div class="label" style="margin:0 0 6px">Tu nombre</div><input id="sync-name" maxlength="30" placeholder="Tu nombre" value="${esc(syncName() === SYNC_DEFAULT_NAME ? '' : syncName())}"></div><div><div class="label" style="margin:0 0 6px">Código de vinculación</div><input id="sync-pin" maxlength="30" placeholder="Código de vinculación" value="${syncGenPin()}"></div><p class="muted" style="margin-top:4px">${hint}</p></div></div>`;
   }
   if (employee) {
     const ni = m.querySelector('#store-name');
