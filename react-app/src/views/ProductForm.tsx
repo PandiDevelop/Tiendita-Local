@@ -43,7 +43,7 @@ export function ProductForm({ editingId, onClose }: { editingId?: string; onClos
         st.products.push({ id: uid(), name: nm, price: pr, image: image || DEFAULT_PRODUCT_IMAGE, promos: promoList, category: catVal });
       }
       if (qty.trim() !== '') {
-        const q = Number(qty);
+        const q = Math.round(Number(qty));
         if (Number.isFinite(q) && q >= 0) {
           st.inventory = st.inventory || {};
           const pid = editingId || st.products[st.products.length - 1].id;
@@ -79,7 +79,7 @@ export function ProductForm({ editingId, onClose }: { editingId?: string; onClos
         </div>
       </div>
       <div className="field"><label>Cantidad en inventario</label>
-        <input min={0} type="number" placeholder="0" value={qty} onChange={(e) => setQty(e.target.value)} />
+        <input min={0} step={1} type="number" inputMode="numeric" placeholder="0" value={qty} onChange={(e) => setQty(e.target.value)} />
         <p className="muted">Se guarda como existencias del producto y se descuenta solo con cada venta.</p>
       </div>
       <div className="field"><label>Promociones <span className="muted">(cada una se vende por separado)</span></label>

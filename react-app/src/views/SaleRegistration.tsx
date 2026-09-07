@@ -54,6 +54,11 @@ export function SaleRegistration({ onClose }: { onClose: () => void }) {
     persist({ lines: next }, false);
   }
 
+  function setQty(n: number, raw: number) {
+    if (!Number.isFinite(raw)) raw = 0;
+    setLine(n, { qty: Math.max(0, Math.round(raw)) });
+  }
+
   function removeLine(n: number) {
     const next = lines.filter((_, i) => i !== n);
     setLines(next);
@@ -114,7 +119,7 @@ export function SaleRegistration({ onClose }: { onClose: () => void }) {
         {priceDrop && <div className="sale-promo">{priceDrop}</div>}
         <div className="sale-builder-qty">
           <button type="button" className="qty-btn" onClick={() => setLine(n, { qty: Math.max(0, l.qty - 1) })}>−</button>
-          <input className="qty-input" type="number" min={0} inputMode="numeric" value={l.qty} onChange={(e) => setLine(n, { qty: Math.max(0, Number(e.target.value) || 0) })} />
+          <input className="qty-input" type="number" min={0} step={1} inputMode="numeric" value={l.qty} onChange={(e) => setQty(n, Number(e.target.value))} />
           <button type="button" className="qty-btn" onClick={() => setLine(n, { qty: l.qty + 1 })}>+</button>
         </div>
       </div>

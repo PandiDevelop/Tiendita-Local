@@ -4,38 +4,48 @@ import { esc, inventorySold, adoptInvLog } from '../lib/core';
 import { Modal } from '../ui';
 import type { Product } from '../types';
 
+interface Editable { p: Product; qty: number; supplier: string; }
+
 export function Inventory() {
   const { store, replace, toast } = useStore();
   const s = store!;
   const [mode, setMode] = useState<'stock' | 'log'>('stock');
-  const [editing, setEditing] = useState<Product | null>(null);
-  const [delta, setDelta] = useState(1);
-  const [supplier, setSupplier] = useState('');
-  const [adj, setAdj] = useState<'add' | 'sub'>('add');
+  const [edit, setEdit] = useState<Editable | null>(null);
 
   const sold = inventorySold(s);
   const base = s.inventory || {};
   const log = (s.invLog || []).slice();
   const byId = new Map(s.products.map((p) => [p.id, p]));
 
-  function open(p: Product) {
-    setEditing(p);
-    setDelta(1);
-    setSupplier('');
-    setAdj('add');
+  function cur(p: Product): number {
+    return Math.round(base[p.id] || 0);
   }
 
-  function save() {
-    if (!editing) return;
-    const q = Math.floor(delta);
-    if (!Number.isFinite(q) || q <= 0) return toast('Escribe una cantidad mayor a cero.');
-    const d = adj === 'add' ? q : -q;
+  function bump(p: Product, delta: number) {
     replace((x) => {
       const st = x.stores.find((y) => y.id === s.id)!;
-      adoptInvLog(st, editing.id, d, supplier.trim());
+      adoptInvLog(st, p.id, delta, '');
     });
-    toast(adj === 'add' ? 'Existencias registradas.' : 'Existencias descontadas.');
-    setEditing(null);
+  }
+
+  function open(p: Product) {
+    setEdit({ p, qty: cur(p), supplier: '' });
+  }
+
+  function saveEdit() {
+    if (!edit) return;
+    const q = Math.round(edit.qty);
+    if (!Number.isFinite(q) || q < 0) return toast('Escribe una cantidad válida.');
+    const prev = cur(edit.p);
+    const delta = q - prev;
+    if (delta !== 0) {
+      replace((x) => {
+        const st = x.stores.find((y) => y.id === s.id)!;
+        adoptInvLog(st, edit.p.id, delta, edit.supplier.trim());
+      });
+    }
+    toast('Cantidad actualizada.');
+    setEdit(null);
   }
 
   const nameOf = (pid: string) => byId.get(pid)?.name || 'Producto eliminado';
@@ -43,7 +53,7 @@ export function Inventory() {
   return (
     <div className="panel">
       <div className="panel-head">
-        <div><h2>Inventario</h2><p className="muted">Repón existencias aquí. Las ventas las descuentan solas.</p></div>
+        <div><h2>Inventario</h2><p className="muted">Repón y ajusta existencias aquí. Las ventas las descuentan solas.</p></div>
         <div className="inv-modes">
           <button type="button" className={'inv-mode' + (mode === 'stock' ? ' on' : '')} onClick={() => setMode('stock')}>Existencias</button>
           <button type="button" className={'inv-mode' + (mode === 'log' ? ' on' : '')} onClick={() => setMode('log')}>Historial de cambios</button>
@@ -65,18 +75,22 @@ export function Inventory() {
           </tbody></table>
         ) : <div className="notice">Aún no hay cambios registrados en el inventario.</div>
       ) : s.products.length ? (
-        <table><thead><tr><th>Producto</th><th>Comprado</th><th>Disponible</th><th>Reponer</th></tr></thead><tbody>
+        <table><thead><tr><th>Producto</th><th>Comprado</th><th>Disponible</th><th>Ajustar</th></tr></thead><tbody>
           {s.products.map((p) => {
             const has = base[p.id] != null;
-            const buy = has ? base[p.id] : null;
-            const avail = has ? Math.max(0, base[p.id] - (sold[p.id] || 0)) : null;
+            const buy = has ? Math.round(base[p.id]) : null;
+            const avail = has ? Math.max(0, buy! - (sold[p.id] || 0)) : null;
             return (
               <tr key={p.id}>
                 <td className="product-name">{esc(p.name)}</td>
                 <td>{buy == null ? '—' : buy}</td>
                 <td>{avail == null ? '—' : avail}</td>
                 <td className="inv-actions">
-                  <button className="button primary inv-restock" onClick={() => open(p)}>＋ Reponer</button>
+                  <div className="inv-stepper">
+                    <button className="qty-btn" title="Restar 1" onClick={() => bump(p, -1)}>−</button>
+                    <button className="icon-btn" title="Editar cantidad" onClick={() => open(p)}>✎</button>
+                    <button className="qty-btn" title="Sumar 1" onClick={() => bump(p, 1)}>+</button>
+                  </div>
                 </td>
               </tr>
             );
@@ -84,28 +98,26 @@ export function Inventory() {
         </tbody></table>
       ) : <div className="notice">Aún no hay productos en el catálogo.</div>}
 
-      {editing && (
-        <Modal onClose={() => setEditing(null)}>
-          <h2>Reponer · {esc(editing.name)}</h2>
+      {edit && (
+        <Modal onClose={() => setEdit(null)}>
+          <h2>Editar existencias</h2>
+          <div className="field"><label>Producto</label>
+            <div className="product-name" style={{ fontWeight: 700 }}>{esc(edit.p.name)}</div>
+          </div>
           <div className="field"><label>Cantidad</label>
             <div className="sale-builder-qty">
-              <button type="button" className="qty-btn" onClick={() => setDelta(Math.max(1, delta - 1))}>−</button>
-              <input className="qty-input" type="number" min={1} inputMode="numeric" value={delta} onChange={(e) => setDelta(Math.max(1, Number(e.target.value) || 0))} />
-              <button type="button" className="qty-btn" onClick={() => setDelta(delta + 1)}>+</button>
+              <button type="button" className="qty-btn" onClick={() => setEdit({ ...edit, qty: Math.max(0, edit.qty - 1) })}>−</button>
+              <input className="qty-input" type="number" min={0} step={1} inputMode="numeric" value={edit.qty} onChange={(e) => setEdit({ ...edit, qty: Math.max(0, Number(e.target.value) || 0) })} />
+              <button type="button" className="qty-btn" onClick={() => setEdit({ ...edit, qty: edit.qty + 1 })}>+</button>
             </div>
+            <p className="muted">Cantidad comprada en total, así descuentas las ventas solas del disponible.</p>
           </div>
-          <div className="field"><label>Ajuste</label>
-            <div className="inv-modes">
-              <button type="button" className={'inv-mode' + (adj === 'add' ? ' on' : '')} onClick={() => setAdj('add')}>Sumar</button>
-              <button type="button" className={'inv-mode' + (adj === 'sub' ? ' on' : '')} onClick={() => setAdj('sub')}>Restar</button>
-            </div>
-          </div>
-          <div className="field"><label>Proveedor</label>
-            <input maxLength={60} placeholder="Ej. Distribuidora del Sur" value={supplier} onChange={(e) => setSupplier(e.target.value)} autoFocus />
+          <div className="field"><label>Proveedor (opcional)</label>
+            <input maxLength={60} placeholder="Ej. Distribuidora del Sur" value={edit.supplier} onChange={(e) => setEdit({ ...edit, supplier: e.target.value })} autoFocus />
           </div>
           <div className="modal-actions">
-            <button className="button secondary" onClick={() => setEditing(null)}>Cancelar</button>
-            <button className="button primary" onClick={save}>Guardar</button>
+            <button className="button secondary" onClick={() => setEdit(null)}>Cancelar</button>
+            <button className="button primary" onClick={saveEdit}>Guardar</button>
           </div>
         </Modal>
       )}
