@@ -76,10 +76,10 @@ export function createSync(
       products,
       sales,
       categories: s.categories || [],
-      notes: s.notes || '',
-      invLog: s.invLog || [],
       updatedBy: cid(),
     };
+    if (typeof s.notes === 'string' && s.notes) payload.notes = s.notes;
+    if (s.invLog && s.invLog.length) payload.invLog = s.invLog;
     if (!s.createdBy || s.createdBy === cid()) { payload.name = s.name; payload.image = s.image; }
     try {
       await setDoc(doc(collection(DB, 'stores'), s.syncKey), payload, { merge: true });
@@ -164,7 +164,7 @@ export function applyRemote(getState: () => AppState, mutate: (fn: (d: AppState)
       (remote.categories as string[]).forEach((c) => { const v = (c || '').trim(); if (v && !cur.includes(v)) cur.push(v); });
       st.categories = cur;
     }
-    if (typeof remote.notes === 'string' && remote.notes !== undefined) {
+    if (typeof remote.notes === 'string' && remote.notes.length) {
       st.notes = remote.notes;
     }
     st.invLog = mergeInvLog(st.invLog, toInvLogArr(remote.invLog));
