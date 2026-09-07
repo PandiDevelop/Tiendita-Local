@@ -1,13 +1,11 @@
 // Ajustes de navegación para continuar editando un registro histórico.
 function shop(s) {
-  const daily = state.editingSaleId
-    ? s.sales.find(x => x.id === state.editingSaleId)
-    : s.sales.find(x => x.date === today() && !x.closed);
+  if (state.tab === 'ventas') state.tab = 'inicio';
   let me; try { me = syncClientId; } catch (e) { me = 'local'; }
   const owner = !s.syncKey || !s.createdBy || s.createdBy === me;
-  const tabs = [['inicio','Resumen'],['productos','Productos'],['inventario','Inventario'],['ventas','Ventas del día'],['historial','Historial']];
+  const tabs = [['inicio','Inicio'],['productos','Productos'],['inventario','Inventario'],['historial','Historial']];
   if (owner) tabs.push(['empleados','Empleados']);
-  return `<div class="mobile-head"><button class="menu-btn" onclick="toggleMenu()" aria-label="Abrir menú">☰</button><button class="new-store" onclick="storeModal()">＋ Nueva tienda</button></div><div class="topline"><div class="store-title">${img(s.image,'store-logo')}<div><div class="eyebrow">Tu tienda</div><h1>${esc(s.name)}</h1></div></div><button class="button secondary" onclick="storeModal('${s.id}')">⚙ Editar tienda</button></div><nav class="tabs">${tabs.map(([id,l])=>`<button class="tab ${state.tab===id?'active':''}" onclick="setTab('${id}')">${l}</button>`).join('')}</nav>${state.tab==='inicio'?dashboard(s,daily):state.tab==='productos'?products(s):state.tab==='inventario'?inventoryView(s):state.tab==='ventas'?sales(s,daily):state.tab==='empleados'?employeesView(s):history(s)}`;
+  return `<div class="mobile-head"><button class="menu-btn" onclick="toggleMenu()" aria-label="Abrir menú">☰</button><button class="new-store" onclick="storeModal()">＋ Nueva tienda</button></div><div class="topline"><div class="store-title">${img(s.image,'store-logo')}<div><div class="eyebrow">Tu tienda</div><h1>${esc(s.name)}</h1></div></div><button class="button secondary" onclick="storeModal('${s.id}')">⚙ Editar tienda</button></div><nav class="tabs">${tabs.map(([id,l])=>`<button class="tab ${state.tab===id?'active':''}" onclick="setTab('${id}')">${l}</button>`).join('')}</nav>${state.tab==='inicio'?dashboard(s):state.tab==='productos'?products(s):state.tab==='inventario'?inventoryView(s):state.tab==='empleados'?employeesView(s):history(s)}`;
 }
 function setTab(tab) { if (tab !== 'ventas') state.editingSaleId = null; state.tab = tab; save(); render(); }
 function startDay() {
@@ -72,11 +70,41 @@ function dashboard(s) {
   records.forEach(x=>x.items.forEach(i=>{if(!i.qty)return;const p=s.products.find(p=>p.id===i.productId),pr=p?.promos.find(z=>z.id===i.promotionId),name=pr?.label||p?.name||'Producto eliminado',key=i.productId+'-'+(i.promotionId||'');let line=lines.find(z=>z.key===key);if(!line){line={key,name,qty:0,value:0};lines.push(line)}line.qty+=i.qty;line.value+=priceFor(i,s)*i.qty}));
   lines.sort((a,b)=>b.value-a.value);
   const mm = state.summaryMonth || monthOf(selected);
-  return `<div class="grid"><div class="card stat"><div class="muted">Productos registrados</div><div class="value">${s.products.length}</div><div class="small">En tu catálogo</div></div><div class="card stat"><div class="muted">Unidades vendidas</div><div class="value">${units}</div><div class="small">Del ${formatDate(selected)}</div></div><div class="card stat accent"><div class="muted">Total producido</div><div class="value">${money(revenue)}</div><div class="small">Del ${formatDate(selected)}</div></div></div><div class="panel"><div class="panel-head"><div><h2>Resumen por día</h2><p class="muted">Consulta hasta cinco días por página.</p></div><button class="button primary" onclick="setTab('ventas')">Registrar ventas</button></div>${dates.length?`<div class="day-tabs">${state.summaryPage>0?`<button class="day-nav" onclick="summaryPage(-1)">← Más recientes</button>`:''}${shown.map(d=>`<button class="day-tab ${d===selected?'active':''}" onclick="selectSummaryDate('${d}')">${formatDate(d)}</button>`).join('')}${(state.summaryPage||0)<pages-1?`<button class="day-nav" onclick="summaryPage(1)">Anteriores →</button>`:''}</div><table><thead><tr><th>Producto o promoción</th><th>Unidades</th><th>Producido</th></tr></thead><tbody>${lines.length?lines.map(x=>`<tr><td class="product-name">${esc(x.name)}</td><td>${x.qty}</td><td><b>${money(x.value)}</b></td></tr>`).join(''):`<tr><td colspan="3" class="muted">No se registraron ventas este día.</td></tr>`}</tbody></table>`:`<div class="notice">Cuando registres ventas, aquí verás el detalle diario.</div>`}</div>${monthPanel(s, mm)}`;
+  return `<div class="panel register-cta"><div class="panel-head"><div><h2>Registrar una venta</h2><p class="muted">Cada venta se guarda con fecha, hora y el empleado que la registra.</p></div><button class="button primary" onclick="saleModal()">＋ Registrar venta</button></div></div><div class="grid"><div class="card stat"><div class="muted">Productos registrados</div><div class="value">${s.products.length}</div><div class="small">En tu catálogo</div></div><div class="card stat"><div class="muted">Unidades vendidas</div><div class="value">${units}</div><div class="small">Del ${formatDate(selected)}</div></div><div class="card stat accent"><div class="muted">Total producido</div><div class="value">${money(revenue)}</div><div class="small">Del ${formatDate(selected)}</div></div></div><div class="panel"><div class="panel-head"><div><h2>Resumen por día</h2><p class="muted">Consulta hasta cinco días por página.</p></div><button class="button primary" onclick="saleModal()">＋ Registrar venta</button></div>${dates.length?`<div class="day-tabs">${state.summaryPage>0?`<button class="day-nav" onclick="summaryPage(-1)">← Más recientes</button>`:''}${shown.map(d=>`<button class="day-tab ${d===selected?'active':''}" onclick="selectSummaryDate('${d}')">${formatDate(d)}</button>`).join('')}${(state.summaryPage||0)<pages-1?`<button class="day-nav" onclick="summaryPage(1)">Anteriores →</button>`:''}</div><table><thead><tr><th>Producto o promoción</th><th>Unidades</th><th>Producido</th></tr></thead><tbody>${lines.length?lines.map(x=>`<tr><td class="product-name">${esc(x.name)}</td><td>${x.qty}</td><td><b>${money(x.value)}</b></td></tr>`).join(''):`<tr><td colspan="3" class="muted">No se registraron ventas este día.</td></tr>`}</tbody></table>`:`<div class="notice">Cuando registres ventas, aquí verás el detalle diario.</div>`}</div>${monthPanel(s, mm)}`;
 }
 function history(s) {
-  const closed=s.sales.filter(x=>x.closed).sort((a,b)=>b.date.localeCompare(a.date));
-  return `<div class="panel"><div class="panel-head"><div><h2>Historial de ventas</h2><p class="muted">Edita un día para añadir productos o promociones que olvidaste.</p></div></div>${closed.length?closed.map(x=>`<div class="history-row"><div><div class="date">${formatDate(x.date)} <span class="tag">Cerrado</span></div><div class="muted">${x.items.reduce((a,i)=>a+i.qty,0)} unidades · <span class="record-total">Total producido: ${money(total(x,s))}</span></div></div><div class="actions"><button class="button secondary" onclick="editSale('${x.id}')">Editar</button><button class="icon-btn" title="Exportar este día" onclick="exportExcel('${x.id}')">⇩</button><button class="icon-btn delete-record" title="Borrar registro" onclick="deleteSale('${x.id}')">×</button></div></div>`).join(''):`<div class="empty"><div class="emoji">📅</div><b>Aún no hay días finalizados</b><p>Al cerrar un día, quedará guardado aquí.</p></div>`}</div>`;
+  const sales=[...s.sales].sort((a,b)=>(b.date||'').localeCompare(a.date||'')||(b.time||'').localeCompare(a.time||''));
+  const groups={};
+  sales.forEach(x=>{const d=x.date||today();(groups[d]=groups[d]||[]).push(x)});
+  const dates=Object.keys(groups).sort((a,b)=>b.localeCompare(a));
+  const head=`<div class="panel-head"><div><h2>Historial de ventas</h2><p class="muted">Cada venta se guarda con fecha, hora y el empleado que la registró. Toca "Detalles" para ver los productos.</p></div><button class="button secondary" onclick="exportExcel()">⇩ Exportar a Excel</button></div>`;
+  if(!dates.length)return `<div class="panel">${head}<div class="empty"><div class="emoji">📅</div><b>Aún no hay ventas registradas</b><p>Registra tu primera venta desde la pestaña Inicio.</p></div></div>`;
+  return `<div class="panel">${head}${dates.map(d=>{
+    const list=groups[d];
+    const dayUnits=list.reduce((a,x)=>a+saleUnits(x),0);
+    const dayMoney=list.reduce((a,x)=>a+total(x,s),0);
+    return `<div class="history-day"><div class="history-day-title"><b>${formatDate(d)}</b><span class="muted">${list.length} venta${list.length===1?'':'s'} · ${dayUnits} unidades · ${money(dayMoney)}</span></div><table class="history-table"><thead><tr><th>Fecha</th><th>Hora</th><th>Productos</th><th>Precio</th><th>Empleado</th><th></th></tr></thead><tbody>${list.map(x=>{
+      const u=saleUnits(x),t=total(x,s);
+      return `<tr><td>${shortDate(x.date)}</td><td>${esc(x.time||'—')}</td><td>${u}</td><td><b>${money(t)}</b></td><td>${esc(x.employee||'—')}</td><td><button class="button secondary sale-details-btn" title="Ver detalles de la venta" onclick="toggleSale(this)">Detalles <span class="sale-caret">▾</span></button></td></tr><tr class="sale-detail-row" style="display:none"><td colspan="6"><div class="sale-detail">${saleDetail(x,s)}</div></td></tr>`;
+    }).join('')}</tbody></table></div>`;
+  }).join('')}</div>`;
+}
+function saleUnits(x){return x.items.reduce((a,i)=>a+(i.qty||0),0)}
+function shortDate(d){return d?new Intl.DateTimeFormat('es-CO',{day:'2-digit',month:'2-digit',year:'2-digit'}).format(new Date(d+'T12:00:00')):'—'}
+function saleDetail(x,s){
+  const rows=x.items.filter(i=>i.qty>0).map(i=>{
+    const p=s.products.find(p=>p.id===i.productId),pr=p?.promos.find(z=>z.id===i.promotionId);
+    const name=pr?pr.label+' · '+p.name:(p?p.name:'Producto eliminado');
+    return `<div class="sale-detail-line"><span>${esc(name)} <b>× ${i.qty}</b></span><b class="sale-detail-cost">${money(priceFor(i,s)*i.qty)}</b></div>`;
+  });
+  return rows.length?`<div class="sale-detail-title">Detalles de la venta</div>${rows.join('')}`:'<p class="muted" style="margin:0">Sin productos en esta venta.</p>';
+}
+function toggleSale(btn){
+  const tr=btn.closest('tr'),next=tr&&tr.nextElementSibling;
+  if(!next||!next.classList.contains('sale-detail-row'))return;
+  const open=next.style.display!=='none';
+  next.style.display=open?'none':'table-row';
+  btn.classList.toggle('open',!open);
 }
 function deleteSale(id) { if(!confirm('¿Borrar este registro de ventas? Esta acción no se puede deshacer.'))return; const s=store();s.sales=s.sales.filter(x=>x.id!==id);if(state.editingSaleId===id)state.editingSaleId=null;save();render();toast('Registro eliminado.'); }
 
@@ -108,30 +136,22 @@ function invAdd(productId, n) {
 // Cada +/− en Ventas del día queda atribuido a quien lo tocó (item.who). Cada
 // empleado trae un desplegable (▾) que muestra QUÉ vendió, separado por fechas.
 function employeesView(s) {
-  let me; try { me = syncClientId; } catch (e) { me = ''; }
-  const sm = s.members || {};
-  const nameOf = uid => (sm[uid] && sm[uid].name) || (uid === me ? (() => { try { return syncName(); } catch (e) { return 'Trabajador'; } })() : 'Trabajador');
   const acc = {};
-  s.sales.forEach(x => x.items.forEach(i => {
-    if (!i.who) return;
-    Object.keys(i.who).forEach(uid => {
-      const q = i.who[uid]; if (!q) return;
-      const p = s.products.find(p => p.id === i.productId);
-      const pr = p && p.promos.find(z => z.id === i.promotionId);
-      const val = priceFor(i, s) * q;
-      const a = acc[uid] || (acc[uid] = { units: 0, money: 0, days: new Set(), detail: {} });
-      a.units += q; a.money += val; a.days.add(x.date);
+  s.sales.forEach(x => {
+    const emp = (x.employee || '').trim() || 'Trabajador';
+    const a = acc[emp] || (acc[emp] = { units: 0, money: 0, days: new Set(), detail: {} });
+    x.items.forEach(i => {
+      if (!i.qty) return;
+      const val = priceFor(i, s) * i.qty;
+      a.units += i.qty; a.money += val; a.days.add(x.date);
       const d = a.detail[x.date] || (a.detail[x.date] = { units: 0, money: 0, rows: {} });
-      d.units += q; d.money += val;
+      d.units += i.qty; d.money += val;
       const key = i.productId + '|' + (i.promotionId || '');
-      const r = d.rows[key] || (d.rows[key] = { name: pr ? pr.label + ' · ' + p.name : (p ? p.name : 'Producto eliminado'), qty: 0, money: 0 });
-      r.qty += q; r.money += val;
+      const r = d.rows[key] || (d.rows[key] = { name: itemLabel(i, s), qty: 0, money: 0 });
+      r.qty += i.qty; r.money += val;
     });
-  }));
-  const rows = [];
-  Object.keys(sm).forEach(uid => rows.push({ uid, name: nameOf(uid), role: s.createdBy === uid ? 'Creador' : 'Trabajador', a: acc[uid] || null }));
-  Object.keys(acc).forEach(uid => { if (!rows.find(r => r.uid === uid)) rows.push({ uid, name: nameOf(uid), role: 'Trabajador', a: acc[uid] }); });
-  rows.sort((x, y) => (y.a ? y.a.money : 0) - (x.a ? x.a.money : 0)).sort((x, y) => (y.role === 'Creador' ? 1 : 0) - (x.role === 'Creador' ? 1 : 0));
+  });
+  const rows = Object.keys(acc).map(emp => ({ name: emp, a: acc[emp] })).sort((x, y) => y.a.money - x.a.money);
   const detail = a => {
     if (!a) return '<p class="muted" style="margin:0">Todavía no registra ventas.</p>';
     return Object.keys(a.detail).sort((x, y) => y.localeCompare(x)).map(dt => {
@@ -140,9 +160,9 @@ function employeesView(s) {
     }).join('');
   };
   const body = rows.length
-    ? `<table><thead><tr><th>Empleado</th><th>Unidades vendidas</th><th>Producido</th><th>Días con ventas</th><th></th></tr></thead><tbody>${rows.map(r => `<tr><td class="product-name">${esc(r.name)}${r.role === 'Creador' ? ' <span class="tag">Creador</span>' : ''}</td><td>${r.a ? r.a.units : 0}</td><td><b>${money(r.a ? r.a.money : 0)}</b></td><td>${r.a ? r.a.days.size : 0}</td><td><button class="icon-btn emp-toggle" ${r.a ? '' : 'disabled'} title="${r.a ? 'Ver qué vendió' : 'Sin ventas'}" onclick="toggleEmp(this)">▾</button></td></tr><tr class="emp-detail-row" style="display:none"><td colspan="5"><div class="emp-detail">${detail(r.a)}</div></td></tr>`).join('')}</tbody></table>`
-    : `<div class="empty"><div class="emoji">👥</div><b>Aún no hay empleados</b><p>Cuando alguien se una con tu código y toque + en Ventas del día, aquí verás lo que registró.</p></div>`;
-  return `<div class="panel"><div class="panel-head"><div><h2>Registro de empleados</h2><p class="muted">Unidades y producido que cada quien registró al tocar + en Ventas del día. Toca ▾ para ver el detalle por fecha.</p></div></div>${body}</div>`;
+    ? `<table><thead><tr><th>Empleado</th><th>Unidades vendidas</th><th>Producido</th><th>Días con ventas</th><th></th></tr></thead><tbody>${rows.map(r => `<tr><td class="product-name">${esc(r.name)}</td><td>${r.a.units}</td><td><b>${money(r.a.money)}</b></td><td>${r.a.days.size}</td><td><button class="icon-btn emp-toggle" title="Ver qué vendió" onclick="toggleEmp(this)">▾</button></td></tr><tr class="emp-detail-row" style="display:none"><td colspan="5"><div class="emp-detail">${detail(r.a)}</div></td></tr>`).join('')}</tbody></table>`
+    : `<div class="empty"><div class="emoji">👥</div><b>Aún no hay ventas registradas</b><p>Cuando alguien registre una venta con su nombre, aquí verás lo que produjo.</p></div>`;
+  return `<div class="panel"><div class="panel-head"><div><h2>Registro de empleados</h2><p class="muted">Unidades y producido de cada empleado según el nombre con el que registró sus ventas. Toca ▾ para ver el detalle por fecha.</p></div></div>${body}</div>`;
 }
 function toggleEmp(btn) {
   const tr = btn.closest('tr');
@@ -152,5 +172,61 @@ function toggleEmp(btn) {
   next.style.display = open ? 'none' : 'table-row';
   btn.classList.toggle('open', !open);
 }
-function setTab(tab) { if(tab!=='ventas')state.editingSaleId=null; if(tab==='inicio'){state.summaryPage=0;state.summaryDate=null;state.summaryMonth=null;} state.tab=tab;save();render(); }
+function setTab(tab) { if(tab==='inicio'){state.summaryPage=0;state.summaryDate=null;state.summaryMonth=null;} state.tab=tab;save();render(); }
+function itemLabel(i, s) {
+  const p = s.products.find(p => p.id === i.productId);
+  const pr = p && p.promos.find(z => z.id === i.promotionId);
+  return pr ? pr.label + ' · ' + p.name : (p ? p.name : 'Producto eliminado');
+}
+function currentName() { try { return syncName(); } catch (e) { return 'Trabajador'; } }
+function saleModal() {
+  const s = store();
+  if (!s.products.length) { toast('Primero agrega productos al catálogo.'); return; }
+  modal(`<h2>Registrar venta</h2><div class="field"><label>Empleado que registra</label><input id="sale-employee" maxlength="40" placeholder="Tu nombre" value="${esc(currentName())}"></div><div class="field"><label>Elige un producto</label><select id="sale-product" onchange="addSaleItem(this)"><option value="">Selecciona un producto…</option>${s.products.map(p=>`<option value="${p.id}">${esc(p.name)} — ${money(p.price)}</option>`).join('')}</select></div><div class="field"><label>Productos de esta venta</label><div id="sale-lines"><p class="muted" style="margin:0">Selecciona un producto arriba para añadirlo, luego elige la cantidad.</p></div></div><div class="modal-actions"><button class="button secondary" onclick="closeModal()">Cancelar</button><button class="button primary" onclick="registerSale()">Registrar venta</button></div>`);
+}
+function addSaleItem(sel) {
+  const s = store(), pid = sel.value;
+  if (!pid) return;
+  let dup = false;
+  document.querySelectorAll('.sale-line').forEach(l => { if (l.dataset.pid === pid) dup = true; });
+  if (dup) { toast('Ese producto ya está en la venta.'); sel.value = ''; return; }
+  const p = s.products.find(x => x.id === pid);
+  let q = '';
+  for (let n = 1; n <= 99; n++) q += `<option value="${n}">${n}</option>`;
+  sel.value = '';
+  const hint = document.querySelector('#sale-lines .muted');
+  if (hint) hint.remove();
+  $('#sale-lines').insertAdjacentHTML('beforeend', `<div class="sale-line" data-pid="${pid}"><span class="sale-line-name">${esc(p.name)}</span><select class="sale-qty">${q}</select><span class="sale-line-price">${money(p.price)}</span><button class="icon-btn" type="button" title="Quitar" onclick="this.parentElement.remove()">×</button></div>`);
+}
+function registerSale() {
+  const s = store();
+  const emp = ($('#sale-employee').value.trim() || currentName()).trim() || 'Trabajador';
+  const items = [];
+  document.querySelectorAll('.sale-line').forEach(l => {
+    const pid = l.dataset.pid, qty = +l.querySelector('.sale-qty').value;
+    if (pid && qty > 0) items.push({ productId: pid, promotionId: null, qty });
+  });
+  if (!items.length) return toast('Añade al menos un producto con cantidad.');
+  const now = new Date();
+  s.sales.push({ id: crypto.randomUUID(), date: today(), time: now.toTimeString().slice(0, 5), employee: emp, items });
+  save(); closeModal(); render(); toast('Venta registrada.');
+}
+function exportExcel() {
+  const s = store(), sales = s.sales;
+  if (!sales.length) { toast('No hay ventas para exportar.'); return; }
+  const rows = [['Tienda', 'Fecha', 'Hora', 'Producto', 'Ítem', 'Precio', 'Cantidad vendida', 'Total', 'Empleado']];
+  sales.forEach(x => x.items.forEach(i => {
+    const p = s.products.find(p => p.id === i.productId), pr = p && p.promos.find(z => z.id === i.promotionId);
+    const name = pr ? pr.label : (p ? p.name : 'Producto eliminado'), parent = pr ? p.name : 'Producto';
+    rows.push([s.name, x.date, x.time || '', parent, name, priceFor(i, s), i.qty, priceFor(i, s) * i.qty, x.employee || '']);
+  }));
+  const csv = '\ufeff' + rows.map(r => r.map(v => '"' + String(v == null ? '' : v).replace(/"/g, '""') + '"').join(';')).join('\r\n');
+  const fname = 'ventas-' + s.name.toLowerCase().replace(/[^a-z0-9]+/gi, '-') + '-' + today() + '.csv';
+  const url = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8;' }));
+  const a = document.createElement('a');
+  a.href = url; a.download = fname; a.style.display = 'none';
+  document.body.appendChild(a); a.click();
+  setTimeout(() => { if (a.parentNode) a.parentNode.removeChild(a); URL.revokeObjectURL(url); }, 1000);
+  toast('Archivo listo para abrir en Excel.');
+}
 render();
