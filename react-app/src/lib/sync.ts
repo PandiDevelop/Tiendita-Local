@@ -89,7 +89,7 @@ export function createSync(
 
   async function push(storeId: string) {
     const s = getState().stores.find((x) => x.id === storeId);
-    if (!s || !s.syncKey || !DB) return;
+    if (!s || !s.syncKey || !syncReady() || !DB) return;
     const f = fp(storeId);
     if (lastPush.get(storeId) === f) return;
     lastPush.set(storeId, f);
@@ -117,14 +117,14 @@ export function createSync(
 
   function schedule(storeId: string) {
     const s = getState().stores.find((x) => x.id === storeId);
-    if (!s || !s.syncKey || !DB) return;
+    if (!s || !s.syncKey || !syncReady() || !DB) return;
     const t = timers.get(storeId);
     if (t) clearTimeout(t);
     timers.set(storeId, setTimeout(() => { timers.delete(storeId); push(storeId); }, 600));
   }
 
   function attach(storeId: string) {
-    if (!DB) return;
+    if (!syncReady() || !DB) return;
     const prev = subs.get(storeId);
     if (prev) { prev(); subs.delete(storeId); }
     const s = getState().stores.find((x) => x.id === storeId);
@@ -153,7 +153,7 @@ export function createSync(
   // convertimos a objeto keyed una sola vez para que los pushes no fallen.
   function repairDoc(storeId: string, d: Record<string, unknown>) {
     const s = getState().stores.find((x) => x.id === storeId);
-    if (!s || !s.syncKey || !DB) return;
+    if (!s || !s.syncKey || !syncReady() || !DB) return;
     const noteArr = d.noteLog;
     const invArr = d.invLog;
     const patch: Record<string, unknown> = {};
