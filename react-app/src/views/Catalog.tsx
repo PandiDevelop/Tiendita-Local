@@ -1,12 +1,39 @@
+import { useState } from 'react';
 import { useStore } from '../store';
-import { money, esc, inventorySold, DEFAULT_PRODUCT_IMAGE } from '../lib/core';
-import { Image } from '../ui';
+import { money, esc, inventorySold, adoptInvLog, DEFAULT_PRODUCT_IMAGE } from '../lib/core';
+import { Image, Modal } from '../ui';
+import type { Product } from '../types';
 
 export function Catalog() {
-  const { store, state, replace, setModal, setModalArg } = useStore();
+  const { store, state, replace, setModal, setModalArg, toast } = useStore();
   const s = store!;
   const sold = inventorySold(s);
   const inv = s.inventory || {};
+  const [edit, setEdit] = useState<{ p: Product; qty: number } | null>(null);
+
+  function cur(p: Product): number {
+    return Math.round(inv[p.id] || 0);
+  }
+  function bump(p: Product, delta: number) {
+    replace((d) => {
+      const st = d.stores.find((x) => x.id === s.id)!;
+      adoptInvLog(st, p.id, delta, '');
+    });
+  }
+  function saveEdit() {
+    if (!edit) return;
+    const q = Math.round(edit.qty);
+    if (!Number.isFinite(q) || q < 0) return toast('Escribe una cantidad válida.');
+    const delta = q - cur(edit.p);
+    if (delta !== 0) {
+      replace((d) => {
+        const st = d.stores.find((x) => x.id === s.id)!;
+        adoptInvLog(st, edit.p.id, delta, '');
+      });
+    }
+    toast('Cantidad actualizada.');
+    setEdit(null);
+  }
 
   const storeCats = () => {
     const cats: string[] = [];
@@ -69,7 +96,14 @@ export function Catalog() {
                           <td className="cat-bar"><div className="product-cell"><div className="product-name">{esc(p.name)}</div><Image src={p.image || DEFAULT_PRODUCT_IMAGE} cls="product-image-cell" /></div></td>
                           <td>{money(p.price)}</td><td>{avail}</td>
                           <td>{p.promos.length ? <div className="promo-stack">{p.promos.map((x) => <span className="promotion" key={x.id}>{esc(x.label)} · {money(x.price)}</span>)}</div> : <span className="muted">—</span>}</td>
-                          <td><div className="actions"><button className="icon-btn" onClick={() => { setModalArg(p.id); setModal('editProduct'); }}>✎</button></div></td>
+                          <td><div className="actions">
+                          <span className="cat-qty">
+                            <button className="qty-btn" title="Restar 1" onClick={() => bump(p, -1)}>−</button>
+                            <button className="icon-btn" title="Editar cantidad exacta" onClick={() => setEdit({ p, qty: cur(p) })}>✎</button>
+                            <button className="qty-btn" title="Sumar 1" onClick={() => bump(p, 1)}>+</button>
+                          </span>
+                          <button className="icon-btn" onClick={() => { setModalArg(p.id); setModal('editProduct'); }}>⚙</button>
+                        </div></td>
                         </tr>
                       );
                     })}
@@ -80,6 +114,27 @@ export function Catalog() {
           </div>
         );
       }) : <div className="empty"><div className="emoji">📦</div><b>Tu catálogo está vacío</b><p>Agrega el primer producto para empezar.</p></div>}
+
+      {edit && (
+        <Modal onClose={() => setEdit(null)}>
+          <h2>Editar existencias</h2>
+          <div className="field"><label>Producto</label>
+            <div className="product-name" style={{ fontWeight: 700 }}>{esc(edit.p.name)}</div>
+          </div>
+          <div className="field"><label>Cantidad que tiene el producto</label>
+            <div className="sale-builder-qty">
+              <button type="button" className="qty-btn" onClick={() => setEdit({ ...edit, qty: Math.max(0, edit.qty - 1) })}>−</button>
+              <input className="qty-input" type="number" min={0} step={1} inputMode="numeric" value={edit.qty} onChange={(e) => setEdit({ ...edit, qty: Math.max(0, Number(e.target.value) || 0) })} />
+              <button type="button" className="qty-btn" onClick={() => setEdit({ ...edit, qty: edit.qty + 1 })}>+</button>
+            </div>
+            <p className="muted">Escribe el total de unidades compradas (no lo que queda tras las ventas).</p>
+          </div>
+          <div className="modal-actions">
+            <button className="button secondary" onClick={() => setEdit(null)}>Cancelar</button>
+            <button className="button primary" onClick={saveEdit}>Guardar</button>
+          </div>
+        </Modal>
+      )}
     </div>
   );
 }

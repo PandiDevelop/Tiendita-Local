@@ -138,6 +138,7 @@ export function createSync(
         return;
       }
       if (d.updatedBy !== cid()) applyRemote(storeId, d);
+      if (Array.isArray(d.noteLog) || Array.isArray(d.invLog)) repairDoc(storeId, d);
     }, (e) => console.warn('Suscripción:', e));
     subs.set(storeId, un);
   }
@@ -145,6 +146,22 @@ export function createSync(
   function detach(storeId: string) {
     const un = subs.get(storeId);
     if (un) { un(); subs.delete(storeId); }
+  }
+
+  // Firestore no deja fusionar paths de mapa (noteLog.<id>) cuando el campo es
+  // un array. Las tiendas creadas antes de este cambio tienen arrays: los
+  // convertimos a objeto keyed una sola vez para que los pushes no fallen.
+  function repairDoc(storeId: string, d: Record<string, unknown>) {
+    const s = getState().stores.find((x) => x.id === storeId);
+    if (!s || !s.syncKey || !DB) return;
+    const noteArr = d.noteLog;
+    const invArr = d.invLog;
+    const patch: Record<string, unknown> = {};
+    if (Array.isArray(noteArr)) patch.noteLog = toNoteLogArr(noteArr).reduce((o, e) => { if (e && e.id) o[e.id] = e; return o; }, {} as Record<string, unknown>);
+    if (Array.isArray(invArr)) patch.invLog = toInvLogArr(invArr).reduce((o, e) => { if (e && e.id) o[e.id] = e; return o; }, {} as Record<string, unknown>);
+    if (Object.keys(patch).length) {
+      setDoc(doc(collection(DB, 'stores'), s.syncKey), patch, { merge: true }).catch((e) => console.warn('Repair del doc:', e));
+    }
   }
 
   return { attach, detach, push, schedule };
@@ -272,9 +289,12 @@ export async function activateSync(storeId: string, pin: string, getState: () =>
       s.sales.forEach((x) => (sales[x.id] = x));
       const members: Record<string, Member> = {};
       members[syncClientId()] = { name: syncName(), role: 'owner', joinedAt: Date.now() };
+      const noteLog: Record<string, unknown> = {}, invLog: Record<string, unknown> = {};
+      (s.noteLog || []).forEach((e) => { if (e && e.id) noteLog[e.id] = e; });
+      (s.invLog || []).forEach((e) => { if (e && e.id) invLog[e.id] = e; });
       await setDoc(ref, {
         name: s.name, image: s.image, products, sales, categories: s.categories || [],
-        notes: s.notes || '', noteLog: s.noteLog || [], invLog: s.invLog || [], inventory: s.inventory || {},
+        notes: s.notes || '', noteLog, invLog, inventory: s.inventory || {},
         createdBy: syncClientId(), members, updatedBy: syncClientId(),
       }, { merge: true });
       mutate((d) => { const st = d.stores.find((x) => x.id === storeId); if (st) { st.localRole = 'owner'; st.syncKey = key; st.syncPin = pin; } });
