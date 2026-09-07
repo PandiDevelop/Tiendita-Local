@@ -58,9 +58,33 @@ export function createSync(
   const lastPush = new Map<string, string>();
   const cid = () => syncClientId();
 
+  // Fingerprint canónico: ordena llaves y arrays (por id) para que dos
+  // dispositivos con el MISMO contenido obtengan el mismo fingerprint aunque
+  // difieran en el orden local. Evita re-pusheos infinitos tras cada merge.
+  function canon(v: unknown): unknown {
+    if (Array.isArray(v)) {
+      const arr = v.map((x) => canon(x));
+      if (arr.length && arr.every((x) => x && typeof x === 'object' && typeof (x as { id?: unknown }).id === 'string')) {
+        arr.sort((a, b) => String((a as { id: string }).id).localeCompare(String((b as { id: string }).id)));
+      }
+      return arr;
+    }
+    if (v && typeof v === 'object') {
+      const out: Record<string, unknown> = {};
+      Object.keys(v as Record<string, unknown>).sort().forEach((k) => { out[k] = canon((v as Record<string, unknown>)[k]); });
+      return out;
+    }
+    return v;
+  }
+
   function fp(storeId: string): string {
     const s = getState().stores.find((x) => x.id === storeId);
-    return s ? JSON.stringify([s.name, s.image, s.products, s.sales, s.categories, s.notes, s.noteLog, s.invLog]) : '';
+    if (!s) return '';
+    return JSON.stringify(canon({
+      name: s.name, image: s.image, products: s.products, sales: s.sales,
+      categories: s.categories || [], notes: s.notes || '', noteLog: s.noteLog || [],
+      invLog: s.invLog || [], inventory: s.inventory || {},
+    }));
   }
 
   async function push(storeId: string) {
@@ -79,8 +103,12 @@ export function createSync(
       updatedBy: cid(),
     };
     if (typeof s.notes === 'string' && s.notes) payload.notes = s.notes;
-    if (s.noteLog && s.noteLog.length) payload.noteLog = s.noteLog;
-    if (s.invLog && s.invLog.length) payload.invLog = s.invLog;
+    // Firestore con merge reemplaza arrays completos, así que subimos cada
+    // entrada con path punteado (noteLog.<id>) para fusionar campo a campo y
+    // nunca pisar lo que otro dispositivo agrego.
+    (s.noteLog || []).forEach((e) => { if (e && e.id) payload['noteLog.' + e.id] = e; });
+    (s.invLog || []).forEach((e) => { if (e && e.id) payload['invLog.' + e.id] = e; });
+    payload.inventory = s.inventory || {};
     if (!s.createdBy || s.createdBy === cid()) { payload.name = s.name; payload.image = s.image; }
     try {
       await setDoc(doc(collection(DB, 'stores'), s.syncKey), payload, { merge: true });
@@ -170,6 +198,16 @@ export function applyRemote(getState: () => AppState, mutate: (fn: (d: AppState)
     }
     st.noteLog = mergeNoteLog(st.noteLog, toNoteLogArr(remote.noteLog));
     st.invLog = mergeInvLog(st.invLog, toInvLogArr(remote.invLog));
+    // El inventario viaja como mapa y se une por el mayor valor por producto
+    // (nunca pierde existencias; igual con los contadores de venta).
+    st.inventory = st.inventory || {};
+    if (remote.inventory && typeof remote.inventory === 'object') {
+      const ri = remote.inventory as Record<string, number>;
+      Object.keys(ri).forEach((pid) => {
+        const n = Math.round(Number(ri[pid]) || 0);
+        st.inventory![pid] = st.inventory![pid] == null || n > st.inventory![pid] ? n : st.inventory![pid];
+      });
+    }
     const metaOk = !remote.createdBy || (remote.updatedBy && remote.updatedBy === remote.createdBy);
     if (metaOk && remote.name && remote.name !== st.name) st.name = remote.name as string;
     if (metaOk && remote.image && remote.image !== st.image) st.image = remote.image as string;
@@ -196,7 +234,7 @@ export async function joinStore(pin: string, mutate: (fn: (d: AppState) => void)
       products: toProductsArr(r.products),
       sales: toSalesArr(r.sales),
       categories: JSON.parse(JSON.stringify((r.categories || []))),
-      inventory: {},
+      inventory: r.inventory && typeof r.inventory === 'object' ? { ...(r.inventory as Record<string, number>) } : {},
       notes: typeof r.notes === 'string' ? r.notes : '',
       noteLog: toNoteLogArr(r.noteLog),
       invLog: toInvLogArr(r.invLog),
@@ -236,7 +274,7 @@ export async function activateSync(storeId: string, pin: string, getState: () =>
       members[syncClientId()] = { name: syncName(), role: 'owner', joinedAt: Date.now() };
       await setDoc(ref, {
         name: s.name, image: s.image, products, sales, categories: s.categories || [],
-        notes: s.notes || '', noteLog: s.noteLog || [], invLog: s.invLog || [],
+        notes: s.notes || '', noteLog: s.noteLog || [], invLog: s.invLog || [], inventory: s.inventory || {},
         createdBy: syncClientId(), members, updatedBy: syncClientId(),
       }, { merge: true });
       mutate((d) => { const st = d.stores.find((x) => x.id === storeId); if (st) { st.localRole = 'owner'; st.syncKey = key; st.syncPin = pin; } });

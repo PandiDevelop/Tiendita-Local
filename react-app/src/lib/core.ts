@@ -193,16 +193,21 @@ export function inventorySold(s: Store): Record<string, number> {
   return t;
 }
 
-// Registra un cambio de inventario (delta con signo: + suma, - resta) y aplica
-// el ajuste al conteo local. Las unidades siempre son enteras. El log es
-// inmutable y se fusiona por id al sincronizar.
+export interface InvLogRow extends InventoryLogEntry {
+  total: number;
+}
+
+// Registra un cambio de inventario (delta: + suma, - resta) y aplica el ajuste
+// al conteo local. El log es inmutable y se fusiona por id al sincronizar; el
+// total por producto viaja como mapa y se une por el mayor valor.
 export function adoptInvLog(s: Store, productId: string, delta: number, supplier: string): void {
   const d = Math.round(delta);
   if (!d) return;
   s.invLog ||= [];
-  s.invLog.push({ id: uid(), productId, date: today(), time: timeNow(), qty: d, supplier: (supplier || '').trim(), by: syncClientId() });
   s.inventory = s.inventory || {};
-  s.inventory[productId] = Math.max(0, Math.round(s.inventory[productId] || 0) + d);
+  const total = Math.max(0, Math.round(s.inventory[productId] || 0) + d);
+  (s.invLog as InvLogRow[]).push({ id: uid(), productId, date: today(), time: timeNow(), qty: d, total, supplier: (supplier || '').trim(), by: syncClientId() });
+  s.inventory[productId] = total;
 }
 
 export function mergeInvLog(a: InventoryLogEntry[] | undefined, b: InventoryLogEntry[]): InventoryLogEntry[] {
