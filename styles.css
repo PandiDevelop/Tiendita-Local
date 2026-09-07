@@ -69,6 +69,12 @@ th,td{text-align:left;vertical-align:middle}
 .sale-prod-row .sale-brand{flex:1;min-width:0}
 .sale-add{background:var(--lav);color:#8f73bf;border-radius:10px;flex:0 0 auto}
 .sale-modal-head{display:flex;justify-content:space-between;align-items:center;gap:10px}
+.sale-window{display:flex;flex-direction:column;max-height:calc(100dvh - 44px)}
+.sale-scroll{overflow-y:auto;min-height:0;margin:0 -3px;padding:0 3px;scrollbar-width:thin}
+.sale-foot{display:flex;align-items:center;gap:10px;margin-top:16px;padding-top:16px;border-top:1px solid var(--line)}
+.sale-foot .button{flex:1}
+.x-close,.trash-btn{width:40px;height:40px;flex:0 0 auto;display:grid;place-items:center;background:#fff;border:1px solid var(--line);color:#8f73bf;border-radius:11px}
+.sale-modal-head .x-close{font-size:17px;font-weight:700}
 .sale-builder-line{background:#faf8fc;border:1px solid var(--line);border-radius:12px;padding:12px;display:grid;gap:10px}
 .sale-builder-head{display:flex;align-items:flex-start;gap:10px}
 .sale-brand{display:flex;align-items:center;gap:10px;flex:1;min-width:0}
