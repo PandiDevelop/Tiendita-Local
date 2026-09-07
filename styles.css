@@ -39,7 +39,16 @@ html,body,#app{max-width:100%;overflow-x:hidden}
 .sale-builder .field{margin:0}
 .sale-builder label{display:block;font-size:12px;font-weight:700;color:#7c6c96;margin-bottom:6px}
 #sale-product,.sale-promo-select{width:100%;border:1px solid #ddd8e5;background:#fff;border-radius:11px;padding:12px 14px;color:var(--ink)}
-.sale-lines{display:grid;gap:10px}
+.sale-lines{display:grid;gap:10px;margin-top:12px}
+.sale-cat-btn{width:100%;display:flex;align-items:center;justify-content:space-between;gap:8px;text-align:left}
+.sale-cat-list{display:flex;flex-direction:column;gap:7px;padding:10px;margin-top:9px;background:#fdfcf8;border:1px solid var(--line);border-radius:12px}
+.sale-cat-item{display:flex;align-items:center;justify-content:space-between;gap:8px;width:100%;padding:10px 12px;text-align:left;background:#fff;border:1px solid var(--line);border-radius:9px;color:var(--ink);font-weight:600}
+.sale-cat-item.active{background:var(--lav);border-color:var(--lilac)}
+.sale-products{display:grid;gap:8px;margin:10px 0 2px}
+.sale-prod-row{display:flex;align-items:center;gap:11px;padding:9px 10px;background:#fdfcf8;border:1px solid var(--line);border-radius:11px}
+.sale-prod-row .sale-brand{flex:1;min-width:0}
+.sale-add{background:var(--lav);color:#8f73bf;border-radius:10px;flex:0 0 auto}
+.sale-modal-head{display:flex;justify-content:space-between;align-items:center;gap:10px}
 .sale-builder-line{background:#faf8fc;border:1px solid var(--line);border-radius:12px;padding:12px;display:grid;gap:10px}
 .sale-builder-head{display:flex;align-items:flex-start;gap:10px}
 .sale-brand{display:flex;align-items:center;gap:10px;flex:1;min-width:0}

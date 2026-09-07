@@ -248,29 +248,63 @@ function saleLineHTML(p,price,qty){
 function saveDraft(){
   const s=store();if(!s)return;
   const emp=document.getElementById('sale-employee');
+  const catBtn=document.getElementById('sale-cat-btn');
+  const category=catBtn?(catBtn.dataset.cat||''):'';
   const lines=[];
   document.querySelectorAll('.sale-builder-line').forEach(l=>{
     lines.push({pid:l.dataset.pid,price:+l.dataset.price||0,qty:Math.max(0,+l.querySelector('.qty-input').value||0)});
   });
-  state.saleDraft={storeId:s.id,employee:emp?emp.value:'',lines};
+  state.saleDraft={storeId:s.id,employee:emp?emp.value:'',category,lines};
   save();
 }
 function clearDraft(){state.saleDraft=null;save();}
+function saleCatsOf(s){
+  const cats=storeCats(s);
+  if(s.products.some(p=>!((p.category||'').trim())))cats.push('Sin categoría');
+  return cats;
+}
+function catLabel(p){return (p.category||'').trim()||'Sin categoría';}
+function saleProductsHTML(s,cat){
+  const list=s.products.filter(p=>catLabel(p)===cat);
+  if(!list.length)return '<div class="notice">Sin productos en esta categoría todavía.</div>';
+  return list.map(p=>`<div class="sale-prod-row"><div class="sale-brand">${img(p.image||defaultProductImage,'product-image-sale')}<div><div class="product-name">${esc(p.name)}</div><div class="muted">${money(p.price)}</div></div></div><button type="button" class="icon-btn sale-add" title="Añadir a la venta" onclick="addSaleOf('${p.id}')">＋</button></div>`).join('');
+}
 function saleBuilderHTML(s){
   const draft=saleDraftOf(s);
+  const curCat=draft&&draft.category?draft.category:'';
+  const cats=saleCatsOf(s);
+  const catItems=cats.map(c=>`<button type="button" class="sale-cat-item${curCat===c?' active':''}" data-cat="${esc(c)}" onclick="pickSaleCat(this.dataset.cat)"><span>${esc(c)}</span><span class="muted">${s.products.filter(p=>catLabel(p)===c).length}</span></button>`).join('');
   const linesHTML=draft?draft.lines.map(l=>{const p=s.products.find(x=>x.id===l.pid);return p?saleLineHTML(p,l.price,l.qty):'';}).join(''):'';
   const draftTotal=draft?draft.lines.reduce((n,l)=>n+(+l.price||0)*(+l.qty||0),0):0;
-  return `<div class="sale-builder"><div class="field"><label>Empleado que registra</label><input id="sale-employee" maxlength="40" placeholder="Tu nombre" value="${esc(draft?draft.employee:currentName())}" oninput="saveDraft()"></div><label class="sale-pick-label">Producto</label><select id="sale-product" onchange="addSaleLine(this)"><option value="">Selecciona un producto…</option>${s.products.map(p=>`<option value="${p.id}">${esc(p.name)}</option>`).join('')}</select><div id="sale-lines" class="sale-lines">${linesHTML}</div><div class="sale-total"><span>Total de la venta</span><b id="sale-total">${money(draftTotal)}</b></div>`;
+  return `<div class="sale-builder"><div class="field"><label>Empleado que registra</label><input id="sale-employee" maxlength="40" placeholder="Tu nombre" value="${esc(draft?draft.employee:currentName())}" oninput="saveDraft()"></div><label class="sale-pick-label">Categoría</label><button type="button" class="button secondary sale-cat-btn" data-cat="${esc(curCat)}" onclick="toggleSaleCatList()"><b id="sale-cat-name">${curCat?esc(curCat):'Seleccionar…'}</b><span class="sale-caret">▾</span></button><div id="sale-cat-list" class="sale-cat-list" style="display:none">${catItems}</div><label class="sale-pick-label" id="sale-prods-label" ${curCat?'':'style="display:none"'}>${curCat?('Productos de '+esc(curCat)):''}</label><div id="sale-products" class="sale-products">${curCat?saleProductsHTML(s,curCat):''}</div><div id="sale-lines" class="sale-lines">${linesHTML}</div><div class="sale-total"><span>Total de la venta</span><b id="sale-total">${money(draftTotal)}</b></div>`;
 }
 function salePanel(s){return saleBuilderHTML(s);}
 function saleModalOpen(){
   const s=store();
   if(!s)return;
   if(!s.products.length){
-    modal(`<h2>Registrar una venta</h2><div class="empty"><div class="emoji">🧾</div><b>Aún no hay productos para vender</b><p>Agrega productos al catálogo para poder registrarlos.</p><button class="button primary" onclick="closeModal();setTab('productos')">Ir al catálogo</button></div><div class="modal-actions"><button class="button secondary" onclick="closeModal()">Cancelar</button></div>`);
+    modal(`<h2>Registrar una venta</h2><div class="empty"><div class="emoji">🧾</div><b>Aún no hay productos para vender</b><p>Agrega productos al catálogo para poder registrarlos.</p><button class="button primary" onclick="closeModal();setTab('productos')">Ir al catálogo</button></div><div class="modal-actions"><span style="flex:1"></span><button class="button primary" onclick="closeModal()">Cerrar</button></div>`);
     return;
   }
-  modal(`<h2>Registrar una venta</h2><p class="muted" style="margin:8px 0 14px">La venta en curso se mantiene aunque cierres esta ventana.</p>${saleBuilderHTML(s)}<div class="modal-actions"><button class="button secondary" onclick="closeModal()">Cancelar</button><button class="button primary" onclick="registerSale()">Guardar venta</button></div>`);
+  modal(`<div class="sale-modal-head"><h2 style="margin:0">Registrar una venta</h2><button type="button" class="icon-btn" title="Cancelar y cerrar" onclick="closeModal()">✕</button></div><p class="muted" style="margin:8px 0 14px">La venta en curso se mantiene aunque cierres esta ventana.</p>${saleBuilderHTML(s)}<div class="modal-actions"><button type="button" class="icon-btn" title="Borrar la venta en curso" onclick="deleteSaleDraft()">🗑</button><span style="flex:1"></span><button class="button primary" onclick="registerSale()">Guardar venta</button></div>`);
+}
+function toggleSaleCatList(){
+  const el=document.getElementById('sale-cat-list');
+  if(el)el.style.display=el.style.display==='none'?'block':'none';
+}
+function pickSaleCat(cat){
+  const btn=document.getElementById('sale-cat-btn');
+  if(btn)btn.dataset.cat=cat;
+  const nameEl=document.getElementById('sale-cat-name');
+  if(nameEl)nameEl.textContent=cat;
+  const list=document.getElementById('sale-cat-list');
+  if(list)list.style.display='none';
+  document.querySelectorAll('#sale-cat-list .sale-cat-item').forEach(b=>b.classList.toggle('active',(b.dataset.cat||'')===cat));
+  const prods=document.getElementById('sale-products');
+  if(prods)prods.innerHTML=saleProductsHTML(store(),cat);
+  const lab=document.getElementById('sale-prods-label');
+  if(lab){lab.style.display='';lab.textContent='Productos de '+cat;}
+  saveDraft();
 }
 function addSaleLine(sel){
   const s=store(),pid=sel.value;
@@ -280,6 +314,16 @@ function addSaleLine(sel){
   document.getElementById('sale-lines').appendChild(elFromHTML(saleLineHTML(p,p.price,0)));
   updateSaleTotal();saveDraft();
 }
+function addSaleOf(pid){
+  const s=store(),p=s.products.find(x=>x.id===pid);if(!p)return;
+  const linesEl=document.getElementById('sale-lines');
+  if(!linesEl)return;
+  linesEl.appendChild(elFromHTML(saleLineHTML(p,p.price,0)));
+  updateSaleTotal();saveDraft();
+  const q=linesEl.lastElementChild&&linesEl.lastElementChild.querySelector('.qty-input');
+  if(q)q.focus();
+}
+function deleteSaleDraft(){clearDraft();saleModalOpen();toast('Venta en curso borrada.');}
 function changeLinePrice(sel){
   const line=sel.closest('.sale-builder-line'),v=Number(sel.value);
   line.dataset.price=v;
