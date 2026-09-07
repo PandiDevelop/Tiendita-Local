@@ -69,7 +69,7 @@ function products(s){
     }).join('');
     return `<div class="cat-group"><button class="cat-head" data-cat="${esc(g.name)}" onclick="toggleCat(this.dataset.cat)"><span class="cat-caret">${open?'▾':'▸'}</span><b>${esc(g.name)}</b><span class="muted">· ${g.list.length} producto${g.list.length===1?'':'s'}</span></button><div class="cat-body" style="display:${open?'block':'none'}">${rows?`<table><thead><tr><th>Producto</th><th>Precio</th><th>Disponible</th><th>Promociones</th><th></th></tr></thead><tbody>${rows}</tbody></table>`:`<div class="notice">Sin productos en esta categoría todavía.</div>`}</div></div>`;
   }).join('');
-  return `<div class="panel"><div class="panel-head"><div><h2>Catálogo de productos</h2><p class="muted">Precios, existencias y promociones de ${esc(s.name)}, organizados por categoría.</p></div></div><div class="cat-actions"><button class="button secondary" onclick="addCategory()">＋ Añadir categoría</button><input id="cat-new" maxlength="30" placeholder="Nueva categoría…" onkeydown="if(event.key==='Enter')addCategory()"><button class="button primary" onclick="productModal()">＋ Añadir producto</button></div>${s.products.length?catBlock:`<div class="empty"><div class="emoji">📦</div><b>Tu catálogo está vacío</b><p>Agrega el primer producto para empezar.</p></div>`}</div>`;
+  return `<div class="panel"><div class="panel-head"><div><h2>Catálogo de productos</h2><p class="muted">Precios, existencias y promociones de ${esc(s.name)}, organizados por categoría.</p></div></div><div class="cat-actions"><input id="cat-new" maxlength="30" placeholder="Nueva categoría…" onkeydown="if(event.key==='Enter')addCategory()"><button class="button primary" onclick="addCategory()">＋ Añadir categoría</button><div class="cat-divider"></div><button class="button primary" onclick="productModal()">＋ Añadir producto</button></div>${s.products.length?catBlock:`<div class="empty"><div class="emoji">📦</div><b>Tu catálogo está vacío</b><p>Agrega el primer producto para empezar.</p></div>`}</div>`;
 }
 function categoryPick(sel){
   const box=document.getElementById('category-new');
@@ -128,7 +128,7 @@ function dashboard(s) {
   records.forEach(x=>x.items.forEach(i=>{if(!i.qty)return;const p=s.products.find(p=>p.id===i.productId),pr=p?.promos.find(z=>z.id===i.promotionId),name=pr?.label||p?.name||'Producto eliminado',key=i.productId+'-'+(i.promotionId||'');let line=lines.find(z=>z.key===key);if(!line){line={key,name,qty:0,value:0};lines.push(line)}line.qty+=i.qty;line.value+=priceFor(i,s)*i.qty}));
   lines.sort((a,b)=>b.value-a.value);
   const mm = state.summaryMonth || monthOf(selected);
-  return `<div class="sale-toggle-row">${state.saleOpen?`<button class="button secondary" onclick="toggleSalePanel()">✕ Cerrar registro de venta</button>`:`<button class="button primary" onclick="toggleSalePanel()">＋ Registrar venta</button>`}</div>${state.saleOpen?salePanel(s):''}<div class="grid"><div class="card stat"><div class="muted">Productos registrados</div><div class="value">${s.products.length}</div><div class="small">En tu catálogo</div></div><div class="card stat"><div class="muted">Unidades vendidas</div><div class="value">${units}</div><div class="small">Del ${formatDate(selected)}</div></div><div class="card stat accent"><div class="muted">Total producido</div><div class="value">${money(revenue)}</div><div class="small">Del ${formatDate(selected)}</div></div></div><div class="panel"><div class="panel-head"><div><h2>Resumen por día</h2><p class="muted">Consulta hasta cinco días por página.</p></div><button class="button primary" onclick="saleGo()">＋ Registrar venta</button></div>${dates.length?`<div class="day-tabs">${state.summaryPage>0?`<button class="day-nav" onclick="summaryPage(-1)">← Más recientes</button>`:''}${shown.map(d=>`<button class="day-tab ${d===selected?'active':''}" onclick="selectSummaryDate('${d}')">${formatDate(d)}</button>`).join('')}${(state.summaryPage||0)<pages-1?`<button class="day-nav" onclick="summaryPage(1)">Anteriores →</button>`:''}</div><table><thead><tr><th>Producto o promoción</th><th>Unidades</th><th>Producido</th></tr></thead><tbody>${lines.length?lines.map(x=>`<tr><td class="product-name">${esc(x.name)}</td><td>${x.qty}</td><td><b>${money(x.value)}</b></td></tr>`).join(''):`<tr><td colspan="3" class="muted">No se registraron ventas este día.</td></tr>`}</tbody></table>`:`<div class="notice">Cuando registres ventas, aquí verás el detalle diario.</div>`}</div>${monthPanel(s, mm)}`;
+  return `<div class="sale-cta-row"><button class="button primary sale-cta" onclick="saleGo()">＋ Registrar venta</button></div><div class="grid"><div class="card stat"><div class="muted">Productos registrados</div><div class="value">${s.products.length}</div><div class="small">En tu catálogo</div></div><div class="card stat"><div class="muted">Unidades vendidas</div><div class="value">${units}</div><div class="small">Del ${formatDate(selected)}</div></div><div class="card stat accent"><div class="muted">Total producido</div><div class="value">${money(revenue)}</div><div class="small">Del ${formatDate(selected)}</div></div></div><div class="panel"><div class="panel-head"><div><h2>Resumen por día</h2><p class="muted">Consulta hasta cinco días por página.</p></div></div>${dates.length?`<div class="day-tabs">${state.summaryPage>0?`<button class="day-nav" onclick="summaryPage(-1)">← Más recientes</button>`:''}${shown.map(d=>`<button class="day-tab ${d===selected?'active':''}" onclick="selectSummaryDate('${d}')">${formatDate(d)}</button>`).join('')}${(state.summaryPage||0)<pages-1?`<button class="day-nav" onclick="summaryPage(1)">Anteriores →</button>`:''}</div><table><thead><tr><th>Producto o promoción</th><th>Unidades</th><th>Producido</th></tr></thead><tbody>${lines.length?lines.map(x=>`<tr><td class="product-name">${esc(x.name)}</td><td>${x.qty}</td><td><b>${money(x.value)}</b></td></tr>`).join(''):`<tr><td colspan="3" class="muted">No se registraron ventas este día.</td></tr>`}</tbody></table>`:`<div class="notice">Cuando registres ventas, aquí verás el detalle diario.</div>`}</div>${monthPanel(s, mm)}`;
 }
 function history(s) {
   const sales=[...s.sales].sort((a,b)=>(b.date||'').localeCompare(a.date||'')||(b.time||'').localeCompare(a.time||''));
@@ -237,8 +237,7 @@ function itemLabel(i, s) {
   return pr ? pr.label + ' · ' + p.name : (p ? p.name : 'Producto eliminado');
 }
 function currentName() { try { return syncName(); } catch (e) { return 'Trabajador'; } }
-function toggleSalePanel(){state.saleOpen=!state.saleOpen;save();render();}
-function saleGo(){if(!state.saleOpen){state.saleOpen=true;save();render();return;}const e=document.getElementById('sale-panel')||document.querySelector('.register-cta');if(e){e.scrollIntoView({behavior:'smooth',block:'start'});const se=document.getElementById('sale-product');if(se)se.focus();}}
+function saleGo(){saleModalOpen();}
 function elFromHTML(html){const t=document.createElement('template');t.innerHTML=html;return t.content.firstElementChild;}
 function saleDraftOf(s){return state.saleDraft&&state.saleDraft.storeId===s.id?state.saleDraft:null;}
 function saleLineHTML(p,price,qty){
@@ -257,12 +256,21 @@ function saveDraft(){
   save();
 }
 function clearDraft(){state.saleDraft=null;save();}
-function salePanel(s){
-  if(!s.products.length)return `<div class="panel register-cta" id="sale-panel"><div class="panel-head"><div><h2>Registrar una venta</h2><p class="muted">Primero agrega productos al catálogo para poder registrarlos.</p></div><button class="button primary" onclick="setTab('productos')">Ir al catálogo</button></div></div>`;
+function saleBuilderHTML(s){
   const draft=saleDraftOf(s);
   const linesHTML=draft?draft.lines.map(l=>{const p=s.products.find(x=>x.id===l.pid);return p?saleLineHTML(p,l.price,l.qty):'';}).join(''):'';
   const draftTotal=draft?draft.lines.reduce((n,l)=>n+(+l.price||0)*(+l.qty||0),0):0;
-  return `<div class="panel register-cta" id="sale-panel"><div class="panel-head"><div><h2>Registrar una venta</h2><p class="muted">Elige un producto, anota la cantidad y guárdala. Puedes repetir el mismo producto y aplicar promociones. La venta en curso se mantiene aunque cambies de pestaña.</p></div></div><div class="sale-builder"><div class="field"><label>Empleado que registra</label><input id="sale-employee" maxlength="40" placeholder="Tu nombre" value="${esc(draft?draft.employee:currentName())}" oninput="saveDraft()"></div><label class="sale-pick-label">Producto</label><select id="sale-product" onchange="addSaleLine(this)"><option value="">Selecciona un producto…</option>${s.products.map(p=>`<option value="${p.id}">${esc(p.name)}</option>`).join('')}</select><div id="sale-lines" class="sale-lines">${linesHTML}</div><div class="sale-total"><span>Total de la venta</span><b id="sale-total">${money(draftTotal)}</b></div><button class="button primary sale-save" onclick="registerSale()">Guardar venta</button></div></div>`;
+  return `<div class="sale-builder"><div class="field"><label>Empleado que registra</label><input id="sale-employee" maxlength="40" placeholder="Tu nombre" value="${esc(draft?draft.employee:currentName())}" oninput="saveDraft()"></div><label class="sale-pick-label">Producto</label><select id="sale-product" onchange="addSaleLine(this)"><option value="">Selecciona un producto…</option>${s.products.map(p=>`<option value="${p.id}">${esc(p.name)}</option>`).join('')}</select><div id="sale-lines" class="sale-lines">${linesHTML}</div><div class="sale-total"><span>Total de la venta</span><b id="sale-total">${money(draftTotal)}</b></div>`;
+}
+function salePanel(s){return saleBuilderHTML(s);}
+function saleModalOpen(){
+  const s=store();
+  if(!s)return;
+  if(!s.products.length){
+    modal(`<h2>Registrar una venta</h2><div class="empty"><div class="emoji">🧾</div><b>Aún no hay productos para vender</b><p>Agrega productos al catálogo para poder registrarlos.</p><button class="button primary" onclick="closeModal();setTab('productos')">Ir al catálogo</button></div><div class="modal-actions"><button class="button secondary" onclick="closeModal()">Cancelar</button></div>`);
+    return;
+  }
+  modal(`<h2>Registrar una venta</h2><p class="muted" style="margin:8px 0 14px">La venta en curso se mantiene aunque cierres esta ventana.</p>${saleBuilderHTML(s)}<div class="modal-actions"><button class="button secondary" onclick="closeModal()">Cancelar</button><button class="button primary" onclick="registerSale()">Guardar venta</button></div>`);
 }
 function addSaleLine(sel){
   const s=store(),pid=sel.value;
@@ -302,7 +310,7 @@ function registerSale() {
   if (!items.length) return toast('Añade al menos un producto con cantidad mayor a cero.');
   const now = new Date();
   s.sales.push({ id: crypto.randomUUID(), date: today(), time: now.toTimeString().slice(0, 5), employee: emp, items });
-  clearDraft(); render(); toast('Venta registrada.');
+  clearDraft(); closeModal(); render(); toast('Venta registrada.');
 }
 function exportExcel() {
   const s = store(), sales = s.sales;
