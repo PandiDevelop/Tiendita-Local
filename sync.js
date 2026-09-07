@@ -123,6 +123,11 @@ function syncApply(storeId, remote) {
     }
   });
   s.sales = Array.from(sales.values());
+  if (remote.categories) {
+    const cur = s.categories || [];
+    remote.categories.forEach(c => { const v = (c || '').trim(); if (v && !cur.includes(v)) cur.push(v); });
+    s.categories = cur;
+  }
 
   // Nombre e imagen solo los cambia quien CREÓ la tienda (o documentos antiguos
   // sin creador). Un trabajador nunca reescribe la identidad de la tienda.
@@ -140,7 +145,7 @@ function syncApply(storeId, remote) {
 async function pushSync(storeId) {
   const s = state.stores.find(x => x.id === storeId);
   if (!s || !s.syncKey || !DB) return;
-  const syncFp = JSON.stringify([s.name, s.image, s.products, s.sales]);
+  const syncFp = JSON.stringify([s.name, s.image, s.products, s.sales, s.categories]);
   if (LAST_PUSH[storeId] === syncFp) return;
   LAST_PUSH[storeId] = syncFp;
   const products = {}, sales = {};
@@ -149,6 +154,7 @@ async function pushSync(storeId) {
   const payload = {
     products,
     sales,
+    categories: s.categories || [],
     updatedBy: syncClientId,
     updatedAt: firebase.firestore.FieldValue.serverTimestamp()
   };
@@ -212,6 +218,7 @@ async function activateSync(s, pin) {
         image: s.image,
         products,
         sales,
+        categories: s.categories || [],
         createdBy: syncClientId,
         members,
         updatedBy: syncClientId,
@@ -497,6 +504,7 @@ async function joinStore() {
       image: r.image || defaultStoreImage,
       products: toProductsArr(r.products),
       sales: toSalesArr(r.sales),
+      categories: JSON.parse(JSON.stringify((r.categories || []))),
       syncKey: key,
       syncPin: pin,
       createdBy: r.createdBy || null,

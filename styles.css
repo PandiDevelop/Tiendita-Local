@@ -60,3 +60,12 @@ html,body,#app{max-width:100%;overflow-x:hidden}
 .product-image-cell{width:38px;height:38px;object-fit:cover;border-radius:9px;background:var(--peach);flex:0 0 auto}
 .product-cell{display:flex;align-items:center;gap:11px;min-width:0}
 .product-image-preview{width:68px;height:68px;object-fit:cover;border-radius:12px;background:var(--peach)}
+.cat-addbar{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px}
+.cat-addbar input{flex:1;min-width:160px;border:1px solid var(--line);border-radius:11px;padding:11px 13px;background:white;color:var(--ink)}
+.cat-group{border:1px solid var(--line);border-radius:13px;margin-bottom:13px;background:white;overflow:hidden}
+.cat-head{display:flex;align-items:center;gap:9px;width:100%;padding:13px 15px;background:#faf8fc;color:var(--ink);text-align:left;font-weight:700;font-size:15px}
+.cat-head .cat-caret{color:#8f73bf;font-size:13px;transition:transform .15s}
+.cat-head .muted{font-weight:600}
+.cat-body{padding:2px 0 10px;overflow-x:auto}
+@media (min-width:761px){.cat-body table{margin:0 15px}}
+@media (max-width:760px){.cat-addbar{margin-bottom:14px}.cat-addbar input{width:100%}.cat-head{padding:12px 13px}}

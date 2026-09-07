@@ -23,10 +23,66 @@ function saveProduct(id) {
   const promos=labels.map((x,n)=>({id:x.dataset.promoId||crypto.randomUUID(),label:x.value.trim(),price:Number(prices[n].value)})).filter(x=>x.label&&Number.isFinite(x.price)&&x.price>=0);
   if(!name)return toast('Escribe el nombre del producto.');
   if(!Number.isFinite(price)||price<0)return toast('Añade un precio válido.');
+  const catSel=$('#product-category'),catRaw=catSel?catSel.value:'',cat=(catRaw==='__new__'?($('#category-name-new').value||'').trim():catRaw).trim();
+  s.categories=s.categories||[];
+  if(cat&&!s.categories.includes(cat))s.categories.push(cat);
   let pid;
-  if(id){Object.assign(s.products.find(p=>p.id===id),{name,price,image,promos});pid=id;} else {pid=crypto.randomUUID();s.products.push({id:pid,name,price,image,promos});}
+  if(id){Object.assign(s.products.find(p=>p.id===id),{name,price,image,promos,category:cat});pid=id;} else {pid=crypto.randomUUID();s.products.push({id:pid,name,price,image,promos,category:cat});}
   if(qtyRaw!==''){const q=Number(qtyRaw);if(Number.isFinite(q)&&q>=0){s.inventory=s.inventory||{};s.inventory[pid]=q;}}
   save();closeModal();render();toast('Producto guardado.');
+}
+// ---- Categorías: el catálogo se agrupa por categorías (listas desplegables) ----
+function storeCats(s){
+  const cats=[];
+  (s.categories||[]).forEach(c=>{const v=(c||'').trim();if(v&&!cats.includes(v))cats.push(v);});
+  s.products.forEach(p=>{const v=(p.category||'').trim();if(v&&!cats.includes(v))cats.push(v);});
+  return cats;
+}
+function catOpen(s,cat){return !state.openCats||!state.openCats[s.id]||state.openCats[s.id][cat]!==false;}
+function toggleCat(cat){
+  const s=store();
+  state.openCats=state.openCats||{};
+  state.openCats[s.id]=state.openCats[s.id]||{};
+  state.openCats[s.id][cat]=!catOpen(s,cat);
+  save();render();
+}
+function addCategory(){
+  const v=(document.getElementById('cat-new').value||'').trim();
+  const s=store();
+  if(!v)return toast('Escribe el nombre de la categoría.');
+  if(storeCats(s).includes(v))return toast('Esa categoría ya existe.');
+  s.categories=s.categories||[];
+  s.categories.push(v);
+  save();render();toast('Categoría añadida.');
+}
+function products(s){
+  const sold=(typeof inventorySold==='function')?inventorySold(s):{},inv=s.inventory||{};
+  const grouped={};
+  s.products.forEach(p=>{const c=(p.category||'').trim()||'Sin categoría';(grouped[c]=grouped[c]||[]).push(p);});
+  const groups=storeCats(s).map(c=>({name:c,list:grouped[c]||[]}));
+  if(grouped['Sin categoría'])groups.push({name:'Sin categoría',list:grouped['Sin categoría']});
+  const catBlock=groups.map(g=>{
+    const open=catOpen(s,g.name);
+    const rows=g.list.map(p=>{
+      const base=inv[p.id],avail=(base==null)?'—':Math.max(0,base-(sold[p.id]||0));
+      return `<tr><td><div class="product-cell">${img(p.image||defaultProductImage,'product-image-cell')}<div class="product-name">${esc(p.name)}</div></div></td><td>${money(p.price)}</td><td>${avail}</td><td>${p.promos.length?`<div class="promo-stack">${p.promos.map(x=>`<span class="promotion">${esc(x.label)} · ${money(x.price)}</span>`).join('')}</div>`:'<span class="muted">—</span>'}</td><td><div class="actions"><button class="icon-btn" onclick="productModal('${p.id}')">✎</button><button class="icon-btn" onclick="deleteProduct('${p.id}')">×</button></div></td></tr>`;
+    }).join('');
+    return `<div class="cat-group"><button class="cat-head" data-cat="${esc(g.name)}" onclick="toggleCat(this.dataset.cat)"><span class="cat-caret">${open?'▾':'▸'}</span><b>${esc(g.name)}</b><span class="muted">· ${g.list.length} producto${g.list.length===1?'':'s'}</span></button><div class="cat-body" style="display:${open?'block':'none'}">${rows?`<table><thead><tr><th>Producto</th><th>Precio</th><th>Disponible</th><th>Promociones</th><th></th></tr></thead><tbody>${rows}</tbody></table>`:`<div class="notice">Sin productos en esta categoría todavía.</div>`}</div></div>`;
+  }).join('');
+  return `<div class="panel"><div class="cat-addbar"><input id="cat-new" maxlength="30" placeholder="Nueva categoría…" onkeydown="if(event.key==='Enter')addCategory()"><button class="button secondary" onclick="addCategory()">＋ Añadir categoría</button></div><div class="panel-head"><div><h2>Catálogo de productos</h2><p class="muted">Precios, existencias y promociones de ${esc(s.name)}, organizados por categoría.</p></div><button class="button primary" onclick="productModal()">＋ Añadir producto</button></div>${s.products.length?catBlock:`<div class="empty"><div class="emoji">📦</div><b>Tu catálogo está vacío</b><p>Agrega el primer producto para empezar.</p></div>`}</div>`;
+}
+function categoryPick(sel){
+  const box=document.getElementById('category-new');
+  if(!box)return;
+  const isNew=sel.value==='__new__';
+  box.style.display=isNew?'grid':'none';
+  if(isNew){const i=box.querySelector('input');if(i){i.value='';i.focus();}}
+}
+function productModal(id){
+  let s=store(),p=s.products.find(x=>x.id===id)||{name:'',price:'',promos:[],category:''};
+  const cur=(p.category||'').trim();
+  const catOptions=`<option value="__new__">＋ Añadir categoría</option><option value="">Sin categoría</option>${storeCats(s).map(c=>`<option value="${esc(c)}" ${cur===c?'selected':''}>${esc(c)}</option>`).join('')}`;
+  modal(`<h2>${id?'Editar producto':'Añadir producto'}</h2><div class="field"><label>Categoría</label><select id="product-category" onchange="categoryPick(this)">${catOptions}</select><div id="category-new" class="field" style="display:none"><input id="category-name-new" maxlength="30" placeholder="Nombre de la nueva categoría"></div></div><div class="field"><label>Nombre del producto</label><input id="product-name" value="${esc(p.name)}" placeholder="Ej. Caja de galletas" autofocus></div><div class="field"><label>Precio del producto</label><input id="product-price" value="${p.price}" min="0" type="number" placeholder="0"></div><div class="field"><label>Imagen del producto</label><div class="image-picker">${img(p.image||defaultProductImage,'image-preview product-preview')}<div><input id="product-image" type="file" accept="image/*" onchange="previewProductImage(this)"><p class="muted">Foto o logo opcional del producto.</p></div></div><input id="product-image-data" type="hidden" value="${p.image||''}"></div><div class="field"><label>Cantidad en inventario</label><input id="product-qty" value="${(s.inventory&&s.inventory[p.id])??''}" min="0" type="number" placeholder="0"><p class="muted">Se guarda como existencias del producto y se descuenta solo con cada venta.</p></div><div class="field"><label>Promociones <span class="muted">(cada una se vende por separado)</span></label><div id="promo-list">${p.promos.map(promoInput).join('')}</div><button class="add-promo" onclick="addPromo()">＋ Agregar promoción</button></div><div class="modal-actions"><button class="button secondary" onclick="closeModal()">Cancelar</button><button class="button primary" onclick="saveProduct('${id||''}')">Guardar producto</button></div>`);
 }
 function summaryDates(s) { return [...new Set(s.sales.map(x=>x.date))].sort((a,b)=>b.localeCompare(a)); }
 function selectSummaryDate(date) { state.summaryDate=date; save(); render(); }
@@ -182,35 +238,50 @@ function itemLabel(i, s) {
 }
 function currentName() { try { return syncName(); } catch (e) { return 'Trabajador'; } }
 function saleGo(){const e=document.getElementById('sale-panel')||document.querySelector('.register-cta');if(e){e.scrollIntoView({behavior:'smooth',block:'start'});const se=document.getElementById('sale-product');if(se)se.focus();}}
+function elFromHTML(html){const t=document.createElement('template');t.innerHTML=html;return t.content.firstElementChild;}
+function saleDraftOf(s){return state.saleDraft&&state.saleDraft.storeId===s.id?state.saleDraft:null;}
+function saleLineHTML(p,price,qty){
+  const promos=(p.promos||[]).filter(x=>Number.isFinite(x.price));
+  const promoDrop=promos.length?`<div class="sale-promo"><select class="sale-promo-select" onchange="changeLinePrice(this)"><option value="${p.price}">Precio normal · ${money(p.price)}</option>${promos.map(pr=>`<option value="${pr.price}" ${String(+pr.price)===String(+price)?'selected':''}>${esc(pr.label)} · ${money(pr.price)}</option>`).join('')}</select></div>`:'';
+  return `<div class="sale-builder-line" data-pid="${p.id}" data-price="${price}"><div class="sale-builder-head"><div class="sale-brand">${img(p.image||defaultProductImage,'product-image-sale')}<div class="sale-builder-name">${esc(p.name)}</div></div><button class="icon-btn sale-del" title="Quitar" onclick="this.closest('.sale-builder-line').remove();saveDraft();updateSaleTotal()">×</button></div><div class="sale-builder-price">${money(price)} <span class="muted">c/u</span></div>${promoDrop}<div class="sale-builder-qty"><button type="button" class="qty-btn" onclick="stepQty(this,-1)">−</button><input class="qty-input" type="number" min="0" value="${qty}" inputmode="numeric" oninput="updateSaleTotal();saveDraft()"><button type="button" class="qty-btn" onclick="stepQty(this,1)">+</button></div>`;
+}
+function saveDraft(){
+  const s=store();if(!s)return;
+  const emp=document.getElementById('sale-employee');
+  const lines=[];
+  document.querySelectorAll('.sale-builder-line').forEach(l=>{
+    lines.push({pid:l.dataset.pid,price:+l.dataset.price||0,qty:Math.max(0,+l.querySelector('.qty-input').value||0)});
+  });
+  state.saleDraft={storeId:s.id,employee:emp?emp.value:'',lines};
+  save();
+}
+function clearDraft(){state.saleDraft=null;save();}
 function salePanel(s){
   if(!s.products.length)return `<div class="panel register-cta" id="sale-panel"><div class="panel-head"><div><h2>Registrar una venta</h2><p class="muted">Primero agrega productos al catálogo para poder registrarlos.</p></div><button class="button primary" onclick="setTab('productos')">Ir al catálogo</button></div></div>`;
-  return `<div class="panel register-cta" id="sale-panel"><div class="panel-head"><div><h2>Registrar una venta</h2><p class="muted">Elige un producto, anota la cantidad y guárdala. Puedes repetir el mismo producto y aplicar promociones.</p></div></div><div class="sale-builder"><div class="field"><label>Empleado que registra</label><input id="sale-employee" maxlength="40" placeholder="Tu nombre" value="${esc(currentName())}"></div><label class="sale-pick-label">Producto</label><select id="sale-product" onchange="addSaleLine(this)"><option value="">Selecciona un producto…</option>${s.products.map(p=>`<option value="${p.id}">${esc(p.name)}</option>`).join('')}</select><div id="sale-lines" class="sale-lines"></div><div class="sale-total"><span>Total de la venta</span><b id="sale-total">${money(0)}</b></div><button class="button primary sale-save" onclick="registerSale()">Guardar venta</button></div></div>`;
+  const draft=saleDraftOf(s);
+  const linesHTML=draft?draft.lines.map(l=>{const p=s.products.find(x=>x.id===l.pid);return p?saleLineHTML(p,l.price,l.qty):'';}).join(''):'';
+  const draftTotal=draft?draft.lines.reduce((n,l)=>n+(+l.price||0)*(+l.qty||0),0):0;
+  return `<div class="panel register-cta" id="sale-panel"><div class="panel-head"><div><h2>Registrar una venta</h2><p class="muted">Elige un producto, anota la cantidad y guárdala. Puedes repetir el mismo producto y aplicar promociones. La venta en curso se mantiene aunque cambies de pestaña.</p></div></div><div class="sale-builder"><div class="field"><label>Empleado que registra</label><input id="sale-employee" maxlength="40" placeholder="Tu nombre" value="${esc(draft?draft.employee:currentName())}" oninput="saveDraft()"></div><label class="sale-pick-label">Producto</label><select id="sale-product" onchange="addSaleLine(this)"><option value="">Selecciona un producto…</option>${s.products.map(p=>`<option value="${p.id}">${esc(p.name)}</option>`).join('')}</select><div id="sale-lines" class="sale-lines">${linesHTML}</div><div class="sale-total"><span>Total de la venta</span><b id="sale-total">${money(draftTotal)}</b></div><button class="button primary sale-save" onclick="registerSale()">Guardar venta</button></div></div>`;
 }
 function addSaleLine(sel){
   const s=store(),pid=sel.value;
   if(!pid)return;
   sel.value='';
   const p=s.products.find(x=>x.id===pid);if(!p)return;
-  const line=document.createElement('div');
-  line.className='sale-builder-line';
-  line.dataset.pid=pid;line.dataset.price=p.price;
-  const promos=(p.promos||[]).filter(x=>Number.isFinite(x.price));
-  const promoDrop=promos.length?`<div class="sale-promo"><select class="sale-promo-select" onchange="changeLinePrice(this)"><option value="${p.price}">Precio normal · ${money(p.price)}</option>${promos.map(pr=>`<option value="${pr.price}">${esc(pr.label)} · ${money(pr.price)}</option>`).join('')}</select></div>`:'';
-  line.innerHTML=`<div class="sale-builder-head"><div class="sale-brand">${img(p.image||defaultProductImage,'product-image-sale')}<div class="sale-builder-name">${esc(p.name)}</div></div><button class="icon-btn sale-del" title="Quitar" onclick="this.closest('.sale-builder-line').remove();updateSaleTotal()">×</button></div><div class="sale-builder-price">${money(p.price)} <span class="muted">c/u</span></div>${promoDrop}<div class="sale-builder-qty"><button type="button" class="qty-btn" onclick="stepQty(this,-1)">−</button><input class="qty-input" type="number" min="0" value="0" inputmode="numeric" oninput="updateSaleTotal()"><button type="button" class="qty-btn" onclick="stepQty(this,1)">+</button></div>`;
-  document.getElementById('sale-lines').appendChild(line);
-  updateSaleTotal();
+  document.getElementById('sale-lines').appendChild(elFromHTML(saleLineHTML(p,p.price,0)));
+  updateSaleTotal();saveDraft();
 }
 function changeLinePrice(sel){
   const line=sel.closest('.sale-builder-line'),v=Number(sel.value);
   line.dataset.price=v;
   const el=line.querySelector('.sale-builder-price');
   if(el)el.innerHTML=`${money(v)} <span class="muted">c/u</span>`;
-  updateSaleTotal();
+  updateSaleTotal();saveDraft();
 }
 function stepQty(btn,d){
   const inp=btn.parentElement.querySelector('.qty-input');
   inp.value=Math.max(0,(+inp.value||0)+d);
-  updateSaleTotal();
+  updateSaleTotal();saveDraft();
 }
 function updateSaleTotal(){
   let t=0;
@@ -230,7 +301,7 @@ function registerSale() {
   if (!items.length) return toast('Añade al menos un producto con cantidad mayor a cero.');
   const now = new Date();
   s.sales.push({ id: crypto.randomUUID(), date: today(), time: now.toTimeString().slice(0, 5), employee: emp, items });
-  save(); render(); toast('Venta registrada.');
+  clearDraft(); render(); toast('Venta registrada.');
 }
 function exportExcel() {
   const s = store(), sales = s.sales;
