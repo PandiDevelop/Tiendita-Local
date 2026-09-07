@@ -1,0 +1,98 @@
+import { createContext, useCallback, useContext, useEffect, useRef, ReactNode, useState } from 'react';
+import type { AppState, Store, Tab } from './types';
+import { loadState, saveState } from './lib/core';
+import { createSync, applyRemote, activateSync, joinStore, SyncHandle } from './lib/sync';
+
+export type ModalKind = 'none' | 'sale' | 'newProduct' | 'editProduct' | 'newStore' | 'editStore' | 'join';
+
+interface Ctx {
+  state: AppState;
+  store: Store | undefined;
+  replace: (updater: (draft: AppState) => void) => void;
+  setTab: (tab: Tab) => void;
+  modal: ModalKind;
+  setModal: (m: ModalKind) => void;
+  modalArg: string;
+  setModalArg: (a: string) => void;
+  toastMsg: string;
+  toast: (m: string) => void;
+  attach: (id: string) => void;
+  activate: (storeId: string, pin: string) => Promise<void>;
+  join: (pin: string) => Promise<void>;
+}
+
+const AppCtx = createContext<Ctx | null>(null);
+
+export function useStore(): Ctx {
+  const ctx = useContext(AppCtx);
+  if (!ctx) throw new Error('useStore must be used within AppProvider');
+  return ctx;
+}
+
+export function AppProvider({ children }: { children: ReactNode }) {
+  const [state, setState] = useState<AppState>(() => loadState());
+  const stateRef = useRef(state);
+  stateRef.current = state;
+  const [modal, setModal] = useState<ModalKind>('none');
+  const [modalArg, setModalArg] = useState('');
+  const [toastMsg, setToastMsg] = useState('');
+  const toastTimer = useRef(0);
+
+  const replace = useCallback((updater: (draft: AppState) => void) => {
+    const next = JSON.parse(JSON.stringify(stateRef.current)) as AppState;
+    updater(next);
+    stateRef.current = next;
+    saveState(next);
+    setState(next);
+  }, []);
+
+  const toast = useCallback((m: string) => {
+    setToastMsg(m);
+    clearTimeout(toastTimer.current);
+    toastTimer.current = window.setTimeout(() => setToastMsg(''), 2200);
+  }, []);
+
+  const sync = useRef<SyncHandle | null>(null);
+  if (!sync.current) {
+    sync.current = createSync(
+      () => stateRef.current,
+      (storeId, remote) => applyRemote(() => stateRef.current, replace, storeId, remote),
+      (storeId, msg) => {
+        replace((d) => {
+          d.stores = d.stores.filter((x) => x.id !== storeId);
+          if (d.activeStoreId === storeId) {
+            d.activeStoreId = d.stores.length ? d.stores[0].id : null;
+            d.tab = 'inicio';
+          }
+        });
+        toast(msg);
+      },
+    );
+  }
+
+  useEffect(() => {
+    state.stores.forEach((s) => { if (s.syncKey) sync.current!.attach(s.id); });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  useEffect(() => {
+    state.stores.forEach((s) => { if (s.syncKey) sync.current!.schedule(s.id); });
+  }, [state]);
+
+  const attach = useCallback((id: string) => { sync.current!.attach(id); }, []);
+  const activate = useCallback((storeId: string, pin: string) => activateSync(storeId, pin, () => stateRef.current, replace, attach), [replace, attach]);
+  const join = useCallback((pin: string) => joinStore(pin, replace, attach), [replace, attach]);
+
+  const active = state.stores.find((s) => s.id === state.activeStoreId) ?? state.stores[0];
+
+  const setTab = useCallback((tab: Tab) => {
+    replace((d) => {
+      if (tab === 'inicio') { d.summaryPage = 0; d.summaryDate = null; d.summaryMonth = null; }
+      d.tab = tab;
+      if (tab !== 'inicio') d.editingSaleId = null;
+    });
+  }, [replace]);
+
+  const value: Ctx = { state, store: active, replace, setTab, modal, setModal, modalArg, setModalArg, toastMsg, toast, attach, activate, join };
+  return <AppCtx.Provider value={value}>{children}</AppCtx.Provider>;
+}
