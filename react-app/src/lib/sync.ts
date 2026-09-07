@@ -1,7 +1,7 @@
 import { initializeApp, FirebaseApp } from 'firebase/app';
 import { getFirestore, Firestore, collection, doc, onSnapshot, setDoc, getDoc, deleteField } from 'firebase/firestore';
 import type { AppState, Member, Product, Sale, Store } from '../types';
-import { toProductsArr, toSalesArr, mergeItems, syncKeyOf, syncClientId, syncName, normalizeStore, DEFAULT_STORE_IMAGE, uid } from './core';
+import { toProductsArr, toSalesArr, toInvLogArr, mergeItems, mergeInvLog, syncKeyOf, syncClientId, syncName, normalizeStore, DEFAULT_STORE_IMAGE, uid } from './core';
 
 export { syncClientId, syncName, syncSetName, syncGenPin, syncKeyOf } from './core';
 
@@ -60,7 +60,7 @@ export function createSync(
 
   function fp(storeId: string): string {
     const s = getState().stores.find((x) => x.id === storeId);
-    return s ? JSON.stringify([s.name, s.image, s.products, s.sales, s.categories]) : '';
+    return s ? JSON.stringify([s.name, s.image, s.products, s.sales, s.categories, s.notes, s.invLog]) : '';
   }
 
   async function push(storeId: string) {
@@ -76,6 +76,8 @@ export function createSync(
       products,
       sales,
       categories: s.categories || [],
+      notes: s.notes || '',
+      invLog: s.invLog || [],
       updatedBy: cid(),
     };
     if (!s.createdBy || s.createdBy === cid()) { payload.name = s.name; payload.image = s.image; }
@@ -162,6 +164,10 @@ export function applyRemote(getState: () => AppState, mutate: (fn: (d: AppState)
       (remote.categories as string[]).forEach((c) => { const v = (c || '').trim(); if (v && !cur.includes(v)) cur.push(v); });
       st.categories = cur;
     }
+    if (typeof remote.notes === 'string' && remote.notes !== undefined) {
+      st.notes = remote.notes;
+    }
+    st.invLog = mergeInvLog(st.invLog, toInvLogArr(remote.invLog));
     const metaOk = !remote.createdBy || (remote.updatedBy && remote.updatedBy === remote.createdBy);
     if (metaOk && remote.name && remote.name !== st.name) st.name = remote.name as string;
     if (metaOk && remote.image && remote.image !== st.image) st.image = remote.image as string;
@@ -189,6 +195,8 @@ export async function joinStore(pin: string, mutate: (fn: (d: AppState) => void)
       sales: toSalesArr(r.sales),
       categories: JSON.parse(JSON.stringify((r.categories || []))),
       inventory: {},
+      notes: typeof r.notes === 'string' ? r.notes : '',
+      invLog: toInvLogArr(r.invLog),
       syncKey: key,
       syncPin: pin,
       createdBy: r.createdBy || null,
@@ -225,6 +233,7 @@ export async function activateSync(storeId: string, pin: string, getState: () =>
       members[syncClientId()] = { name: syncName(), role: 'owner', joinedAt: Date.now() };
       await setDoc(ref, {
         name: s.name, image: s.image, products, sales, categories: s.categories || [],
+        notes: s.notes || '', invLog: s.invLog || [],
         createdBy: syncClientId(), members, updatedBy: syncClientId(),
       }, { merge: true });
       mutate((d) => { const st = d.stores.find((x) => x.id === storeId); if (st) { st.localRole = 'owner'; st.syncKey = key; st.syncPin = pin; } });

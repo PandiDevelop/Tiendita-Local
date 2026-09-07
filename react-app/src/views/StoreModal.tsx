@@ -45,7 +45,7 @@ export function StoreModal({ editing, onClose }: { editing?: boolean; onClose: (
         if (st) { st.name = nm; st.image = image || DEFAULT_STORE_IMAGE; }
         savedId = target.id;
       } else {
-        const st = { id: uid(), name: nm, image: image || DEFAULT_STORE_IMAGE, products: [], sales: [], categories: [], inventory: {} };
+        const st = { id: uid(), name: nm, image: image || DEFAULT_STORE_IMAGE, products: [], sales: [], categories: [], inventory: {}, notes: '', invLog: [] };
         d.stores.push(st);
         d.activeStoreId = st.id;
         savedId = st.id;

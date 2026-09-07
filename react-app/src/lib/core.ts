@@ -1,8 +1,10 @@
-import type { AppState, Product, Sale, SaleDraft, SaleItem, Store } from '../types';
+import type { AppState, InventoryLogEntry, Product, Sale, SaleDraft, SaleItem, Store } from '../types';
 
 export const KEY = 'mi-tiendita-v1';
 export const CLIENT_KEY = 'mi-tiendita-client';
 export const USER_KEY = 'mi-tiendita-user';
+
+export const APP_VERSION = '1.1.0';
 
 const DEFAULT_STORE_SVG = encodeURIComponent(
   '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 160"><rect width="160" height="160" rx="34" fill="#f3eaff"/><path d="M29 67h102v61H29z" fill="#fffdf9" stroke="#9b7dcc" stroke-width="5"/><path d="M22 66 36 38h88l14 28z" fill="#ffc7b5" stroke="#9b7dcc" stroke-width="5"/><path d="M40 39h15v28H40zm32 0h16v28H72zm33 0h15v28h-15z" fill="#fffaf3"/><path d="M45 83h30v45H45z" fill="#b9e4d0" stroke="#9b7dcc" stroke-width="4"/><path d="M91 83h24v20H91z" fill="#fff0a9" stroke="#9b7dcc" stroke-width="4"/></svg>',
@@ -18,6 +20,10 @@ export const SYNC_DEFAULT_NAME = 'Trabajador';
 
 export function today(): string {
   return new Date().toISOString().slice(0, 10);
+}
+
+export function timeNow(): string {
+  return new Date().toTimeString().slice(0, 5);
 }
 
 export function money(n: number | string | null | undefined): string {
@@ -77,6 +83,8 @@ export function normalizeStore(store: Store): Store {
   store.sales ||= [];
   store.categories = store.categories || [];
   store.inventory = store.inventory || {};
+  store.notes = typeof store.notes === 'string' ? store.notes : '';
+  store.invLog = Array.isArray(store.invLog) ? store.invLog : [];
   store.products.forEach((p) => {
     const old = p.promos ?? [];
     p.promos = old.map((x) =>
@@ -182,6 +190,32 @@ export function inventorySold(s: Store): Record<string, number> {
   const t: Record<string, number> = {};
   s.sales.forEach((x) => x.items.forEach((i) => { if (i.qty) t[i.productId] = (t[i.productId] || 0) + i.qty; }));
   return t;
+}
+
+// Registra un cambio de inventario (delta con signo: + suma, - resta) y aplica
+// el ajuste al conteo local. El log es inmutable y se fusiona por id al sincronizar.
+export function adoptInvLog(s: Store, productId: string, delta: number, supplier: string): void {
+  s.invLog ||= [];
+  s.invLog.push({ id: uid(), productId, date: today(), time: timeNow(), qty: delta, supplier: (supplier || '').trim(), by: syncClientId() });
+  s.inventory = s.inventory || {};
+  s.inventory[productId] = Math.max(0, (s.inventory[productId] || 0) + delta);
+}
+
+export function mergeInvLog(a: InventoryLogEntry[] | undefined, b: InventoryLogEntry[]): InventoryLogEntry[] {
+  const map = new Map<string, InventoryLogEntry>();
+  (a || []).forEach((e) => map.set(e.id, JSON.parse(JSON.stringify(e))));
+  (b || []).forEach((e) => { if (e && e.id) map.set(e.id, JSON.parse(JSON.stringify(e))); });
+  return Array.from(map.values())
+    .sort((x, y) => (y.date || '').localeCompare(x.date || '') || (y.time || '').localeCompare(x.time || ''));
+}
+
+export function toInvLogArr(src: unknown): InventoryLogEntry[] {
+  if (Array.isArray(src)) return JSON.parse(JSON.stringify(src));
+  if (src && typeof src === 'object') {
+    return Object.keys(src as Record<string, InventoryLogEntry>)
+      .map((k) => JSON.parse(JSON.stringify((src as Record<string, InventoryLogEntry>)[k])));
+  }
+  return [];
 }
 
 export function storeCats(s: Store): string[] {

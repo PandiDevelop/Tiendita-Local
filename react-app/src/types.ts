@@ -39,6 +39,16 @@ export interface Member {
   joinedAt: number;
 }
 
+export interface InventoryLogEntry {
+  id: string;
+  productId: string;
+  date: string;
+  time: string;
+  qty: number;
+  supplier: string;
+  by?: string;
+}
+
 export interface Store {
   id: string;
   name: string;
@@ -47,6 +57,8 @@ export interface Store {
   sales: Sale[];
   categories: string[];
   inventory: Record<string, number>;
+  notes: string;
+  invLog: InventoryLogEntry[];
   syncKey?: string;
   syncPin?: string;
   createdBy?: string | null;
@@ -54,7 +66,7 @@ export interface Store {
   members?: Record<string, Member>;
 }
 
-export type Tab = 'inicio' | 'productos' | 'inventario' | 'historial' | 'empleados';
+export type Tab = 'inicio' | 'productos' | 'inventario' | 'historial' | 'notas' | 'empleados';
 
 export interface SaleDraft {
   storeId: string;

@@ -1,12 +1,13 @@
 import { useEffect, useState } from 'react';
 import { useStore } from './store';
-import { DEFAULT_STORE_IMAGE, esc } from './lib/core';
+import { APP_VERSION, DEFAULT_STORE_IMAGE, esc } from './lib/core';
 import { syncClientId } from './lib/sync';
 import { Image, Toast } from './ui';
 import { Dashboard } from './views/Dashboard';
 import { Catalog } from './views/Catalog';
 import { Inventory } from './views/Inventory';
 import { History } from './views/History';
+import { Notes } from './views/Notes';
 import { Employees } from './views/Employees';
 import { StoreModal } from './views/StoreModal';
 import { JoinModal } from './views/Join';
@@ -75,7 +76,7 @@ export function App() {
         </div>
         <button className="new-store" onClick={() => setModal('newStore')}>＋ Nueva tienda</button>
         <button className="sync-join" onClick={() => setModal('join')}>Unirme a una tienda</button>
-        <div className="side-footer">Tus datos se guardan de forma local<br />en este dispositivo.</div>
+        <div className="side-footer">Tus datos se guardan de forma local<br />en este dispositivo. v{APP_VERSION}</div>
       </div>
       <div className="menu-backdrop" onClick={() => setMenuOpen(false)}></div>
       <main className="content">
@@ -92,7 +93,7 @@ export function App() {
           <button className="button secondary" onClick={() => setModal('editStore')}>⚙ Editar tienda</button>
         </div>
         <nav className="tabs">
-          {([['inicio', 'Inicio'], ['productos', 'Catálogo'], ['inventario', 'Inventario'], ['historial', 'Historial'], ['empleados', 'Empleados']] as const)
+          {([['inicio', 'Inicio'], ['productos', 'Catálogo'], ['inventario', 'Inventario'], ['historial', 'Historial'], ['notas', 'Notas'], ['empleados', 'Empleados']] as const)
             .filter(([id]) => id !== 'empleados' || owner)
             .map(([id, l]) => (
               <button key={id} className={'tab ' + (state.tab === id ? 'active' : '')} onClick={() => setTab(id)}>{l}</button>
@@ -102,6 +103,7 @@ export function App() {
         {state.tab === 'productos' && <Catalog />}
         {state.tab === 'inventario' && <Inventory />}
         {state.tab === 'historial' && <History />}
+        {state.tab === 'notas' && <Notes />}
         {state.tab === 'empleados' && <Employees />}
       </main>
       {modals}

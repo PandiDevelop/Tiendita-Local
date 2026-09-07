@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useStore } from '../store';
-import { DEFAULT_PRODUCT_IMAGE, compressImage, storeCats, uid } from '../lib/core';
+import { DEFAULT_PRODUCT_IMAGE, compressImage, storeCats, adoptInvLog, uid } from '../lib/core';
 import { Dropdown } from '../Dropdown';
 import { Image, Modal } from '../ui';
 import type { Promo } from '../types';
@@ -46,7 +46,9 @@ export function ProductForm({ editingId, onClose }: { editingId?: string; onClos
         const q = Number(qty);
         if (Number.isFinite(q) && q >= 0) {
           st.inventory = st.inventory || {};
-          st.inventory[editingId || st.products[st.products.length - 1].id] = q;
+          const pid = editingId || st.products[st.products.length - 1].id;
+          const prev = st.inventory[pid] || 0;
+          adoptInvLog(st, pid, q - prev, 'Catálogo');
         }
       }
     });
