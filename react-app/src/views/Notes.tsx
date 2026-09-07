@@ -1,58 +1,70 @@
 import { useEffect, useRef, useState } from 'react';
 import { useStore } from '../store';
+import { addNote, esc, shortDate, syncName, syncClientId } from '../lib/core';
+import type { NoteEntry } from '../types';
 
 export function Notes() {
-  const { store, replace, toast } = useStore();
+  const { store, replace } = useStore();
   const s = store!;
-  const [text, setText] = useState(s.notes || '');
-  const [status, setStatus] = useState<'saved' | 'typing'>('saved');
+  const [text, setText] = useState('');
   const taRef = useRef<HTMLTextAreaElement | null>(null);
-  const t = useRef(0);
+  const me = syncClientId();
+  const myName = syncName();
 
-  function commit(v: string) {
-    replace((d) => { const st = d.stores.find((x) => x.id === s.id)!; st.notes = v; });
+  const notes: NoteEntry[] = (s.noteLog || []).slice();
+
+  function nameOf(e: NoteEntry): string {
+    const m = (s.members || {})[e.by || ''];
+    return (e.byName) || (m && m.name) || (e.by === me ? myName : 'Miembro');
   }
 
-  function saveNow() {
-    commit(text);
-    setStatus('saved');
-    toast('Notas guardadas y sincronizadas.');
+  function send() {
+    const t = text.trim();
+    if (!t) return;
+    replace((d) => { const st = d.stores.find((x) => x.id === s.id)!; addNote(st, t); });
+    setText('');
+    taRef.current?.focus();
   }
 
-  function onChange(v: string) {
-    setText(v);
-    setStatus('typing');
-    window.clearTimeout(t.current);
-    t.current = window.setTimeout(() => { commit(v); setStatus('saved'); }, 700);
+  function onEnter(ev: React.KeyboardEvent<HTMLTextAreaElement>) {
+    if (ev.key === 'Enter' && !ev.shiftKey) { ev.preventDefault(); send(); }
   }
 
-  // Refleja en vivo lo que llega de otro dispositivo, salvo que estés escribiendo.
   useEffect(() => {
-    const focused = document.activeElement === taRef.current;
-    if (!focused) {
-      setText((cur) => (cur === s.notes ? cur : s.notes || ''));
-      setStatus('saved');
-    }
-  }, [s.notes, s.id]);
+    const box = document.querySelector<HTMLElement>('.notes-scroll');
+    if (box) box.scrollTop = box.scrollHeight;
+  }, [notes.length, s.id]);
 
   return (
     <div className="panel">
       <div className="panel-head">
-        <div><h2>Notas del equipo</h2><p className="muted">Se guardan solas al escribir; el botón las manda al instante. Se sincronizan con las personas vinculadas a la tienda.</p></div>
-        <div className="notes-head-actions">
-          <span className={'notes-ws' + (status === 'typing' ? ' typing' : '')}>{status === 'typing' ? 'Guardando…' : 'Sincronizado'}</span>
-          <button className="button primary" onClick={saveNow}>Guardar nota</button>
-        </div>
+        <div><h2>Notas del equipo</h2><p className="muted">Escribe una nota abajo y quedará en el tablero para todos los vinculados a la tienda.</p></div>
       </div>
-      <textarea
-        ref={taRef}
-        className="notes-box"
-        rows={12}
-        placeholder="Escribe aquí lo que quieras compartir con tu equipo… (se guarda solo y se ve en todos los dispositivos)"
-        value={text}
-        onChange={(e) => onChange(e.target.value)}
-        onBlur={() => { if (text !== (s.notes || '')) commit(text); }}
-      />
+      <div className="notes-compose">
+        <textarea
+          ref={taRef}
+          className="notes-box"
+          rows={3}
+          placeholder="Escribe tu nota aquí… (Enter para enviar)"
+          value={text}
+          onChange={(e) => setText(e.target.value)}
+          onKeyDown={onEnter}
+        />
+        <button className="button primary" onClick={send}>Publicar nota</button>
+      </div>
+      <div className="notes-scroll">
+        {notes.length ? (
+          notes.slice().reverse().map((e) => (
+            <div key={e.id} className={'note-msg' + (e.by === me ? ' mine' : '')}>
+              <div className="note-meta">
+                <strong>{esc(nameOf(e))}</strong>
+                <span className="muted">{e.date ? shortDate(e.date) : ''}{e.time ? ' · ' + esc(e.time) : ''}</span>
+              </div>
+              <div className="note-text">{esc(e.text)}</div>
+            </div>
+          ))
+        ) : <div className="notice">No hay notas todavía. Publica la primera.</div>}
+      </div>
     </div>
   );
 }

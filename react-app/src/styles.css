@@ -120,8 +120,18 @@ th,td{text-align:left;vertical-align:middle}
 .inv-stepper{display:inline-flex;align-items:center;gap:5px}
 .inv-stepper .qty-btn{width:33px;height:33px;border-radius:9px;background:var(--lav);color:#7258a2;font-size:18px;font-weight:700;flex:0 0 auto}
 .inv-stepper .icon-btn{width:33px;height:33px;border-radius:9px;background:#efe9fa;border:1px solid #d9cdef;color:#7258a2;font-size:15px}
+.inv-stepper .inv-cargo{width:33px;height:33px;border-radius:9px;background:#e6f4ec;border:1px solid #bfe0cd;font-size:14px;flex:0 0 auto}
 .inv-qty.add{color:#2f8a4f;font-weight:700}
 .inv-qty.sub{color:#c0392b;font-weight:700}
+.notes-compose{display:grid;gap:8px;margin-bottom:14px}
+.notes-compose .button{justify-self:end}
+.notes-scroll{display:grid;gap:10px;max-height:46vh;overflow-y:auto;padding-right:4px}
+.note-msg{background:#faf7ff;border:1px solid #e6def5;border-radius:12px;padding:11px 13px}
+.note-msg.mine{background:#f3ffe9;border-color:#cde7bd}
+.note-meta{display:flex;align-items:baseline;gap:9px;margin-bottom:4px}
+.note-meta strong{font-size:14px}
+.note-meta .muted{font-size:12px}
+.note-text{line-height:1.45;white-space:pre-wrap;overflow-wrap:break-word}
 .notes-box{width:100%;padding:14px;border:1px solid #ddd8e5;border-radius:12px;font:15px "DM Sans",sans-serif;line-height:1.5;color:var(--ink);resize:vertical;min-height:220px}
 .notes-head-actions{display:flex;align-items:center;gap:12px}
 .notes-ws{font-size:12px;font-weight:700;color:#3f9d5f;white-space:nowrap}

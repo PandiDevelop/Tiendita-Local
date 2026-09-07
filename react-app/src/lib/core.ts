@@ -1,4 +1,4 @@
-import type { AppState, InventoryLogEntry, Product, Sale, SaleDraft, SaleItem, Store } from '../types';
+import type { AppState, InventoryLogEntry, NoteEntry, Product, Sale, SaleDraft, SaleItem, Store } from '../types';
 
 export const KEY = 'mi-tiendita-v1';
 export const CLIENT_KEY = 'mi-tiendita-client';
@@ -84,6 +84,7 @@ export function normalizeStore(store: Store): Store {
   store.categories = store.categories || [];
   store.inventory = store.inventory || {};
   store.notes = typeof store.notes === 'string' ? store.notes : '';
+  store.noteLog = Array.isArray(store.noteLog) ? store.noteLog : [];
   store.invLog = Array.isArray(store.invLog) ? store.invLog : [];
   store.products.forEach((p) => {
     const old = p.promos ?? [];
@@ -219,6 +220,33 @@ export function toInvLogArr(src: unknown): InventoryLogEntry[] {
       .map((k) => JSON.parse(JSON.stringify((src as Record<string, InventoryLogEntry>)[k])));
   }
   return [];
+}
+
+export function toNoteLogArr(src: unknown): NoteEntry[] {
+  if (Array.isArray(src)) return JSON.parse(JSON.stringify(src));
+  if (src && typeof src === 'object') {
+    return Object.keys(src as Record<string, NoteEntry>)
+      .map((k) => JSON.parse(JSON.stringify((src as Record<string, NoteEntry>)[k])));
+  }
+  return [];
+}
+
+// Agrega una nota del tablero (mensajes del equipo). El log es inmutable y se
+// fusiona por id al sincronizar: cada dispositivo conserva su bolsillo de notas
+// y las notas ajenas llegan por el snapshot.
+export function addNote(s: Store, text: string): void {
+  const t = (text || '').trim();
+  if (!t) return;
+  s.noteLog ||= [];
+  s.noteLog.push({ id: uid(), text: t, date: today(), time: timeNow(), by: syncClientId(), byName: syncName() });
+}
+
+export function mergeNoteLog(a: NoteEntry[] | undefined, b: NoteEntry[]): NoteEntry[] {
+  const map = new Map<string, NoteEntry>();
+  (a || []).forEach((e) => { if (e && e.id) map.set(e.id, JSON.parse(JSON.stringify(e))); });
+  (b || []).forEach((e) => { if (e && e.id) map.set(e.id, JSON.parse(JSON.stringify(e))); });
+  return Array.from(map.values())
+    .sort((x, y) => (y.date || '').localeCompare(x.date || '') || (y.time || '').localeCompare(x.time || ''));
 }
 
 export function storeCats(s: Store): string[] {

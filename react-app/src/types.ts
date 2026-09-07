@@ -49,6 +49,15 @@ export interface InventoryLogEntry {
   by?: string;
 }
 
+export interface NoteEntry {
+  id: string;
+  text: string;
+  date: string;
+  time: string;
+  by?: string;
+  byName?: string;
+}
+
 export interface Store {
   id: string;
   name: string;
@@ -58,6 +67,7 @@ export interface Store {
   categories: string[];
   inventory: Record<string, number>;
   notes: string;
+  noteLog: NoteEntry[];
   invLog: InventoryLogEntry[];
   syncKey?: string;
   syncPin?: string;

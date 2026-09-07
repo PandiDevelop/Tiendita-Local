@@ -1,7 +1,7 @@
 import { initializeApp, FirebaseApp } from 'firebase/app';
 import { getFirestore, Firestore, collection, doc, onSnapshot, setDoc, getDoc, deleteField } from 'firebase/firestore';
 import type { AppState, Member, Product, Sale, Store } from '../types';
-import { toProductsArr, toSalesArr, toInvLogArr, mergeItems, mergeInvLog, syncKeyOf, syncClientId, syncName, normalizeStore, DEFAULT_STORE_IMAGE, uid } from './core';
+import { toProductsArr, toSalesArr, toInvLogArr, toNoteLogArr, mergeItems, mergeInvLog, mergeNoteLog, syncKeyOf, syncClientId, syncName, normalizeStore, DEFAULT_STORE_IMAGE, uid } from './core';
 
 export { syncClientId, syncName, syncSetName, syncGenPin, syncKeyOf } from './core';
 
@@ -60,7 +60,7 @@ export function createSync(
 
   function fp(storeId: string): string {
     const s = getState().stores.find((x) => x.id === storeId);
-    return s ? JSON.stringify([s.name, s.image, s.products, s.sales, s.categories, s.notes, s.invLog]) : '';
+    return s ? JSON.stringify([s.name, s.image, s.products, s.sales, s.categories, s.notes, s.noteLog, s.invLog]) : '';
   }
 
   async function push(storeId: string) {
@@ -79,6 +79,7 @@ export function createSync(
       updatedBy: cid(),
     };
     if (typeof s.notes === 'string' && s.notes) payload.notes = s.notes;
+    if (s.noteLog && s.noteLog.length) payload.noteLog = s.noteLog;
     if (s.invLog && s.invLog.length) payload.invLog = s.invLog;
     if (!s.createdBy || s.createdBy === cid()) { payload.name = s.name; payload.image = s.image; }
     try {
@@ -167,6 +168,7 @@ export function applyRemote(getState: () => AppState, mutate: (fn: (d: AppState)
     if (typeof remote.notes === 'string' && remote.notes.length) {
       st.notes = remote.notes;
     }
+    st.noteLog = mergeNoteLog(st.noteLog, toNoteLogArr(remote.noteLog));
     st.invLog = mergeInvLog(st.invLog, toInvLogArr(remote.invLog));
     const metaOk = !remote.createdBy || (remote.updatedBy && remote.updatedBy === remote.createdBy);
     if (metaOk && remote.name && remote.name !== st.name) st.name = remote.name as string;
@@ -196,6 +198,7 @@ export async function joinStore(pin: string, mutate: (fn: (d: AppState) => void)
       categories: JSON.parse(JSON.stringify((r.categories || []))),
       inventory: {},
       notes: typeof r.notes === 'string' ? r.notes : '',
+      noteLog: toNoteLogArr(r.noteLog),
       invLog: toInvLogArr(r.invLog),
       syncKey: key,
       syncPin: pin,
@@ -233,7 +236,7 @@ export async function activateSync(storeId: string, pin: string, getState: () =>
       members[syncClientId()] = { name: syncName(), role: 'owner', joinedAt: Date.now() };
       await setDoc(ref, {
         name: s.name, image: s.image, products, sales, categories: s.categories || [],
-        notes: s.notes || '', invLog: s.invLog || [],
+        notes: s.notes || '', noteLog: s.noteLog || [], invLog: s.invLog || [],
         createdBy: syncClientId(), members, updatedBy: syncClientId(),
       }, { merge: true });
       mutate((d) => { const st = d.stores.find((x) => x.id === storeId); if (st) { st.localRole = 'owner'; st.syncKey = key; st.syncPin = pin; } });
