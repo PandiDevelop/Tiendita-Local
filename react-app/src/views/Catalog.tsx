@@ -1,14 +1,22 @@
 import { useState } from 'react';
 import { useStore } from '../store';
-import { money, esc, inventorySold, DEFAULT_PRODUCT_IMAGE } from '../lib/core';
+import { money, esc, inventorySold, setCategoryPricing, uid, DEFAULT_PRODUCT_IMAGE } from '../lib/core';
 import { Image, Modal } from '../ui';
+import type { Promo } from '../types';
+
+interface CatModalState {
+  mode: 'new' | 'edit';
+  name: string;
+  price: string;
+  promos: Promo[];
+}
 
 export function Catalog() {
   const { store, state, replace, setModal, setModalArg, toast } = useStore();
   const s = store!;
   const sold = inventorySold(s);
   const inv = s.inventory || {};
-  const [newCat, setNewCat] = useState<string | null>(null);
+  const [catModal, setCatModal] = useState<CatModalState | null>(null);
 
   const storeCats = () => {
     const cats: string[] = [];
@@ -33,22 +41,45 @@ export function Catalog() {
     });
   }
   function addCategory() {
-    setNewCat('');
+    setCatModal({ mode: 'new', name: '', price: '', promos: [] });
   }
-  function saveNewCategory() {
-    const v = (newCat || '').trim();
-    if (!v) { setNewCat(null); return; }
-    if (storeCats().includes(v)) { toast('Esa categoría ya existe.'); return; }
-    replace((d) => {
-      const st = d.stores.find((x) => x.id === s.id);
-      st!.categories = st!.categories || [];
-      st!.categories.push(v);
-      d.openCats = d.openCats || {};
-      d.openCats[s.id] = d.openCats[s.id] || {};
-      d.openCats[s.id][v] = true;
+  function editCategoryPrice(cat: string) {
+    const cp = s.categoryPricing && s.categoryPricing[cat];
+    setCatModal({
+      mode: 'edit',
+      name: cat,
+      price: cp ? String(cp.price) : '',
+      promos: cp ? JSON.parse(JSON.stringify(cp.promos || [])) : [],
     });
-    setNewCat(null);
-    toast('Categoría añadida.');
+  }
+  function saveCatModal() {
+    if (!catModal) return;
+    const v = catModal.name.trim();
+    if (!v) { setCatModal(null); return; }
+    if (catModal.mode === 'new' && storeCats().includes(v)) { toast('Esa categoría ya existe.'); return; }
+    const priceTxt = catModal.price.trim();
+    let pr: number | null = null;
+    if (priceTxt !== '') {
+      pr = Number(priceTxt);
+      if (!Number.isFinite(pr) || pr < 0) { toast('Añade un precio válido para la categoría.'); return; }
+    } else if (catModal.mode === 'edit') {
+      toast('Añade un precio para la categoría.');
+      return;
+    }
+    const promoList = catModal.promos.filter((x) => x.label.trim() && Number.isFinite(x.price) && x.price >= 0);
+    replace((d) => {
+      const st = d.stores.find((x) => x.id === s.id)!;
+      st.categories = st.categories || [];
+      if (catModal.mode === 'new') {
+        if (!st.categories.includes(v)) st.categories.push(v);
+        d.openCats = d.openCats || {};
+        d.openCats[s.id] = d.openCats[s.id] || {};
+        d.openCats[s.id][v] = true;
+      }
+      if (pr != null) setCategoryPricing(st, v, pr, promoList);
+    });
+    setCatModal(null);
+    toast(catModal.mode === 'new' ? 'Categoría añadida.' : 'Precio de categoría actualizado en todos sus productos.');
   }
 
   return (
@@ -61,12 +92,18 @@ export function Catalog() {
       </div>
       {s.products.length ? groups.map((g) => {
         const open = catOpen(g.name);
+        const editable = g.name !== 'Sin categoría';
         return (
           <div className="cat-group" key={g.name}>
-            <button className="cat-head" onClick={() => toggleCat(g.name)}>
-              <span className="cat-caret">{open ? '▾' : '▸'}</span><b>{esc(g.name)}</b>
-              <span className="muted">· {g.list.length} producto{g.list.length === 1 ? '' : 's'}</span>
-            </button>
+            <div className="cat-head">
+              <button className="cat-head-toggle" onClick={() => toggleCat(g.name)}>
+                <span className="cat-caret">{open ? '▾' : '▸'}</span><b>{esc(g.name)}</b>
+                <span className="muted">· {g.list.length} producto{g.list.length === 1 ? '' : 's'}</span>
+              </button>
+              {editable && (
+                <button className="icon-btn" title="Precio de la categoría" onClick={() => editCategoryPrice(g.name)}>💲</button>
+              )}
+            </div>
             {open && (
               <div className="cat-body">
                 {g.list.length ? (
@@ -93,22 +130,39 @@ export function Catalog() {
         );
       }) : <div className="empty"><div className="emoji">📦</div><b>Tu catálogo está vacío</b><p>Agrega el primer producto para empezar.</p></div>}
 
-      {newCat !== null && (
-        <Modal onClose={() => setNewCat(null)}>
-          <h2>Nueva categoría</h2>
+      {catModal && (
+        <Modal onClose={() => setCatModal(null)}>
+          <h2>{catModal.mode === 'new' ? 'Nueva categoría' : 'Precio de la categoría'}</h2>
           <div className="field"><label>Nombre de la categoría</label>
             <input
               maxLength={30}
               placeholder="Ej. Bebidas"
-              value={newCat}
-              onChange={(e) => setNewCat(e.target.value)}
-              onKeyDown={(e) => { if (e.key === 'Enter') saveNewCategory(); }}
-              autoFocus
+              value={catModal.name}
+              disabled={catModal.mode === 'edit'}
+              onChange={(e) => setCatModal((m) => m && { ...m, name: e.target.value })}
+              onKeyDown={(e) => { if (e.key === 'Enter') saveCatModal(); }}
+              autoFocus={catModal.mode === 'new'}
             />
           </div>
+          <div className="field"><label>Precio {catModal.mode === 'new' ? '(opcional)' : ''}</label>
+            <input min={0} type="number" placeholder="0" value={catModal.price} onChange={(e) => setCatModal((m) => m && { ...m, price: e.target.value })} autoFocus={catModal.mode === 'edit'} />
+            <p className="muted">Se aplica a todos los productos de esta categoría. Cada producto se puede editar después para tener un precio distinto.</p>
+          </div>
+          <div className="field"><label>Promociones <span className="muted">(cada una se vende por separado)</span></label>
+            <div id="cat-promo-list">
+              {catModal.promos.map((x, n) => (
+                <div className="promo-input" key={n}>
+                  <input className="promo-label" maxLength={70} placeholder="Nombre de la promoción" value={x.label} onChange={(e) => setCatModal((m) => m && { ...m, promos: m.promos.map((y, i) => i === n ? { ...y, label: e.target.value } : y) })} />
+                  <input className="promo-price" min={0} type="number" placeholder="Precio" value={x.price == null ? '' : String(x.price)} onChange={(e) => setCatModal((m) => m && { ...m, promos: m.promos.map((y, i) => i === n ? { ...y, price: Number(e.target.value) } : y) })} />
+                  <button className="icon-btn" onClick={() => setCatModal((m) => m && { ...m, promos: m.promos.filter((_, i) => i !== n) })}>×</button>
+                </div>
+              ))}
+            </div>
+            <button className="add-promo" onClick={() => setCatModal((m) => m && { ...m, promos: [...m.promos, { id: uid(), label: '', price: Number(m.price) || 0 }] })}>＋ Agregar promoción</button>
+          </div>
           <div className="modal-actions">
-            <button className="button secondary" onClick={() => setNewCat(null)}>Cancelar</button>
-            <button className="button primary" onClick={saveNewCategory}>Guardar</button>
+            <button className="button secondary" onClick={() => setCatModal(null)}>Cancelar</button>
+            <button className="button primary" onClick={saveCatModal}>Guardar</button>
           </div>
         </Modal>
       )}

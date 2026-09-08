@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useStore } from '../store';
 import { DEFAULT_STORE_IMAGE, compressImage, esc, syncClientId, syncGenPin, syncName, syncSetName, uid } from '../lib/core';
 import { deactivateSyncFn, leaveStoreFn, deleteStoreFn, removeMemberFn } from '../lib/sync';
-import { Image, Modal } from '../ui';
+import { ImagePicker, Modal } from '../ui';
 import type { Member } from '../types';
 
 export function StoreModal({ editing, onClose }: { editing?: boolean; onClose: () => void }) {
@@ -94,13 +94,7 @@ export function StoreModal({ editing, onClose }: { editing?: boolean; onClose: (
         <input id="store-name" maxLength={40} placeholder="Ej. Dulces Aurora" value={name} onChange={(e) => setName(e.target.value)} disabled={isEmployee} autoFocus />
       </div>
       <div className="field"><label>Imagen de la tienda</label>
-        <div className="image-picker">
-          <Image src={image || DEFAULT_STORE_IMAGE} cls="image-preview" />
-          <div>
-            <input id="store-image" type="file" accept="image/*" onChange={(e) => onFile(e.target.files?.[0])} disabled={isEmployee} />
-            <p className="muted">Puedes subir un logo o foto. Si no eliges una, se usará la tienda predeterminada.</p>
-          </div>
-        </div>
+        <ImagePicker id="store-image" src={image || DEFAULT_STORE_IMAGE} cls="image-preview" disabled={isEmployee} hint="Puedes subir un logo o foto. Si no eliges una, se usará la tienda predeterminada." onFile={onFile} />
       </div>
       {s && s.syncKey ? (
         <div className="field sync-field">

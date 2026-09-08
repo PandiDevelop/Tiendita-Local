@@ -1,4 +1,4 @@
-import type { AppState, InventoryLogEntry, NoteEntry, Product, Sale, SaleDraft, SaleItem, Store } from '../types';
+import type { AppState, CategoryPricing, InventoryLogEntry, NoteEntry, Product, Promo, Sale, SaleDraft, SaleItem, Store } from '../types';
 
 export const KEY = 'mi-tiendita-v1';
 export const CLIENT_KEY = 'mi-tiendita-client';
@@ -89,6 +89,7 @@ export function normalizeStore(store: Store): Store {
   store.products ||= [];
   store.sales ||= [];
   store.categories = store.categories || [];
+  store.categoryPricing = store.categoryPricing || {};
   store.inventory = store.inventory || {};
   store.notes = typeof store.notes === 'string' ? store.notes : '';
   store.noteLog = Array.isArray(store.noteLog) ? store.noteLog : [];
@@ -259,6 +260,28 @@ export function mergeNoteLog(a: NoteEntry[] | undefined, b: NoteEntry[]): NoteEn
   (b || []).forEach((e) => { if (e && e.id) map.set(e.id, JSON.parse(JSON.stringify(e))); });
   return Array.from(map.values())
     .sort((x, y) => (y.date || '').localeCompare(x.date || '') || (y.time || '').localeCompare(x.time || ''));
+}
+
+// Fija el precio y las promociones por defecto de una categoria y los copia a
+// todos los productos que ya tengan esa categoria (asi la mayoria de un
+// grupo comparte el mismo precio). Cada producto se puede editar despues
+// para tener un precio distinto sin afectar a los demas.
+export function setCategoryPricing(s: Store, cat: string, price: number, promos: Promo[]): CategoryPricing | null {
+  const v = (cat || '').trim();
+  if (!v || !Number.isFinite(price) || price < 0) return null;
+  const clean: Promo[] = (promos || [])
+    .filter((x) => x && x.label && x.label.trim() && Number.isFinite(x.price) && x.price >= 0)
+    .map((x) => ({ id: x.id || uid(), label: x.label.trim(), price: x.price }));
+  s.categoryPricing = s.categoryPricing || {};
+  const entry: CategoryPricing = { price, promos: clean };
+  s.categoryPricing[v] = entry;
+  s.products.forEach((p) => {
+    if ((p.category || '').trim() === v) {
+      p.price = price;
+      p.promos = JSON.parse(JSON.stringify(clean));
+    }
+  });
+  return entry;
 }
 
 export function storeCats(s: Store): string[] {

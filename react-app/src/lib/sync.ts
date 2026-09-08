@@ -82,7 +82,8 @@ export function createSync(
     if (!s) return '';
     return JSON.stringify(canon({
       name: s.name, image: s.image, products: s.products, sales: s.sales,
-      categories: s.categories || [], notes: s.notes || '', noteLog: s.noteLog || [],
+      categories: s.categories || [], categoryPricing: s.categoryPricing || {},
+      notes: s.notes || '', noteLog: s.noteLog || [],
       invLog: s.invLog || [], inventory: s.inventory || {},
     }));
   }
@@ -100,6 +101,7 @@ export function createSync(
       products,
       sales,
       categories: s.categories || [],
+      categoryPricing: s.categoryPricing || {},
       updatedBy: cid(),
     };
     if (typeof s.notes === 'string' && s.notes) payload.notes = s.notes;
@@ -218,6 +220,9 @@ export function applyRemote(getState: () => AppState, mutate: (fn: (d: AppState)
       (remote.categories as string[]).forEach((c) => { const v = (c || '').trim(); if (v && !cur.includes(v)) cur.push(v); });
       st.categories = cur;
     }
+    if (remote.categoryPricing && typeof remote.categoryPricing === 'object') {
+      st.categoryPricing = Object.assign({}, st.categoryPricing || {}, JSON.parse(JSON.stringify(remote.categoryPricing)));
+    }
     if (typeof remote.notes === 'string' && remote.notes.length) {
       st.notes = remote.notes;
     }
@@ -265,6 +270,7 @@ export async function joinStore(pin: string, getState: () => AppState, mutate: (
       products: toProductsArr(r.products),
       sales: toSalesArr(r.sales),
       categories: JSON.parse(JSON.stringify((r.categories || []))),
+      categoryPricing: r.categoryPricing && typeof r.categoryPricing === 'object' ? JSON.parse(JSON.stringify(r.categoryPricing)) : {},
       inventory: r.inventory && typeof r.inventory === 'object' ? { ...(r.inventory as Record<string, number>) } : {},
       notes: typeof r.notes === 'string' ? r.notes : '',
       noteLog: toNoteLogArr(r.noteLog),
@@ -308,6 +314,7 @@ export async function activateSync(storeId: string, pin: string, getState: () =>
       (s.invLog || []).forEach((e) => { if (e && e.id) invLog[e.id] = e; });
       await setDoc(ref, {
         name: s.name, image: s.image, products, sales, categories: s.categories || [],
+        categoryPricing: s.categoryPricing || {},
         notes: s.notes || '', noteLog, invLog, inventory: s.inventory || {},
         createdBy: syncClientId(), members, updatedBy: syncClientId(),
       }, { merge: true });

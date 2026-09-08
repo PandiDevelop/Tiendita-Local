@@ -4,6 +4,14 @@ export interface Promo {
   price: number;
 }
 
+// Precio y promociones por defecto de una categoria. Al crearla o editarla se
+// copian a todos los productos que tengan esa categoria; despues cada
+// producto se puede editar individualmente para tener un precio distinto.
+export interface CategoryPricing {
+  price: number;
+  promos: Promo[];
+}
+
 export interface Product {
   id: string;
   name: string;
@@ -65,6 +73,7 @@ export interface Store {
   products: Product[];
   sales: Sale[];
   categories: string[];
+  categoryPricing?: Record<string, CategoryPricing>;
   inventory: Record<string, number>;
   notes: string;
   noteLog: NoteEntry[];

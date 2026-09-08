@@ -1,8 +1,8 @@
 import { useState } from 'react';
 import { useStore } from '../store';
-import { DEFAULT_PRODUCT_IMAGE, compressImage, storeCats, adoptInvLog, uid } from '../lib/core';
+import { DEFAULT_PRODUCT_IMAGE, compressImage, storeCats, adoptInvLog, setCategoryPricing, uid } from '../lib/core';
 import { Dropdown } from '../Dropdown';
-import { Image, Modal } from '../ui';
+import { ImagePicker, Modal } from '../ui';
 import type { Promo } from '../types';
 
 export function ProductForm({ editingId, onClose }: { editingId?: string; onClose: () => void }) {
@@ -35,6 +35,7 @@ export function ProductForm({ editingId, onClose }: { editingId?: string; onClos
     replace((d) => {
       const st = d.stores.find((x) => x.id === s.id)!;
       st.categories = st.categories || [];
+      const isNewCat = showCatNew && !!catVal && !st.categories.includes(catVal);
       if (catVal && !st.categories.includes(catVal)) st.categories.push(catVal);
       if (editingId) {
         const t = st.products.find((x) => x.id === editingId);
@@ -42,6 +43,10 @@ export function ProductForm({ editingId, onClose }: { editingId?: string; onClos
       } else {
         st.products.push({ id: uid(), name: nm, price: pr, image: image || DEFAULT_PRODUCT_IMAGE, promos: promoList, category: catVal });
       }
+      // Nueva categoria creada desde el formulario de producto: este producto
+      // fija el precio/promos por defecto de la categoria (la mayoria de un
+      // grupo suele costar lo mismo). Se puede ajustar despues desde Catalogo.
+      if (isNewCat) setCategoryPricing(st, catVal, pr, promoList);
       if (!editingId && qty.trim() !== '') {
         const q = Math.round(Number(qty));
         if (Number.isFinite(q) && q >= 0) {
@@ -59,7 +64,15 @@ export function ProductForm({ editingId, onClose }: { editingId?: string; onClos
     <Modal onClose={onClose}>
       <h2>{editingId ? 'Editar producto' : 'Añadir producto'}</h2>
       <div className="field"><label>Categoría</label>
-        <Dropdown value={cat} ph="Sin categoría" items={cats} onPick={(v) => { setCat(v); if (v === '__new__') setCatNew(''); }} />
+        <Dropdown value={cat} ph="Sin categoría" items={cats} onPick={(v) => {
+          setCat(v);
+          if (v === '__new__') { setCatNew(''); return; }
+          if (!editingId && v && s.categoryPricing && s.categoryPricing[v]) {
+            const cp = s.categoryPricing[v];
+            setPrice(String(cp.price));
+            setPromos(JSON.parse(JSON.stringify(cp.promos || [])));
+          }
+        }} />
         {showCatNew && <div className="field" style={{ marginTop: 8 }}><input maxLength={30} placeholder="Nombre de la nueva categoría" value={catNew} onChange={(e) => setCatNew(e.target.value)} autoFocus /></div>}
       </div>
       <div className="field"><label>Nombre del producto</label>
@@ -69,13 +82,7 @@ export function ProductForm({ editingId, onClose }: { editingId?: string; onClos
         <input min={0} type="number" placeholder="0" value={price} onChange={(e) => setPrice(e.target.value)} />
       </div>
       <div className="field"><label>Imagen del producto</label>
-        <div className="image-picker">
-          <Image src={image || DEFAULT_PRODUCT_IMAGE} cls="image-preview product-preview" />
-          <div>
-            <input id="product-image" type="file" accept="image/*" onChange={(e) => onFile(e.target.files?.[0])} />
-            <p className="muted">Foto o logo opcional del producto.</p>
-          </div>
-        </div>
+        <ImagePicker id="product-image" src={image || DEFAULT_PRODUCT_IMAGE} cls="image-preview product-preview" hint="Foto o logo opcional del producto." onFile={onFile} />
       </div>
       {!editingId && (
         <div className="field"><label>Cantidad en inventario</label>
