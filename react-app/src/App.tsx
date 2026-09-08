@@ -8,6 +8,7 @@ import { Inventory } from './views/Inventory';
 import { Profit } from './views/Profit';
 import { Notes } from './views/Notes';
 import { Employees } from './views/Employees';
+import { Events } from './views/Events';
 import { StoreModal } from './views/StoreModal';
 import { JoinModal } from './views/Join';
 import { ProductForm } from './views/ProductForm';
@@ -96,16 +97,18 @@ export function App() {
           <button className="button secondary" onClick={() => setModal('editStore')}>⚙ Editar tienda</button>
         </div>
         <nav className="tabs">
-          {([['inicio', 'Inicio'], ['productos', 'Catálogo'], ['inventario', 'Inventario'], ['ganancias', 'Ganancias'], ['notas', 'Notas'], ['empleados', 'Empleados']] as const)
+          {([['inicio', 'Inicio'], ['ganancias', 'Ganancias'], ['eventos', 'Eventos'], ['productos', 'Catálogo'], ['inventario', 'Inventario'], ['empleados', 'Empleados'], ['notas', 'Notas']] as const)
             .filter(([id]) => id !== 'empleados' || owner)
+            .filter(([id]) => id !== 'eventos' || owner)
             .map(([id, l]) => (
               <button key={id} className={'tab ' + (state.tab === id ? 'active' : '')} onClick={() => setTab(id)}>{l}</button>
             ))}
         </nav>
         {state.tab === 'inicio' && <Dashboard />}
+        {state.tab === 'ganancias' && <Profit />}
+        {state.tab === 'eventos' && <Events />}
         {state.tab === 'productos' && <Catalog />}
         {state.tab === 'inventario' && <Inventory />}
-        {state.tab === 'ganancias' && <Profit />}
         {state.tab === 'notas' && <Notes />}
         {state.tab === 'empleados' && <Employees />}
       </main>

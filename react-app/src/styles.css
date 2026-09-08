@@ -158,3 +158,87 @@ th,td{text-align:left;vertical-align:middle}
 .notes-head-actions{display:flex;align-items:center;gap:12px}
 .notes-ws{font-size:12px;font-weight:700;color:#3f9d5f;white-space:nowrap}
 .notes-ws.typing{color:#8a84a0}
+
+
+/* Lote de mejoras: tags en mayuscula, botones de quitar, arrastre centrado,
+   chips de categorias, editor de promos, eventos y venta con precio manual. */
+
+.prod-tag{text-transform:uppercase}
+.ev-tag{background:var(--mint);color:#39745b;text-transform:none;max-width:190px}
+
+/* Boton generico de "quitar algo" (promo, miembro, evento...): mas grande que
+   el icon-btn clasico y con contorno resaltado para que se distinga de los
+   botones de texto de alrededor. */
+.icon-remove{height:38px;min-width:38px;padding:0 12px;border-radius:10px;background:#fff;border:1.5px solid #ebb3c4;box-shadow:0 0 0 3px #fdebf1;color:#d2547a;font-weight:700;font-size:16px;flex:0 0 auto;display:inline-flex;align-items:center;justify-content:center;line-height:1}
+.icon-remove:hover{background:#fff0f2}
+.icon-remove.reset-price{width:38px;padding:0}
+
+/* Boton "Quitar" de una linea en Registrar venta: grande, ample y resaltado
+   (mismo estilo de quitar que el resto de la app, punto 1 de las mejoras). */
+.sale-del{display:inline-flex;align-items:center;gap:6px;padding:9px 15px;border-radius:10px;background:#fff;border:1.5px solid #ebb3c4;box-shadow:0 0 0 3px #fdebf1;color:#d2547a;font-weight:700;font-size:13px;flex:0 0 auto;white-space:nowrap}
+.sale-del:hover{background:#fff0f2}
+.sale-builder-head{display:flex;align-items:center;gap:10px}
+
+/* Arrastre: fila centrada y boton con el handle centrado (alto ok). */
+.drag-cell{width:42px;min-width:42px;text-align:center;vertical-align:middle;padding-right:0}
+.drag-cell .drag-handle{display:inline-flex;align-items:center;justify-content:center;margin:0 auto;line-height:1}
+.drag-handle{display:inline-flex;align-items:center;justify-content:center;margin:0 auto;line-height:1}
+
+/* Caja de la categoria encima del nombre en las tarjetas de producto de
+   Registrar venta (punto 8). */
+.prod-cat{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:#8f73bf;background:#f1ebff;border-radius:999px;padding:2px 9px;align-self:flex-start;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+
+/* Categorias seleccionadas en Registrar venta: chips con una X para quitarlas
+   y un desplegable para anadir mas (punto 3). */
+.sale-cats{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin-bottom:4px}
+.sale-cats .sale-pick-label{width:100%}
+.cat-chip{display:inline-flex;align-items:center;gap:8px;background:#efe9fa;border:1px solid #d9cdef;color:#7258a2;font-weight:700;font-size:13px;border-radius:999px;padding:6px 8px 6px 13px}
+.cat-chip button{display:grid;place-items:center;width:20px;height:20px;border-radius:50%;background:#fff;border:1px solid #d9cdef;color:#d2547a;font-weight:700;font-size:12px;line-height:1;padding:0}
+
+/* Promo aplicada automaticamente en una linea de venta. */
+.sale-promo-note{font-size:11px;font-weight:700;color:#39745b;background:#e6f4ec;border-radius:7px;padding:3px 9px;width:max-content;max-width:100%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+
+/* Precio editable a mano por linea (punto 9). */
+.sale-builder-price{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.price-input{width:96px;border:1px solid #ddd8e5;border-radius:9px;padding:8px 10px;font-weight:700;color:#625276}
+
+/* Banda de evento activo en Registrar venta. */
+.event-banner{background:#e6f3ec;border:1px solid #bfe0cd;color:#3f8a63;border-radius:11px;padding:9px 12px;font-size:13px;font-weight:700;margin:6px 0}
+
+/* Editor de promos (orden = prioridad, la primera que cumpla gana). */
+.promo-editor{display:grid;gap:4px}
+.promo-editor .promo-input{display:grid;gap:9px;margin-bottom:9px;border:1px solid var(--line);border-radius:11px;padding:11px;background:#faf8fc}
+.promo-row-top{display:flex;align-items:center;gap:7px}
+.promo-row-top .promo-label{flex:1;min-width:0}
+.promo-row-conds{display:flex;flex-wrap:wrap;gap:7px;align-items:center}
+.promo-row-conds input,.promo-row-conds select{border:1px solid #ddd8e5;border-radius:9px;padding:8px 9px;font-size:13px;color:var(--ink);background:#fff}
+.promo-row-conds .promo-price,.promo-row-conds .promo-pct{width:96px}
+.promo-row-conds .promo-min{width:120px}
+.promo-row-conds .promo-date{flex:1 1 auto;min-width:128px;width:auto}
+.promo-row-conds .promo-select{min-width:160px;width:auto}
+@media (max-width:760px){.promo-editor .promo-input{position:static;padding:11px}.promo-editor .promo-input .icon-btn{position:static}.promo-row-top .promo-label{width:auto}.promo-row-conds .promo-price,.promo-row-conds .promo-pct{width:calc(50% - 5px)}}
+
+/* Venta: separacion de empleados por roles. */
+.team-group{display:grid;gap:7px}
+.team-group-title{font-size:11px;text-transform:uppercase;letter-spacing:1.2px;font-weight:700;color:#8a84a0;margin:10px 2px 2px}
+
+/* Pestana de eventos. */
+.ev-card{background:#fdfcf8;border:1px solid var(--line);border-radius:13px;padding:14px;margin-bottom:12px;display:grid;gap:12px}
+.ev-card.active{border-color:#9fc7af;background:#fbfffc}
+.ev-top{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.ev-name{flex:1;min-width:180px}
+.ev-active{display:flex;align-items:center;gap:9px}
+.ev-rows{display:flex;align-items:flex-end;flex-wrap:wrap;gap:10px}
+.ev-rows .field{margin:0;flex:1;min-width:120px}
+.ev-rows .icon-remove{align-self:center;height:42px}
+.ev-pct{width:90px}
+.ev-foot{display:flex;align-items:center;gap:10px;flex-wrap:wrap;font-size:13px}
+.ev-badge{font-size:11px;font-weight:700;border-radius:999px;padding:3px 10px;white-space:nowrap}
+.ev-badge.on{background:#e6f4ec;color:#3f8a63}
+.ev-badge.off{background:#f2edf8;color:#8a84a0}
+.switch{position:relative;display:inline-block;width:42px;height:24px;flex:0 0 auto}
+.switch input{opacity:0;width:0;height:0;position:absolute}
+.switch span{position:absolute;inset:0;background:#ddd8e5;border-radius:999px;transition:.15s}
+.switch span::before{content:'';position:absolute;height:18px;width:18px;left:3px;top:3px;background:#fff;border-radius:50%;transition:.15s;box-shadow:0 1px 3px rgba(0,0,0,.22)}
+.switch input:checked+span{background:#6fae82}
+.switch input:checked+span::before{transform:translateX(18px)}

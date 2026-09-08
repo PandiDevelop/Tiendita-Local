@@ -26,6 +26,14 @@ export function Employees() {
   const teamRows = members
     .map(([cid, m]) => ({ cid, name: m.name || 'Trabajador', role: cid === ownerId ? 'owner' as Role : (m.role || 'worker' as Role), me: cid === syncClientId() }))
     .sort((a, b) => (a.role === 'owner' ? -1 : b.role === 'owner' ? 1 : a.name.localeCompare(b.name)));
+  // La lista del equipo se separa por secciones segun el rol de cada miembro
+  // (Dueños / Administradores / Trabajadores), siempre con la misma sección
+  // aunque no tenga integrantes.
+  const teamGroups: { role: Role; label: string; rows: typeof teamRows }[] = [
+    { role: 'owner', label: 'Dueños', rows: teamRows.filter((m) => m.role === 'owner') },
+    { role: 'admin', label: 'Administradores', rows: teamRows.filter((m) => m.role === 'admin') },
+    { role: 'worker', label: 'Trabajadores', rows: teamRows.filter((m) => m.role === 'worker') },
+  ];
 
   const acc: Record<string, EmpAcc> = {};
   s.sales.forEach((x) => {
@@ -74,12 +82,17 @@ export function Employees() {
       {teamRows.length ? (
         <div className="team-list">
           <div className="team-list-title">Equipo · rol de cada miembro</div>
-          {teamRows.map((m) => (
-            <div className="team-row" key={m.cid}>
-              <span className="team-name">{esc(m.name)}{m.me ? <span className="team-me">tú</span> : null}</span>
-              <span className={'role-pill role-' + m.role}>{roleLabel(m.role)}</span>
+          {teamGroups.map((g) => g.rows.length ? (
+            <div className="team-group" key={g.role}>
+              <div className="team-group-title">{g.label}</div>
+              {g.rows.map((m) => (
+                <div className="team-row" key={m.cid}>
+                  <span className="team-name">{esc(m.name)}{m.me ? <span className="team-me">tú</span> : null}</span>
+                  <span className={'role-pill role-' + m.role}>{roleLabel(m.role)}</span>
+                </div>
+              ))}
             </div>
-          ))}
+          ) : null)}
         </div>
       ) : null}
 

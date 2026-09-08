@@ -1,8 +1,9 @@
 import { useState } from 'react';
 import { useStore } from '../store';
-import { storeCats, setCategoryPricing, toEditablePromos, fromEditablePromos, uid } from '../lib/core';
+import { insertCatSorted, storeCats, setCategoryPricing, toEditablePromos, fromEditablePromos } from '../lib/core';
 import type { EditablePromo } from '../lib/core';
 import { Modal } from '../ui';
+import { PromoEditor } from './PromoEditor';
 
 interface Props {
   mode: 'new' | 'edit';
@@ -45,8 +46,7 @@ export function CategoryModal({ mode, catName, onClose, onSaved }: Props) {
     const promoList = fromEditablePromos(promos);
     replace((d) => {
       const st = d.stores.find((x) => x.id === s.id)!;
-      st.categories = st.categories || [];
-      if (mode === 'new' && !st.categories.includes(v)) st.categories.push(v);
+      if (mode === 'new') insertCatSorted(st, v);
       if (pr != null) setCategoryPricing(st, v, pr, cst, promoList);
     });
     onClose();
@@ -75,17 +75,8 @@ export function CategoryModal({ mode, catName, onClose, onSaved }: Props) {
         <input min={0} type="number" placeholder="0" value={cost} onChange={(e) => setCost(e.target.value)} />
         <p className="muted">También se copia a todos los productos de la categoría; cada uno se puede editar después para tener un costo distinto.</p>
       </div>
-      <div className="field"><label>Promociones <span className="muted">(cada una se vende por separado)</span></label>
-        <div id="cat-promo-list">
-          {promos.map((x, n) => (
-            <div className="promo-input" key={n}>
-              <input className="promo-label" maxLength={70} placeholder="Nombre de la promoción" value={x.label} onChange={(e) => setPromos((l) => l.map((y, i) => i === n ? { ...y, label: e.target.value } : y))} />
-              <input className="promo-price" min={0} type="number" placeholder="Precio" value={x.price} onChange={(e) => setPromos((l) => l.map((y, i) => i === n ? { ...y, price: e.target.value } : y))} />
-              <button className="icon-btn" onClick={() => setPromos((l) => l.filter((_, i) => i !== n))}>×</button>
-            </div>
-          ))}
-        </div>
-        <button className="add-promo" onClick={() => setPromos((l) => [...l, { id: uid(), label: '', price: price || '0' }])}>＋ Agregar promoción</button>
+      <div className="field"><label>Promociones <span className="muted">(se aplican solas en la venta según su condición)</span></label>
+        <PromoEditor promos={promos} onChange={setPromos} priceHint={price} />
       </div>
       <div className="modal-actions">
         <button className="button secondary" onClick={onClose}>Cancelar</button>

@@ -136,7 +136,7 @@ export function StoreModal({ editing, onClose }: { editing?: boolean; onClose: (
                                   {isAdmin ? 'Quitar admin' : 'Hacer admin'}
                                 </button>
                               )}
-                              {(isOwner || !isAdmin) && <button className="icon-btn" title="Quitar de la tienda" onClick={() => removeMember(mi)}>×</button>}
+                              {(isOwner || !isAdmin) && <button className="icon-remove" title="Quitar de la tienda" onClick={() => removeMember(mi)}>✕</button>}
                             </div>
                           )}
                         </div>
@@ -147,7 +147,7 @@ export function StoreModal({ editing, onClose }: { editing?: boolean; onClose: (
                 {!isOwner && <p className="muted">Como administrador puedes ver el equipo y quitar trabajadores. Solo el dueño puede dar o quitar el permiso de administrador.</p>}
               </>}
             </div>
-            {isOwner && <button className="icon-btn" title="Desvincular" onClick={deactivate}>×</button>}
+            {isOwner && <button className="icon-remove" title="Desvincular" onClick={deactivate}>✕</button>}
           </div>
           {isEmployee && <button className="button secondary leave-btn" onClick={leave}>Desvincularse de esta tienda</button>}
         </div>

@@ -1,11 +1,11 @@
 import { useEffect, useRef, useState } from 'react';
 import { useStore } from '../store';
-import { DEFAULT_PRODUCT_IMAGE, catLabel, money, saleCatsOf, sortByOrder, syncName, today, uid } from '../lib/core';
+import { DEFAULT_PRODUCT_IMAGE, activeEvent, catLabel, findActivePromo, money, saleCatsOf, saleUnitPrice, shortTag, sortProducts, syncName, today, uid } from '../lib/core';
 import { Dropdown } from '../Dropdown';
 import { Image, Modal } from '../ui';
 import type { Product } from '../types';
 
-interface Line { pid: string; price: number; cost: number; qty: number; }
+interface Line { pid: string; price: number; cost: number; qty: number; manual?: boolean; }
 
 const SALE_PAGE_SIZE = 4;
 
@@ -14,26 +14,28 @@ export function SaleRegistration({ onClose }: { onClose: () => void }) {
   const s = store!;
   const draft = state.saleDraft && state.saleDraft.storeId === s.id ? state.saleDraft : null;
   const [employee, setEmployee] = useState(draft?.employee ?? syncName());
-  const [category, setCategory] = useState(draft?.category ?? '');
+  const [categories, setCategories] = useState<string[]>(draft?.categories && Array.isArray(draft.categories) ? draft.categories.slice() : []);
   const [lines, setLines] = useState<Line[]>(draft ? JSON.parse(JSON.stringify(draft.lines)) : []);
   // Texto que se esta escribiendo en el input de cantidad de cada linea,
   // separado del numero confirmado: asi se puede borrar un '0' y escribir
   // otra cosa sin que el campo se reponga solo en cada tecla.
   const [qtyDraft, setQtyDraft] = useState<Record<number, string>>({});
-  // Buscador de producto dentro de la categoria seleccionada (filtra por
-  // nombre y por tag). Al buscar o cambiar de categoria se vuelve a la
-  // primera pagina de productos.
+  // Buscador de producto (filtra por nombre y por tag). Al buscar o cambiar
+  // de categoria se vuelve a la primera pagina de productos.
   const [query, setQuery] = useState('');
   const [page, setPage] = useState(0);
   const pagerRef = useRef<HTMLDivElement>(null);
 
+  // Evento activo: su descuento se aplica solo (saleUnitPrice) y las ventas
+  // registradas en el quedan marcadas con su nombre en el historial.
+  const ev = activeEvent(s);
+
   const cats = saleCatsOf(s).map((c) => ({ v: c, label: c, count: s.products.filter((p) => catLabel(p) === c).length }));
+  // Categorias visibles en el selector: TODAS menos las ya elegidas (para no
+  // poder repetirlas); sin ninguna elegida se muestran todos los productos.
   const catsOpen = cats.length;
-  // Sin categoria seleccionada se muestran TODOS los productos (paginados);
-  // al elegir una, solo los de esa categoria. Asi el buscador siempre tiene
-  // algo que filtrar, aunque la persona nunca toque el selector.
-  const list = sortByOrder(category ? s.products.filter((p) => catLabel(p) === category) : s.products);
-  // Filtro por lo que se escribe en el buscador (nombre o tag).
+  const selectableCats = cats.filter((c) => !categories.includes(c.v));
+  const list = sortProducts(categories.length ? s.products.filter((p) => categories.includes(catLabel(p))) : s.products);
   const q = query.trim().toLowerCase();
   const filtered = q
     ? list.filter((p) => (p.tag && p.tag.trim().toLowerCase().includes(q)) || p.name.toLowerCase().includes(q))
@@ -44,10 +46,24 @@ export function SaleRegistration({ onClose }: { onClose: () => void }) {
   for (let i = 0; i < filtered.length; i += SALE_PAGE_SIZE) pages.push(filtered.slice(i, i + SALE_PAGE_SIZE));
   const maxPage = Math.max(0, pages.length - 1);
   const curPage = Math.min(page, maxPage);
+  // Monto en bruto (precios base, sin promos ni evento) que usan las
+  // promos con condicion de total de venta y el descuento automatico.
+  const baseTotal = lines.reduce((n, l) => { const p = s.products.find((x) => x.id === l.pid); return n + (p ? p.price : 0) * l.qty; }, 0);
   const total = lines.reduce((n, l) => n + l.price * l.qty, 0);
 
-  // Al cambiar de categoria o de texto en el buscador se reinicia la pagina.
-  useEffect(() => { setPage(0); if (pagerRef.current) pagerRef.current.scrollLeft = 0; }, [category, query]);
+  // Recalcula el precio automatico (promo del producto + evento) de las
+  // lineas cuyo precio no se edito a mano. Las lineas manuales se respetan.
+  function recomputeAutos(next: Line[]): Line[] {
+    return next.map((l) => {
+      if (l.manual) return l;
+      const p = s.products.find((x) => x.id === l.pid);
+      if (!p) return l;
+      const base = next.reduce((n, o) => { const pp = s.products.find((x) => x.id === o.pid); return n + (pp ? pp.price : 0) * o.qty; }, 0);
+      return { ...l, price: saleUnitPrice(s, p, l.qty, base) };
+    });
+  }
+
+  useEffect(() => { setPage(0); if (pagerRef.current) pagerRef.current.scrollLeft = 0; }, [categories.join('|'), query]);
 
   function goPage(n: number) {
     const next = Math.max(0, Math.min(maxPage, n));
@@ -66,37 +82,33 @@ export function SaleRegistration({ onClose }: { onClose: () => void }) {
     if (i !== page && i >= 0 && i <= maxPage) setPage(i);
   }
 
-  function persist(next: { employee?: string; category?: string; lines?: Line[] }, immediate = false) {
+  function persist(next: Partial<{ employee: string; categories: string[]; lines: Line[] }>, immediate = false) {
     const d = {
       employee: next.employee !== undefined ? next.employee : employee,
-      category: next.category !== undefined ? next.category : category,
+      categories: next.categories !== undefined ? next.categories : categories,
       lines: next.lines !== undefined ? next.lines : lines,
     };
     if (immediate) setEmployee(d.employee);
-    if (immediate) setCategory(d.category);
+    if (immediate) setCategories(d.categories);
     if (immediate) setLines(d.lines);
-    replace((x) => { x.saleDraft = { storeId: s.id, employee: d.employee, category: d.category, lines: JSON.parse(JSON.stringify(d.lines)) }; });
+    replace((x) => { x.saleDraft = { storeId: s.id, employee: d.employee, categories: d.categories.slice(), lines: JSON.parse(JSON.stringify(d.lines)) }; });
   }
 
   function clearDraft() {
     replace((x) => { x.saleDraft = null; });
-    setEmployee(''); setCategory(''); setLines([]);
+    setEmployee(''); setCategories([]); setLines([]); setQuery('');
     toast('Venta en curso borrada.');
   }
 
   function addLine(p: Product) {
-    const next = [...lines, { pid: p.id, price: p.price, cost: p.cost ?? 0, qty: 0 }];
+    const next = recomputeAutos([...lines, { pid: p.id, price: p.price, cost: p.cost ?? 0, qty: 0 }]);
     setLines(next);
     persist({ lines: next }, false);
-    // Antes esto enfocaba a la fuerza el input de cantidad recien
-    // agregado, lo que en celular abre el teclado solo sin que la persona
-    // haya tocado nada. Owen ya habia pedido que nada abra el teclado
-    // automaticamente: se deja la linea agregada sin enfocar, el usuario
-    // toca el campo cuando quiera escribir la cantidad.
   }
 
-  function setLine(n: number, patch: Partial<Line>) {
-    const next = lines.map((l, i) => i === n ? { ...l, ...patch } : l);
+  function setLine(n: number, patch: Partial<Line>, recompute = false) {
+    const mapped = lines.map((l, i) => i === n ? { ...l, ...patch } : l);
+    const next = recompute ? recomputeAutos(mapped) : mapped;
     setLines(next);
     persist({ lines: next }, false);
   }
@@ -104,7 +116,7 @@ export function SaleRegistration({ onClose }: { onClose: () => void }) {
   function setQtyText(n: number, raw: string) {
     setQtyDraft((d) => ({ ...d, [n]: raw }));
     const num = raw.trim() === '' ? 0 : Math.max(0, Math.round(Number(raw)) || 0);
-    setLine(n, { qty: num });
+    setLine(n, { qty: num }, true);
   }
 
   function clearQtyDraft(n: number) {
@@ -117,6 +129,12 @@ export function SaleRegistration({ onClose }: { onClose: () => void }) {
     persist({ lines: next }, false);
   }
 
+  function setManualPrice(n: number, raw: string) {
+    const mapped = lines.map((l, i) => i === n ? { ...l, price: raw.trim() === '' ? 0 : Math.max(0, Number(raw) || 0), manual: true } : l);
+    setLines(mapped);
+    persist({ lines: mapped }, false);
+  }
+
   function register() {
     const emp = (employee.trim() || syncName());
     const items = lines.filter((l) => l.qty > 0).map((l) => ({ productId: l.pid, promotionId: null, qty: l.qty, price: l.price, cost: l.cost }));
@@ -124,7 +142,7 @@ export function SaleRegistration({ onClose }: { onClose: () => void }) {
     const now = new Date();
     replace((x) => {
       const st = x.stores.find((y) => y.id === s.id)!;
-      st.sales.push({ id: uid(), date: today(), time: now.toTimeString().slice(0, 5), employee: emp, items: JSON.parse(JSON.stringify(items)), closed: false });
+      st.sales.push({ id: uid(), date: today(), time: now.toTimeString().slice(0, 5), employee: emp, items: JSON.parse(JSON.stringify(items)), closed: false, event: ev ? ev.name : undefined });
       x.saleDraft = null;
     });
     onClose();
@@ -141,40 +159,40 @@ export function SaleRegistration({ onClose }: { onClose: () => void }) {
     );
   }
 
-  // Tarjeta de un producto dentro de una pagina del selector (4 por pagina).
-  // Fuera de la grilla se usa el mismo estilo en miniatura de lineas.
   const productCard = (p: Product) => (
     <div className="sale-prod-card" key={p.id}>
+      <div className="prod-cat">{(p.category || '').trim() || 'Sin categoría'}</div>
       <div className="sale-brand"><Image src={p.image || DEFAULT_PRODUCT_IMAGE} cls="product-image-sale" /><div><div className="product-name">{p.name}</div><div className="muted">{money(p.price)}</div></div></div>
       <button type="button" className="icon-btn sale-add" title="Añadir a la venta" onClick={() => addLine(p)}>＋</button>
     </div>
   );
 
-  const priceItemsFor = (p: Product): { v: string; label: string }[] => {
-    const items = [{ v: String(p.price), label: 'Precio normal · ' + money(p.price) }];
-    (p.promos || []).forEach((pr) => { if (Number.isFinite(pr.price)) items.push({ v: String(pr.price), label: pr.label + ' · ' + money(pr.price) }); });
-    return items;
-  };
-
   const lineRow = (l: Line, n: number) => {
     const p = s.products.find((x) => x.id === l.pid);
     if (!p) return null;
-    const priceItems = priceItemsFor(p);
-    const priceDrop = priceItems.length > 1 ? (
-      <Dropdown value={String(l.price)} ph="Precio" items={priceItems} onPick={(v) => setLine(n, { price: Number(v) || 0 })} />
-    ) : undefined;
+    const promo = findActivePromo(p, l.qty, baseTotal);
     return (
       <div className="sale-builder-line" data-pid={p.id} data-price={l.price} key={n}>
         <div className="sale-builder-head">
-          <div className="sale-brand"><Image src={p.image || DEFAULT_PRODUCT_IMAGE} cls="product-image-sale" /><div className="sale-builder-name">{p.name}</div></div>
-          <button className="icon-btn sale-del" title="Quitar" onClick={() => removeLine(n)}>×</button>
+          <Image src={p.image || DEFAULT_PRODUCT_IMAGE} cls="product-image-sale" />
+          <div className="sale-builder-name">
+            <span className="b-name">{p.name}</span>
+            {p.tag ? <span className="prod-tag">{shortTag(p.tag)}</span> : null}
+          </div>
+          <button className="sale-del" title="Quitar este producto de la venta" onClick={() => removeLine(n)}>Quitar</button>
         </div>
-        <div className="sale-builder-price">{money(l.price)} <span className="muted">c/u</span></div>
-        {priceDrop && <div className="sale-promo">{priceDrop}</div>}
+        {promo && <div className="sale-promo-note">Promo aplicada: {promo.label}</div>}
+        <div className="sale-builder-price">
+          <input className="price-input" type="number" min={0} step="any" inputMode="decimal" value={String(l.price)} onChange={(e) => setManualPrice(n, e.target.value)} title="Puedes cambiar el precio a mano" />
+          <span className="muted">c/u</span>
+          {l.manual && (
+            <button type="button" className="icon-remove reset-price" title="Volver al precio automático" onClick={() => setLine(n, { manual: false }, true)}>↺</button>
+          )}
+        </div>
         <div className="sale-builder-qty">
-          <button type="button" className="qty-btn" onClick={() => { clearQtyDraft(n); setLine(n, { qty: Math.max(0, l.qty - 1) }); }}>−</button>
+          <button type="button" className="qty-btn" onClick={() => { clearQtyDraft(n); setLine(n, { qty: Math.max(0, l.qty - 1) }, true); }}>−</button>
           <input className="qty-input" type="number" min={0} step={1} inputMode="numeric" value={qtyDraft[n] !== undefined ? qtyDraft[n] : String(l.qty)} onChange={(e) => setQtyText(n, e.target.value)} onBlur={() => clearQtyDraft(n)} />
-          <button type="button" className="qty-btn" onClick={() => { clearQtyDraft(n); setLine(n, { qty: l.qty + 1 }); }}>+</button>
+          <button type="button" className="qty-btn" onClick={() => { clearQtyDraft(n); setLine(n, { qty: l.qty + 1 }, true); }}>+</button>
         </div>
       </div>
     );
@@ -193,16 +211,23 @@ export function SaleRegistration({ onClose }: { onClose: () => void }) {
             <div className="field"><label>Empleado que registra</label>
               <input maxLength={40} placeholder="Tu nombre" value={employee} onChange={(e) => { setEmployee(e.target.value); persist({ employee: e.target.value }); }} />
             </div>
-            {catsOpen ? <>
-              <label className="sale-pick-label">Categoría</label>
-              <Dropdown value={category} ph="Seleccionar categoría…" items={cats} onPick={(v) => { setCategory(v); persist({ category: v }); }} />
-            </> : null}
-            <label className="sale-pick-label">{category ? 'Productos de ' + category : 'Todos los productos'}{filtered.length ? ' · ' + filtered.length : ''}</label>
+            {catsOpen ? (
+              <div className="sale-cats">
+                <span className="sale-pick-label">Categorías</span>
+                {categories.map((c) => (
+                  <div className="cat-chip" key={c}>{c}<button type="button" title={`Quitar ${c}`} onClick={() => { const next = categories.filter((x) => x !== c); setCategories(next); persist({ categories: next }); }}>×</button></div>
+                ))}
+                {selectableCats.length > 0 && (
+                  <Dropdown value="" ph="＋ Añadir categoría" items={selectableCats} onPick={(v) => { const next = [...categories, v]; setCategories(next); persist({ categories: next }); }} />
+                )}
+              </div>
+            ) : null}
+            <label className="sale-pick-label">{categories.length ? 'Productos de las categorías · ' + filtered.length : 'Todos los productos' + (filtered.length ? ' · ' + filtered.length : '')}</label>
             <div className="sale-search">
               <input type="search" inputMode="search" placeholder="Buscar producto…" value={query} onChange={(e) => setQuery(e.target.value)} />
             </div>
             {!filtered.length ? (
-              <div className="notice">{q ? 'Sin productos que coincidan con la búsqueda.' : 'Sin productos todavía.'}</div>
+              <div className="notice">{q ? 'Sin productos que coincidan con la búsqueda en las categorías elegidas.' : 'Sin productos todavía.'}</div>
             ) : (
               <div className="sale-products">
                 <div className="sale-products-scroll" ref={pagerRef} onScroll={onPagerScroll}>
@@ -220,6 +245,9 @@ export function SaleRegistration({ onClose }: { onClose: () => void }) {
                   </div>
                 )}
               </div>
+            )}
+            {ev && (
+              <div className="event-banner">Evento “{ev.name}” activo: −{ev.pct}% en toda la venta</div>
             )}
             <div id="sale-lines" className="sale-lines">{lines.map(lineRow)}</div>
             <div className="sale-total"><span>Total de la venta</span><b>{money(total)}</b></div>

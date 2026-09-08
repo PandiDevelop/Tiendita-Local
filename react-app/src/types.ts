@@ -1,7 +1,19 @@
+// El precio final se define como precio fijo ("price") o descuento porcentual
+// ("pct"). La condicion dice CUANDO se activa la promo: por cantidad de ese
+// mismo producto (min = unidades), por total de la venta (min = monto en COP)
+// o por fechas (start..end). La prioridad entre varias promos del mismo
+// producto es el orden del arreglo (la primera que cumpla su condicion gana);
+// en el editor se reordenan para cambiar esa prioridad.
 export interface Promo {
   id: string;
   label: string;
+  type: 'price' | 'pct';
   price: number;
+  pct: number;
+  cond: 'qty' | 'saleTotal' | 'date';
+  min: number;
+  start?: string;
+  end?: string;
 }
 
 // Precio, costo y promociones por defecto de una categoria. Al crearla o
@@ -55,14 +67,33 @@ export interface Sale {
   by?: string;
   closed: boolean;
   items: SaleItem[];
+  // Si se registro durante un evento activo (pestana Eventos), se guarda el
+  // nombre del evento para mostrarlo en el historial junto a fecha y hora.
+  event?: string;
 }
 
 export type Role = 'owner' | 'admin' | 'worker';
+
+// Evento especial (pestana Eventos): mientras este activo (y dentro del rango
+// de fechas si se definio), sus ventas registradas aplican su descuento a todo
+// y quedan marcadas con el nombre del evento en el historial.
+export interface StoreEvent {
+  id: string;
+  name: string;
+  pct: number;
+  active: boolean;
+  start?: string;
+  end?: string;
+}
 
 export interface Member {
   name: string;
   role: Role;
   joinedAt: number;
+  // UUID unico del empleado, generado al registrarse la primera vez en la
+  // tienda. No puede repetirse ni entre ID's ni entre nombres de empleados
+  // cuando se sincronizan entre dispositivos (ver validarNombreEmpleado).
+  eid?: string;
 }
 
 export interface InventoryLogEntry {
@@ -102,14 +133,15 @@ export interface Store {
   createdBy?: string | null;
   localRole?: Role;
   members?: Record<string, Member>;
+  events?: StoreEvent[];
 }
 
-export type Tab = 'inicio' | 'productos' | 'inventario' | 'ganancias' | 'notas' | 'empleados';
+export type Tab = 'inicio' | 'productos' | 'inventario' | 'ganancias' | 'notas' | 'empleados' | 'eventos';
 
 export interface SaleDraft {
   storeId: string;
   employee: string;
-  category: string;
+  categories: string[];
   lines: { pid: string; price: number; qty: number }[];
 }
 

@@ -1,16 +1,17 @@
 {
   "0": "sync.ts",
+  "1": "setup.ts",
   "2": "ui.tsx",
-  "3": "core.ts",
+  "3": "App.tsx",
   "4": "package.json",
   "5": "Inventory.tsx",
   "6": "ProductForm.tsx",
   "7": "compilerOptions",
-  "8": "App.tsx",
+  "8": "SaleRegistration.tsx",
   "9": "vite-env.d.ts",
   "10": "public/sw.js",
   "11": "sw.js",
-  "12": "StoreModal.tsx",
+  "12": "core.ts",
   "13": "Mi Tiendita",
   "14": "AGENTS.md"
 }

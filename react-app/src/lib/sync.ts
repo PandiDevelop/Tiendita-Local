@@ -199,6 +199,7 @@ export function createSync(
         sales,
         categories: s.categories || [],
         categoryPricing: s.categoryPricing || {},
+        events: s.events || [],
         updatedBy: cid(),
       };
       if (typeof s.notes === 'string' && s.notes) main.notes = s.notes;
@@ -399,6 +400,9 @@ export function applyRemote(getState: () => AppState, mutate: (fn: (d: AppState)
     if (!st) return;
     if (members) st.members = members as Record<string, Member>;
     if (remote.createdBy && remote.createdBy !== st.createdBy) st.createdBy = remote.createdBy as string;
+    if (Array.isArray(remote.events)) {
+      st.events = JSON.parse(JSON.stringify(remote.events)) as Store['events'];
+    }
 
     const products = new Map(st.products.map((p) => [p.id, p]));
     toProductsArr(remote.products).forEach((p) => products.set(p.id, p));
@@ -467,6 +471,17 @@ async function loadProducts(key: string): Promise<Product[]> {
   return out;
 }
 
+// True si ya hay un empleado distinto (otro dispositivo/registro) con el mismo
+// nombre configurado en este dispositivo. El nombre se compara sin mayusculas
+// y sin espacios de mas para que "Ana " y "ana" se consideren duplicados.
+function clashName(members: Record<string, Member>): boolean {
+  const n = syncName().trim().toLowerCase();
+  if (!n) return false;
+  return Object.keys(members).some(
+    (k) => k !== syncClientId() && (members[k] && (members[k].name || '').trim().toLowerCase()) === n,
+  );
+}
+
 export async function joinStore(pin: string, getState: () => AppState, mutate: (fn: (d: AppState) => void) => void, attach: (id: string) => void) {
   if (!pin) { await customAlert('Escribe el código.'); return; }
   if (!syncReady()) { await customAlert('Configura Firebase primero'); return; }
@@ -484,8 +499,17 @@ export async function joinStore(pin: string, getState: () => AppState, mutate: (
     if (!snap.exists()) { await customAlert('No existe una tienda con ese código.'); return; }
     const r = snap.data();
     if (r.deleted) { await customAlert('Esa tienda fue eliminada. Pide un código nuevo.'); return; }
+    const remote: Record<string, Member> = (r.members || {}) as Record<string, Member>;
+    // Cada empleado se registra con un UUID unico (eid) generado aqui. El
+    // nombre tampoco puede repetirse entre empleados de la tienda: antes de
+    // unirse se valida contra los miembros remotos, y al sincronizar (ver
+    // joinStore/activateSync y validateMemberName) se vuelve a comprobar.
+    if (clashName(remote)) {
+      await customAlert('Ya hay un empleado con ese nombre en la tienda. Cambia tu nombre y vuelve a intentarlo.');
+      return;
+    }
     const members: Record<string, Member> = {};
-    members[syncClientId()] = { name: syncName(), role: 'worker', joinedAt: Date.now() };
+    members[syncClientId()] = { name: syncName(), role: 'worker', joinedAt: Date.now(), eid: (remote[syncClientId()] && remote[syncClientId()].eid) || uid() };
     await setDoc(ref, { members }, { merge: true });
     // Productos: se combinan los que aun puedan vivir embebidos en el
     // documento principal (modelo viejo) con los de la subcoleccion (modelo
@@ -503,6 +527,7 @@ export async function joinStore(pin: string, getState: () => AppState, mutate: (
       sales: toSalesArr(r.sales),
       categories: JSON.parse(JSON.stringify((r.categories || []))),
       categoryPricing: r.categoryPricing && typeof r.categoryPricing === 'object' ? JSON.parse(JSON.stringify(r.categoryPricing)) : {},
+      events: Array.isArray(r.events) ? JSON.parse(JSON.stringify(r.events)) : [],
       inventory: r.inventory && typeof r.inventory === 'object' ? { ...(r.inventory as Record<string, number>) } : {},
       notes: typeof r.notes === 'string' ? r.notes : '',
       noteLog: toNoteLogArr(r.noteLog),
@@ -539,7 +564,7 @@ export async function activateSync(storeId: string, pin: string, getState: () =>
       const sales: Record<string, Sale> = {};
       s.sales.forEach((x) => (sales[x.id] = x));
       const members: Record<string, Member> = {};
-      members[syncClientId()] = { name: syncName(), role: 'owner', joinedAt: Date.now() };
+      members[syncClientId()] = { name: syncName(), role: 'owner', joinedAt: Date.now(), eid: uid() };
       const noteLog: Record<string, unknown> = {}, invLog: Record<string, unknown> = {};
       (s.noteLog || []).forEach((e) => { if (e && e.id) noteLog[e.id] = e; });
       (s.invLog || []).forEach((e) => { if (e && e.id) invLog[e.id] = e; });
@@ -551,6 +576,7 @@ export async function activateSync(storeId: string, pin: string, getState: () =>
         name: s.name, image: s.image, sales, categories: s.categories || [],
         categoryPricing: s.categoryPricing || {},
         notes: s.notes || '', noteLog, invLog, inventory: s.inventory || {},
+        events: s.events || [],
         createdBy: syncClientId(), members, updatedBy: syncClientId(),
       }, { merge: true });
       mutate((d) => { const st = d.stores.find((x) => x.id === storeId); if (st) { st.localRole = 'owner'; st.syncKey = key; st.syncPin = pin; } });
@@ -568,8 +594,12 @@ export async function activateSync(storeId: string, pin: string, getState: () =>
       const s = getState().stores.find((x) => x.id === storeId);
       if (!s) return;
       const prev = (r.members && (r.members[syncClientId()])) || (s.members && s.members[syncClientId()]) || {};
+      if (clashName((r.members || {}) as Record<string, Member>)) {
+        await customAlert('Ya hay un empleado con ese nombre en la tienda. Cambia tu nombre y vuelve a intentarlo.');
+        return;
+      }
       const upd: Record<string, Member> = {};
-      upd[syncClientId()] = { name: syncName(), role: isOwner ? 'owner' : 'worker', joinedAt: (prev as Member).joinedAt || Date.now() };
+      upd[syncClientId()] = { name: syncName(), role: isOwner ? 'owner' : 'worker', joinedAt: (prev as Member).joinedAt || Date.now(), eid: (prev as Member).eid || uid() };
       await setDoc(ref, { members: upd }, { merge: true });
       if (isOwner && !r.createdBy) await setDoc(ref, { createdBy: syncClientId() }, { merge: true });
       // Se incorporan tambien los productos de la subcoleccion, para que el

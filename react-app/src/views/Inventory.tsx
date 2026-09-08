@@ -1,7 +1,8 @@
 import { useState } from 'react';
+import type { PointerEvent as ReactPointerEvent } from 'react';
 import { useStore } from '../store';
-import { DEFAULT_PRODUCT_IMAGE, esc, inventorySold, adoptInvLog, syncName, groupedByCategory, storeCats, shortTag } from '../lib/core';
-import { Image, Modal } from '../ui';
+import { DEFAULT_PRODUCT_IMAGE, esc, inventorySold, adoptInvLog, syncName, groupedByCategory, storeCats, reorderCategoryProducts, shortTag } from '../lib/core';
+import { GearIcon, Image, Modal } from '../ui';
 import { CategoryModal } from './CategoryModal';
 import type { Product } from '../types';
 
@@ -24,6 +25,9 @@ export function Inventory() {
   const [cargo, setCargo] = useState<QtyPopup | null>(null);
   // Configuracion de categoria abierta con la tuerca del encabezado.
   const [catModal, setCatModal] = useState<string | null>(null);
+  // Orden temporal de productos de UNA categoria mientras se arrastra (igual
+  // que en el Catalogo); se guarda el orden final al soltar.
+  const [prodDrag, setProdDrag] = useState<{ cat: string; order: string[]; pid: string } | null>(null);
 
   const sold = inventorySold(s);
   const base = s.inventory || {};
@@ -49,6 +53,45 @@ export function Inventory() {
 
   function cur(p: Product): number {
     return Math.round(base[p.id] || 0);
+  }
+
+  // Arrastrar para reordenar produtos dentro de una categoria (mismo orden
+  // compartido con el Catalogo: el campo 'order' del producto). Misma
+  // implementacion con Pointer Events que en Catalog.tsx.
+  function startProdDrag(e: ReactPointerEvent, cat: string, pid: string, list: Product[]) {
+    e.preventDefault();
+    e.stopPropagation();
+    let order = list.map((p) => p.id);
+    setProdDrag({ cat, order, pid });
+    const handle = e.currentTarget as HTMLElement;
+    try { handle.setPointerCapture(e.pointerId); } catch { /* noop */ }
+    const move = (ev: PointerEvent) => {
+      const el = document.elementFromPoint(ev.clientX, ev.clientY) as HTMLElement | null;
+      const row = el && (el.closest('[data-pid]') as HTMLElement | null);
+      const overPid = row?.getAttribute('data-pid');
+      if (!overPid || overPid === pid) return;
+      const from = order.indexOf(pid);
+      const to = order.indexOf(overPid);
+      if (from === -1 || to === -1 || from === to) return;
+      const next = order.slice();
+      next.splice(from, 1);
+      next.splice(to, 0, pid);
+      order = next;
+      setProdDrag({ cat, order, pid });
+    };
+    const finish = () => {
+      document.removeEventListener('pointermove', move);
+      document.removeEventListener('pointerup', finish);
+      document.removeEventListener('pointercancel', finish);
+      setProdDrag(null);
+      replace((d) => {
+        const st = d.stores.find((x) => x.id === s.id)!;
+        reorderCategoryProducts(st, order);
+      });
+    };
+    document.addEventListener('pointermove', move);
+    document.addEventListener('pointerup', finish);
+    document.addEventListener('pointercancel', finish);
   }
 
   function bump(p: Product, delta: number) {
@@ -137,20 +180,21 @@ export function Inventory() {
                     <span className="muted">· {g.list.length} producto{g.list.length === 1 ? '' : 's'}</span>
                   </button>
                   {editable && (
-                    <button className="icon-btn" title="Configurar la categoría (precio, costo y promociones por defecto)" onClick={() => setCatModal(g.name)}>⚙</button>
+                    <button className="icon-btn" title="Configurar la categoría (precio, costo y promociones por defecto)" onClick={() => setCatModal(g.name)}><GearIcon /></button>
                   )}
                 </div>
                 {open && (
                   <div className="cat-body">
                     {g.list.length ? (
-                      <table><thead><tr><th>Producto</th><th>Disponible</th><th>Vendido</th><th>Adquirido</th><th>Ajustar</th></tr></thead><tbody>
+                      <table><thead><tr><th></th><th>Producto</th><th>Disponible</th><th>Vendido</th><th>Adquirido</th><th>Ajustar</th></tr></thead><tbody>
                         {g.list.map((p) => {
                           const has = base[p.id] != null;
                           const buy = has ? Math.round(base[p.id]) : null;
                           const soldQty = sold[p.id] || 0;
                           const avail = has ? Math.max(0, buy! - soldQty) : null;
                           return (
-                            <tr key={p.id}>
+                            <tr key={p.id} data-pid={p.id} className={prodDrag?.pid === p.id ? 'dragging' : ''}>
+                              <td className="drag-cell"><button type="button" className="icon-btn drag-handle" title="Arrastrar para reordenar" onPointerDown={(e) => startProdDrag(e, g.name, p.id, g.list)}>⠿</button></td>
                               <td className="cat-bar"><div className="product-cell"><Image src={p.image || DEFAULT_PRODUCT_IMAGE} cls="product-image-cell" /><div className="product-name">{esc(p.name)}{p.tag && p.tag.trim() ? <span className="prod-tag" title={esc(p.tag)}>{esc(shortTag(p.tag))}</span> : null}</div></div></td>
                               <td>{avail == null ? '—' : avail}</td>
                               <td>{soldQty}</td>

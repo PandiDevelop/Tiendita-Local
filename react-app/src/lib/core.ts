@@ -1,4 +1,4 @@
-import type { AppState, CategoryPricing, InventoryLogEntry, NoteEntry, Product, Promo, Role, Sale, SaleDraft, SaleItem, Store } from '../types';
+import type { AppState, CategoryPricing, InventoryLogEntry, NoteEntry, Product, Promo, Role, Sale, SaleDraft, SaleItem, Store, StoreEvent } from '../types';
 
 export const KEY = 'mi-tiendita-v1';
 export const CLIENT_KEY = 'mi-tiendita-client';
@@ -26,7 +26,7 @@ export const DEFAULT_PRODUCT_TAG = 'general';
 // Muestra un tag acortado cuando es muy largo: p.ej. "Uma musume" se ve como
 // "Uma". Se usa en listas donde el tag compite con el nombre del producto.
 export function shortTag(tag: string | undefined, max = 5): string {
-  const t = (tag || '').trim();
+  const t = (tag || '').trim().toUpperCase();
   if (!t) return '';
   return t.length > max ? t.slice(0, max) : t;
 }
@@ -42,6 +42,15 @@ export function timeNow(): string {
 export function money(n: number | string | null | undefined): string {
   const num = Number(n || 0);
   return new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', maximumFractionDigits: 0 }).format(Number.isFinite(num) ? num : 0);
+}
+
+// Etiqueta corta de una promocion para listas: muestra la recompensa segun su
+// tipo (precio fijo o porcentaje de descuento), no solo el nombre.
+export function promoText(x: Promo | undefined | null): string {
+  const base = (x && x.label) || 'Promoción';
+  if (x && x.type === 'pct') return base + ' · −' + (Number.isFinite(x.pct) ? x.pct : 0) + '%';
+  if (x && Number.isFinite(x.price)) return base + ' · ' + money(x.price);
+  return base;
 }
 
 // Antes esta funcion reemplazaba &, <, >, comillas y apostrofes por sus
@@ -97,6 +106,33 @@ export function mergeItems(a: SaleItem[] | undefined, b: SaleItem[] | undefined)
   return Array.from(map.values());
 }
 
+// Normaliza cualquier forma de promo (nueva, vieja o escrita a mano durante
+// una migracion) al modelo actual. En el nuevo modelo una promo se aplica de
+// forma automatica al rastro de la venta: el tipo de recompensa es 'price'
+// (precio fijo) o 'pct' (porcentaje de descuento) y la condicion de
+// activacion es 'qty' (cantidad del producto), 'saleTotal' (monto total de la
+// venta) o 'date' (rango de fechas).
+export function normalizePromo(x: string | Partial<Promo> | undefined | null, fallback: number): Promo {
+  if (typeof x === 'string') {
+    return { id: uid(), label: x, type: 'price', price: fallback, pct: 0, cond: 'qty', min: 1, start: '', end: '' };
+  }
+  const base = (x || {}) as Partial<Promo>;
+  const type = base.type === 'pct' ? 'pct' : 'price';
+  const cond = base.cond === 'saleTotal' || base.cond === 'date' ? base.cond : 'qty';
+  const min = Number.isFinite(base.min) ? (base.min as number) : cond === 'qty' ? 1 : 0;
+  return {
+    id: base.id || uid(),
+    label: String(base.label || '').trim(),
+    type,
+    price: Number.isFinite(base.price) ? (base.price as number) : type === 'price' ? fallback : 0,
+    pct: Number.isFinite(base.pct) ? (base.pct as number) : 0,
+    cond,
+    min,
+    start: base.start || '',
+    end: base.end || '',
+  };
+}
+
 export function normalizeStore(store: Store): Store {
   store.image = store.image || DEFAULT_STORE_IMAGE;
   store.products ||= [];
@@ -107,11 +143,26 @@ export function normalizeStore(store: Store): Store {
   store.notes = typeof store.notes === 'string' ? store.notes : '';
   store.noteLog = Array.isArray(store.noteLog) ? store.noteLog : [];
   store.invLog = Array.isArray(store.invLog) ? store.invLog : [];
+  store.events = (store.events || []).filter((e) => !!e).map((e) => ({
+    id: e.id || uid(),
+    name: String(e.name || '').trim(),
+    pct: Number.isFinite(e.pct) ? e.pct : 0,
+    active: !!e.active,
+    start: e.start || '',
+    end: e.end || '',
+  }));
+  // Todo miembro registrado debe tener su UUID unico (eid). En tiendas
+  // antiguas sin el campo se genera en este punto para que la sincronizacion
+  // pueda validar unicidad de ID y nombre de empleados.
+  if (store.members) {
+    Object.keys(store.members).forEach((k) => {
+      const m = store.members && store.members[k];
+      if (m && !m.eid) m.eid = uid();
+    });
+  }
   store.products.forEach((p) => {
     const old = p.promos ?? [];
-    p.promos = old.map((x) =>
-      typeof x === 'string' ? { id: uid(), label: x, price: p.price } : { id: x.id || uid(), label: x.label || '', price: Number.isFinite(x.price) ? x.price : p.price },
-    );
+    p.promos = old.map((x) => normalizePromo(x, p.price));
     p.category = p.category || '';
     p.cost = Number.isFinite(p.cost) ? p.cost : 0;
   });
@@ -138,6 +189,13 @@ export function loadState(): AppState {
   // pantalla en blanco.
   if ((merged.tab as string) === 'historial') merged.tab = 'ganancias';
   (merged.stores || []).forEach(normalizeStore);
+  // Drafts de venta guardados con el selector viejo de UNA categoria: los
+  // migro a la lista de categorias seleccionadas (chips con X).
+  if (merged.saleDraft && typeof (merged.saleDraft as unknown as { category?: unknown }).category === 'string') {
+    const d = merged.saleDraft as unknown as { category?: string };
+    merged.saleDraft = { ...merged.saleDraft, categories: d.category && d.category.trim() ? [d.category.trim()] : [] };
+  }
+  if (merged.saleDraft && !Array.isArray(merged.saleDraft.categories)) merged.saleDraft.categories = [];
   return merged;
 }
 
@@ -311,8 +369,8 @@ export function setCategoryPricing(s: Store, cat: string, price: number, cost: n
   if (!v || !Number.isFinite(price) || price < 0) return null;
   const cst = Number.isFinite(cost) && cost >= 0 ? cost : 0;
   const clean: Promo[] = (promos || [])
-    .filter((x) => x && x.label && x.label.trim() && Number.isFinite(x.price) && x.price >= 0)
-    .map((x) => ({ id: x.id || uid(), label: x.label.trim(), price: x.price }));
+    .filter((x) => x && x.label && x.label.trim())
+    .map((x) => normalizePromo(x, price));
   s.categoryPricing = s.categoryPricing || {};
   const entry: CategoryPricing = { price, cost: cst, promos: clean };
   s.categoryPricing[v] = entry;
@@ -326,23 +384,53 @@ export function setCategoryPricing(s: Store, cat: string, price: number, cost: n
   return entry;
 }
 
-// El precio de una promocion se edita como texto (no numero) para poder
-// borrar un '0' y escribir otra cosa sin que se reponga solo; se convierte a
-// numero (0 si queda vacio) al guardar. Se usa tanto en el formulario de
-// producto como en el modal de precio de categoria.
-export interface EditablePromo { id: string; label: string; price: string; }
-
-export function toEditablePromos(list: Promo[] | undefined): EditablePromo[] {
-  return (list || []).map((x) => ({ id: x.id, label: x.label, price: String(x.price) }));
+// Las promociones se editan como texto (no numero) para poder borrar un '0' y
+// escribir otra cosa sin que se reponga solo; se convierten a numero (0 si
+// queda vacio) al guardar. Se usa tanto en el formulario de producto como en
+// el modal de precio de categoria. Un campo 'start'/'end' en el rango de
+// fechas (cond 'date') con valor vacio significa 'sin limite' de ese lado.
+export interface EditablePromo {
+  id: string;
+  label: string;
+  type: 'price' | 'pct';
+  price: string;
+  pct: string;
+  cond: 'qty' | 'saleTotal' | 'date';
+  min: string;
+  start: string;
+  end: string;
 }
-
+function numText(v: string | number | null | undefined): string {
+  return String(v ?? '');
+}
+export function toEditablePromos(list: Promo[] | undefined): EditablePromo[] {
+  return (list || []).map((x) => ({
+    id: x.id,
+    label: x.label,
+    type: x.type === 'pct' ? 'pct' : 'price',
+    price: numText(x.price),
+    pct: numText(x.pct),
+    cond: x.cond === 'saleTotal' || x.cond === 'date' ? x.cond : 'qty',
+    min: numText(x.min),
+    start: x.start || '',
+    end: x.end || '',
+  }));
+}
 export function fromEditablePromos(list: EditablePromo[]): Promo[] {
+  const num = (v: string) => { const n = Number(v); return !v || !Number.isFinite(n) ? 0 : Math.max(0, n); };
   return list
     .filter((x) => x.label.trim())
-    .map((x) => {
-      const n = Number(x.price);
-      return { id: x.id, label: x.label.trim(), price: x.price.trim() === '' || !Number.isFinite(n) ? 0 : Math.max(0, n) };
-    });
+    .map((x) => normalizePromo({
+      id: x.id,
+      label: x.label.trim(),
+      type: x.type,
+      price: num(x.price),
+      pct: num(x.pct),
+      cond: x.cond,
+      min: num(x.min),
+      start: x.start || today(),
+      end: x.end || '',
+    }, 0));
 }
 
 // Fija el campo 'order' de cada producto de UNA categoria segun el nuevo
@@ -380,6 +468,17 @@ export function storeCats(s: Store): string[] {
   return cats;
 }
 
+// Las listas de la pagina (Catalogo e Inventario, y por comodidad tambien el
+// listado de productos en Registro de Venta) se muestran en orden alfabetico
+// por defecto. En cuanto el usuario arrastra una fila para reordenar, esa
+// categoria pasa a tener 'order' definido en todos sus productos y se respeta
+// ese orden manual de ahi en adelante (ver reorderCategoryProducts). Con eso
+// se mantiene "alfabetico por defecto pero siempre se puede cambiar de lugar".
+export function sortProducts(list: Product[]): Product[] {
+  if (list.some((p) => Number.isFinite(p.order))) return sortByOrder(list);
+  return [...list].sort((a, b) => (a.name || '').localeCompare(b.name || '', 'es'));
+}
+
 export interface CategoryGroup { name: string; list: Product[]; }
 
 // Agrupa los productos por categoria en el orden de storeCats (el orden en
@@ -390,10 +489,22 @@ export interface CategoryGroup { name: string; list: Product[]; }
 export function groupedByCategory(s: Store): CategoryGroup[] {
   const grouped: Record<string, Product[]> = {};
   s.products.forEach((p) => { const c = (p.category || '').trim() || 'Sin categoría'; (grouped[c] = grouped[c] || []).push(p); });
-  Object.keys(grouped).forEach((c) => { grouped[c] = sortByOrder(grouped[c]); });
+  Object.keys(grouped).forEach((c) => { grouped[c] = sortProducts(grouped[c]); });
   const groups = storeCats(s).map((c) => ({ name: c, list: grouped[c] || [] }));
   if (grouped['Sin categoría']) groups.push({ name: 'Sin categoría', list: grouped['Sin categoría'] });
   return groups;
+}
+
+// Inserta una categoria nueva en su posicion alfabetica dentro de store.categories
+// para que las listas arranquen en orden alfabetico; despues se puede arrastrar
+// para fijar un orden manual (el arreglo categories ES el orden manual de la
+// pestana Catalogo).
+export function insertCatSorted(s: Store, cat: string): void {
+  const v = (cat || '').trim();
+  if (!v || storeCats(s).includes(v)) return;
+  const list = [...(s.categories || []), v];
+  list.sort((a, b) => a.localeCompare(b, 'es'));
+  s.categories = list;
 }
 
 // Redimensiona y comprime una foto del dispositivo para que quepa en
@@ -471,4 +582,55 @@ export function canManageTeam(s: Store): boolean {
 
 export function saleDraftOf(state: AppState, s: Store): SaleDraft | null {
   return state.saleDraft && state.saleDraft.storeId === s.id ? state.saleDraft : null;
+}
+
+// Evento actualmente activo (pestana Eventos): activado, con pct > 0 y dentro
+// del rango de fechas si lo definio. Sus ventas aplican el descuento a todo y
+// quedan etiquetadas con el nombre del evento en el historial.
+export function activeEvent(s: Store): StoreEvent | undefined {
+  const t = today();
+  return (s.events || []).find((e) => e && e.name && e.active && (!e.start || t >= e.start) && (!e.end || t <= e.end));
+}
+
+// True si una promo esta activa para una venta dada. El "total" es el monto
+// en bruto (precios base, antes de aplicar ninguna promo/evento) para evitar
+// depedencias circulares entre el descuento y su propia condicion.
+export function promoApplies(pr: Promo | undefined, qty: number, saleTotal: number): boolean {
+  if (!pr || !pr.label || qty <= 0) return false;
+  const t = today();
+  if (pr.cond === 'date') {
+    if (pr.start && t < pr.start) return false;
+    if (pr.end && t > pr.end) return false;
+    return true;
+  }
+  if (pr.cond === 'saleTotal') return saleTotal >= (pr.min || 0);
+  return qty >= (pr.min || 1);
+}
+
+// Primera promo (en su orden = prioridad, gana la primera que cumpla) que se
+// aplica automaticamente a este producto dentro de la venta.
+export function findActivePromo(p: Product | undefined, qty: number, saleTotal: number): Promo | undefined {
+  if (!p) return undefined;
+  for (const pr of p.promos || []) {
+    if (promoApplies(pr, qty, saleTotal)) return pr;
+  }
+  return undefined;
+}
+
+// Precio por unidad de un producto ya con la promo aplicada (precio fijo o
+// porcentaje sobre el precio base).
+export function promoPrice(p: Product, qty: number, saleTotal: number): number {
+  const pr = findActivePromo(p, qty, saleTotal);
+  if (pr?.type === 'pct') return Math.max(0, p.price * (1 - (pr.pct || 0) / 100));
+  if (pr) return Math.max(0, pr.price);
+  return p.price;
+}
+
+// Precio final por unidad: promo del producto y, encima de eso, el descuento
+// del evento activo (que aplica a todo durante el evento).
+export function saleUnitPrice(s: Store, p: Product, qty: number, saleTotal: number): number {
+  let price = promoPrice(p, qty, saleTotal);
+  const ev = activeEvent(s);
+  if (ev && ev.pct) price = price * (1 - (ev.pct || 0) / 100);
+  return Math.max(0, Math.round(price));
 }

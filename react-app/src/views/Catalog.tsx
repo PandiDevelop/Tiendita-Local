@@ -1,8 +1,8 @@
 import { useState } from 'react';
 import type { PointerEvent as ReactPointerEvent } from 'react';
 import { useStore } from '../store';
-import { money, esc, inventorySold, reorderCategoryProducts, groupedByCategory, storeCats, shortTag, DEFAULT_PRODUCT_IMAGE } from '../lib/core';
-import { Image } from '../ui';
+import { money, esc, inventorySold, reorderCategoryProducts, groupedByCategory, storeCats, shortTag, promoText, DEFAULT_PRODUCT_IMAGE } from '../lib/core';
+import { GearIcon, Image } from '../ui';
 import { CategoryModal } from './CategoryModal';
 import type { Product } from '../types';
 
@@ -159,7 +159,7 @@ export function Catalog() {
                 <span className="muted">· {g.list.length} producto{g.list.length === 1 ? '' : 's'}</span>
               </button>
               {editable && (
-                <button className="icon-btn" title="Configurar la categoría (precio, costo y promociones por defecto)" onClick={() => editCategoryPrice(g.name)}>⚙</button>
+                <button className="icon-btn" title="Configurar la categoría (precio, costo y promociones por defecto)" onClick={() => editCategoryPrice(g.name)}><GearIcon /></button>
               )}
             </div>
             {open && (
@@ -174,9 +174,9 @@ export function Catalog() {
                           <td className="drag-cell"><button type="button" className="icon-btn drag-handle" title="Arrastrar para reordenar" onPointerDown={(e) => startProdDrag(e, g.name, p.id, g.list)}>⠿</button></td>
                           <td className="cat-bar"><div className="product-cell"><Image src={p.image || DEFAULT_PRODUCT_IMAGE} cls="product-image-cell" /><div className="product-name">{esc(p.name)}{p.tag && p.tag.trim() ? <span className="prod-tag" title={esc(p.tag)}>{esc(shortTag(p.tag))}</span> : null}</div></div></td>
                           <td>{money(p.price)}</td><td>{avail}</td>
-                          <td>{p.promos.length ? <div className="promo-stack">{p.promos.map((x) => <span className="promotion" key={x.id}>{esc(x.label)} · {money(x.price)}</span>)}</div> : <span className="muted">—</span>}</td>
+                          <td>{p.promos.length ? <div className="promo-stack">{p.promos.map((x) => <span className="promotion" key={x.id}>{promoText(x)}</span>)}</div> : <span className="muted">—</span>}</td>
                           <td><div className="actions">
-                          <button className="icon-btn" title="Editar producto" onClick={() => { setModalArg(p.id); setModal('editProduct'); }}>⚙</button>
+                          <button className="icon-btn" title="Editar producto" onClick={() => { setModalArg(p.id); setModal('editProduct'); }}><GearIcon /></button>
                         </div></td>
                         </tr>
                       );
