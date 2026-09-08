@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { useStore } from './store';
 import { APP_VERSION, DEFAULT_STORE_IMAGE, esc } from './lib/core';
 import { syncClientId } from './lib/sync';
-import { Image, Toast } from './ui';
+import { DialogHost, Image, Toast } from './ui';
 import { Dashboard } from './views/Dashboard';
 import { Catalog } from './views/Catalog';
 import { Inventory } from './views/Inventory';
@@ -57,6 +57,7 @@ export function App() {
         </main>
         {modals}
         <Toast message={toastMsg} />
+        <DialogHost />
       </>
     );
   }
@@ -108,6 +109,7 @@ export function App() {
       </main>
       {modals}
       <Toast message={toastMsg} />
+      <DialogHost />
     </>
   );
 }

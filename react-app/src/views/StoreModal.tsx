@@ -73,12 +73,12 @@ export function StoreModal({ editing, onClose }: { editing?: boolean; onClose: (
 
   function leave() {
     if (!s) return;
-    leaveStoreFn(s.id, () => state, replace, attach).then(onClose);
+    leaveStoreFn(s.id, () => state, replace, attach).then((ok) => { if (ok) onClose(); });
   }
 
   function del() {
     if (!s) return;
-    deleteStoreFn(s.id, () => state, replace, attach).then(onClose);
+    deleteStoreFn(s.id, () => state, replace, attach).then((ok) => { if (ok) onClose(); });
   }
 
   function removeMember(memberId: string) {
@@ -91,7 +91,7 @@ export function StoreModal({ editing, onClose }: { editing?: boolean; onClose: (
     <Modal onClose={onClose}>
       <h2>{editing ? 'Editar tienda' : 'Nueva tienda'}</h2>
       <div className="field"><label>Nombre de la tienda</label>
-        <input id="store-name" maxLength={40} placeholder="Ej. Dulces Aurora" value={name} onChange={(e) => setName(e.target.value)} disabled={isEmployee} autoFocus />
+        <input id="store-name" maxLength={40} placeholder="Ej. Dulces Aurora" value={name} onChange={(e) => setName(e.target.value)} disabled={isEmployee} />
       </div>
       <div className="field"><label>Imagen de la tienda</label>
         <ImagePicker id="store-image" src={image || DEFAULT_STORE_IMAGE} cls="image-preview" disabled={isEmployee} hint="Puedes subir un logo o foto. Si no eliges una, se usará la tienda predeterminada." onFile={onFile} />

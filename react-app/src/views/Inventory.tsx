@@ -4,7 +4,14 @@ import { esc, inventorySold, adoptInvLog } from '../lib/core';
 import { Modal } from '../ui';
 import type { Product } from '../types';
 
-interface QtyPopup { p: Product; qty: number; }
+// qty se maneja como texto mientras se edita para no forzar un '0' que no
+// se pueda borrar; se interpreta como numero (0 si esta vacio) al guardar.
+interface QtyPopup { p: Product; qty: string; }
+
+function parseQty(v: string): number {
+  const n = Math.round(Number(v));
+  return Number.isFinite(n) && n >= 0 ? n : 0;
+}
 
 export function Inventory() {
   const { store, replace, toast } = useStore();
@@ -31,18 +38,17 @@ export function Inventory() {
 
   // Lápiz: fijar la cantidad exacta (sin proveedor).
   function openEdit(p: Product) {
-    setEdit({ p, qty: cur(p) });
+    setEdit({ p, qty: String(cur(p)) });
   }
 
   // Cargamento: añadir un lote nuevo con distribuidor.
   function openCargo(p: Product) {
-    setCargo({ p, qty: 0 });
+    setCargo({ p, qty: '' });
   }
 
   function saveEdit() {
     if (!edit) return;
-    const q = Math.round(edit.qty);
-    if (!Number.isFinite(q) || q < 0) return toast('Escribe una cantidad válida.');
+    const q = parseQty(edit.qty);
     const delta = q - cur(edit.p);
     if (delta !== 0) {
       replace((x) => {
@@ -56,8 +62,8 @@ export function Inventory() {
 
   function saveCargo() {
     if (!cargo) return;
-    const q = Math.round(cargo.qty);
-    if (!Number.isFinite(q) || q <= 0) return toast('Escribe una cantidad mayor a 0.');
+    const q = parseQty(cargo.qty);
+    if (q <= 0) return toast('Escribe una cantidad mayor a 0.');
     replace((x) => {
       const st = x.stores.find((y) => y.id === s.id)!;
       adoptInvLog(st, cargo.p.id, q, cargoSupplier);
@@ -128,9 +134,9 @@ export function Inventory() {
           </div>
           <div className="field"><label>Cantidad que tiene el producto</label>
             <div className="sale-builder-qty">
-              <button type="button" className="qty-btn" onClick={() => setEdit({ ...edit, qty: Math.max(0, edit.qty - 1) })}>−</button>
-              <input className="qty-input" type="number" min={0} step={1} inputMode="numeric" value={edit.qty} onChange={(e) => setEdit({ ...edit, qty: Math.max(0, Number(e.target.value) || 0) })} />
-              <button type="button" className="qty-btn" onClick={() => setEdit({ ...edit, qty: edit.qty + 1 })}>+</button>
+              <button type="button" className="qty-btn" onClick={() => setEdit({ ...edit, qty: String(Math.max(0, parseQty(edit.qty) - 1)) })}>−</button>
+              <input className="qty-input" type="number" min={0} step={1} inputMode="numeric" value={edit.qty} onChange={(e) => setEdit({ ...edit, qty: e.target.value })} />
+              <button type="button" className="qty-btn" onClick={() => setEdit({ ...edit, qty: String(parseQty(edit.qty) + 1) })}>+</button>
             </div>
             <p className="muted">Escribe el total de unidades compradas (no lo que queda tras las ventas).</p>
           </div>
@@ -149,14 +155,14 @@ export function Inventory() {
           </div>
           <div className="field"><label>Unidades del lote</label>
             <div className="sale-builder-qty">
-              <button type="button" className="qty-btn" onClick={() => setCargo({ ...cargo, qty: Math.max(0, cargo.qty - 1) })}>−</button>
-              <input className="qty-input" type="number" min={0} step={1} inputMode="numeric" value={cargo.qty} onChange={(e) => setCargo({ ...cargo, qty: Math.max(0, Number(e.target.value) || 0) })} />
-              <button type="button" className="qty-btn" onClick={() => setCargo({ ...cargo, qty: cargo.qty + 1 })}>+</button>
+              <button type="button" className="qty-btn" onClick={() => setCargo({ ...cargo, qty: String(Math.max(0, parseQty(cargo.qty) - 1)) })}>−</button>
+              <input className="qty-input" type="number" min={0} step={1} inputMode="numeric" value={cargo.qty} onChange={(e) => setCargo({ ...cargo, qty: e.target.value })} />
+              <button type="button" className="qty-btn" onClick={() => setCargo({ ...cargo, qty: String(parseQty(cargo.qty) + 1) })}>+</button>
             </div>
             <p className="muted">Cantidad que llega ahora; se suma a las existencias.</p>
           </div>
           <div className="field"><label>Distribuidor / proveedor</label>
-            <input maxLength={60} placeholder="Ej. Distribuidora del Sur" value={cargoSupplier} onChange={(e) => setCargoSupplier(e.target.value)} autoFocus />
+            <input maxLength={60} placeholder="Ej. Distribuidora del Sur" value={cargoSupplier} onChange={(e) => setCargoSupplier(e.target.value)} />
           </div>
           <div className="modal-actions">
             <button className="button secondary" onClick={() => setCargo(null)}>Cancelar</button>

@@ -1,4 +1,5 @@
-import { ReactNode, useEffect } from 'react';
+import { ReactNode, useEffect, useState } from 'react';
+import { DialogRequest, customConfirm, resolveDialog, subscribeDialog } from './lib/dialog';
 
 export function Image({ src, cls, alt = '' }: { src?: string; cls?: string; alt?: string }) {
   return <img className={cls} src={src} alt={alt} />;
@@ -38,4 +39,30 @@ export function Modal({ onClose, children }: { onClose: () => void; children: Re
 
 export function Toast({ message }: { message: string }) {
   return <div id="toast" className={message ? 'show' : ''} role="status" aria-live="polite">{message}</div>;
+}
+
+// Host del dialogo personalizado (ver lib/dialog.ts). Se monta una sola vez
+// en la raiz de la app; escucha las peticiones de customAlert/customConfirm
+// y muestra un Modal en vez del alert()/confirm() nativo del navegador.
+export function DialogHost() {
+  const [req, setReq] = useState<DialogRequest | null>(null);
+  useEffect(() => subscribeDialog(setReq), []);
+  if (!req) return null;
+  return (
+    <div className="modal-backdrop dialog-backdrop">
+      <div className="modal dialog-modal">
+        <p className="dialog-msg">{req.message}</p>
+        <div className="modal-actions">
+          {req.kind === 'confirm' && <button className="button secondary" onClick={() => resolveDialog(false)}>Cancelar</button>}
+          <button className="button primary" onClick={() => resolveDialog(true)}>{req.kind === 'confirm' ? 'Sí, continuar' : 'Aceptar'}</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// Reemplazo de window.confirm() pensado para manejadores de eventos de React
+// (no async): dispara el dialogo personalizado y ejecuta onYes si confirman.
+export function confirmDialog(message: string, onYes: () => void): void {
+  customConfirm(message).then((ok) => { if (ok) onYes(); });
 }

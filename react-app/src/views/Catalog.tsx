@@ -1,14 +1,16 @@
 import { useState } from 'react';
+import type { PointerEvent as ReactPointerEvent } from 'react';
 import { useStore } from '../store';
-import { money, esc, inventorySold, setCategoryPricing, uid, DEFAULT_PRODUCT_IMAGE } from '../lib/core';
+import { money, esc, inventorySold, setCategoryPricing, reorderCategoryProducts, toEditablePromos, fromEditablePromos, uid, DEFAULT_PRODUCT_IMAGE } from '../lib/core';
+import type { EditablePromo } from '../lib/core';
 import { Image, Modal } from '../ui';
-import type { Promo } from '../types';
+import type { Product } from '../types';
 
 interface CatModalState {
   mode: 'new' | 'edit';
   name: string;
   price: string;
-  promos: Promo[];
+  promos: EditablePromo[];
 }
 
 export function Catalog() {
@@ -17,6 +19,13 @@ export function Catalog() {
   const sold = inventorySold(s);
   const inv = s.inventory || {};
   const [catModal, setCatModal] = useState<CatModalState | null>(null);
+
+  // Orden de categorias/productos mientras se arrastran (solo visual hasta
+  // soltar); se limpia al terminar el arrastre, momento en el que se guarda
+  // el orden final en la tienda.
+  const [catDragOrder, setCatDragOrder] = useState<string[] | null>(null);
+  const [draggingCat, setDraggingCat] = useState<string | null>(null);
+  const [prodDrag, setProdDrag] = useState<{ cat: string; order: string[]; pid: string } | null>(null);
 
   const storeCats = () => {
     const cats: string[] = [];
@@ -29,6 +38,15 @@ export function Catalog() {
   s.products.forEach((p) => { const c = (p.category || '').trim() || 'Sin categoría'; (grouped[c] = grouped[c] || []).push(p); });
   const groups = storeCats().map((c) => ({ name: c, list: grouped[c] || [] }));
   if (grouped['Sin categoría']) groups.push({ name: 'Sin categoría', list: grouped['Sin categoría'] });
+
+  // Orden de categorias a mostrar: el de siempre, salvo que haya un arrastre
+  // en curso, en cuyo caso se usa el orden temporal (Sin categoría siempre
+  // queda al final, no se puede mover).
+  const realNames = groups.filter((g) => g.name !== 'Sin categoría').map((g) => g.name);
+  const byName = new Map(groups.map((g) => [g.name, g]));
+  const displayOrder = catDragOrder && catDragOrder.length === realNames.length ? catDragOrder : realNames;
+  const orderedGroups = displayOrder.map((n) => byName.get(n)).filter((g): g is typeof groups[number] => !!g);
+  if (byName.has('Sin categoría')) orderedGroups.push(byName.get('Sin categoría')!);
 
   function catOpen(cat: string) {
     return !state.openCats || !state.openCats[s.id] || state.openCats[s.id][cat] !== false;
@@ -49,7 +67,7 @@ export function Catalog() {
       mode: 'edit',
       name: cat,
       price: cp ? String(cp.price) : '',
-      promos: cp ? JSON.parse(JSON.stringify(cp.promos || [])) : [],
+      promos: toEditablePromos(cp?.promos),
     });
   }
   function saveCatModal() {
@@ -66,7 +84,7 @@ export function Catalog() {
       toast('Añade un precio para la categoría.');
       return;
     }
-    const promoList = catModal.promos.filter((x) => x.label.trim() && Number.isFinite(x.price) && x.price >= 0);
+    const promoList = fromEditablePromos(catModal.promos);
     replace((d) => {
       const st = d.stores.find((x) => x.id === s.id)!;
       st.categories = st.categories || [];
@@ -82,20 +100,104 @@ export function Catalog() {
     toast(catModal.mode === 'new' ? 'Categoría añadida.' : 'Precio de categoría actualizado en todos sus productos.');
   }
 
+  // Arrastrar para reordenar categorias (agarrando el ⠿ del encabezado).
+  // Se usan Pointer Events (no drag & drop nativo) porque el drag & drop de
+  // HTML5 no funciona con el dedo en la mayoría de navegadores móviles.
+  function startCatDrag(e: ReactPointerEvent, name: string) {
+    e.preventDefault();
+    e.stopPropagation();
+    let order = realNames.slice();
+    setCatDragOrder(order);
+    setDraggingCat(name);
+    const handle = e.currentTarget as HTMLElement;
+    try { handle.setPointerCapture(e.pointerId); } catch { /* noop */ }
+    const move = (ev: PointerEvent) => {
+      const el = document.elementFromPoint(ev.clientX, ev.clientY) as HTMLElement | null;
+      const group = el && (el.closest('[data-cat]') as HTMLElement | null);
+      const overName = group?.getAttribute('data-cat');
+      if (!overName || overName === 'Sin categoría' || overName === name) return;
+      const from = order.indexOf(name);
+      const to = order.indexOf(overName);
+      if (from === -1 || to === -1 || from === to) return;
+      const next = order.slice();
+      next.splice(from, 1);
+      next.splice(to, 0, name);
+      order = next;
+      setCatDragOrder(next);
+    };
+    const finish = () => {
+      document.removeEventListener('pointermove', move);
+      document.removeEventListener('pointerup', finish);
+      document.removeEventListener('pointercancel', finish);
+      setDraggingCat(null);
+      setCatDragOrder(null);
+      replace((d) => {
+        const st = d.stores.find((x) => x.id === s.id)!;
+        st.categories = order.slice();
+      });
+    };
+    document.addEventListener('pointermove', move);
+    document.addEventListener('pointerup', finish);
+    document.addEventListener('pointercancel', finish);
+  }
+
+  // Arrastrar para reordenar productos dentro de una categoria.
+  function startProdDrag(e: ReactPointerEvent, cat: string, pid: string, list: Product[]) {
+    e.preventDefault();
+    e.stopPropagation();
+    let order = list.map((p) => p.id);
+    setProdDrag({ cat, order, pid });
+    const handle = e.currentTarget as HTMLElement;
+    try { handle.setPointerCapture(e.pointerId); } catch { /* noop */ }
+    const move = (ev: PointerEvent) => {
+      const el = document.elementFromPoint(ev.clientX, ev.clientY) as HTMLElement | null;
+      const row = el && (el.closest('[data-pid]') as HTMLElement | null);
+      const overPid = row?.getAttribute('data-pid');
+      if (!overPid || overPid === pid) return;
+      const from = order.indexOf(pid);
+      const to = order.indexOf(overPid);
+      if (from === -1 || to === -1 || from === to) return;
+      const next = order.slice();
+      next.splice(from, 1);
+      next.splice(to, 0, pid);
+      order = next;
+      setProdDrag({ cat, order, pid });
+    };
+    const finish = () => {
+      document.removeEventListener('pointermove', move);
+      document.removeEventListener('pointerup', finish);
+      document.removeEventListener('pointercancel', finish);
+      setProdDrag(null);
+      replace((d) => {
+        const st = d.stores.find((x) => x.id === s.id)!;
+        reorderCategoryProducts(st, cat, order);
+      });
+    };
+    document.addEventListener('pointermove', move);
+    document.addEventListener('pointerup', finish);
+    document.addEventListener('pointercancel', finish);
+  }
+
   return (
     <div className="panel">
-      <div className="panel-head"><div><h2>Catálogo de productos</h2><p className="muted">Precios, existencias y promociones de {esc(s.name)}, organizados por categoría.</p></div></div>
+      <div className="panel-head"><div><h2>Catálogo de productos</h2><p className="muted">Precios, existencias y promociones de {esc(s.name)}, organizados por categoría. Usa ⠿ para arrastrar y cambiar el orden.</p></div></div>
       <div className="cat-actions">
         <button className="button primary" onClick={addCategory}>＋ Añadir categoría</button>
         <div className="cat-divider"></div>
         <button className="button primary" onClick={() => setModal('newProduct')}>＋ Añadir producto</button>
       </div>
-      {s.products.length ? groups.map((g) => {
+      {s.products.length ? orderedGroups.map((g) => {
         const open = catOpen(g.name);
         const editable = g.name !== 'Sin categoría';
+        const list = prodDrag && prodDrag.cat === g.name
+          ? prodDrag.order.map((id) => g.list.find((p) => p.id === id)).filter((p): p is Product => !!p)
+          : g.list;
         return (
-          <div className="cat-group" key={g.name}>
+          <div className={'cat-group' + (draggingCat === g.name ? ' dragging' : '')} key={g.name} data-cat={g.name}>
             <div className="cat-head">
+              {editable && (
+                <button type="button" className="icon-btn drag-handle" title="Arrastrar para reordenar" onPointerDown={(e) => startCatDrag(e, g.name)}>⠿</button>
+              )}
               <button className="cat-head-toggle" onClick={() => toggleCat(g.name)}>
                 <span className="cat-caret">{open ? '▾' : '▸'}</span><b>{esc(g.name)}</b>
                 <span className="muted">· {g.list.length} producto{g.list.length === 1 ? '' : 's'}</span>
@@ -106,13 +208,14 @@ export function Catalog() {
             </div>
             {open && (
               <div className="cat-body">
-                {g.list.length ? (
-                  <table><thead><tr><th>Producto</th><th>Precio</th><th>Disponible</th><th>Promociones</th><th></th></tr></thead><tbody>
-                    {g.list.map((p) => {
+                {list.length ? (
+                  <table><thead><tr><th></th><th>Producto</th><th>Precio</th><th>Disponible</th><th>Promociones</th><th></th></tr></thead><tbody>
+                    {list.map((p) => {
                       const base = inv[p.id];
                       const avail = base == null ? '—' : Math.max(0, base - (sold[p.id] || 0));
                       return (
-                        <tr key={p.id}>
+                        <tr key={p.id} data-pid={p.id} className={prodDrag?.pid === p.id ? 'dragging' : ''}>
+                          <td className="drag-cell"><button type="button" className="icon-btn drag-handle" title="Arrastrar para reordenar" onPointerDown={(e) => startProdDrag(e, g.name, p.id, g.list)}>⠿</button></td>
                           <td className="cat-bar"><div className="product-cell"><div className="product-name">{esc(p.name)}</div><Image src={p.image || DEFAULT_PRODUCT_IMAGE} cls="product-image-cell" /></div></td>
                           <td>{money(p.price)}</td><td>{avail}</td>
                           <td>{p.promos.length ? <div className="promo-stack">{p.promos.map((x) => <span className="promotion" key={x.id}>{esc(x.label)} · {money(x.price)}</span>)}</div> : <span className="muted">—</span>}</td>
@@ -141,11 +244,10 @@ export function Catalog() {
               disabled={catModal.mode === 'edit'}
               onChange={(e) => setCatModal((m) => m && { ...m, name: e.target.value })}
               onKeyDown={(e) => { if (e.key === 'Enter') saveCatModal(); }}
-              autoFocus={catModal.mode === 'new'}
             />
           </div>
           <div className="field"><label>Precio {catModal.mode === 'new' ? '(opcional)' : ''}</label>
-            <input min={0} type="number" placeholder="0" value={catModal.price} onChange={(e) => setCatModal((m) => m && { ...m, price: e.target.value })} autoFocus={catModal.mode === 'edit'} />
+            <input min={0} type="number" placeholder="0" value={catModal.price} onChange={(e) => setCatModal((m) => m && { ...m, price: e.target.value })} />
             <p className="muted">Se aplica a todos los productos de esta categoría. Cada producto se puede editar después para tener un precio distinto.</p>
           </div>
           <div className="field"><label>Promociones <span className="muted">(cada una se vende por separado)</span></label>
@@ -153,12 +255,12 @@ export function Catalog() {
               {catModal.promos.map((x, n) => (
                 <div className="promo-input" key={n}>
                   <input className="promo-label" maxLength={70} placeholder="Nombre de la promoción" value={x.label} onChange={(e) => setCatModal((m) => m && { ...m, promos: m.promos.map((y, i) => i === n ? { ...y, label: e.target.value } : y) })} />
-                  <input className="promo-price" min={0} type="number" placeholder="Precio" value={x.price == null ? '' : String(x.price)} onChange={(e) => setCatModal((m) => m && { ...m, promos: m.promos.map((y, i) => i === n ? { ...y, price: Number(e.target.value) } : y) })} />
+                  <input className="promo-price" min={0} type="number" placeholder="Precio" value={x.price} onChange={(e) => setCatModal((m) => m && { ...m, promos: m.promos.map((y, i) => i === n ? { ...y, price: e.target.value } : y) })} />
                   <button className="icon-btn" onClick={() => setCatModal((m) => m && { ...m, promos: m.promos.filter((_, i) => i !== n) })}>×</button>
                 </div>
               ))}
             </div>
-            <button className="add-promo" onClick={() => setCatModal((m) => m && { ...m, promos: [...m.promos, { id: uid(), label: '', price: Number(m.price) || 0 }] })}>＋ Agregar promoción</button>
+            <button className="add-promo" onClick={() => setCatModal((m) => m && { ...m, promos: [...m.promos, { id: uid(), label: '', price: m.price || '0' }] })}>＋ Agregar promoción</button>
           </div>
           <div className="modal-actions">
             <button className="button secondary" onClick={() => setCatModal(null)}>Cancelar</button>

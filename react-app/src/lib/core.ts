@@ -284,6 +284,40 @@ export function setCategoryPricing(s: Store, cat: string, price: number, promos:
   return entry;
 }
 
+// El precio de una promocion se edita como texto (no numero) para poder
+// borrar un '0' y escribir otra cosa sin que se reponga solo; se convierte a
+// numero (0 si queda vacio) al guardar. Se usa tanto en el formulario de
+// producto como en el modal de precio de categoria.
+export interface EditablePromo { id: string; label: string; price: string; }
+
+export function toEditablePromos(list: Promo[] | undefined): EditablePromo[] {
+  return (list || []).map((x) => ({ id: x.id, label: x.label, price: String(x.price) }));
+}
+
+export function fromEditablePromos(list: EditablePromo[]): Promo[] {
+  return list
+    .filter((x) => x.label.trim())
+    .map((x) => {
+      const n = Number(x.price);
+      return { id: x.id, label: x.label.trim(), price: x.price.trim() === '' || !Number.isFinite(n) ? 0 : Math.max(0, n) };
+    });
+}
+
+// Reordena los productos de UNA categoria segun el nuevo orden de ids que
+// llega del arrastre en el Catalogo, sin tocar la posicion relativa de los
+// productos de las demas categorias (se recorren en el orden original y solo
+// se van sustituyendo, en orden, los que pertenecen a la categoria movida).
+export function reorderCategoryProducts(s: Store, cat: string, orderedIds: string[]): void {
+  const byId = new Map(s.products.map((p) => [p.id, p]));
+  const queue = orderedIds.slice();
+  s.products = s.products.map((p) => {
+    const c = (p.category || '').trim() || 'Sin categoría';
+    if (c !== cat) return p;
+    const nextId = queue.shift();
+    return nextId ? byId.get(nextId) || p : p;
+  });
+}
+
 export function storeCats(s: Store): string[] {
   const cats: string[] = [];
   (s.categories || []).forEach((c) => { const v = (c || '').trim(); if (v && !cats.includes(v)) cats.push(v); });

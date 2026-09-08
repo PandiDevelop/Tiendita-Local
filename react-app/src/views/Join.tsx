@@ -27,10 +27,10 @@ export function JoinModal({ onClose }: { onClose: () => void }) {
     <Modal onClose={onClose}>
       <h2>Unirme a una tienda</h2>
       <div className="field"><label>Tu nombre</label>
-        <input id="sync-name" maxLength={30} placeholder="Cómo te llaman tus compañeros" value={name} onChange={(e) => setName(e.target.value)} autoFocus={myName === 'Trabajador'} />
+        <input id="sync-name" maxLength={30} placeholder="Cómo te llaman tus compañeros" value={name} onChange={(e) => setName(e.target.value)} />
       </div>
       <div className="field"><label>¿Tienes el código de tu tienda?</label>
-        <input id="sync-pin" maxLength={30} placeholder="Código compartido" value={pin} onChange={(e) => setPin(e.target.value)} autoFocus={myName !== 'Trabajador'} />
+        <input id="sync-pin" maxLength={30} placeholder="Código compartido" value={pin} onChange={(e) => setPin(e.target.value)} />
       </div>
       <p className="muted">Pega el código que te dio quien creó la tienda. Sus productos y ventas aparecerán aquí.</p>
       <div className="modal-actions">

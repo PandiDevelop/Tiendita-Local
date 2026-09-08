@@ -1,9 +1,9 @@
 import { useState } from 'react';
 import { useStore } from '../store';
-import { DEFAULT_PRODUCT_IMAGE, compressImage, storeCats, adoptInvLog, setCategoryPricing, uid } from '../lib/core';
+import { DEFAULT_PRODUCT_IMAGE, compressImage, storeCats, adoptInvLog, setCategoryPricing, toEditablePromos, fromEditablePromos, uid } from '../lib/core';
+import type { EditablePromo } from '../lib/core';
 import { Dropdown } from '../Dropdown';
 import { ImagePicker, Modal } from '../ui';
-import type { Promo } from '../types';
 
 export function ProductForm({ editingId, onClose }: { editingId?: string; onClose: () => void }) {
   const { store, replace, toast } = useStore();
@@ -16,7 +16,7 @@ export function ProductForm({ editingId, onClose }: { editingId?: string; onClos
   const [price, setPrice] = useState(p?.price != null ? String(p.price) : '');
   const [image, setImage] = useState(p?.image || '');
   const [qty, setQty] = useState('');
-  const [promos, setPromos] = useState<Promo[]>(p ? JSON.parse(JSON.stringify(p.promos || [])) : []);
+  const [promos, setPromos] = useState<EditablePromo[]>(toEditablePromos(p?.promos));
 
   const showCatNew = cat === '__new__';
 
@@ -31,7 +31,7 @@ export function ProductForm({ editingId, onClose }: { editingId?: string; onClos
     if (!nm) return toast('Escribe el nombre del producto.');
     if (!Number.isFinite(pr) || pr < 0) return toast('Añade un precio válido.');
     const catVal = showCatNew ? catNew.trim() : cat;
-    const promoList = promos.filter((x) => x.label.trim() && Number.isFinite(x.price) && x.price >= 0);
+    const promoList = fromEditablePromos(promos);
     replace((d) => {
       const st = d.stores.find((x) => x.id === s.id)!;
       st.categories = st.categories || [];
@@ -70,13 +70,13 @@ export function ProductForm({ editingId, onClose }: { editingId?: string; onClos
           if (!editingId && v && s.categoryPricing && s.categoryPricing[v]) {
             const cp = s.categoryPricing[v];
             setPrice(String(cp.price));
-            setPromos(JSON.parse(JSON.stringify(cp.promos || [])));
+            setPromos(toEditablePromos(cp.promos));
           }
         }} />
-        {showCatNew && <div className="field" style={{ marginTop: 8 }}><input maxLength={30} placeholder="Nombre de la nueva categoría" value={catNew} onChange={(e) => setCatNew(e.target.value)} autoFocus /></div>}
+        {showCatNew && <div className="field" style={{ marginTop: 8 }}><input maxLength={30} placeholder="Nombre de la nueva categoría" value={catNew} onChange={(e) => setCatNew(e.target.value)} /></div>}
       </div>
       <div className="field"><label>Nombre del producto</label>
-        <input maxLength={80} placeholder="Ej. Caja de galletas" value={name} onChange={(e) => setName(e.target.value)} autoFocus={!editingId} />
+        <input maxLength={80} placeholder="Ej. Caja de galletas" value={name} onChange={(e) => setName(e.target.value)} />
       </div>
       <div className="field"><label>Precio del producto</label>
         <input min={0} type="number" placeholder="0" value={price} onChange={(e) => setPrice(e.target.value)} />
@@ -95,12 +95,12 @@ export function ProductForm({ editingId, onClose }: { editingId?: string; onClos
           {promos.map((x, n) => (
             <div className="promo-input" key={n}>
               <input className="promo-label" maxLength={70} placeholder="Nombre de la promoción" value={x.label} onChange={(e) => setPromos((l) => l.map((y, i) => i === n ? { ...y, label: e.target.value } : y))} />
-              <input className="promo-price" min={0} type="number" placeholder="Precio" value={x.price == null ? '' : String(x.price)} onChange={(e) => setPromos((l) => l.map((y, i) => i === n ? { ...y, price: Number(e.target.value) } : y))} />
+              <input className="promo-price" min={0} type="number" placeholder="Precio" value={x.price} onChange={(e) => setPromos((l) => l.map((y, i) => i === n ? { ...y, price: e.target.value } : y))} />
               <button className="icon-btn" onClick={() => setPromos((l) => l.filter((_, i) => i !== n))}>×</button>
             </div>
           ))}
         </div>
-        <button className="add-promo" onClick={() => setPromos((l) => [...l, { id: uid(), label: '', price: p?.price ?? 0 }])}>＋ Agregar promoción</button>
+        <button className="add-promo" onClick={() => setPromos((l) => [...l, { id: uid(), label: '', price: price || '0' }])}>＋ Agregar promoción</button>
       </div>
       <div className="modal-actions">
         <button className="button secondary" onClick={onClose}>Cancelar</button>

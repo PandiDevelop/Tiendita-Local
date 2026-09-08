@@ -2,6 +2,7 @@ import { initializeApp, FirebaseApp } from 'firebase/app';
 import { getFirestore, Firestore, collection, doc, onSnapshot, setDoc, getDoc, deleteField } from 'firebase/firestore';
 import type { AppState, Member, Product, Sale, Store } from '../types';
 import { toProductsArr, toSalesArr, toInvLogArr, toNoteLogArr, mergeItems, mergeInvLog, mergeNoteLog, syncKeyOf, syncClientId, syncName, normalizeStore, DEFAULT_STORE_IMAGE, uid } from './core';
+import { customAlert, customConfirm } from './dialog';
 
 export { syncClientId, syncName, syncSetName, syncGenPin, syncKeyOf } from './core';
 
@@ -246,20 +247,21 @@ export function applyRemote(getState: () => AppState, mutate: (fn: (d: AppState)
 }
 
 export async function joinStore(pin: string, getState: () => AppState, mutate: (fn: (d: AppState) => void) => void, attach: (id: string) => void) {
-  if (!pin) return alert('Escribe el código.');
-  if (!syncReady()) return alert('Configura Firebase primero');
+  if (!pin) { await customAlert('Escribe el código.'); return; }
+  if (!syncReady()) { await customAlert('Configura Firebase primero'); return; }
   const key = syncKeyOf(pin);
   const existing = getState().stores.find((x) => x.syncKey === key);
   if (existing) {
     mutate((d) => { d.activeStoreId = existing.id; d.tab = 'inicio'; });
     attach(existing.id);
-    return alert('Ya tienes esta tienda vinculada en este dispositivo.');
+    await customAlert('Ya tienes esta tienda vinculada en este dispositivo.');
+    return;
   }
   try {
     const snap = await getDoc(doc(collection(DB!, 'stores'), key));
-    if (!snap.exists()) return alert('No existe una tienda con ese código.');
+    if (!snap.exists()) { await customAlert('No existe una tienda con ese código.'); return; }
     const r = snap.data();
-    if (r.deleted) return alert('Esa tienda fue eliminada. Pide un código nuevo.');
+    if (r.deleted) { await customAlert('Esa tienda fue eliminada. Pide un código nuevo.'); return; }
     const members: Record<string, Member> = {};
     members[syncClientId()] = { name: syncName(), role: 'worker', joinedAt: Date.now() };
     await setDoc(doc(collection(DB!, 'stores'), key), { members }, { merge: true });
@@ -288,15 +290,15 @@ export async function joinStore(pin: string, getState: () => AppState, mutate: (
       d.tab = 'inicio';
     });
     attach(s.id);
-    alert('Tienda vinculada.');
+    await customAlert('Tienda vinculada.');
   } catch (e) {
     console.warn(e);
-    alert('No se pudo conectar con la tienda.');
+    await customAlert('No se pudo conectar con la tienda.');
   }
 }
 
 export async function activateSync(storeId: string, pin: string, getState: () => AppState, mutate: (fn: (d: AppState) => void) => void, attach: (id: string) => void) {
-  if (!syncReady()) { alert('Configura Firebase primero'); return; }
+  if (!syncReady()) { await customAlert('Configura Firebase primero'); return; }
   const key = syncKeyOf(pin);
   const ref = doc(collection(DB!, 'stores'), key);
   try {
@@ -319,10 +321,10 @@ export async function activateSync(storeId: string, pin: string, getState: () =>
         createdBy: syncClientId(), members, updatedBy: syncClientId(),
       }, { merge: true });
       mutate((d) => { const st = d.stores.find((x) => x.id === storeId); if (st) { st.localRole = 'owner'; st.syncKey = key; st.syncPin = pin; } });
-      alert('Sincronización activada. Comparte el código con tu equipo.');
+      await customAlert('Sincronización activada. Comparte el código con tu equipo.');
     } else {
       const r = snap.data();
-      if (r.deleted) { alert('Esa tienda fue eliminada. Pide un código nuevo.'); return; }
+      if (r.deleted) { await customAlert('Esa tienda fue eliminada. Pide un código nuevo.'); return; }
       const isOwner = !r.createdBy || r.createdBy === syncClientId();
       const s = getState().stores.find((x) => x.id === storeId);
       if (!s) return;
@@ -340,12 +342,12 @@ export async function activateSync(storeId: string, pin: string, getState: () =>
         st.syncKey = key;
         st.syncPin = pin;
       });
-      alert(isOwner ? 'Tienda actualizada y sincronización confirmada.' : 'Vinculado a la tienda compartida.');
+      await customAlert(isOwner ? 'Tienda actualizada y sincronización confirmada.' : 'Vinculado a la tienda compartida.');
     }
     attach(storeId);
   } catch (e) {
     console.warn(e);
-    alert('No se pudo sincronizar. Revisa tu conexión.');
+    await customAlert('No se pudo sincronizar. Revisa tu conexión.');
   }
 }
 
@@ -378,31 +380,37 @@ export function removeLocalStoreFn(storeId: string, _getState: () => AppState, m
   });
 }
 
-export async function leaveStoreFn(id: string, getState: () => AppState, mutate: (fn: (d: AppState) => void) => void, detach: (storeId: string) => void) {
+// Devuelve true si la tienda se elimino del dispositivo (para que quien
+// llama, ej. StoreModal, sepa si debe cerrar su ventana o el usuario cancelo
+// el dialogo de confirmacion).
+export async function leaveStoreFn(id: string, getState: () => AppState, mutate: (fn: (d: AppState) => void) => void, detach: (storeId: string) => void): Promise<boolean> {
   const s = getState().stores.find((x) => x.id === id);
-  if (!s || !s.syncKey) return;
+  if (!s || !s.syncKey) return false;
   const q = '¿Quieres salir de la tienda "' + s.name + '"? Se eliminará de este dispositivo y dejarás de recibir sus cambios. No se puede deshacer.';
-  if (!confirm(q)) return;
+  if (!(await customConfirm(q))) return false;
   if (DB) {
     try {
       await setDoc(doc(collection(DB, 'stores'), s.syncKey), { members: { [syncClientId()]: deleteField() } }, { merge: true });
     } catch (e) { console.warn('No se pudo avisar del retiro:', e); }
   }
   removeLocalStoreFn(id, getState, mutate, detach);
+  return true;
 }
 
-export async function deleteStoreFn(id: string, getState: () => AppState, mutate: (fn: (d: AppState) => void) => void, detach: (storeId: string) => void) {
+// Igual que leaveStoreFn: true si se borro, false si el usuario cancelo.
+export async function deleteStoreFn(id: string, getState: () => AppState, mutate: (fn: (d: AppState) => void) => void, detach: (storeId: string) => void): Promise<boolean> {
   const s = getState().stores.find((x) => x.id === id);
-  if (!s) return;
+  if (!s) return false;
   const shared = !!(s.syncKey && s.syncPin);
   const q = shared
     ? '¿Borrar la tienda "' + s.name + '"? Se borrará también en todos los dispositivos vinculados. No se puede deshacer.'
     : '¿Borrar la tienda "' + s.name + '"? Esta acción no se puede deshacer.';
-  if (!confirm(q)) return;
+  if (!(await customConfirm(q))) return false;
   if (DB && s.syncKey) {
     try {
       await setDoc(doc(collection(DB, 'stores'), s.syncKey), { deleted: true }, { merge: true });
     } catch (e) { console.warn(e); }
   }
   removeLocalStoreFn(id, getState, mutate, detach);
+  return true;
 }

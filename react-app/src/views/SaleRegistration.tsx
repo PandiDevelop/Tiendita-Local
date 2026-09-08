@@ -14,6 +14,10 @@ export function SaleRegistration({ onClose }: { onClose: () => void }) {
   const [employee, setEmployee] = useState(draft?.employee ?? syncName());
   const [category, setCategory] = useState(draft?.category ?? '');
   const [lines, setLines] = useState<Line[]>(draft ? JSON.parse(JSON.stringify(draft.lines)) : []);
+  // Texto que se esta escribiendo en el input de cantidad de cada linea,
+  // separado del numero confirmado: asi se puede borrar un '0' y escribir
+  // otra cosa sin que el campo se reponga solo en cada tecla.
+  const [qtyDraft, setQtyDraft] = useState<Record<number, string>>({});
 
   const cats = saleCatsOf(s).map((c) => ({ v: c, label: c, count: s.products.filter((p) => catLabel(p) === c).length }));
   const catsOpen = cats.length;
@@ -54,9 +58,14 @@ export function SaleRegistration({ onClose }: { onClose: () => void }) {
     persist({ lines: next }, false);
   }
 
-  function setQty(n: number, raw: number) {
-    if (!Number.isFinite(raw)) raw = 0;
-    setLine(n, { qty: Math.max(0, Math.round(raw)) });
+  function setQtyText(n: number, raw: string) {
+    setQtyDraft((d) => ({ ...d, [n]: raw }));
+    const num = raw.trim() === '' ? 0 : Math.max(0, Math.round(Number(raw)) || 0);
+    setLine(n, { qty: num });
+  }
+
+  function clearQtyDraft(n: number) {
+    setQtyDraft((d) => { if (!(n in d)) return d; const c = { ...d }; delete c[n]; return c; });
   }
 
   function removeLine(n: number) {
@@ -118,9 +127,9 @@ export function SaleRegistration({ onClose }: { onClose: () => void }) {
         <div className="sale-builder-price">{money(l.price)} <span className="muted">c/u</span></div>
         {priceDrop && <div className="sale-promo">{priceDrop}</div>}
         <div className="sale-builder-qty">
-          <button type="button" className="qty-btn" onClick={() => setLine(n, { qty: Math.max(0, l.qty - 1) })}>−</button>
-          <input className="qty-input" type="number" min={0} step={1} inputMode="numeric" value={l.qty} onChange={(e) => setQty(n, Number(e.target.value))} />
-          <button type="button" className="qty-btn" onClick={() => setLine(n, { qty: l.qty + 1 })}>+</button>
+          <button type="button" className="qty-btn" onClick={() => { clearQtyDraft(n); setLine(n, { qty: Math.max(0, l.qty - 1) }); }}>−</button>
+          <input className="qty-input" type="number" min={0} step={1} inputMode="numeric" value={qtyDraft[n] !== undefined ? qtyDraft[n] : String(l.qty)} onChange={(e) => setQtyText(n, e.target.value)} onBlur={() => clearQtyDraft(n)} />
+          <button type="button" className="qty-btn" onClick={() => { clearQtyDraft(n); setLine(n, { qty: l.qty + 1 }); }}>+</button>
         </div>
       </div>
     );
