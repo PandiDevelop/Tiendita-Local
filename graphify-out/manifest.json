@@ -78,9 +78,9 @@
     "semantic_hash": ""
   },
   "react-app/src/views/Catalog.tsx": {
-    "mtime": 1788902917.6630163,
-    "seen": 1788903163.6280794,
-    "ast_hash": "d5b23c71b9aeb9f05e9bad03f63b93f3",
+    "mtime": 1788911697.692824,
+    "seen": 1788911767.833982,
+    "ast_hash": "a5d19d7cf6b64a91f426a2d7a65dd35b",
     "semantic_hash": ""
   },
   "react-app/src/views/Dashboard.tsx": {
@@ -96,9 +96,9 @@
     "semantic_hash": ""
   },
   "react-app/src/views/History.tsx": {
-    "mtime": 1788910057.9232507,
-    "seen": 1788910103.5517817,
-    "ast_hash": "d164959128ca63fcd989db41a4e88d20",
+    "mtime": 1788911655.6035817,
+    "seen": 1788911767.833982,
+    "ast_hash": "55f8d738ee4c6c1f3a003c74f76fb148",
     "semantic_hash": ""
   },
   "react-app/src/views/Inventory.tsx": {
@@ -132,9 +132,9 @@
     "semantic_hash": ""
   },
   "react-app/src/views/SaleRegistration.tsx": {
-    "mtime": 1788910043.6636443,
-    "seen": 1788910103.5517817,
-    "ast_hash": "f7eedb26314be76e0342428d8754ccd6",
+    "mtime": 1788911629.969077,
+    "seen": 1788911767.833982,
+    "ast_hash": "d86da962ba9d4430b7c457947ad8aad5",
     "semantic_hash": ""
   },
   "react-app/src/views/StoreModal.tsx": {
@@ -180,9 +180,9 @@
     "semantic_hash": ""
   },
   "index.html": {
-    "mtime": 1788910070.7181258,
-    "seen": 1788910103.5517817,
-    "ast_hash": "11b6c3e9798194dc7b6f291455a85d4b",
+    "mtime": 1788911745.8501801,
+    "seen": 1788911767.833982,
+    "ast_hash": "f32a9d8944a7ca85427028d5f3beeab0",
     "semantic_hash": ""
   },
   "react-app/index.html": {
@@ -252,9 +252,9 @@
     "semantic_hash": ""
   },
   "react-app/src/views/CategoryModal.tsx": {
-    "mtime": 1788902831.5542572,
-    "seen": 1788903163.6280794,
-    "ast_hash": "2523b6a2ab79649de0f6b1a69a3cb206",
+    "mtime": 1788911675.7310894,
+    "seen": 1788911767.833982,
+    "ast_hash": "03fdc0e9d05b48cb86c35300dcf98da1",
     "semantic_hash": ""
   },
   "react-app/src/test/features.test.tsx": {
@@ -276,9 +276,9 @@
     "semantic_hash": ""
   },
   "react-app/src/views/Events.tsx": {
-    "mtime": 1788909977.5737672,
-    "seen": 1788910103.5517817,
-    "ast_hash": "094f66cd8884c3b433cc1fe4e6143b5f",
+    "mtime": 1788911703.3258357,
+    "seen": 1788911767.833982,
+    "ast_hash": "9edb46018b5850566328f494fe195840",
     "semantic_hash": ""
   },
   "react-app/src/views/PromoEditor.tsx": {
