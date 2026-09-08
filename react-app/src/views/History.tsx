@@ -51,7 +51,11 @@ export function History() {
         <div><h2>Historial de ventas</h2><p className="muted">Cada venta se guarda con fecha, hora y el empleado que la registró.</p></div>
         <button className="button secondary" onClick={() => exportExcel(s.sales)}>⇩ Exportar a Excel</button>
       </div>
-      {!dates.length ? <div className="empty"><div className="emoji">📅</div><b>Aún no hay ventas registradas</b><p>Registra tu primera venta desde la pestaña Inicio.</p></div> : dates.map((d) => {
+      {!dates.length ? <div className="empty"><div className="emoji">
+        <svg viewBox="0 0 24 24" width="40" height="40" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" style={{ color: '#a98dde', display: 'block', margin: '0 auto' }}>
+          <rect x="3" y="4.5" width="18" height="16" rx="3" /><path d="M8 2.5v4M16 2.5v4M3 9.5h18" /><path d="M8.5 14.8l2.4 2.4 4.6-4.8" strokeWidth="2" />
+        </svg>
+      </div><b>Aún no hay ventas registradas</b><p>Registra tu primera venta desde la pestaña Inicio.</p></div> : dates.map((d) => {
         const list = groups[d];
         const dayUnits = list.reduce((a, x) => a + saleUnits(x), 0);
         const dayMoney = list.reduce((a, x) => a + total(x, s), 0);

@@ -1,9 +1,10 @@
 // El precio final se define como precio fijo ("price") o descuento porcentual
-// ("pct"). La condicion dice CUANDO se activa la promo: por cantidad de ese
-// mismo producto (min = unidades), por total de la venta (min = monto en COP)
-// o por fechas (start..end). La prioridad entre varias promos del mismo
-// producto es el orden del arreglo (la primera que cumpla su condicion gana);
-// en el editor se reordenan para cambiar esa prioridad.
+// ("pct"). La condicion dice CUANDO se activa la promo: por unidades de la
+// MISMA CATEGORIA en la venta (min = unidades de esa categoria), por total de
+// la venta (min = monto en COP) o por fechas (start..end). La prioridad entre
+// varias promos del mismo producto es el orden del arreglo (la primera que
+// cumpla su condicion gana); en el editor se reordenan para cambiar esa
+// prioridad.
 export interface Promo {
   id: string;
   label: string;

@@ -75,6 +75,19 @@ export function StoreModal({ editing, onClose }: { editing?: boolean; onClose: (
     toast('Sincronización desactivada. La tienda queda solo en este dispositivo.');
   }
 
+  // Activa la sincronización con el código escrito. Solo tiene sentido cuando
+  // la tienda ya existe (para una tienda nueva se activa al guardarla).
+  async function activateSyncNow() {
+    if (!s) return;
+    if (myName.trim()) syncSetName(myName.trim());
+    const code = pin.trim();
+    if (!code) return toast('Escribe el código de sincronización.');
+    await activate(s.id, code);
+    attach(s.id);
+    renderAgain();
+    toast('Sincronización activada.');
+  }
+
   function leave() {
     if (!s) return;
     leaveStoreFn(s.id, () => state, replace, attach).then((ok) => { if (ok) onClose(); });
@@ -147,8 +160,8 @@ export function StoreModal({ editing, onClose }: { editing?: boolean; onClose: (
                 {!isOwner && <p className="muted">Como administrador puedes ver el equipo y quitar trabajadores. Solo el dueño puede dar o quitar el permiso de administrador.</p>}
               </>}
             </div>
-            {isOwner && <button className="icon-remove" title="Desvincular" onClick={deactivate}>✕</button>}
           </div>
+          {isOwner && <button className="button secondary" style={{ width: '100%', marginTop: 10 }} onClick={deactivate}>Desactivar sincronización</button>}
           {isEmployee && <button className="button secondary leave-btn" onClick={leave}>Desvincularse de esta tienda</button>}
         </div>
       ) : (
@@ -165,6 +178,7 @@ export function StoreModal({ editing, onClose }: { editing?: boolean; onClose: (
               <p className="muted" style={{ marginTop: 4 }}>Quienes tengan el mismo código verán y editarán esta tienda en tiempo real.</p>
             </div>
           </div>
+          {s && isOwner && <button className="button secondary" style={{ width: '100%', marginTop: 10 }} onClick={activateSyncNow}>Activar sincronización</button>}
         </div>
       )}
       {s && isOwner ? (

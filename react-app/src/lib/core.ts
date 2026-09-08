@@ -594,7 +594,10 @@ export function activeEvent(s: Store): StoreEvent | undefined {
 
 // True si una promo esta activa para una venta dada. El "total" es el monto
 // en bruto (precios base, antes de aplicar ninguna promo/evento) para evitar
-// depedencias circulares entre el descuento y su propia condicion.
+// depedencias circulares entre el descuento y su propia condicion. El "qty"
+// es el total de unidades de la MISMA CATEGORIA del producto dentro de la
+// venta (no las del producto solo): asi una promo de "2 unidades" se activa
+// cuando hay dos productos cualesquiera de esa categoria.
 export function promoApplies(pr: Promo | undefined, qty: number, saleTotal: number): boolean {
   if (!pr || !pr.label || qty <= 0) return false;
   const t = today();

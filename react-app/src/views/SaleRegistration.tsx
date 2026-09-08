@@ -51,6 +51,17 @@ export function SaleRegistration({ onClose }: { onClose: () => void }) {
   const baseTotal = lines.reduce((n, l) => { const p = s.products.find((x) => x.id === l.pid); return n + (p ? p.price : 0) * l.qty; }, 0);
   const total = lines.reduce((n, l) => n + l.price * l.qty, 0);
 
+  // Unidades de la MISMA CATEGORIA que este producto dentro de la venta.
+  // Las promos de cantidad se activan cuando hay N unidades de la categoria
+  // (dos productos distintos de la misma categoria cuentan como 2), no por
+  // las unidades de un mismo producto.
+  function catUnits(next: Line[], p: Product): number {
+    return next.reduce((n, o) => {
+      const pp = s.products.find((x) => x.id === o.pid);
+      return n + (pp && catLabel(pp) === catLabel(p) ? (o.qty || 0) : 0);
+    }, 0);
+  }
+
   // Recalcula el precio automatico (promo del producto + evento) de las
   // lineas cuyo precio no se edito a mano. Las lineas manuales se respetan.
   function recomputeAutos(next: Line[]): Line[] {
@@ -59,7 +70,7 @@ export function SaleRegistration({ onClose }: { onClose: () => void }) {
       const p = s.products.find((x) => x.id === l.pid);
       if (!p) return l;
       const base = next.reduce((n, o) => { const pp = s.products.find((x) => x.id === o.pid); return n + (pp ? pp.price : 0) * o.qty; }, 0);
-      return { ...l, price: saleUnitPrice(s, p, l.qty, base) };
+      return { ...l, price: saleUnitPrice(s, p, catUnits(next, p), base) };
     });
   }
 
@@ -170,7 +181,7 @@ export function SaleRegistration({ onClose }: { onClose: () => void }) {
   const lineRow = (l: Line, n: number) => {
     const p = s.products.find((x) => x.id === l.pid);
     if (!p) return null;
-    const promo = findActivePromo(p, l.qty, baseTotal);
+    const promo = findActivePromo(p, catUnits(lines, p), baseTotal);
     return (
       <div className="sale-builder-line" data-pid={p.id} data-price={l.price} key={n}>
         <div className="sale-builder-head">

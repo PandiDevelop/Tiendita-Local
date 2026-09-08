@@ -25,8 +25,8 @@ const ChevDown = () => (
 // de categoría). El ORDEN de la lista es la prioridad: cuando una promo se
 // cumple en la venta, la PRIMERA de la lista que aplique es la que gana. Cada
 // promo define su recompensa (precio fijo o % de descuento) y su condición
-// de activación (cantidad del producto, monto total de la venta o rango de
-// fechas).
+// de activación (unidades de la misma categoría, monto total de la venta o
+// rango de fechas).
 export function PromoEditor({ promos, onChange, priceHint }: Props) {
   const setAt = (n: number, p: Partial<EditablePromo>) => onChange(promos.map((y, i) => i === n ? { ...y, ...p } : y));
   const move = (n: number, dir: -1 | 1) => {
@@ -56,11 +56,11 @@ export function PromoEditor({ promos, onChange, priceHint }: Props) {
               ? <input className="promo-price" min={0} type="number" placeholder="Precio" value={x.price} onChange={(e) => setAt(n, { price: e.target.value })} />
               : <input className="promo-pct" min={0} max={100} type="number" placeholder="% de descuento" value={x.pct} onChange={(e) => setAt(n, { pct: e.target.value })} />}
             <select className="promo-select" value={x.cond} onChange={(e) => setAt(n, { cond: e.target.value as EditablePromo['cond'] })}>
-              <option value="qty">Cuando sean N unidades</option>
+              <option value="qty">Cuando haya N de la misma categoría</option>
               <option value="saleTotal">Cuando el total sea ≥ N</option>
               <option value="date">Entre fechas</option>
             </select>
-            {x.cond === 'qty' && <input className="promo-min" min={0} type="number" placeholder="Mín. unidades" value={x.min} onChange={(e) => setAt(n, { min: e.target.value })} />}
+            {x.cond === 'qty' && <input className="promo-min" min={1} type="number" placeholder="Unidades por categoría" value={x.min} onChange={(e) => setAt(n, { min: e.target.value })} />}
             {x.cond === 'saleTotal' && <input className="promo-min" min={0} type="number" placeholder="Total mínimo" value={x.min} onChange={(e) => setAt(n, { min: e.target.value })} />}
             {x.cond === 'date' && <>
               <input className="promo-date" type="date" value={x.start} onChange={(e) => setAt(n, { start: e.target.value })} />
