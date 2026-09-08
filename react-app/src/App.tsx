@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useStore } from './store';
 import { APP_VERSION, DEFAULT_STORE_IMAGE, canManageTeam, esc } from './lib/core';
-import { DialogHost, Image, Toast } from './ui';
+import { DialogHost, Image, ImageLightboxHost, Toast } from './ui';
 import { Dashboard } from './views/Dashboard';
 import { Catalog } from './views/Catalog';
 import { Inventory } from './views/Inventory';
@@ -59,6 +59,7 @@ export function App() {
         {modals}
         <Toast message={toastMsg} />
         <DialogHost />
+        <ImageLightboxHost />
       </>
     );
   }
@@ -71,7 +72,7 @@ export function App() {
         <div className="store-list">
           {state.stores.map((x) => (
             <button key={x.id} className={'store-pill ' + (x.id === state.activeStoreId ? 'active' : '')} onClick={() => selectStore(x.id)}>
-              <Image src={x.image || DEFAULT_STORE_IMAGE} cls="store-thumb" />
+              <Image src={x.image || DEFAULT_STORE_IMAGE} cls="store-thumb" enlarge={false} />
               <span>{esc(x.name)}</span>
             </button>
           ))}
@@ -111,6 +112,7 @@ export function App() {
       {modals}
       <Toast message={toastMsg} />
       <DialogHost />
+      <ImageLightboxHost />
     </>
   );
 }

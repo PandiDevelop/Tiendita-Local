@@ -1,8 +1,44 @@
 import { ReactNode, useEffect, useState } from 'react';
 import { DialogRequest, customConfirm, resolveDialog, subscribeDialog } from './lib/dialog';
+import { closeLightbox, openLightbox, subscribeLightbox } from './lib/lightbox';
 
-export function Image({ src, cls, alt = '' }: { src?: string; cls?: string; alt?: string }) {
-  return <img className={cls} src={src} alt={alt} />;
+// Antes no habia forma de ver una foto (de producto, tienda, etc.) mas
+// grande que la miniatura de la lista: tocarla no hacia nada, o en algunos
+// casos disparaba sin querer la accion de la fila (editar, seleccionar
+// tienda...). Ahora, si la imagen tiene una foto real, tocarla la abre en
+// grande (ImageLightboxHost) sin disparar el click de lo que la rodea;
+// enlarge={false} se usa en los pocos lugares donde tocar la miniatura ya
+// tiene su propia accion clara (p.ej. la lista de tiendas del menu).
+export function Image({ src, cls, alt = '', enlarge = true }: { src?: string; cls?: string; alt?: string; enlarge?: boolean }) {
+  const canEnlarge = enlarge && !!src;
+  return (
+    <img
+      className={cls}
+      src={src}
+      alt={alt}
+      onClick={canEnlarge ? (e) => { e.stopPropagation(); openLightbox(src!); } : undefined}
+      style={canEnlarge ? { cursor: 'zoom-in' } : undefined}
+    />
+  );
+}
+
+// Muestra la foto abierta con openLightbox() por encima de todo, a tamaño
+// grande. Se monta una sola vez junto a DialogHost.
+export function ImageLightboxHost() {
+  const [src, setSrc] = useState<string | null>(null);
+  useEffect(() => subscribeLightbox(setSrc), []);
+  useEffect(() => {
+    if (!src) return;
+    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') closeLightbox(); };
+    document.addEventListener('keydown', onKey);
+    return () => document.removeEventListener('keydown', onKey);
+  }, [src]);
+  if (!src) return null;
+  return (
+    <div className="modal-backdrop lightbox-backdrop" onClick={closeLightbox}>
+      <img className="lightbox-img" src={src} alt="" />
+    </div>
+  );
 }
 
 // Selector de imagen con dos opciones: elegir un archivo (galeria) o tomar la
