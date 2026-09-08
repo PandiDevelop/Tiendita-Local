@@ -1,5 +1,5 @@
 import { initializeApp, FirebaseApp } from 'firebase/app';
-import { initializeFirestore, Firestore, collection, doc, onSnapshot, setDoc, getDoc, deleteField } from 'firebase/firestore';
+import { initializeFirestore, Firestore, collection, doc, onSnapshot, setDoc, getDoc, getDocs, deleteField, writeBatch } from 'firebase/firestore';
 import type { AppState, Member, Product, Role, Sale, Store } from '../types';
 import { toProductsArr, toSalesArr, toInvLogArr, toNoteLogArr, mergeItems, mergeInvLog, mergeNoteLog, syncKeyOf, syncClientId, syncName, normalizeStore, DEFAULT_STORE_IMAGE, uid } from './core';
 import { customAlert, customConfirm } from './dialog';
@@ -50,6 +50,51 @@ export function syncReady(): boolean {
   }
 }
 
+// Cada producto vive en su propio documento dentro de una subcoleccion
+// "products" del documento de la tienda, en vez de embebido como mapa
+// dentro del documento principal. Antes, con TODOS los productos (y sus
+// fotos) metidos en un solo documento, era facil pasarse del limite de
+// ~1MB que tiene un documento de Firestore segun crecia el catalogo: al
+// pasarse, el guardado fallaba COMPLETO (productos, ventas, notas,
+// inventario, todo junto, porque viajaba en el mismo documento), lo que se
+// sentia como "la sincronizacion esta fallando" sin ninguna pista de por
+// que. Con un documento por producto, el limite de tamaño ya no depende de
+// cuantos productos tenga la tienda, solo del tamaño de UNA foto (muy por
+// debajo del limite).
+function storeDocRef(key: string) {
+  return doc(collection(DB!, 'stores'), key);
+}
+function productsColRef(key: string) {
+  return collection(storeDocRef(key), 'products');
+}
+function productDocPayload(p: Product, by: string): Record<string, unknown> {
+  const payload: Record<string, unknown> = {
+    id: p.id,
+    name: p.name || '',
+    price: Number.isFinite(p.price) ? p.price : 0,
+    cost: Number.isFinite(p.cost) ? p.cost : 0,
+    image: p.image || '',
+    promos: Array.isArray(p.promos) ? p.promos : [],
+    category: p.category || '',
+    updatedBy: by,
+  };
+  if (typeof p.order === 'number' && Number.isFinite(p.order)) payload.order = p.order;
+  return payload;
+}
+function productFromDoc(id: string, data: Record<string, unknown>): Product {
+  const p: Product = {
+    id,
+    name: String(data.name || ''),
+    price: Number(data.price) || 0,
+    cost: Number(data.cost) || 0,
+    image: String(data.image || ''),
+    promos: Array.isArray(data.promos) ? JSON.parse(JSON.stringify(data.promos)) : [],
+    category: String(data.category || ''),
+  };
+  if (typeof data.order === 'number' && Number.isFinite(data.order)) p.order = data.order;
+  return p;
+}
+
 export interface SyncHandle {
   attach: (storeId: string) => void;
   detach: (storeId: string) => void;
@@ -67,6 +112,18 @@ export function createSync(
   const timers = new Map<string, ReturnType<typeof setTimeout>>();
   const retryTimers = new Map<string, ReturnType<typeof setTimeout>>();
   const failCount = new Map<string, number>();
+  // Antes podian dispararse dos push() del mismo dispositivo casi al mismo
+  // tiempo (uno por el reintento automatico, otro porque la persona siguio
+  // editando) y pisarse entre si a medias. Ahora solo hay un push en vuelo
+  // por tienda: si llega otro mientras el anterior sigue en curso, se marca
+  // "hay que volver a intentar" y se encola para justo despues de que
+  // termine el actual, en vez de salir al tiempo.
+  const inFlight = new Set<string>();
+  const pendingAgain = new Set<string>();
+  // Tiendas cuyo documento principal ya se reviso en esta sesion en busca
+  // de productos "viejos" (de antes de que existiera la subcoleccion) para
+  // migrarlos una sola vez. Ver migrateLegacyProducts().
+  const migratedLegacy = new Set<string>();
   // Ultimo contenido de cada producto que SI se confirmo guardado en la
   // nube (por tienda). Antes cada push mandaba el catalogo COMPLETO (con
   // cada imagen) sin importar que hubiera cambiado, asi que agregar una
@@ -114,6 +171,11 @@ export function createSync(
   }
 
   async function push(storeId: string) {
+    // Solo un push en vuelo por tienda (ver comentario junto a inFlight
+    // arriba): si ya hay uno corriendo, se anota que hace falta otro justo
+    // despues y se sale. fp() se vuelve a calcular cuando de verdad corra,
+    // asi que recoge cualquier cambio que haya entrado mientras tanto.
+    if (inFlight.has(storeId)) { pendingAgain.add(storeId); return; }
     const s = getState().stores.find((x) => x.id === storeId);
     if (!s || !s.syncKey || !syncReady() || !DB) return;
     const t = retryTimers.get(storeId);
@@ -121,47 +183,57 @@ export function createSync(
     const f = fp(storeId);
     if (lastPush.get(storeId) === f) return;
 
-    // Solo se incluyen los productos cuyo contenido cambio desde el ultimo
-    // push que SI se confirmo guardado (ver comentario junto a
-    // lastPushedProducts arriba). Si el dispositivo se acaba de conectar
-    // (no hay historial todavia) se manda el catalogo completo una vez,
-    // como antes.
-    const prevProd = lastPushedProducts.get(storeId) || new Map<string, string>();
-    const nextProd = new Map<string, string>();
-    const products: Record<string, Product> = {};
-    s.products.forEach((p) => {
-      const j = JSON.stringify(p);
-      nextProd.set(p.id, j);
-      if (prevProd.get(p.id) !== j) products[p.id] = p;
-    });
-
-    const sales: Record<string, Sale> = {};
-    s.sales.forEach((x) => (sales[x.id] = x));
-    const payload: Record<string, unknown> = {
-      sales,
-      categories: s.categories || [],
-      categoryPricing: s.categoryPricing || {},
-      updatedBy: cid(),
-    };
-    if (Object.keys(products).length) payload.products = products;
-    if (typeof s.notes === 'string' && s.notes) payload.notes = s.notes;
-    // OJO: setDoc(..., {merge:true}) NO interpreta claves con puntos como
-    // field paths (eso solo aplica a updateDoc). Antes se escribia
-    // payload['noteLog.'+id], lo que creaba un campo LITERAL llamado
-    // "noteLog.<id>" en vez de fusionar dentro del mapa noteLog, y notas/
-    // inventario nunca llegaban al campo real. Construimos objetos anidados
-    // normales: setDoc con merge:true SI fusiona mapas anidados por clave,
-    // sin pisar las entradas que subio otro dispositivo.
-    const noteLogPatch: Record<string, unknown> = {};
-    (s.noteLog || []).forEach((e) => { if (e && e.id) noteLogPatch[e.id] = e; });
-    if (Object.keys(noteLogPatch).length) payload.noteLog = noteLogPatch;
-    const invLogPatch: Record<string, unknown> = {};
-    (s.invLog || []).forEach((e) => { if (e && e.id) invLogPatch[e.id] = e; });
-    if (Object.keys(invLogPatch).length) payload.invLog = invLogPatch;
-    payload.inventory = s.inventory || {};
-    if (!s.createdBy || s.createdBy === cid()) { payload.name = s.name; payload.image = s.image; }
+    inFlight.add(storeId);
     try {
-      await setDoc(doc(collection(DB, 'stores'), s.syncKey), payload, { merge: true });
+      // Solo se incluyen los productos cuyo contenido cambio desde el
+      // ultimo push que SI se confirmo guardado (ver comentario junto a
+      // lastPushedProducts arriba). Si el dispositivo se acaba de conectar
+      // (no hay historial todavia) se manda el catalogo completo una vez,
+      // como antes, pero cada uno en su propio documento.
+      const prevProd = lastPushedProducts.get(storeId) || new Map<string, string>();
+      const nextProd = new Map<string, string>();
+      const changedProducts: Product[] = [];
+      s.products.forEach((p) => {
+        const j = JSON.stringify(p);
+        nextProd.set(p.id, j);
+        if (prevProd.get(p.id) !== j) changedProducts.push(p);
+      });
+
+      const sales: Record<string, Sale> = {};
+      s.sales.forEach((x) => (sales[x.id] = x));
+      const payload: Record<string, unknown> = {
+        sales,
+        categories: s.categories || [],
+        categoryPricing: s.categoryPricing || {},
+        updatedBy: cid(),
+      };
+      if (typeof s.notes === 'string' && s.notes) payload.notes = s.notes;
+      // OJO: setDoc(..., {merge:true}) NO interpreta claves con puntos como
+      // field paths (eso solo aplica a updateDoc). Antes se escribia
+      // payload['noteLog.'+id], lo que creaba un campo LITERAL llamado
+      // "noteLog.<id>" en vez de fusionar dentro del mapa noteLog, y notas/
+      // inventario nunca llegaban al campo real. Construimos objetos anidados
+      // normales: setDoc con merge:true SI fusiona mapas anidados por clave,
+      // sin pisar las entradas que subio otro dispositivo.
+      const noteLogPatch: Record<string, unknown> = {};
+      (s.noteLog || []).forEach((e) => { if (e && e.id) noteLogPatch[e.id] = e; });
+      if (Object.keys(noteLogPatch).length) payload.noteLog = noteLogPatch;
+      const invLogPatch: Record<string, unknown> = {};
+      (s.invLog || []).forEach((e) => { if (e && e.id) invLogPatch[e.id] = e; });
+      if (Object.keys(invLogPatch).length) payload.invLog = invLogPatch;
+      payload.inventory = s.inventory || {};
+      if (!s.createdBy || s.createdBy === cid()) { payload.name = s.name; payload.image = s.image; }
+
+      // Un solo batch: el documento principal (chico, sin fotos) mas un
+      // documento por cada producto que cambio. Como cada producto viaja
+      // en su propio documento, el batch entero se queda muy por debajo
+      // del limite de tamaño aunque el catalogo tenga muchos productos.
+      const batch = writeBatch(DB);
+      batch.set(storeDocRef(s.syncKey), payload, { merge: true });
+      changedProducts.forEach((p) => {
+        batch.set(doc(productsColRef(s.syncKey!), p.id), productDocPayload(p, cid()), { merge: true });
+      });
+      await batch.commit();
       // Antes se marcaba "ya lo mande" (lastPush) ANTES de saber si el
       // guardado en la nube funciono. Si ese intento fallaba (sin señal,
       // el documento crecio demasiado, lo que sea), quedaba registrado
@@ -183,6 +255,9 @@ export function createSync(
       // schedule() se vuelva a llamar: si nada mas cambia, esos datos
       // jamas llegarian a la nube.
       retryTimers.set(storeId, setTimeout(() => push(storeId), 4000));
+    } finally {
+      inFlight.delete(storeId);
+      if (pendingAgain.delete(storeId)) push(storeId);
     }
   }
 
@@ -208,13 +283,37 @@ export function createSync(
     }
   }
 
+  // Las tiendas creadas antes de que existiera la subcoleccion de
+  // productos todavia tienen su catalogo embebido como mapa en el
+  // documento principal (campo "products"). La primera vez que este
+  // dispositivo ve ese documento en la sesion, copia esos productos a sus
+  // propios documentos y borra el mapa viejo del documento principal para
+  // liberar el espacio que estaba ocupando (y que podia estar bloqueando
+  // hasta los guardados de ventas/notas/inventario, al viajar todos en el
+  // mismo documento). Es seguro que dos dispositivos lo hagan a la vez: es
+  // la misma info, y merge:true no pisa nada.
+  function migrateLegacyProducts(storeId: string, d: Record<string, unknown>) {
+    if (migratedLegacy.has(storeId) || !DB) return;
+    migratedLegacy.add(storeId);
+    const legacy = d.products;
+    const hasLegacy = legacy && (Array.isArray(legacy) ? legacy.length : Object.keys(legacy as object).length);
+    if (!hasLegacy) return;
+    const s = getState().stores.find((x) => x.id === storeId);
+    if (!s || !s.syncKey) return;
+    const arr = toProductsArr(legacy);
+    const batch = writeBatch(DB);
+    arr.forEach((p) => { batch.set(doc(productsColRef(s.syncKey!), p.id), productDocPayload(p, cid()), { merge: true }); });
+    batch.set(storeDocRef(s.syncKey), { products: deleteField() }, { merge: true });
+    batch.commit().catch((e) => console.warn('Migración de productos:', e));
+  }
+
   function attach(storeId: string) {
     if (!syncReady() || !DB) return;
     const prev = subs.get(storeId);
     if (prev) { prev(); subs.delete(storeId); }
     const s = getState().stores.find((x) => x.id === storeId);
     if (!s || !s.syncKey) return;
-    const un = onSnapshot(doc(collection(DB, 'stores'), s.syncKey), (snap) => {
+    const unMeta = onSnapshot(storeDocRef(s.syncKey), (snap) => {
       if (!snap || !snap.exists()) return;
       const d = snap.data();
       if (!d) return;
@@ -224,6 +323,7 @@ export function createSync(
       }
       if (d.updatedBy !== cid()) applyRemote(storeId, d);
       if (Array.isArray(d.noteLog) || Array.isArray(d.invLog)) repairDoc(storeId, d);
+      migrateLegacyProducts(storeId, d);
     }, (e) => {
       // Cuando el listener de Firestore falla (un corte de red, el celular
       // se quedo sin señal un rato, etc.) el SDK NO lo reconecta solo: una
@@ -232,10 +332,32 @@ export function createSync(
       // significaba quedarse sin tiempo real hasta recargar la pagina a
       // mano. Ahora se reintenta solo despues de un momento.
       console.warn('Suscripción:', e);
-      subs.delete(storeId);
+      // OJO: no se borra la entrada de subs aqui (el otro oido, el de
+      // productos, puede seguir vivo). attach() ya se encarga de des-
+      // suscribir ambos oidos como corresponde cuando le toque volver a
+      // correr.
       setTimeout(() => attach(storeId), 3000);
     });
-    subs.set(storeId, un);
+    // Segundo oido, sobre la subcoleccion de productos: cada producto que
+    // se agrega, edita o llega por primera vez dispara un cambio aqui. Se
+    // ignoran los cambios que hizo este mismo dispositivo (updatedBy) para
+    // no re-aplicarse a si mismo lo que acaba de mandar.
+    const unProducts = onSnapshot(productsColRef(s.syncKey), (snap) => {
+      const changed: Record<string, Product> = {};
+      let any = false;
+      snap.docChanges().forEach((ch) => {
+        if (ch.type === 'removed') return;
+        const data = ch.doc.data() as Record<string, unknown>;
+        if (!data || data.updatedBy === cid()) return;
+        changed[ch.doc.id] = productFromDoc(ch.doc.id, data);
+        any = true;
+      });
+      if (any) applyRemote(storeId, { products: changed });
+    }, (e) => {
+      console.warn('Suscripción (productos):', e);
+      setTimeout(() => attach(storeId), 3000);
+    });
+    subs.set(storeId, () => { unMeta(); unProducts(); });
   }
 
   function detach(storeId: string) {
@@ -245,6 +367,7 @@ export function createSync(
     if (rt) { clearTimeout(rt); retryTimers.delete(storeId); }
     failCount.delete(storeId);
     lastPushedProducts.delete(storeId);
+    migratedLegacy.delete(storeId);
   }
 
   // Firestore no deja fusionar paths de mapa (noteLog.<id>) cuando el campo es
@@ -259,7 +382,7 @@ export function createSync(
     if (Array.isArray(noteArr)) patch.noteLog = toNoteLogArr(noteArr).reduce((o, e) => { if (e && e.id) o[e.id] = e; return o; }, {} as Record<string, unknown>);
     if (Array.isArray(invArr)) patch.invLog = toInvLogArr(invArr).reduce((o, e) => { if (e && e.id) o[e.id] = e; return o; }, {} as Record<string, unknown>);
     if (Object.keys(patch).length) {
-      setDoc(doc(collection(DB, 'stores'), s.syncKey), patch, { merge: true }).catch((e) => console.warn('Repair del doc:', e));
+      setDoc(storeDocRef(s.syncKey), patch, { merge: true }).catch((e) => console.warn('Repair del doc:', e));
     }
   }
 
@@ -352,18 +475,30 @@ export async function joinStore(pin: string, getState: () => AppState, mutate: (
     return;
   }
   try {
-    const snap = await getDoc(doc(collection(DB!, 'stores'), key));
+    const ref = storeDocRef(key);
+    const snap = await getDoc(ref);
     if (!snap.exists()) { await customAlert('No existe una tienda con ese código.'); return; }
     const r = snap.data();
     if (r.deleted) { await customAlert('Esa tienda fue eliminada. Pide un código nuevo.'); return; }
     const members: Record<string, Member> = {};
     members[syncClientId()] = { name: syncName(), role: 'worker', joinedAt: Date.now() };
-    await setDoc(doc(collection(DB!, 'stores'), key), { members }, { merge: true });
+    await setDoc(ref, { members }, { merge: true });
+    // Los productos de la tienda pueden estar en dos sitios: el mapa viejo
+    // embebido en el documento principal (tiendas de antes de que
+    // existiera la subcoleccion, ver migrateLegacyProducts) y/o la
+    // subcoleccion "products" (lo normal desde ahora). Se combinan los dos,
+    // con la subcoleccion ganando si un producto esta en ambos lados.
+    const productMap = new Map<string, Product>();
+    toProductsArr(r.products).forEach((p) => productMap.set(p.id, p));
+    try {
+      const prodSnap = await getDocs(productsColRef(key));
+      prodSnap.forEach((pd) => { productMap.set(pd.id, productFromDoc(pd.id, pd.data() as Record<string, unknown>)); });
+    } catch (e) { console.warn('No se pudieron cargar los productos:', e); }
     const s: Store = {
       id: uid(),
       name: r.name || 'Tienda compartida',
       image: r.image || DEFAULT_STORE_IMAGE,
-      products: toProductsArr(r.products),
+      products: Array.from(productMap.values()),
       sales: toSalesArr(r.sales),
       categories: JSON.parse(JSON.stringify((r.categories || []))),
       categoryPricing: r.categoryPricing && typeof r.categoryPricing === 'object' ? JSON.parse(JSON.stringify(r.categoryPricing)) : {},
@@ -394,26 +529,32 @@ export async function joinStore(pin: string, getState: () => AppState, mutate: (
 export async function activateSync(storeId: string, pin: string, getState: () => AppState, mutate: (fn: (d: AppState) => void) => void, attach: (id: string) => void) {
   if (!syncReady()) { await customAlert('Configura Firebase primero'); return; }
   const key = syncKeyOf(pin);
-  const ref = doc(collection(DB!, 'stores'), key);
+  const ref = storeDocRef(key);
   try {
     const snap = await getDoc(ref);
     if (!snap.exists()) {
       const s = getState().stores.find((x) => x.id === storeId);
       if (!s) return;
-      const products: Record<string, Product> = {}, sales: Record<string, Sale> = {};
-      s.products.forEach((p) => (products[p.id] = p));
+      const sales: Record<string, Sale> = {};
       s.sales.forEach((x) => (sales[x.id] = x));
       const members: Record<string, Member> = {};
       members[syncClientId()] = { name: syncName(), role: 'owner', joinedAt: Date.now() };
       const noteLog: Record<string, unknown> = {}, invLog: Record<string, unknown> = {};
       (s.noteLog || []).forEach((e) => { if (e && e.id) noteLog[e.id] = e; });
       (s.invLog || []).forEach((e) => { if (e && e.id) invLog[e.id] = e; });
-      await setDoc(ref, {
-        name: s.name, image: s.image, products, sales, categories: s.categories || [],
+      // Cada producto en su propio documento (ver comentario junto a
+      // storeDocRef/productsColRef): asi la primera activacion de una
+      // tienda con un catalogo grande no se topa de una con el limite de
+      // tamaño de un documento de Firestore.
+      const batch = writeBatch(DB!);
+      batch.set(ref, {
+        name: s.name, image: s.image, sales, categories: s.categories || [],
         categoryPricing: s.categoryPricing || {},
         notes: s.notes || '', noteLog, invLog, inventory: s.inventory || {},
         createdBy: syncClientId(), members, updatedBy: syncClientId(),
       }, { merge: true });
+      s.products.forEach((p) => { batch.set(doc(productsColRef(key), p.id), productDocPayload(p, syncClientId()), { merge: true }); });
+      await batch.commit();
       mutate((d) => { const st = d.stores.find((x) => x.id === storeId); if (st) { st.localRole = 'owner'; st.syncKey = key; st.syncPin = pin; } });
       // Conectar el listener YA, antes del aviso: si se espera a que el
       // usuario cierre el mensaje (el await de abajo no continua hasta que
