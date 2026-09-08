@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import type { PointerEvent as ReactPointerEvent } from 'react';
 import { useStore } from '../store';
-import { money, esc, inventorySold, setCategoryPricing, reorderCategoryProducts, sortByOrder, toEditablePromos, fromEditablePromos, uid, DEFAULT_PRODUCT_IMAGE } from '../lib/core';
+import { money, esc, inventorySold, setCategoryPricing, reorderCategoryProducts, groupedByCategory, storeCats, toEditablePromos, fromEditablePromos, uid, DEFAULT_PRODUCT_IMAGE } from '../lib/core';
 import type { EditablePromo } from '../lib/core';
 import { Image, Modal } from '../ui';
 import type { Product } from '../types';
@@ -10,6 +10,7 @@ interface CatModalState {
   mode: 'new' | 'edit';
   name: string;
   price: string;
+  cost: string;
   promos: EditablePromo[];
 }
 
@@ -27,18 +28,7 @@ export function Catalog() {
   const [draggingCat, setDraggingCat] = useState<string | null>(null);
   const [prodDrag, setProdDrag] = useState<{ cat: string; order: string[]; pid: string } | null>(null);
 
-  const storeCats = () => {
-    const cats: string[] = [];
-    (s.categories || []).forEach((c) => { const v = (c || '').trim(); if (v && !cats.includes(v)) cats.push(v); });
-    s.products.forEach((p) => { const v = (p.category || '').trim(); if (v && !cats.includes(v)) cats.push(v); });
-    return cats;
-  };
-
-  const grouped: Record<string, typeof s.products> = {};
-  s.products.forEach((p) => { const c = (p.category || '').trim() || 'Sin categoría'; (grouped[c] = grouped[c] || []).push(p); });
-  Object.keys(grouped).forEach((c) => { grouped[c] = sortByOrder(grouped[c]); });
-  const groups = storeCats().map((c) => ({ name: c, list: grouped[c] || [] }));
-  if (grouped['Sin categoría']) groups.push({ name: 'Sin categoría', list: grouped['Sin categoría'] });
+  const groups = groupedByCategory(s);
 
   // Orden de categorias a mostrar: el de siempre, salvo que haya un arrastre
   // en curso, en cuyo caso se usa el orden temporal (Sin categoría siempre
@@ -60,7 +50,7 @@ export function Catalog() {
     });
   }
   function addCategory() {
-    setCatModal({ mode: 'new', name: '', price: '', promos: [] });
+    setCatModal({ mode: 'new', name: '', price: '', cost: '', promos: [] });
   }
   function editCategoryPrice(cat: string) {
     const cp = s.categoryPricing && s.categoryPricing[cat];
@@ -68,6 +58,7 @@ export function Catalog() {
       mode: 'edit',
       name: cat,
       price: cp ? String(cp.price) : '',
+      cost: cp && cp.cost != null ? String(cp.cost) : '',
       promos: toEditablePromos(cp?.promos),
     });
   }
@@ -75,7 +66,7 @@ export function Catalog() {
     if (!catModal) return;
     const v = catModal.name.trim();
     if (!v) { setCatModal(null); return; }
-    if (catModal.mode === 'new' && storeCats().includes(v)) { toast('Esa categoría ya existe.'); return; }
+    if (catModal.mode === 'new' && storeCats(s).includes(v)) { toast('Esa categoría ya existe.'); return; }
     const priceTxt = catModal.price.trim();
     let pr: number | null = null;
     if (priceTxt !== '') {
@@ -85,6 +76,9 @@ export function Catalog() {
       toast('Añade un precio para la categoría.');
       return;
     }
+    const costTxt = catModal.cost.trim();
+    const cst = costTxt === '' ? 0 : Number(costTxt);
+    if (!Number.isFinite(cst) || cst < 0) { toast('Añade un costo válido para la categoría.'); return; }
     const promoList = fromEditablePromos(catModal.promos);
     replace((d) => {
       const st = d.stores.find((x) => x.id === s.id)!;
@@ -95,10 +89,10 @@ export function Catalog() {
         d.openCats[s.id] = d.openCats[s.id] || {};
         d.openCats[s.id][v] = true;
       }
-      if (pr != null) setCategoryPricing(st, v, pr, promoList);
+      if (pr != null) setCategoryPricing(st, v, pr, cst, promoList);
     });
     setCatModal(null);
-    toast(catModal.mode === 'new' ? 'Categoría añadida.' : 'Precio de categoría actualizado en todos sus productos.');
+    toast(catModal.mode === 'new' ? 'Categoría añadida.' : 'Precio y costo de categoría actualizados en todos sus productos.');
   }
 
   // Arrastrar para reordenar categorias (agarrando el ⠿ del encabezado).
@@ -217,7 +211,7 @@ export function Catalog() {
                       return (
                         <tr key={p.id} data-pid={p.id} className={prodDrag?.pid === p.id ? 'dragging' : ''}>
                           <td className="drag-cell"><button type="button" className="icon-btn drag-handle" title="Arrastrar para reordenar" onPointerDown={(e) => startProdDrag(e, g.name, p.id, g.list)}>⠿</button></td>
-                          <td className="cat-bar"><div className="product-cell"><div className="product-name">{esc(p.name)}</div><Image src={p.image || DEFAULT_PRODUCT_IMAGE} cls="product-image-cell" /></div></td>
+                          <td className="cat-bar"><div className="product-cell"><Image src={p.image || DEFAULT_PRODUCT_IMAGE} cls="product-image-cell" /><div className="product-name">{esc(p.name)}</div></div></td>
                           <td>{money(p.price)}</td><td>{avail}</td>
                           <td>{p.promos.length ? <div className="promo-stack">{p.promos.map((x) => <span className="promotion" key={x.id}>{esc(x.label)} · {money(x.price)}</span>)}</div> : <span className="muted">—</span>}</td>
                           <td><div className="actions">
@@ -250,6 +244,10 @@ export function Catalog() {
           <div className="field"><label>Precio {catModal.mode === 'new' ? '(opcional)' : ''}</label>
             <input min={0} type="number" placeholder="0" value={catModal.price} onChange={(e) => setCatModal((m) => m && { ...m, price: e.target.value })} />
             <p className="muted">Se aplica a todos los productos de esta categoría. Cada producto se puede editar después para tener un precio distinto.</p>
+          </div>
+          <div className="field"><label>Costo <span className="muted">(opcional)</span></label>
+            <input min={0} type="number" placeholder="0" value={catModal.cost} onChange={(e) => setCatModal((m) => m && { ...m, cost: e.target.value })} />
+            <p className="muted">También se copia a todos los productos de la categoría; cada uno se puede editar después para tener un costo distinto.</p>
           </div>
           <div className="field"><label>Promociones <span className="muted">(cada una se vende por separado)</span></label>
             <div id="cat-promo-list">

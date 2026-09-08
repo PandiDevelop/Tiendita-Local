@@ -54,7 +54,7 @@ export function ProductForm({ editingId, onClose }: { editingId?: string; onClos
       } else {
         st.products.push({ id: uid(), name: nm, price: pr, cost: cst, image: image || DEFAULT_PRODUCT_IMAGE, promos: promoList, category: catVal });
       }
-      if (shouldSeedPricing) setCategoryPricing(st, catVal, pr, promoList);
+      if (shouldSeedPricing) setCategoryPricing(st, catVal, pr, cst, promoList);
       if (!editingId && qty.trim() !== '') {
         const q = Math.round(Number(qty));
         if (Number.isFinite(q) && q >= 0) {
@@ -78,6 +78,7 @@ export function ProductForm({ editingId, onClose }: { editingId?: string; onClos
           if (!editingId && v && s.categoryPricing && s.categoryPricing[v]) {
             const cp = s.categoryPricing[v];
             setPrice(String(cp.price));
+            setCost(cp.cost != null ? String(cp.cost) : '');
             setPromos(toEditablePromos(cp.promos));
           }
         }} />

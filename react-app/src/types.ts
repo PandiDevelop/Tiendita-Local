@@ -4,11 +4,13 @@ export interface Promo {
   price: number;
 }
 
-// Precio y promociones por defecto de una categoria. Al crearla o editarla se
-// copian a todos los productos que tengan esa categoria; despues cada
-// producto se puede editar individualmente para tener un precio distinto.
+// Precio, costo y promociones por defecto de una categoria. Al crearla o
+// editarla se copian a todos los productos que tengan esa categoria; despues
+// cada producto se puede editar individualmente para tener un precio o
+// costo distinto sin afectar a los demas.
 export interface CategoryPricing {
   price: number;
+  cost?: number;
   promos: Promo[];
 }
 
@@ -99,7 +101,7 @@ export interface Store {
   members?: Record<string, Member>;
 }
 
-export type Tab = 'inicio' | 'productos' | 'inventario' | 'historial' | 'ganancias' | 'notas' | 'empleados';
+export type Tab = 'inicio' | 'productos' | 'inventario' | 'ganancias' | 'notas' | 'empleados';
 
 export interface SaleDraft {
   storeId: string;

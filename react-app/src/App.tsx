@@ -5,7 +5,6 @@ import { DialogHost, Image, Toast } from './ui';
 import { Dashboard } from './views/Dashboard';
 import { Catalog } from './views/Catalog';
 import { Inventory } from './views/Inventory';
-import { History } from './views/History';
 import { Profit } from './views/Profit';
 import { Notes } from './views/Notes';
 import { Employees } from './views/Employees';
@@ -96,7 +95,7 @@ export function App() {
           <button className="button secondary" onClick={() => setModal('editStore')}>⚙ Editar tienda</button>
         </div>
         <nav className="tabs">
-          {([['inicio', 'Inicio'], ['productos', 'Catálogo'], ['inventario', 'Inventario'], ['historial', 'Historial'], ['ganancias', 'Ganancias'], ['notas', 'Notas'], ['empleados', 'Empleados']] as const)
+          {([['inicio', 'Inicio'], ['productos', 'Catálogo'], ['inventario', 'Inventario'], ['ganancias', 'Ganancias'], ['notas', 'Notas'], ['empleados', 'Empleados']] as const)
             .filter(([id]) => id !== 'empleados' || owner)
             .map(([id, l]) => (
               <button key={id} className={'tab ' + (state.tab === id ? 'active' : '')} onClick={() => setTab(id)}>{l}</button>
@@ -105,7 +104,6 @@ export function App() {
         {state.tab === 'inicio' && <Dashboard />}
         {state.tab === 'productos' && <Catalog />}
         {state.tab === 'inventario' && <Inventory />}
-        {state.tab === 'historial' && <History />}
         {state.tab === 'ganancias' && <Profit />}
         {state.tab === 'notas' && <Notes />}
         {state.tab === 'empleados' && <Employees />}

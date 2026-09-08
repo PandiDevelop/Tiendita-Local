@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import type { AppState, Product, Store } from '../types';
-import { makeDraft, normalizeStore, addNote, adoptInvLog, sortByOrder, uid, costFor, priceFor, total, costTotal, profitTotal } from '../lib/core';
+import { makeDraft, normalizeStore, addNote, adoptInvLog, sortByOrder, uid, costFor, priceFor, total, costTotal, profitTotal, setCategoryPricing, groupedByCategory } from '../lib/core';
 import { applyRemote } from '../lib/sync';
 
 beforeEach(() => {
@@ -239,5 +239,30 @@ describe('ganancias: costo por producto y calculo de margen', () => {
     expect(total(sale, s)).toBe(3000);
     expect(costTotal(sale, s)).toBe(1200);
     expect(profitTotal(sale, s)).toBe(1800);
+  });
+});
+
+describe('categorias: precio y costo base, agrupado por categoria', () => {
+  it('setCategoryPricing copia precio, costo y promos a todos los productos de la categoria', () => {
+    const s = newStore('s1');
+    const p1 = addProduct(s, 'Agua', 1000);
+    const p2 = addProduct(s, 'Gaseosa', 1000);
+    s.products.forEach((p) => { p.category = 'Bebidas'; });
+    setCategoryPricing(s, 'Bebidas', 2000, 800, []);
+    expect(s.products.find((p) => p.id === p1)!.price).toBe(2000);
+    expect(s.products.find((p) => p.id === p1)!.cost).toBe(800);
+    expect(s.products.find((p) => p.id === p2)!.cost).toBe(800);
+    expect(s.categoryPricing!['Bebidas'].cost).toBe(800);
+  });
+
+  it('groupedByCategory ordena segun storeCats y deja Sin categoria al final', () => {
+    const s = newStore('s1');
+    addProduct(s, 'Suelto', 500);
+    const p1 = addProduct(s, 'Agua', 1000);
+    s.categories = ['Bebidas'];
+    s.products.find((p) => p.id === p1)!.category = 'Bebidas';
+    const groups = groupedByCategory(s);
+    expect(groups.map((g) => g.name)).toEqual(['Bebidas', 'Sin categoría']);
+    expect(groups[0].list.map((p) => p.id)).toEqual([p1]);
   });
 });

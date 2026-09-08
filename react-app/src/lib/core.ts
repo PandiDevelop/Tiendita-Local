@@ -119,6 +119,11 @@ export function loadState(): AppState {
   const raw = localStorage.getItem(KEY);
   const parsed = raw ? JSON.parse(raw) : {};
   const merged: AppState = Object.assign(makeDraft(), parsed || {});
+  // El historial de ventas ahora vive dentro de la pestaña Ganancias (ya no
+  // es su propia pestaña): si alguien se habia quedado en Historial la
+  // ultima vez que uso la app, lo mandamos a Ganancias en vez de dejar la
+  // pantalla en blanco.
+  if ((merged.tab as string) === 'historial') merged.tab = 'ganancias';
   (merged.stores || []).forEach(normalizeStore);
   return merged;
 }
@@ -283,22 +288,25 @@ export function mergeNoteLog(a: NoteEntry[] | undefined, b: NoteEntry[]): NoteEn
     .sort((x, y) => (y.date || '').localeCompare(x.date || '') || (y.time || '').localeCompare(x.time || ''));
 }
 
-// Fija el precio y las promociones por defecto de una categoria y los copia a
-// todos los productos que ya tengan esa categoria (asi la mayoria de un
-// grupo comparte el mismo precio). Cada producto se puede editar despues
-// para tener un precio distinto sin afectar a los demas.
-export function setCategoryPricing(s: Store, cat: string, price: number, promos: Promo[]): CategoryPricing | null {
+// Fija el precio, costo y promociones por defecto de una categoria y los
+// copia a todos los productos que ya tengan esa categoria (asi la mayoria de
+// un grupo comparte el mismo precio/costo). Cada producto se puede editar
+// despues para tener un precio o costo distinto sin afectar a los demas.
+// cost es opcional (igual que en el producto): si no se define, queda en 0.
+export function setCategoryPricing(s: Store, cat: string, price: number, cost: number, promos: Promo[]): CategoryPricing | null {
   const v = (cat || '').trim();
   if (!v || !Number.isFinite(price) || price < 0) return null;
+  const cst = Number.isFinite(cost) && cost >= 0 ? cost : 0;
   const clean: Promo[] = (promos || [])
     .filter((x) => x && x.label && x.label.trim() && Number.isFinite(x.price) && x.price >= 0)
     .map((x) => ({ id: x.id || uid(), label: x.label.trim(), price: x.price }));
   s.categoryPricing = s.categoryPricing || {};
-  const entry: CategoryPricing = { price, promos: clean };
+  const entry: CategoryPricing = { price, cost: cst, promos: clean };
   s.categoryPricing[v] = entry;
   s.products.forEach((p) => {
     if ((p.category || '').trim() === v) {
       p.price = price;
+      p.cost = cst;
       p.promos = JSON.parse(JSON.stringify(clean));
     }
   });
@@ -357,6 +365,22 @@ export function storeCats(s: Store): string[] {
   (s.categories || []).forEach((c) => { const v = (c || '').trim(); if (v && !cats.includes(v)) cats.push(v); });
   s.products.forEach((p) => { const v = (p.category || '').trim(); if (v && !cats.includes(v)) cats.push(v); });
   return cats;
+}
+
+export interface CategoryGroup { name: string; list: Product[]; }
+
+// Agrupa los productos por categoria en el orden de storeCats (el orden en
+// que se muestran en Catalogo), con 'Sin categoria' siempre al final. Antes
+// esto vivia duplicado dentro de Catalogo.tsx; ahora tambien lo usa
+// Inventario para organizar las existencias por categoria igual que el
+// catalogo.
+export function groupedByCategory(s: Store): CategoryGroup[] {
+  const grouped: Record<string, Product[]> = {};
+  s.products.forEach((p) => { const c = (p.category || '').trim() || 'Sin categoría'; (grouped[c] = grouped[c] || []).push(p); });
+  Object.keys(grouped).forEach((c) => { grouped[c] = sortByOrder(grouped[c]); });
+  const groups = storeCats(s).map((c) => ({ name: c, list: grouped[c] || [] }));
+  if (grouped['Sin categoría']) groups.push({ name: 'Sin categoría', list: grouped['Sin categoría'] });
+  return groups;
 }
 
 // Redimensiona y comprime una foto del dispositivo para que quepa en

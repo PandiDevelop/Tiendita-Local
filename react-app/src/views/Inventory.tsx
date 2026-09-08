@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useStore } from '../store';
-import { DEFAULT_PRODUCT_IMAGE, esc, inventorySold, adoptInvLog, syncName } from '../lib/core';
+import { DEFAULT_PRODUCT_IMAGE, esc, inventorySold, adoptInvLog, syncName, groupedByCategory } from '../lib/core';
 import { Image, Modal } from '../ui';
 import type { Product } from '../types';
 
@@ -16,7 +16,7 @@ function parseQty(v: string): number {
 }
 
 export function Inventory() {
-  const { store, replace, toast } = useStore();
+  const { store, state, replace, toast } = useStore();
   const s = store!;
   const [mode, setMode] = useState<'stock' | 'log'>('stock');
   const [edit, setEdit] = useState<QtyPopup | null>(null);
@@ -26,6 +26,18 @@ export function Inventory() {
   const base = s.inventory || {};
   const log = (s.invLog || []).slice();
   const byId = new Map(s.products.map((p) => [p.id, p]));
+  const groups = groupedByCategory(s);
+
+  function catOpen(cat: string) {
+    return !state.openCats || !state.openCats[s.id] || state.openCats[s.id][cat] !== false;
+  }
+  function toggleCat(cat: string) {
+    replace((d) => {
+      d.openCats = d.openCats || {};
+      d.openCats[s.id] = d.openCats[s.id] || {};
+      d.openCats[s.id][cat] = !catOpen(cat);
+    });
+  }
 
   function cur(p: Product): number {
     return Math.round(base[p.id] || 0);
@@ -105,28 +117,51 @@ export function Inventory() {
           </tbody></table>
         ) : <div className="notice">Aún no hay cambios registrados en el inventario.</div>
       ) : s.products.length ? (
-        <table><thead><tr><th>Producto</th><th>Comprado</th><th>Disponible</th><th>Ajustar</th></tr></thead><tbody>
-          {s.products.map((p) => {
-            const has = base[p.id] != null;
-            const buy = has ? Math.round(base[p.id]) : null;
-            const avail = has ? Math.max(0, buy! - (sold[p.id] || 0)) : null;
+        <>
+          {groups.map((g) => {
+            const open = catOpen(g.name);
             return (
-              <tr key={p.id}>
-                <td className="cat-bar"><div className="product-cell"><div className="product-name">{esc(p.name)}</div><Image src={p.image || DEFAULT_PRODUCT_IMAGE} cls="product-image-cell" /></div></td>
-                <td>{buy == null ? '—' : buy}</td>
-                <td>{avail == null ? '—' : avail}</td>
-                <td className="inv-actions">
-                  <div className="inv-stepper">
-                    <button className="qty-btn" title="Restar 1" onClick={() => bump(p, -1)}>−</button>
-                    <button className="icon-btn" title="Editar cantidad exacta" onClick={() => openEdit(p)}>✎</button>
-                    <button className="qty-btn" title="Sumar 1" onClick={() => bump(p, 1)}>+</button>
-                    <button className="inv-cargo" title="Nuevo cargamento" onClick={() => openCargo(p)}>🚚</button>
+              <div className="cat-group" key={g.name}>
+                <div className="cat-head">
+                  <button className="cat-head-toggle" onClick={() => toggleCat(g.name)}>
+                    <span className="cat-caret">{open ? '▾' : '▸'}</span><b>{esc(g.name)}</b>
+                    <span className="muted">· {g.list.length} producto{g.list.length === 1 ? '' : 's'}</span>
+                  </button>
+                </div>
+                {open && (
+                  <div className="cat-body">
+                    {g.list.length ? (
+                      <table><thead><tr><th>Producto</th><th>Disponible</th><th>Vendido</th><th>Adquirido</th><th>Ajustar</th></tr></thead><tbody>
+                        {g.list.map((p) => {
+                          const has = base[p.id] != null;
+                          const buy = has ? Math.round(base[p.id]) : null;
+                          const soldQty = sold[p.id] || 0;
+                          const avail = has ? Math.max(0, buy! - soldQty) : null;
+                          return (
+                            <tr key={p.id}>
+                              <td className="cat-bar"><div className="product-cell"><Image src={p.image || DEFAULT_PRODUCT_IMAGE} cls="product-image-cell" /><div className="product-name">{esc(p.name)}</div></div></td>
+                              <td>{avail == null ? '—' : avail}</td>
+                              <td>{soldQty}</td>
+                              <td>{buy == null ? '—' : buy}</td>
+                              <td className="inv-actions">
+                                <div className="inv-stepper">
+                                  <button className="qty-btn" title="Restar 1" onClick={() => bump(p, -1)}>−</button>
+                                  <button className="icon-btn" title="Editar cantidad exacta" onClick={() => openEdit(p)}>✎</button>
+                                  <button className="qty-btn" title="Sumar 1" onClick={() => bump(p, 1)}>+</button>
+                                  <button className="inv-cargo" title="Nuevo cargamento" onClick={() => openCargo(p)}>🚚</button>
+                                </div>
+                              </td>
+                            </tr>
+                          );
+                        })}
+                      </tbody></table>
+                    ) : <div className="notice">Sin productos en esta categoría todavía.</div>}
                   </div>
-                </td>
-              </tr>
+                )}
+              </div>
             );
           })}
-        </tbody></table>
+        </>
       ) : <div className="notice">Aún no hay productos en el catálogo.</div>}
 
       {edit && (
@@ -141,7 +176,7 @@ export function Inventory() {
               <input className="qty-input" type="number" min={0} step={1} inputMode="numeric" value={edit.qty} onChange={(e) => setEdit({ ...edit, qty: e.target.value })} />
               <button type="button" className="qty-btn" onClick={() => setEdit({ ...edit, qty: String(parseQty(edit.qty) + 1) })}>+</button>
             </div>
-            <p className="muted">Escribe el total de unidades compradas (no lo que queda tras las ventas).</p>
+            <p className="muted">Escribe el total de unidades adquiridas (no lo que queda tras las ventas).</p>
           </div>
           <div className="field"><label>Quién hace el ajuste</label>
             <input maxLength={40} placeholder="Tu nombre" value={edit.who} onChange={(e) => setEdit({ ...edit, who: e.target.value })} />

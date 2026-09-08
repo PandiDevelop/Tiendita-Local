@@ -1,11 +1,14 @@
 import { useState } from 'react';
 import { useStore } from '../store';
-import { costFor, esc, money, priceFor, today } from '../lib/core';
+import { costFor, esc, money, priceFor, today, DEFAULT_PRODUCT_IMAGE } from '../lib/core';
+import { Image } from '../ui';
+import { History } from './History';
 import type { Sale, Store as IStore } from '../types';
 
 type RangeMode = 'todo' | 'hoy' | 'mes' | 'rango';
+type ViewMode = 'resumen' | 'historial';
 
-interface PLine { pid: string; name: string; qty: number; revenue: number; cost: number; profit: number; }
+interface PLine { pid: string; name: string; image: string; qty: number; revenue: number; cost: number; profit: number; }
 
 // Igual que monthLines en Dashboard.tsx, pero acumulando ingreso, costo y
 // ganancia por producto en vez de solo el valor vendido.
@@ -16,7 +19,7 @@ function profitLines(s: IStore, sales: Sale[]): PLine[] {
     const p = s.products.find((px) => px.id === i.productId);
     if (!p) return;
     let line = lines.find((z) => z.pid === i.productId);
-    if (!line) { line = { pid: i.productId, name: p.name, qty: 0, revenue: 0, cost: 0, profit: 0 }; lines.push(line); }
+    if (!line) { line = { pid: i.productId, name: p.name, image: p.image, qty: 0, revenue: 0, cost: 0, profit: 0 }; lines.push(line); }
     const rev = priceFor(i, s) * i.qty;
     const cst = costFor(i, s) * i.qty;
     line.qty += i.qty;
@@ -30,6 +33,7 @@ function profitLines(s: IStore, sales: Sale[]): PLine[] {
 export function Profit() {
   const { store } = useStore();
   const s = store!;
+  const [view, setView] = useState<ViewMode>('resumen');
   const [mode, setMode] = useState<RangeMode>('todo');
   const [from, setFrom] = useState(today());
   const [to, setTo] = useState(today());
@@ -51,43 +55,82 @@ export function Profit() {
   const profit = revenue - cost;
   const margin = revenue > 0 ? (profit / revenue) * 100 : 0;
   const lines = profitLines(s, filtered);
+  const topProfit = lines.length ? lines[0].profit : 0;
 
   return (
     <>
       <div className="panel">
-        <div className="panel-head"><div><h2>Ganancias</h2><p className="muted">Ingresos, costo y ganancia de tus ventas. Filtra por fecha si quieres ver un periodo específico.</p></div></div>
-        <div className="day-tabs">
-          <button className={'day-tab ' + (mode === 'todo' ? 'active' : '')} onClick={() => setMode('todo')}>Todo</button>
-          <button className={'day-tab ' + (mode === 'hoy' ? 'active' : '')} onClick={() => setMode('hoy')}>Hoy</button>
-          <button className={'day-tab ' + (mode === 'mes' ? 'active' : '')} onClick={() => setMode('mes')}>Este mes</button>
-          <button className={'day-tab ' + (mode === 'rango' ? 'active' : '')} onClick={() => setMode('rango')}>Rango de fechas</button>
-        </div>
-        {mode === 'rango' && (
-          <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', margin: '10px 0 4px' }}>
-            <div className="field" style={{ flex: '1 1 140px', margin: 0 }}><label>Desde</label>
-              <input type="date" value={from} onChange={(e) => setFrom(e.target.value)} />
-            </div>
-            <div className="field" style={{ flex: '1 1 140px', margin: 0 }}><label>Hasta</label>
-              <input type="date" value={to} onChange={(e) => setTo(e.target.value)} />
-            </div>
+        <div className="panel-head">
+          <div><h2>Ganancias</h2><p className="muted">Ingresos, costo y ganancia de tus ventas.</p></div>
+          <div className="inv-modes">
+            <button type="button" className={'inv-mode' + (view === 'resumen' ? ' on' : '')} onClick={() => setView('resumen')}>Resumen</button>
+            <button type="button" className={'inv-mode' + (view === 'historial' ? ' on' : '')} onClick={() => setView('historial')}>Historial de ventas</button>
           </div>
+        </div>
+        {view === 'resumen' && (
+          <>
+            <div className="day-tabs">
+              <button className={'day-tab ' + (mode === 'todo' ? 'active' : '')} onClick={() => setMode('todo')}>Todo</button>
+              <button className={'day-tab ' + (mode === 'hoy' ? 'active' : '')} onClick={() => setMode('hoy')}>Hoy</button>
+              <button className={'day-tab ' + (mode === 'mes' ? 'active' : '')} onClick={() => setMode('mes')}>Este mes</button>
+              <button className={'day-tab ' + (mode === 'rango' ? 'active' : '')} onClick={() => setMode('rango')}>Rango de fechas</button>
+            </div>
+            {mode === 'rango' && (
+              <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', margin: '2px 0 4px' }}>
+                <div className="field" style={{ flex: '1 1 140px', margin: 0 }}><label>Desde</label>
+                  <input type="date" value={from} onChange={(e) => setFrom(e.target.value)} />
+                </div>
+                <div className="field" style={{ flex: '1 1 140px', margin: 0 }}><label>Hasta</label>
+                  <input type="date" value={to} onChange={(e) => setTo(e.target.value)} />
+                </div>
+              </div>
+            )}
+          </>
         )}
       </div>
-      <div className="grid">
-        <div className="card stat"><div className="muted">Ingresos</div><div className="value">{money(revenue)}</div><div className="small">{filtered.length} venta{filtered.length === 1 ? '' : 's'}</div></div>
-        <div className="card stat"><div className="muted">Costo</div><div className="value">{money(cost)}</div><div className="small">Costo de lo vendido</div></div>
-        <div className="card stat accent"><div className="muted">Ganancia</div><div className="value">{money(profit)}</div><div className="small">{revenue > 0 ? margin.toFixed(1) + '% de margen' : 'Sin ventas en este periodo'}</div></div>
-      </div>
-      <div className="panel">
-        <div className="panel-head"><div><h2>Ganancia por producto</h2><p className="muted">Ordenado de mayor a menor ganancia.</p></div></div>
-        {lines.length ? (
-          <table><thead><tr><th>Producto</th><th>Unidades</th><th>Ingresos</th><th>Costo</th><th>Ganancia</th></tr></thead><tbody>
-            {lines.map((x) => (
-              <tr key={x.pid}><td className="product-name">{esc(x.name)}</td><td>{x.qty}</td><td>{money(x.revenue)}</td><td>{money(x.cost)}</td><td><b>{money(x.profit)}</b></td></tr>
-            ))}
-          </tbody></table>
-        ) : <div className="notice">No hay ventas registradas en este periodo.</div>}
-      </div>
+
+      {view === 'historial' ? <History /> : (
+        <>
+          <div className="grid profit-grid">
+            <div className="card stat">
+              <div className="stat-icon">💵</div>
+              <div className="muted">Ingresos</div><div className="value">{money(revenue)}</div>
+              <div className="small">{filtered.length} venta{filtered.length === 1 ? '' : 's'}</div>
+            </div>
+            <div className="card stat">
+              <div className="stat-icon">🧾</div>
+              <div className="muted">Costo</div><div className="value">{money(cost)}</div>
+              <div className="small">Costo de lo vendido</div>
+            </div>
+            <div className="card stat accent">
+              <div className="stat-icon">📈</div>
+              <div className="muted">Ganancia</div><div className="value">{money(profit)}</div>
+              <div className="small">{revenue > 0 ? margin.toFixed(1) + '% de margen' : 'Sin ventas en este periodo'}</div>
+            </div>
+          </div>
+          <div className="panel">
+            <div className="panel-head"><div><h2>Ganancia por producto</h2><p className="muted">Ordenado de mayor a menor ganancia.</p></div></div>
+            {lines.length ? (
+              <table><thead><tr><th>Producto</th><th>Unidades</th><th>Ingresos</th><th>Costo</th><th>Ganancia</th></tr></thead><tbody>
+                {lines.map((x) => {
+                  const pct = topProfit > 0 ? Math.max(0, x.profit / topProfit) * 100 : 0;
+                  return (
+                    <tr key={x.pid}>
+                      <td className="cat-bar"><div className="product-cell"><Image src={x.image || DEFAULT_PRODUCT_IMAGE} cls="product-image-cell" /><div className="product-name">{esc(x.name)}</div></div></td>
+                      <td>{x.qty}</td>
+                      <td>{money(x.revenue)}</td>
+                      <td>{money(x.cost)}</td>
+                      <td>
+                        <div className="profit-cell"><b>{money(x.profit)}</b><div className="profit-bar"><span style={{ width: pct + '%' }}></span></div></div>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody></table>
+            ) : <div className="notice">No hay ventas registradas en este periodo.</div>}
+          </div>
+        </>
+      )}
     </>
   );
 }
