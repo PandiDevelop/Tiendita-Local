@@ -24,9 +24,9 @@
     "semantic_hash": "627f92d0aeb52db2b7b347b12f32f72e"
   },
   "react-app/src/lib/core.ts": {
-    "mtime": 1788907110.2661943,
-    "seen": 1788907223.6630912,
-    "ast_hash": "8f7b4813d9b8bc0af707260178ebcd2e",
+    "mtime": 1788908644.8557093,
+    "seen": 1788910103.5517817,
+    "ast_hash": "202575df2d03d2f364738be1f4fc5871",
     "semantic_hash": ""
   },
   "react-app/src/lib/dialog.ts": {
@@ -96,9 +96,9 @@
     "semantic_hash": ""
   },
   "react-app/src/views/History.tsx": {
-    "mtime": 1788905621.6762238,
-    "seen": 1788905665.2992861,
-    "ast_hash": "8db7c64042df8e6d75d141051d630162",
+    "mtime": 1788910057.9232507,
+    "seen": 1788910103.5517817,
+    "ast_hash": "d164959128ca63fcd989db41a4e88d20",
     "semantic_hash": ""
   },
   "react-app/src/views/Inventory.tsx": {
@@ -132,9 +132,9 @@
     "semantic_hash": ""
   },
   "react-app/src/views/SaleRegistration.tsx": {
-    "mtime": 1788907127.8141134,
-    "seen": 1788907223.6630912,
-    "ast_hash": "e92be98f3f52003deab8c7cd10a535c2",
+    "mtime": 1788910043.6636443,
+    "seen": 1788910103.5517817,
+    "ast_hash": "f7eedb26314be76e0342428d8754ccd6",
     "semantic_hash": ""
   },
   "react-app/src/views/StoreModal.tsx": {
@@ -180,9 +180,9 @@
     "semantic_hash": ""
   },
   "index.html": {
-    "mtime": 1788907180.0785425,
-    "seen": 1788907223.6630912,
-    "ast_hash": "e0ba5ee3be7690449c452528e99e8315",
+    "mtime": 1788910070.7181258,
+    "seen": 1788910103.5517817,
+    "ast_hash": "11b6c3e9798194dc7b6f291455a85d4b",
     "semantic_hash": ""
   },
   "react-app/index.html": {
@@ -276,15 +276,15 @@
     "semantic_hash": ""
   },
   "react-app/src/views/Events.tsx": {
-    "mtime": 1788902697.1525095,
-    "seen": 1788903163.6280794,
-    "ast_hash": "b6298b3a0f150a082041dc02ba19bab9",
+    "mtime": 1788909977.5737672,
+    "seen": 1788910103.5517817,
+    "ast_hash": "094f66cd8884c3b433cc1fe4e6143b5f",
     "semantic_hash": ""
   },
   "react-app/src/views/PromoEditor.tsx": {
-    "mtime": 1788907151.3705006,
-    "seen": 1788907223.6630912,
-    "ast_hash": "bf53e171b841b349eca9c646afc5c104",
+    "mtime": 1788908666.9598885,
+    "seen": 1788910103.5517817,
+    "ast_hash": "48d0a89fb76f8c1881209bf667959cb4",
     "semantic_hash": ""
   },
   "Claude outputs/TEST_RESULTS.txt": {
