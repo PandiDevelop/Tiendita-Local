@@ -25,6 +25,9 @@ export interface Product {
   image: string;
   promos: Promo[];
   category: string;
+  // Etiqueta opcional (tag). Se sugiere un valor por defecto global ('general')
+  // al crear el producto, pero se puede cambiar o dejar vacio. No es obligatorio.
+  tag?: string;
   // Posicion dentro de su categoria (menor = mas arriba). Se asigna al
   // arrastrar en el Catalogo; viaja como un campo mas del producto para que
   // el orden SI se sincronice entre dispositivos (a diferencia de la

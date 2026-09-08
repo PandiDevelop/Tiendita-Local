@@ -18,6 +18,19 @@ export const DEFAULT_PRODUCT_IMAGE = `data:image/svg+xml,${DEFAULT_PROD_SVG}`;
 
 export const SYNC_DEFAULT_NAME = 'Trabajador';
 
+// Etiqueta/tag que se sugiere por defecto (global para todas las tiendas) al
+// crear un producto. Cada producto puede cambiarla o dejarla vacia: el tag no
+// es obligatorio. Se trunca de forma visual si es muy largo (ver shortTag).
+export const DEFAULT_PRODUCT_TAG = 'general';
+
+// Muestra un tag acortado cuando es muy largo: p.ej. "Uma musume" se ve como
+// "Uma". Se usa en listas donde el tag compite con el nombre del producto.
+export function shortTag(tag: string | undefined, max = 5): string {
+  const t = (tag || '').trim();
+  if (!t) return '';
+  return t.length > max ? t.slice(0, max) : t;
+}
+
 export function today(): string {
   return new Date().toISOString().slice(0, 10);
 }

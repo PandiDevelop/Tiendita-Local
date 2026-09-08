@@ -1,13 +1,31 @@
 import { Fragment, useState } from 'react';
 import { useStore } from '../store';
-import { money, esc, priceFor, formatDate, itemLabel } from '../lib/core';
+import { money, esc, priceFor, formatDate, itemLabel, syncClientId } from '../lib/core';
+import type { Member, Role } from '../types';
 
 interface EmpAcc { units: number; money: number; days: Set<string>; detail: Record<string, { units: number; money: number; rows: Record<string, { name: string; sub: string; qty: number; money: number }> }>; }
+
+// Etiqueta visible para cada rol del equipo. Quien creo la tienda es siempre
+// Dueño (aunque su Member.role sea 'owner' en members); los demás usan
+// el rol que el dueño les asignó.
+function roleLabel(role: Role): string {
+  if (role === 'owner') return 'Dueño';
+  if (role === 'admin') return 'Administrador';
+  return 'Trabajador';
+}
 
 export function Employees() {
   const { store } = useStore();
   const s = store!;
   const [open, setOpen] = useState<Record<string, boolean>>({});
+
+  // Equipo vinculado: su id en la tienda (clientId), nombre y rol. El rol del
+  // dueño real (createdBy) siempre es Dueño, haya o no entrada en members.
+  const ownerId = s.createdBy || null;
+  const members = Object.entries(s.members || {}) as [string, Member][];
+  const teamRows = members
+    .map(([cid, m]) => ({ cid, name: m.name || 'Trabajador', role: cid === ownerId ? 'owner' as Role : (m.role || 'worker' as Role), me: cid === syncClientId() }))
+    .sort((a, b) => (a.role === 'owner' ? -1 : b.role === 'owner' ? 1 : a.name.localeCompare(b.name)));
 
   const acc: Record<string, EmpAcc> = {};
   s.sales.forEach((x) => {
@@ -51,7 +69,20 @@ export function Employees() {
 
   return (
     <div className="panel">
-      <div className="panel-head"><div><h2>Registro de empleados</h2><p className="muted">Unidades y producido de cada empleado según el nombre con el que registró sus ventas. Toca ▾ para ver el detalle por fecha.</p></div></div>
+      <div className="panel-head"><div><h2>Registro de empleados</h2><p className="muted">El equipo vinculado a esta tienda y el producido de cada empleado según el nombre con el que registró sus ventas.</p></div></div>
+
+      {teamRows.length ? (
+        <div className="team-list">
+          <div className="team-list-title">Equipo · rol de cada miembro</div>
+          {teamRows.map((m) => (
+            <div className="team-row" key={m.cid}>
+              <span className="team-name">{esc(m.name)}{m.me ? <span className="team-me">tú</span> : null}</span>
+              <span className={'role-pill role-' + m.role}>{roleLabel(m.role)}</span>
+            </div>
+          ))}
+        </div>
+      ) : null}
+
       {rows.length ? (
         <table><thead><tr><th>Empleado</th><th>Unidades vendidas</th><th>Producido</th><th>Días con ventas</th><th></th></tr></thead><tbody>
           {rows.map((r) => (
@@ -63,7 +94,7 @@ export function Employees() {
             </Fragment>
           ))}
         </tbody></table>
-      ) : <div className="empty"><div className="emoji">👥</div><b>Aún no hay ventas registradas</b><p>Cuando alguien registre una venta con su nombre, aquí verás lo que produjo.</p></div>}
+      ) : <div className="notice">Aún no hay ventas registradas.{teamRows.length ? '' : ' Cuando alguien registre una venta con su nombre, aquí verás lo que produjo.'}</div>}
     </div>
   );
 }

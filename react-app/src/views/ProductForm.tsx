@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useStore } from '../store';
-import { DEFAULT_PRODUCT_IMAGE, compressImage, storeCats, adoptInvLog, setCategoryPricing, toEditablePromos, fromEditablePromos, uid } from '../lib/core';
+import { DEFAULT_PRODUCT_IMAGE, DEFAULT_PRODUCT_TAG, compressImage, storeCats, adoptInvLog, setCategoryPricing, toEditablePromos, fromEditablePromos, uid } from '../lib/core';
 import type { EditablePromo } from '../lib/core';
 import { Dropdown } from '../Dropdown';
 import { ImagePicker, Modal } from '../ui';
@@ -18,6 +18,9 @@ export function ProductForm({ editingId, onClose }: { editingId?: string; onClos
   const [image, setImage] = useState(p?.image || '');
   const [qty, setQty] = useState('');
   const [promos, setPromos] = useState<EditablePromo[]>(toEditablePromos(p?.promos));
+  // El tag es opcional y editable. Al crear un producto nuevo se sugiere el
+  // valor por defecto global; se puede cambiar o vaciar.
+  const [tag, setTag] = useState(editingId ? (p?.tag || '') : (p?.tag || DEFAULT_PRODUCT_TAG));
 
   const showCatNew = cat === '__new__';
 
@@ -48,11 +51,12 @@ export function ProductForm({ editingId, onClose }: { editingId?: string; onClos
       const catHasNoOtherProducts = !!catVal && !st.products.some((x) => (x.category || '').trim() === catVal && x.id !== editingId);
       const shouldSeedPricing = catHasNoPricing && catHasNoOtherProducts;
       if (catVal && !st.categories.includes(catVal)) st.categories.push(catVal);
+      const tagVal = tag.trim();
       if (editingId) {
         const t = st.products.find((x) => x.id === editingId);
-        if (t) Object.assign(t, { name: nm, price: pr, cost: cst, image: image || DEFAULT_PRODUCT_IMAGE, promos: promoList, category: catVal });
+        if (t) Object.assign(t, { name: nm, price: pr, cost: cst, image: image || DEFAULT_PRODUCT_IMAGE, promos: promoList, category: catVal, tag: tagVal || undefined });
       } else {
-        st.products.push({ id: uid(), name: nm, price: pr, cost: cst, image: image || DEFAULT_PRODUCT_IMAGE, promos: promoList, category: catVal });
+        st.products.push({ id: uid(), name: nm, price: pr, cost: cst, image: image || DEFAULT_PRODUCT_IMAGE, promos: promoList, category: catVal, tag: tagVal || undefined });
       }
       if (shouldSeedPricing) setCategoryPricing(st, catVal, pr, cst, promoList);
       if (!editingId && qty.trim() !== '') {
@@ -86,6 +90,10 @@ export function ProductForm({ editingId, onClose }: { editingId?: string; onClos
       </div>
       <div className="field"><label>Nombre del producto</label>
         <input maxLength={80} placeholder="Ej. Caja de galletas" value={name} onChange={(e) => setName(e.target.value)} />
+      </div>
+      <div className="field"><label>Etiqueta / tag <span className="muted">(opcional)</span></label>
+        <input maxLength={30} placeholder="Ej. general" value={tag} onChange={(e) => setTag(e.target.value)} />
+        <p className="muted">Una etiqueta corta para agrupar productos. No es obligatoria; se sugiere <code>general</code> al crear, pero puedes cambiarla o dejarla vacía.</p>
       </div>
       <div className="field"><label>Precio del producto</label>
         <input min={0} type="number" placeholder="0" value={price} onChange={(e) => setPrice(e.target.value)} />

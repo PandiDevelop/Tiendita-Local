@@ -51,19 +51,21 @@ export function ImagePicker({ id, src, cls, hint, onFile, disabled }: { id: stri
   // boton propio con el MISMO estilo (antes uno era el selector nativo del
   // navegador, gris y distinto en cada sistema, y el otro un boton de la
   // app: se veian como dos cosas distintas). Asi 'Elegir archivo' y 'Tomar
-  // foto' se ven como una sola pareja de acciones coherente.
+  // foto' se ven como una sola pareja de acciones coherente. El hint va
+  // FUERA de la fila de centrado para que la foto quede alineada con el
+  // centro de los dos botones, no con botones + texto.
   return (
-    <div className="image-picker">
-      <Image src={src} cls={cls} />
-      <div>
+    <div className="image-picker-wrap">
+      <div className="image-picker">
+        <Image src={src} cls={cls} />
         <div className="image-picker-actions">
           <input id={id} type="file" accept="image/*" onChange={(e) => onFile(e.target.files?.[0])} disabled={disabled} style={{ display: 'none' }} />
           <button type="button" className="button secondary" disabled={disabled} onClick={() => document.getElementById(id)?.click()}>Elegir archivo</button>
           <input id={cameraId} type="file" accept="image/*" capture="environment" onChange={(e) => onFile(e.target.files?.[0])} disabled={disabled} style={{ display: 'none' }} />
           <button type="button" className="button secondary" disabled={disabled} onClick={() => document.getElementById(cameraId)?.click()}>Tomar foto</button>
         </div>
-        {hint && <p className="muted">{hint}</p>}
       </div>
+      {hint && <p className="muted image-picker-hint">{hint}</p>}
     </div>
   );
 }

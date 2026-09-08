@@ -1,1 +1,17 @@
-{"0": "sync.ts", "1": "core.ts", "2": "App.tsx", "3": "useStore", "4": "package.json", "5": "Catalog.tsx", "6": "Inventory.tsx", "7": "compilerOptions", "8": "SaleRegistration", "9": "vite-env.d.ts", "10": "public/sw.js", "11": "sw.js"}
+{
+  "0": "sync.ts",
+  "1": "store.tsx",
+  "2": "ui.tsx",
+  "3": "App.tsx",
+  "4": "package.json",
+  "5": "core.ts",
+  "6": "Inventory",
+  "7": "compilerOptions",
+  "8": "SaleRegistration.tsx",
+  "9": "vite-env.d.ts",
+  "10": "public/sw.js",
+  "11": "sw.js",
+  "12": "StoreModal.tsx",
+  "13": "Mi Tiendita",
+  "14": "AGENTS.md"
+}

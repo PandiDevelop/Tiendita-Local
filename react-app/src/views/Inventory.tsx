@@ -1,7 +1,8 @@
 import { useState } from 'react';
 import { useStore } from '../store';
-import { DEFAULT_PRODUCT_IMAGE, esc, inventorySold, adoptInvLog, syncName, groupedByCategory } from '../lib/core';
+import { DEFAULT_PRODUCT_IMAGE, esc, inventorySold, adoptInvLog, syncName, groupedByCategory, storeCats, shortTag } from '../lib/core';
 import { Image, Modal } from '../ui';
+import { CategoryModal } from './CategoryModal';
 import type { Product } from '../types';
 
 // qty se maneja como texto mientras se edita para no forzar un '0' que no
@@ -21,6 +22,8 @@ export function Inventory() {
   const [mode, setMode] = useState<'stock' | 'log'>('stock');
   const [edit, setEdit] = useState<QtyPopup | null>(null);
   const [cargo, setCargo] = useState<QtyPopup | null>(null);
+  // Configuracion de categoria abierta con la tuerca del encabezado.
+  const [catModal, setCatModal] = useState<string | null>(null);
 
   const sold = inventorySold(s);
   const base = s.inventory || {};
@@ -28,14 +31,19 @@ export function Inventory() {
   const byId = new Map(s.products.map((p) => [p.id, p]));
   const groups = groupedByCategory(s);
 
+  // Independencia de vistas: Catalog guarda sus categorias abiertas bajo la
+  // clave "c:cat" y Inventario bajo "i:cat". Asi abrir una categoria aqui no
+  // la abre en Catálogo ni al reves (ver Catalog.tsx).
+  function catKey(cat: string) { return 'i:' + cat; }
   function catOpen(cat: string) {
-    return !state.openCats || !state.openCats[s.id] || state.openCats[s.id][cat] !== false;
+    return !state.openCats || !state.openCats[s.id] || state.openCats[s.id][catKey(cat)] !== false;
   }
   function toggleCat(cat: string) {
+    const k = catKey(cat);
     replace((d) => {
       d.openCats = d.openCats || {};
       d.openCats[s.id] = d.openCats[s.id] || {};
-      d.openCats[s.id][cat] = !catOpen(cat);
+      d.openCats[s.id][k] = !catOpen(cat);
     });
   }
 
@@ -116,10 +124,11 @@ export function Inventory() {
             ))}
           </tbody></table>
         ) : <div className="notice">Aún no hay cambios registrados en el inventario.</div>
-      ) : s.products.length ? (
+      ) : s.products.length || storeCats(s).length ? (
         <>
           {groups.map((g) => {
             const open = catOpen(g.name);
+            const editable = g.name !== 'Sin categoría';
             return (
               <div className="cat-group" key={g.name}>
                 <div className="cat-head">
@@ -127,6 +136,9 @@ export function Inventory() {
                     <span className="cat-caret">{open ? '▾' : '▸'}</span><b>{esc(g.name)}</b>
                     <span className="muted">· {g.list.length} producto{g.list.length === 1 ? '' : 's'}</span>
                   </button>
+                  {editable && (
+                    <button className="icon-btn" title="Configurar la categoría (precio, costo y promociones por defecto)" onClick={() => setCatModal(g.name)}>⚙</button>
+                  )}
                 </div>
                 {open && (
                   <div className="cat-body">
@@ -139,7 +151,7 @@ export function Inventory() {
                           const avail = has ? Math.max(0, buy! - soldQty) : null;
                           return (
                             <tr key={p.id}>
-                              <td className="cat-bar"><div className="product-cell"><Image src={p.image || DEFAULT_PRODUCT_IMAGE} cls="product-image-cell" /><div className="product-name">{esc(p.name)}</div></div></td>
+                              <td className="cat-bar"><div className="product-cell"><Image src={p.image || DEFAULT_PRODUCT_IMAGE} cls="product-image-cell" /><div className="product-name">{esc(p.name)}{p.tag && p.tag.trim() ? <span className="prod-tag" title={esc(p.tag)}>{esc(shortTag(p.tag))}</span> : null}</div></div></td>
                               <td>{avail == null ? '—' : avail}</td>
                               <td>{soldQty}</td>
                               <td>{buy == null ? '—' : buy}</td>
@@ -163,6 +175,10 @@ export function Inventory() {
           })}
         </>
       ) : <div className="notice">Aún no hay productos en el catálogo.</div>}
+
+      {catModal && (
+        <CategoryModal mode="edit" catName={catModal} onClose={() => setCatModal(null)} />
+      )}
 
       {edit && (
         <Modal onClose={() => setEdit(null)}>
