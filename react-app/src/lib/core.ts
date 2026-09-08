@@ -100,6 +100,7 @@ export function normalizeStore(store: Store): Store {
       typeof x === 'string' ? { id: uid(), label: x, price: p.price } : { id: x.id || uid(), label: x.label || '', price: Number.isFinite(x.price) ? x.price : p.price },
     );
     p.category = p.category || '';
+    p.cost = Number.isFinite(p.cost) ? p.cost : 0;
   });
   store.sales.forEach((x) => {
     x.time = x.time || '';
@@ -170,8 +171,26 @@ export function priceFor(i: SaleItem, s: Store): number {
   return i.promotionId ? (p?.promos.find((x) => x.id === i.promotionId)?.price ?? 0) : (p?.price ?? 0);
 }
 
+// Espejo de priceFor: si la venta ya trae un costo guardado (asi se vendio
+// en su momento) lo usa, si no busca el costo actual del producto. Las
+// promociones no cambian el costo (el costo es lo que salio producirlo o
+// comprarlo, no el precio de venta), asi que no se busca por promocion.
+export function costFor(i: SaleItem, s: Store): number {
+  if (Number.isFinite(i.cost)) return i.cost ?? 0;
+  const p = s.products.find((p) => p.id === i.productId);
+  return p?.cost ?? 0;
+}
+
 export function total(sale: Sale, s: Store): number {
   return sale.items.reduce((n, i) => n + priceFor(i, s) * i.qty, 0);
+}
+
+export function costTotal(sale: Sale, s: Store): number {
+  return sale.items.reduce((n, i) => n + costFor(i, s) * i.qty, 0);
+}
+
+export function profitTotal(sale: Sale, s: Store): number {
+  return sale.items.reduce((n, i) => n + (priceFor(i, s) - costFor(i, s)) * i.qty, 0);
 }
 
 export function saleUnits(x: Sale): number {

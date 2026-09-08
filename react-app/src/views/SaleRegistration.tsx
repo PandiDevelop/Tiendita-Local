@@ -5,7 +5,7 @@ import { Dropdown } from '../Dropdown';
 import { Image, Modal } from '../ui';
 import type { Product } from '../types';
 
-interface Line { pid: string; price: number; qty: number; }
+interface Line { pid: string; price: number; cost: number; qty: number; }
 
 export function SaleRegistration({ onClose }: { onClose: () => void }) {
   const { store, state, replace, toast } = useStore();
@@ -43,7 +43,7 @@ export function SaleRegistration({ onClose }: { onClose: () => void }) {
   }
 
   function addLine(p: Product) {
-    const next = [...lines, { pid: p.id, price: p.price, qty: 0 }];
+    const next = [...lines, { pid: p.id, price: p.price, cost: p.cost ?? 0, qty: 0 }];
     setLines(next);
     persist({ lines: next }, false);
     requestAnimationFrame(() => {
@@ -76,7 +76,7 @@ export function SaleRegistration({ onClose }: { onClose: () => void }) {
 
   function register() {
     const emp = (employee.trim() || syncName());
-    const items = lines.filter((l) => l.qty > 0).map((l) => ({ productId: l.pid, promotionId: null, qty: l.qty, price: l.price }));
+    const items = lines.filter((l) => l.qty > 0).map((l) => ({ productId: l.pid, promotionId: null, qty: l.qty, price: l.price, cost: l.cost }));
     if (!items.length) return toast('Añade al menos un producto con cantidad mayor a cero.');
     const now = new Date();
     replace((x) => {

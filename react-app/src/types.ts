@@ -16,6 +16,10 @@ export interface Product {
   id: string;
   name: string;
   price: number;
+  // Costo de producirlo/comprarlo (opcional). Es individual por producto,
+  // a diferencia del precio que puede venir de la categoria: sirve para
+  // calcular la ganancia (precio - costo) en la seccion de Ganancias.
+  cost?: number;
   image: string;
   promos: Promo[];
   category: string;
@@ -31,6 +35,10 @@ export interface SaleItem {
   promotionId: string | null;
   qty: number;
   price?: number;
+  // Costo del producto al momento de la venta (se copia igual que price):
+  // asi si despues cambias el costo del producto, las ventas viejas
+  // conservan su ganancia real de ese momento.
+  cost?: number;
   who?: Record<string, number>;
 }
 
@@ -91,7 +99,7 @@ export interface Store {
   members?: Record<string, Member>;
 }
 
-export type Tab = 'inicio' | 'productos' | 'inventario' | 'historial' | 'notas' | 'empleados';
+export type Tab = 'inicio' | 'productos' | 'inventario' | 'historial' | 'ganancias' | 'notas' | 'empleados';
 
 export interface SaleDraft {
   storeId: string;

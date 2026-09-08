@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import type { AppState, Product, Store } from '../types';
-import { makeDraft, normalizeStore, addNote, adoptInvLog, sortByOrder, uid } from '../lib/core';
+import { makeDraft, normalizeStore, addNote, adoptInvLog, sortByOrder, uid, costFor, priceFor, total, costTotal, profitTotal } from '../lib/core';
 import { applyRemote } from '../lib/sync';
 
 beforeEach(() => {
@@ -198,5 +198,46 @@ describe('sync de inventario y notas entre dos dispositivos', () => {
 
     const ordered = sortByOrder(b.st.products).map((p) => p.id);
     expect(ordered).toEqual([p2, p1]);
+  });
+});
+
+describe('ganancias: costo por producto y calculo de margen', () => {
+  it('normalizeStore le pone costo 0 a productos viejos sin ese campo', () => {
+    const s = normalizeStore({
+      id: 's1', name: 'T', image: '', products: [
+        { id: 'p1', name: 'Pan', price: 1000, image: '', promos: [], category: '' } as Product,
+      ], sales: [], categories: [], inventory: {}, notes: '', noteLog: [], invLog: [],
+    } as Store);
+    expect(s.products[0].cost).toBe(0);
+  });
+
+  it('costFor usa el costo actual del producto si la venta no tiene uno propio guardado', () => {
+    const s = newStore('s1');
+    const pid = addProduct(s, 'Pan', 1000);
+    s.products.find((p) => p.id === pid)!.cost = 400;
+    const item = { productId: pid, promotionId: null, qty: 3 };
+    expect(costFor(item, s)).toBe(400);
+    expect(priceFor(item, s)).toBe(1000);
+  });
+
+  it('costFor respeta el costo guardado en la venta aunque el producto cambie despues', () => {
+    const s = newStore('s1');
+    const pid = addProduct(s, 'Pan', 1000);
+    s.products.find((p) => p.id === pid)!.cost = 400;
+    const item = { productId: pid, promotionId: null, qty: 2, price: 1000, cost: 300 };
+    // El producto sube de costo despues de la venta...
+    s.products.find((p) => p.id === pid)!.cost = 900;
+    // ...pero la venta ya guardada conserva el costo de cuando se vendio.
+    expect(costFor(item, s)).toBe(300);
+  });
+
+  it('total/costTotal/profitTotal calculan bien la ganancia de una venta', () => {
+    const s = newStore('s1');
+    const pid = addProduct(s, 'Pan', 1000);
+    s.products.find((p) => p.id === pid)!.cost = 400;
+    const sale = { id: 'v1', date: '2026-01-01', time: '10:00', employee: 'X', closed: true, items: [{ productId: pid, promotionId: null, qty: 3, price: 1000, cost: 400 }] };
+    expect(total(sale, s)).toBe(3000);
+    expect(costTotal(sale, s)).toBe(1200);
+    expect(profitTotal(sale, s)).toBe(1800);
   });
 });

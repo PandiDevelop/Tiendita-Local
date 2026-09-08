@@ -14,6 +14,7 @@ export function ProductForm({ editingId, onClose }: { editingId?: string; onClos
   const [catNew, setCatNew] = useState('');
   const [name, setName] = useState(p?.name || '');
   const [price, setPrice] = useState(p?.price != null ? String(p.price) : '');
+  const [cost, setCost] = useState(p?.cost != null ? String(p.cost) : '');
   const [image, setImage] = useState(p?.image || '');
   const [qty, setQty] = useState('');
   const [promos, setPromos] = useState<EditablePromo[]>(toEditablePromos(p?.promos));
@@ -28,25 +29,32 @@ export function ProductForm({ editingId, onClose }: { editingId?: string; onClos
   function save() {
     const nm = name.trim();
     const pr = Number(price);
+    const costTxt = cost.trim();
+    const cst = costTxt === '' ? 0 : Number(costTxt);
     if (!nm) return toast('Escribe el nombre del producto.');
     if (!Number.isFinite(pr) || pr < 0) return toast('Añade un precio válido.');
+    if (!Number.isFinite(cst) || cst < 0) return toast('Añade un costo válido.');
     const catVal = showCatNew ? catNew.trim() : cat;
     const promoList = fromEditablePromos(promos);
     replace((d) => {
       const st = d.stores.find((x) => x.id === s.id)!;
       st.categories = st.categories || [];
-      const isNewCat = showCatNew && !!catVal && !st.categories.includes(catVal);
+      // Antes solo se fijaba el precio/promos base de la categoria cuando
+      // esta se creaba en este mismo formulario ("categoria nueva"). Pero
+      // una categoria tambien puede existir sin precio todavia (p.ej.
+      // creada desde Catalogo dejando el precio en blanco, o vacia): en ese
+      // caso el primer producto que se le agregue debe fijar la base igual.
+      const catHasNoPricing = !!catVal && !(st.categoryPricing && st.categoryPricing[catVal]);
+      const catHasNoOtherProducts = !!catVal && !st.products.some((x) => (x.category || '').trim() === catVal && x.id !== editingId);
+      const shouldSeedPricing = catHasNoPricing && catHasNoOtherProducts;
       if (catVal && !st.categories.includes(catVal)) st.categories.push(catVal);
       if (editingId) {
         const t = st.products.find((x) => x.id === editingId);
-        if (t) Object.assign(t, { name: nm, price: pr, image: image || DEFAULT_PRODUCT_IMAGE, promos: promoList, category: catVal });
+        if (t) Object.assign(t, { name: nm, price: pr, cost: cst, image: image || DEFAULT_PRODUCT_IMAGE, promos: promoList, category: catVal });
       } else {
-        st.products.push({ id: uid(), name: nm, price: pr, image: image || DEFAULT_PRODUCT_IMAGE, promos: promoList, category: catVal });
+        st.products.push({ id: uid(), name: nm, price: pr, cost: cst, image: image || DEFAULT_PRODUCT_IMAGE, promos: promoList, category: catVal });
       }
-      // Nueva categoria creada desde el formulario de producto: este producto
-      // fija el precio/promos por defecto de la categoria (la mayoria de un
-      // grupo suele costar lo mismo). Se puede ajustar despues desde Catalogo.
-      if (isNewCat) setCategoryPricing(st, catVal, pr, promoList);
+      if (shouldSeedPricing) setCategoryPricing(st, catVal, pr, promoList);
       if (!editingId && qty.trim() !== '') {
         const q = Math.round(Number(qty));
         if (Number.isFinite(q) && q >= 0) {
@@ -80,6 +88,10 @@ export function ProductForm({ editingId, onClose }: { editingId?: string; onClos
       </div>
       <div className="field"><label>Precio del producto</label>
         <input min={0} type="number" placeholder="0" value={price} onChange={(e) => setPrice(e.target.value)} />
+      </div>
+      <div className="field"><label>Costo del producto <span className="muted">(opcional)</span></label>
+        <input min={0} type="number" placeholder="0" value={cost} onChange={(e) => setCost(e.target.value)} />
+        <p className="muted">Lo que te cuesta producirlo o comprarlo. Se usa para calcular la ganancia en la sección de Ganancias.</p>
       </div>
       <div className="field"><label>Imagen del producto</label>
         <ImagePicker id="product-image" src={image || DEFAULT_PRODUCT_IMAGE} cls="image-preview product-preview" hint="Foto o logo opcional del producto." onFile={onFile} />
