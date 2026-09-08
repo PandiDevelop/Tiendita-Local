@@ -179,7 +179,7 @@ export function SaleRegistration({ onClose }: { onClose: () => void }) {
             <span className="b-name">{p.name}</span>
             {p.tag ? <span className="prod-tag">{shortTag(p.tag)}</span> : null}
           </div>
-          <button className="sale-del" title="Quitar este producto de la venta" onClick={() => removeLine(n)}>Quitar</button>
+          <button className="sale-del" title="Quitar este producto de la venta" onClick={() => removeLine(n)}>✕</button>
         </div>
         {promo && <div className="sale-promo-note">Promo aplicada: {promo.label}</div>}
         <div className="sale-builder-price">

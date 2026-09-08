@@ -166,23 +166,27 @@ th,td{text-align:left;vertical-align:middle}
 .prod-tag{text-transform:uppercase}
 .ev-tag{background:var(--mint);color:#39745b;text-transform:none;max-width:190px}
 
-/* Boton generico de "quitar algo" (promo, miembro, evento...): mas grande que
-   el icon-btn clasico y con contorno resaltado para que se distinga de los
-   botones de texto de alrededor. */
-.icon-remove{height:38px;min-width:38px;padding:0 12px;border-radius:10px;background:#fff;border:1.5px solid #ebb3c4;box-shadow:0 0 0 3px #fdebf1;color:#d2547a;font-weight:700;font-size:16px;flex:0 0 auto;display:inline-flex;align-items:center;justify-content:center;line-height:1}
-.icon-remove:hover{background:#fff0f2}
-.icon-remove.reset-price{width:38px;padding:0}
+/* Boton generico de "quitar algo" (promo, miembro, evento...): con el mismo
+   lapiz violeta que el resto de la app, contorno suave y tamano contenido. */
+.icon-remove{height:34px;min-width:34px;padding:0 10px;border-radius:9px;background:#fff;border:1.5px solid #d9cdef;box-shadow:0 0 0 3px #f6f1fd;color:#7258a2;font-weight:700;font-size:15px;flex:0 0 auto;display:inline-flex;align-items:center;justify-content:center;line-height:1}
+.icon-remove:hover{background:#f7f2ff}
+.icon-remove.reset-price{width:34px;padding:0;font-size:15px}
 
-/* Boton "Quitar" de una linea en Registrar venta: grande, ample y resaltado
-   (mismo estilo de quitar que el resto de la app, punto 1 de las mejoras). */
-.sale-del{display:inline-flex;align-items:center;gap:6px;padding:9px 15px;border-radius:10px;background:#fff;border:1.5px solid #ebb3c4;box-shadow:0 0 0 3px #fdebf1;color:#d2547a;font-weight:700;font-size:13px;flex:0 0 auto;white-space:nowrap}
-.sale-del:hover{background:#fff0f2}
+/* Boton "quitar" (una X) de una linea en Registrar venta: mismo estilo X y
+   color que el resto de la pagina, pequeno. */
+.sale-del{display:inline-flex;align-items:center;justify-content:center;height:36px;width:36px;padding:0;border-radius:10px;background:#fff;border:1.5px solid #d9cdef;box-shadow:0 0 0 3px #f6f1fd;color:#7258a2;font-weight:700;font-size:16px;flex:0 0 auto;line-height:1;white-space:nowrap}
+.sale-del:hover{background:#f7f2ff}
 .sale-builder-head{display:flex;align-items:center;gap:10px}
 
-/* Arrastre: fila centrada y boton con el handle centrado (alto ok). */
+/* Arrastre: fila centrada y boton con el handle centrado (alto ok). Las
+   celdas de las tablas de Catalogo/Inventario tambien centran su contenido
+   en vertical para que iconos y botones queden en medio de la fila. */
 .drag-cell{width:42px;min-width:42px;text-align:center;vertical-align:middle;padding-right:0}
 .drag-cell .drag-handle{display:inline-flex;align-items:center;justify-content:center;margin:0 auto;line-height:1}
 .drag-handle{display:inline-flex;align-items:center;justify-content:center;margin:0 auto;line-height:1}
+.cat-group table th,.cat-group table td{vertical-align:middle}
+.inv-actions{text-align:center}
+.inv-actions .inv-stepper{justify-content:center;margin:0 auto}
 
 /* Caja de la categoria encima del nombre en las tarjetas de producto de
    Registrar venta (punto 8). */
@@ -230,7 +234,7 @@ th,td{text-align:left;vertical-align:middle}
 .ev-active{display:flex;align-items:center;gap:9px}
 .ev-rows{display:flex;align-items:flex-end;flex-wrap:wrap;gap:10px}
 .ev-rows .field{margin:0;flex:1;min-width:120px}
-.ev-rows .icon-remove{align-self:center;height:42px}
+.ev-rows .icon-remove{align-self:center;height:36px}
 .ev-pct{width:90px}
 .ev-foot{display:flex;align-items:center;gap:10px;flex-wrap:wrap;font-size:13px}
 .ev-badge{font-size:11px;font-weight:700;border-radius:999px;padding:3px 10px;white-space:nowrap}
