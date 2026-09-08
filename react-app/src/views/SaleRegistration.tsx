@@ -29,7 +29,10 @@ export function SaleRegistration({ onClose }: { onClose: () => void }) {
 
   const cats = saleCatsOf(s).map((c) => ({ v: c, label: c, count: s.products.filter((p) => catLabel(p) === c).length }));
   const catsOpen = cats.length;
-  const list = category ? sortByOrder(s.products.filter((p) => catLabel(p) === category)) : [];
+  // Sin categoria seleccionada se muestran TODOS los productos (paginados);
+  // al elegir una, solo los de esa categoria. Asi el buscador siempre tiene
+  // algo que filtrar, aunque la persona nunca toque el selector.
+  const list = sortByOrder(category ? s.products.filter((p) => catLabel(p) === category) : s.products);
   // Filtro por lo que se escribe en el buscador (nombre o tag).
   const q = query.trim().toLowerCase();
   const filtered = q
@@ -194,14 +197,12 @@ export function SaleRegistration({ onClose }: { onClose: () => void }) {
               <label className="sale-pick-label">Categoría</label>
               <Dropdown value={category} ph="Seleccionar categoría…" items={cats} onPick={(v) => { setCategory(v); persist({ category: v }); }} />
             </> : null}
-            <label className="sale-pick-label" style={category ? undefined : { display: 'none' }}>{category ? 'Productos de ' + category : ''}{filtered.length ? ' · ' + filtered.length : ''}</label>
-            {category ? (
-              <div className="sale-search">
-                <input type="search" inputMode="search" placeholder="Buscar producto…" value={query} onChange={(e) => setQuery(e.target.value)} />
-              </div>
-            ) : null}
-            {category && !filtered.length ? (
-              <div className="notice">{q ? 'Sin productos que coincidan con la búsqueda.' : 'Sin productos en esta categoría todavía.'}</div>
+            <label className="sale-pick-label">{category ? 'Productos de ' + category : 'Todos los productos'}{filtered.length ? ' · ' + filtered.length : ''}</label>
+            <div className="sale-search">
+              <input type="search" inputMode="search" placeholder="Buscar producto…" value={query} onChange={(e) => setQuery(e.target.value)} />
+            </div>
+            {!filtered.length ? (
+              <div className="notice">{q ? 'Sin productos que coincidan con la búsqueda.' : 'Sin productos todavía.'}</div>
             ) : (
               <div className="sale-products">
                 <div className="sale-products-scroll" ref={pagerRef} onScroll={onPagerScroll}>

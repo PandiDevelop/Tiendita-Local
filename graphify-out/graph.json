@@ -2353,7 +2353,7 @@
       "file_type": "code",
       "norm_label": "addline()",
       "source_file": "react-app/src/views/SaleRegistration.tsx",
-      "source_location": "L84"
+      "source_location": "L87"
     },
     {
       "id": "react_app_src_views_saleregistration_saleregistration_cleardraft",
@@ -2365,7 +2365,7 @@
       "file_type": "code",
       "norm_label": "cleardraft()",
       "source_file": "react-app/src/views/SaleRegistration.tsx",
-      "source_location": "L78"
+      "source_location": "L81"
     },
     {
       "id": "react_app_src_views_saleregistration_saleregistration_clearqtydraft",
@@ -2377,7 +2377,7 @@
       "file_type": "code",
       "norm_label": "clearqtydraft()",
       "source_file": "react-app/src/views/SaleRegistration.tsx",
-      "source_location": "L107"
+      "source_location": "L110"
     },
     {
       "id": "react_app_src_views_saleregistration_saleregistration_gopage",
@@ -2389,7 +2389,7 @@
       "file_type": "code",
       "norm_label": "gopage()",
       "source_file": "react-app/src/views/SaleRegistration.tsx",
-      "source_location": "L49"
+      "source_location": "L52"
     },
     {
       "id": "react_app_src_views_saleregistration_saleregistration_onpagerscroll",
@@ -2401,7 +2401,7 @@
       "file_type": "code",
       "norm_label": "onpagerscroll()",
       "source_file": "react-app/src/views/SaleRegistration.tsx",
-      "source_location": "L59"
+      "source_location": "L62"
     },
     {
       "id": "react_app_src_views_saleregistration_saleregistration_persist",
@@ -2413,7 +2413,7 @@
       "file_type": "code",
       "norm_label": "persist()",
       "source_file": "react-app/src/views/SaleRegistration.tsx",
-      "source_location": "L66"
+      "source_location": "L69"
     },
     {
       "id": "react_app_src_views_saleregistration_saleregistration_register",
@@ -2425,7 +2425,7 @@
       "file_type": "code",
       "norm_label": "register()",
       "source_file": "react-app/src/views/SaleRegistration.tsx",
-      "source_location": "L117"
+      "source_location": "L120"
     },
     {
       "id": "react_app_src_views_saleregistration_saleregistration_removeline",
@@ -2437,7 +2437,7 @@
       "file_type": "code",
       "norm_label": "removeline()",
       "source_file": "react-app/src/views/SaleRegistration.tsx",
-      "source_location": "L111"
+      "source_location": "L114"
     },
     {
       "id": "react_app_src_views_saleregistration_saleregistration_setline",
@@ -2449,7 +2449,7 @@
       "file_type": "code",
       "norm_label": "setline()",
       "source_file": "react-app/src/views/SaleRegistration.tsx",
-      "source_location": "L95"
+      "source_location": "L98"
     },
     {
       "id": "react_app_src_views_saleregistration_saleregistration_setqtytext",
@@ -2461,7 +2461,7 @@
       "file_type": "code",
       "norm_label": "setqtytext()",
       "source_file": "react-app/src/views/SaleRegistration.tsx",
-      "source_location": "L101"
+      "source_location": "L104"
     },
     {
       "id": "firestore",
@@ -6201,7 +6201,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "react-app/src/views/SaleRegistration.tsx",
-      "source_location": "L145",
+      "source_location": "L148",
       "weight": 1.0
     },
     {
@@ -6249,7 +6249,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "react-app/src/views/SaleRegistration.tsx",
-      "source_location": "L32",
+      "source_location": "L35",
       "weight": 1.0
     },
     {
@@ -6261,7 +6261,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "react-app/src/views/SaleRegistration.tsx",
-      "source_location": "L87",
+      "source_location": "L90",
       "weight": 1.0
     },
     {
@@ -6273,7 +6273,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "react-app/src/views/SaleRegistration.tsx",
-      "source_location": "L118",
+      "source_location": "L121",
       "weight": 1.0
     },
     {
@@ -6285,7 +6285,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "react-app/src/views/SaleRegistration.tsx",
-      "source_location": "L124",
+      "source_location": "L127",
       "weight": 1.0
     },
     {
@@ -6297,7 +6297,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "react-app/src/views/SaleRegistration.tsx",
-      "source_location": "L124",
+      "source_location": "L127",
       "weight": 1.0
     },
     {
@@ -6309,7 +6309,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "react-app/src/views/SaleRegistration.tsx",
-      "source_location": "L114",
+      "source_location": "L117",
       "weight": 1.0
     },
     {
@@ -6321,7 +6321,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "react-app/src/views/SaleRegistration.tsx",
-      "source_location": "L98",
+      "source_location": "L101",
       "weight": 1.0
     },
     {
@@ -6333,7 +6333,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "react-app/src/views/SaleRegistration.tsx",
-      "source_location": "L104",
+      "source_location": "L107",
       "weight": 1.0
     },
     {
@@ -6765,7 +6765,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "react-app/src/views/SaleRegistration.tsx",
-      "source_location": "L101",
+      "source_location": "L104",
       "weight": 1.0
     },
     {
@@ -6777,7 +6777,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "react-app/src/views/SaleRegistration.tsx",
-      "source_location": "L107",
+      "source_location": "L110",
       "weight": 1.0
     },
     {
@@ -6789,7 +6789,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "react-app/src/views/SaleRegistration.tsx",
-      "source_location": "L111",
+      "source_location": "L114",
       "weight": 1.0
     },
     {
@@ -6801,7 +6801,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "react-app/src/views/SaleRegistration.tsx",
-      "source_location": "L49",
+      "source_location": "L52",
       "weight": 1.0
     },
     {
@@ -6813,7 +6813,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "react-app/src/views/SaleRegistration.tsx",
-      "source_location": "L66",
+      "source_location": "L69",
       "weight": 1.0
     },
     {
@@ -6825,7 +6825,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "react-app/src/views/SaleRegistration.tsx",
-      "source_location": "L84",
+      "source_location": "L87",
       "weight": 1.0
     },
     {
@@ -6837,7 +6837,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "react-app/src/views/SaleRegistration.tsx",
-      "source_location": "L95",
+      "source_location": "L98",
       "weight": 1.0
     },
     {
@@ -12946,7 +12946,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "react-app/src/views/SaleRegistration.tsx",
-      "source_location": "L117",
+      "source_location": "L120",
       "weight": 1.0
     },
     {
@@ -12957,7 +12957,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "react-app/src/views/SaleRegistration.tsx",
-      "source_location": "L59",
+      "source_location": "L62",
       "weight": 1.0
     },
     {
@@ -12968,7 +12968,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "react-app/src/views/SaleRegistration.tsx",
-      "source_location": "L78",
+      "source_location": "L81",
       "weight": 1.0
     },
     {
@@ -13520,5 +13520,5 @@
     }
   ],
   "hyperedges": [],
-  "built_at_commit": "73e08d7218cc5c451944544e6b3056651c0e69f2"
+  "built_at_commit": "aaa96fd3781ab7413fdd4bd9a34fcb9967d98930"
 }
