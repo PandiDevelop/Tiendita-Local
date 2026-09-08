@@ -132,10 +132,10 @@
     "semantic_hash": ""
   },
   "react-app/src/views/SaleRegistration.tsx": {
-    "mtime": 1788842736.5923557,
-    "seen": 1788880681.2695267,
-    "ast_hash": "c28befc9e7658b04b4457913c54d704b",
-    "semantic_hash": "c28befc9e7658b04b4457913c54d704b"
+    "mtime": 1788889855.4611897,
+    "seen": 1788889897.0474486,
+    "ast_hash": "04571eb21edc04fcbe58a5a104a19a4b",
+    "semantic_hash": ""
   },
   "react-app/src/views/StoreModal.tsx": {
     "mtime": 1788838318.4593194,

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useStore } from '../store';
 import { DEFAULT_PRODUCT_IMAGE, catLabel, money, saleCatsOf, sortByOrder, syncName, today, uid } from '../lib/core';
 import { Dropdown } from '../Dropdown';
@@ -6,6 +6,8 @@ import { Image, Modal } from '../ui';
 import type { Product } from '../types';
 
 interface Line { pid: string; price: number; cost: number; qty: number; }
+
+const SALE_PAGE_SIZE = 4;
 
 export function SaleRegistration({ onClose }: { onClose: () => void }) {
   const { store, state, replace, toast } = useStore();
@@ -18,11 +20,48 @@ export function SaleRegistration({ onClose }: { onClose: () => void }) {
   // separado del numero confirmado: asi se puede borrar un '0' y escribir
   // otra cosa sin que el campo se reponga solo en cada tecla.
   const [qtyDraft, setQtyDraft] = useState<Record<number, string>>({});
+  // Buscador de producto dentro de la categoria seleccionada (filtra por
+  // nombre y por tag). Al buscar o cambiar de categoria se vuelve a la
+  // primera pagina de productos.
+  const [query, setQuery] = useState('');
+  const [page, setPage] = useState(0);
+  const pagerRef = useRef<HTMLDivElement>(null);
 
   const cats = saleCatsOf(s).map((c) => ({ v: c, label: c, count: s.products.filter((p) => catLabel(p) === c).length }));
   const catsOpen = cats.length;
   const list = category ? sortByOrder(s.products.filter((p) => catLabel(p) === category)) : [];
+  // Filtro por lo que se escribe en el buscador (nombre o tag).
+  const q = query.trim().toLowerCase();
+  const filtered = q
+    ? list.filter((p) => (p.tag && p.tag.trim().toLowerCase().includes(q)) || p.name.toLowerCase().includes(q))
+    : list;
+  // Paginado: solo se muestran 4 productos a la vez y el resto se desliza
+  // (fila horizontal con ajuste de pagina).
+  const pages: Product[][] = [];
+  for (let i = 0; i < filtered.length; i += SALE_PAGE_SIZE) pages.push(filtered.slice(i, i + SALE_PAGE_SIZE));
+  const maxPage = Math.max(0, pages.length - 1);
+  const curPage = Math.min(page, maxPage);
   const total = lines.reduce((n, l) => n + l.price * l.qty, 0);
+
+  // Al cambiar de categoria o de texto en el buscador se reinicia la pagina.
+  useEffect(() => { setPage(0); if (pagerRef.current) pagerRef.current.scrollLeft = 0; }, [category, query]);
+
+  function goPage(n: number) {
+    const next = Math.max(0, Math.min(maxPage, n));
+    setPage(next);
+    const el = pagerRef.current;
+    if (el) {
+      const w = el.clientWidth || el.scrollWidth / (pages.length || 1);
+      el.scrollTo({ left: next * w, behavior: 'smooth' });
+    }
+  }
+
+  function onPagerScroll() {
+    const el = pagerRef.current;
+    if (!el || !el.clientWidth) return;
+    const i = Math.round(el.scrollLeft / el.clientWidth);
+    if (i !== page && i >= 0 && i <= maxPage) setPage(i);
+  }
 
   function persist(next: { employee?: string; category?: string; lines?: Line[] }, immediate = false) {
     const d = {
@@ -99,8 +138,10 @@ export function SaleRegistration({ onClose }: { onClose: () => void }) {
     );
   }
 
-  const productRow = (p: Product) => (
-    <div className="sale-prod-row" key={p.id}>
+  // Tarjeta de un producto dentro de una pagina del selector (4 por pagina).
+  // Fuera de la grilla se usa el mismo estilo en miniatura de lineas.
+  const productCard = (p: Product) => (
+    <div className="sale-prod-card" key={p.id}>
       <div className="sale-brand"><Image src={p.image || DEFAULT_PRODUCT_IMAGE} cls="product-image-sale" /><div><div className="product-name">{p.name}</div><div className="muted">{money(p.price)}</div></div></div>
       <button type="button" className="icon-btn sale-add" title="Añadir a la venta" onClick={() => addLine(p)}>＋</button>
     </div>
@@ -153,8 +194,32 @@ export function SaleRegistration({ onClose }: { onClose: () => void }) {
               <label className="sale-pick-label">Categoría</label>
               <Dropdown value={category} ph="Seleccionar categoría…" items={cats} onPick={(v) => { setCategory(v); persist({ category: v }); }} />
             </> : null}
-            <label className="sale-pick-label" style={category ? undefined : { display: 'none' }}>{category ? 'Productos de ' + category : ''}</label>
-            <div className="sale-products">{category ? list.map(productRow) : null}</div>
+            <label className="sale-pick-label" style={category ? undefined : { display: 'none' }}>{category ? 'Productos de ' + category : ''}{filtered.length ? ' · ' + filtered.length : ''}</label>
+            {category ? (
+              <div className="sale-search">
+                <input type="search" inputMode="search" placeholder="Buscar producto…" value={query} onChange={(e) => setQuery(e.target.value)} />
+              </div>
+            ) : null}
+            {category && !filtered.length ? (
+              <div className="notice">{q ? 'Sin productos que coincidan con la búsqueda.' : 'Sin productos en esta categoría todavía.'}</div>
+            ) : (
+              <div className="sale-products">
+                <div className="sale-products-scroll" ref={pagerRef} onScroll={onPagerScroll}>
+                  {pages.map((pg, i) => (
+                    <div className="sale-prod-page" key={i}>
+                      {pg.map(productCard)}
+                    </div>
+                  ))}
+                </div>
+                {pages.length > 1 && (
+                  <div className="sale-pager-dots">
+                    {pages.map((_, i) => (
+                      <button key={i} className={'sale-dot' + (i === curPage ? ' on' : '')} title={'Ir a la página ' + (i + 1)} onClick={() => goPage(i)} />
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
             <div id="sale-lines" className="sale-lines">{lines.map(lineRow)}</div>
             <div className="sale-total"><span>Total de la venta</span><b>{money(total)}</b></div>
           </div>
