@@ -24,9 +24,9 @@
     "semantic_hash": "627f92d0aeb52db2b7b347b12f32f72e"
   },
   "react-app/src/lib/core.ts": {
-    "mtime": 1788902904.9969437,
-    "seen": 1788903163.6280794,
-    "ast_hash": "18c9af9f4b837a9c327d38a3bdb47bee",
+    "mtime": 1788905583.4172466,
+    "seen": 1788905665.2992861,
+    "ast_hash": "f2dafbc95b7e116ec025ef0f292fd10e",
     "semantic_hash": ""
   },
   "react-app/src/lib/dialog.ts": {
@@ -66,9 +66,9 @@
     "semantic_hash": ""
   },
   "react-app/src/types.ts": {
-    "mtime": 1788902330.0102615,
-    "seen": 1788903163.6280794,
-    "ast_hash": "b3d44a27d4eb5231b49464a359e68604",
+    "mtime": 1788905577.7599807,
+    "seen": 1788905665.2992861,
+    "ast_hash": "3a12d20d5ad9272457589f203f0cb353",
     "semantic_hash": ""
   },
   "react-app/src/ui.tsx": {
@@ -96,9 +96,9 @@
     "semantic_hash": ""
   },
   "react-app/src/views/History.tsx": {
-    "mtime": 1788903024.2270067,
-    "seen": 1788903163.6280794,
-    "ast_hash": "9fb8c88da5e255d6b6ee4e708470aeaa",
+    "mtime": 1788905621.6762238,
+    "seen": 1788905665.2992861,
+    "ast_hash": "8db7c64042df8e6d75d141051d630162",
     "semantic_hash": ""
   },
   "react-app/src/views/Inventory.tsx": {
@@ -132,15 +132,15 @@
     "semantic_hash": ""
   },
   "react-app/src/views/SaleRegistration.tsx": {
-    "mtime": 1788902771.0643444,
-    "seen": 1788903163.6280794,
-    "ast_hash": "57620aced07b79d1d645d708b58ca8f9",
+    "mtime": 1788905594.5088394,
+    "seen": 1788905665.2992861,
+    "ast_hash": "85b7d25c31421550d630a74ac563c375",
     "semantic_hash": ""
   },
   "react-app/src/views/StoreModal.tsx": {
-    "mtime": 1788903039.642016,
-    "seen": 1788903163.6280794,
-    "ast_hash": "aca07d5fa1cdb13c10aa5776930923a6",
+    "mtime": 1788905616.5659125,
+    "seen": 1788905665.2992861,
+    "ast_hash": "9b49913cca5999a58cfff99f1a91298c",
     "semantic_hash": ""
   },
   "react-app/src/vite-env.d.ts": {
@@ -180,9 +180,9 @@
     "semantic_hash": ""
   },
   "index.html": {
-    "mtime": 1788894929.0942657,
-    "seen": 1788903163.6280794,
-    "ast_hash": "0d8058324552f41a7611f0e8f691ca09",
+    "mtime": 1788905630.2427647,
+    "seen": 1788905665.2992861,
+    "ast_hash": "711d4e757da6dadce9a6b3cbd675142c",
     "semantic_hash": ""
   },
   "react-app/index.html": {
@@ -282,9 +282,9 @@
     "semantic_hash": ""
   },
   "react-app/src/views/PromoEditor.tsx": {
-    "mtime": 1788902803.3792717,
-    "seen": 1788903163.6280794,
-    "ast_hash": "02dc99371fdf78db9522dfaf00df5094",
+    "mtime": 1788905603.9756818,
+    "seen": 1788905665.2992861,
+    "ast_hash": "e8b5d6d6d52416e4d0ab5767ff16d524",
     "semantic_hash": ""
   },
   "Claude outputs/TEST_RESULTS.txt": {
