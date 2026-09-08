@@ -109,7 +109,7 @@ export function SaleRegistration({ onClose }: { onClose: () => void }) {
   }
 
   function addLine(p: Product) {
-    const next = recomputeAutos([...lines, { pid: p.id, price: p.price, cost: p.cost ?? 0, qty: 0 }]);
+    const next = recomputeAutos([...lines, { pid: p.id, price: p.price, cost: p.cost ?? 0, qty: 1 }]);
     setLines(next);
     persist({ lines: next }, false);
   }
@@ -184,8 +184,11 @@ export function SaleRegistration({ onClose }: { onClose: () => void }) {
         <div className="sale-builder-head">
           <Image src={p.image || DEFAULT_PRODUCT_IMAGE} cls="product-image-sale" />
           <div className="sale-builder-name">
-            <span className="b-name">{p.name}</span>
-            {p.tag ? <span className="prod-tag">{shortTag(p.tag)}</span> : null}
+            <div className="prod-cat">{(p.category || '').trim() || 'Sin categoría'}</div>
+            <div className="sale-builder-name-row">
+              <span className="b-name">{p.name}</span>
+              {p.tag ? <span className="prod-tag sale-tag">{shortTag(p.tag)}</span> : null}
+            </div>
           </div>
           <button className="sale-del" title="Quitar este producto de la venta" onClick={() => removeLine(n)}>✕</button>
         </div>

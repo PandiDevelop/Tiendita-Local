@@ -185,19 +185,38 @@ th,td{text-align:left;vertical-align:middle}
 .drag-cell .drag-handle{display:inline-flex;align-items:center;justify-content:center;margin:0 auto;line-height:1}
 .drag-handle{display:inline-flex;align-items:center;justify-content:center;margin:0 auto;line-height:1}
 .cat-group table th,.cat-group table td{vertical-align:middle}
-/* Handle de reorden de productos: pegado a la IZQUIERDA de la celda y con
-   espacio hasta la linea morada que divide la informacion del producto. */
+/* Handle de reorden de productos: centrado vertical y horizontalmente. */
 .drag-cell{width:48px;min-width:48px;text-align:center;vertical-align:middle;padding:0}
 .drag-cell .drag-handle{margin:0 auto}
 .inv-actions{text-align:center}
-/* Eventos: campo de nombre con los bordes redondeados. */
-.ev-card .ev-name{border-radius:12px}
-/* Detalles de venta: cuando aplica un paquete de promocion, las unidades se
-   agrupan bajo una linea "Paquete: X" con el total, y cada producto aparte. */
-.sale-detail-group{display:grid;gap:6px}
-.sale-detail-pack{display:flex;justify-content:space-between;align-items:baseline;gap:10px;margin:8px 0 2px;padding-top:9px;border-top:1px dashed #e8e2f2}
-.sale-detail-pack .sale-detail-title{font-size:12px;text-transform:uppercase;letter-spacing:.8px;font-weight:700;color:#a98dde;margin:0}
-.sale-detail-pack .sale-detail-cost{white-space:nowrap}
+/* Eventos: campo de nombre siguiendo la linea grafica del resto del sitio. */
+.ev-card .ev-name{border-radius:10px;padding:11px 12px;border:1px solid #ddd8e5;background:#fff;color:var(--ink);font-weight:600}
+/* Eventos: boton Quitar abajo a la derecha, morado. */
+.ev-foot .ev-quit{margin-left:auto;background:#7258a2;color:#fff;border:1px solid #7258a2;border-radius:999px;padding:8px 16px;font-weight:700;font-size:13px;cursor:pointer}
+.ev-foot .ev-quit:hover{background:#5f4791}
+/* Detalles de venta: cada paquete de promocion aplicado se ve como etiqueta a
+   la derecha del producto vendido (no solo uno). */
+.sale-detail-packs{display:flex;flex:0 0 auto;gap:4px;flex-wrap:wrap;justify-content:flex-end;min-width:0}
+.sale-detail-packs .prod-tag{margin-left:0;background:#f1ebff;color:#8061b4}
+/* Linea de producto en Registrar venta: categoria encima del nombre y tag a
+   la derecha. */
+.sale-builder-name .prod-cat{margin-bottom:4px}
+.sale-builder-name-row{display:flex;align-items:center;gap:6px;min-width:0}
+.sale-builder-name-row .b-name{flex:1;min-width:0;overflow-wrap:break-word}
+.sale-builder-name-row .sale-tag{margin-left:auto;flex:0 0 auto;max-width:130px}
+/* Tablas de Catalogo/Inventario: el tag de cada producto a la derecha. */
+td.cat-bar .product-name{display:flex;align-items:center;gap:4px;min-width:0}
+td.cat-bar .product-name .prod-tag{margin-left:auto;flex:0 0 auto}
+/* Menú que abre la tuerca de cada producto (Editar / Eliminar). */
+.actions{position:relative}
+.action-menu{position:absolute;right:0;top:calc(100% + 4px);background:#fff;border:1px solid #ddd8e5;border-radius:11px;box-shadow:0 6px 18px rgba(24,20,32,.14);z-index:40;min-width:170px;padding:5px;display:grid;gap:2px}
+.action-menu button{display:block;width:100%;text-align:left;padding:8px 12px;border-radius:8px;background:none;border:none;cursor:pointer;font-weight:600;font-size:13px;color:#4b4358}
+.action-menu button:hover{background:#f6f1fd}
+.action-menu button.danger{color:#c15555}
+.menu-backdrop{position:fixed;inset:0;z-index:39}
+/* Boton eliminar dentro de los formularios de tuerca (categoria). */
+.btn-delete{background:#fff7f7;color:#c15555;border:1px solid #e8b3b3;border-radius:10px;padding:11px 13px;font-weight:700;font-size:13px;cursor:pointer}
+.btn-delete:hover{background:#ffecec}
 .inv-actions .inv-stepper{justify-content:center;margin:0 auto}
 
 /* Caja de la categoria encima del nombre en las tarjetas de producto de

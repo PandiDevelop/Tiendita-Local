@@ -143,9 +143,9 @@ export function Events() {
               </label>
             </div>
             <div className="ev-foot">
-              <button className="button secondary" style={{ padding: '7px 13px', fontSize: 13 }} onClick={() => remove(e.id)}>Quitar</button>
               <span className={'ev-badge' + (on ? ' on' : ' off')}>{e.id === (act && act.id) ? 'Aplicándose ahora' : on ? 'Aplica ahora' : 'No aplica hoy'}</span>
               {e.pct > 0 && <span className="muted">Todo a {esc(String(e.pct))}% menos</span>}
+              <button className="ev-quit" onClick={() => remove(e.id)}>Quitar</button>
             </div>
           </div>
         );

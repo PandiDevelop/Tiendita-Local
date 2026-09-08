@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useStore } from '../store';
 import { insertCatSorted, storeCats, setCategoryPricing, toEditablePromos, fromEditablePromos } from '../lib/core';
+import { customConfirm } from '../lib/dialog';
 import type { EditablePromo } from '../lib/core';
 import { Modal } from '../ui';
 import { PromoEditor } from './PromoEditor';
@@ -30,7 +31,7 @@ export function CategoryModal({ mode, catName, onClose, onSaved }: Props) {
   function save() {
     const v = name.trim();
     if (!v) { onClose(); return; }
-    if (mode === 'new' && storeCats(s).includes(v)) { toast('Esa categoría ya existe.'); return; }
+    if (storeCats(s).some((c) => c !== catName && c === v)) { toast('Esa categoría ya existe.'); return; }
     const priceTxt = price.trim();
     let pr: number | null = null;
     if (priceTxt !== '') {
@@ -46,12 +47,40 @@ export function CategoryModal({ mode, catName, onClose, onSaved }: Props) {
     const promoList = fromEditablePromos(promos);
     replace((d) => {
       const st = d.stores.find((x) => x.id === s.id)!;
-      if (mode === 'new') insertCatSorted(st, v);
+      if (mode === 'new') {
+        insertCatSorted(st, v);
+      } else if (catName && v !== catName) {
+        // Renombrar: actualiza el nombre en el orden de categorias, en cada
+        // producto que la usa y en la base de precio/costo/promos propia.
+        st.categories = (st.categories || []).map((c) => (c === catName ? v : c));
+        st.products.forEach((t) => { if ((t.category || '').trim() === catName) t.category = v; });
+        if (st.categoryPricing && st.categoryPricing[catName]) {
+          st.categoryPricing[v] = st.categoryPricing[catName];
+          delete st.categoryPricing[catName];
+        }
+      }
       if (pr != null) setCategoryPricing(st, v, pr, cst, promoList);
     });
     onClose();
-    toast(mode === 'new' ? 'Categoría añadida.' : 'Precio y costo de categoría actualizados en todos sus productos.');
+    toast(mode === 'new' ? 'Categoría añadida.' : 'Categoría actualizada.');
     if (onSaved && mode === 'new') onSaved(v);
+  }
+
+  // Quitar la categoria desde la tuerca: los productos pasan a "Sin categoría"
+  // (no se borran) para no perderlos.
+  function removeCategory() {
+    if (!catName) return;
+    void customConfirm(`¿Eliminar la categoría "${catName}"? Sus productos pasarán a "Sin categoría".`).then((ok) => {
+      if (!ok) return;
+      replace((d) => {
+        const st = d.stores.find((x) => x.id === s.id)!;
+        st.categories = (st.categories || []).filter((c) => c !== catName);
+        st.products.forEach((t) => { if ((t.category || '').trim() === catName) t.category = ''; });
+        if (st.categoryPricing) delete st.categoryPricing[catName];
+      });
+      toast('Categoría eliminada.');
+      onClose();
+    });
   }
 
   return (
@@ -62,7 +91,6 @@ export function CategoryModal({ mode, catName, onClose, onSaved }: Props) {
           maxLength={30}
           placeholder="Ej. Bebidas"
           value={name}
-          disabled={mode === 'edit'}
           onChange={(e) => setName(e.target.value)}
           onKeyDown={(e) => { if (e.key === 'Enter') save(); }}
         />
@@ -79,6 +107,7 @@ export function CategoryModal({ mode, catName, onClose, onSaved }: Props) {
         <PromoEditor promos={promos} onChange={setPromos} priceHint={price} />
       </div>
       <div className="modal-actions">
+        {mode === 'edit' && <button className="btn-delete" onClick={removeCategory}>Eliminar categoría</button>}
         <button className="button secondary" onClick={onClose}>Cancelar</button>
         <button className="button primary" onClick={save}>Guardar</button>
       </div>

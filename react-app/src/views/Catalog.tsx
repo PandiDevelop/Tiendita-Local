@@ -2,17 +2,20 @@ import { useState } from 'react';
 import type { PointerEvent as ReactPointerEvent } from 'react';
 import { useStore } from '../store';
 import { money, esc, inventorySold, reorderCategoryProducts, groupedByCategory, storeCats, shortTag, promoText, DEFAULT_PRODUCT_IMAGE } from '../lib/core';
+import { customConfirm } from '../lib/dialog';
 import { GearIcon, Image } from '../ui';
 import { CategoryModal } from './CategoryModal';
 import type { Product } from '../types';
 
 export function Catalog() {
-  const { store, state, replace, setModal, setModalArg } = useStore();
+  const { store, state, replace, setModal, setModalArg, toast } = useStore();
   const s = store!;
   const sold = inventorySold(s);
   const inv = s.inventory || {};
   // Categoria cuya configuracion se abre con la tuerca del encabezado.
   const [catModal, setCatModal] = useState<{ mode: 'new' | 'edit'; name: string } | null>(null);
+  // Menú que abre la tuerca de cada producto: Editar o Eliminar.
+  const [menuPid, setMenuPid] = useState<string | null>(null);
 
   // Orden de categorias/productos mientras se arrastran (solo visual hasta
   // soltar); se limpia al terminar el arrastre, momento en el que se guarda
@@ -54,6 +57,18 @@ export function Catalog() {
   }
   function editCategoryPrice(cat: string) {
     setCatModal({ mode: 'edit', name: cat });
+  }
+
+  // Eliminar producto desde el menú de la tuerca: sale del catálogo y del
+  // inventario (sus ventas viejas se siguen viendo como "Producto eliminado").
+  async function removeProduct(p: Product) {
+    if (!(await customConfirm(`¿Eliminar el producto "${p.name}" de la tienda?`))) return;
+    replace((d) => {
+      const st = d.stores.find((x) => x.id === s.id)!;
+      st.products = st.products.filter((x) => x.id !== p.id);
+      if (st.inventory) delete st.inventory[p.id];
+    });
+    toast('Producto eliminado.');
   }
 
   // Arrastrar para reordenar categorias (agarrando el ⠿ del encabezado).
@@ -176,7 +191,16 @@ export function Catalog() {
                           <td>{money(p.price)}</td><td>{avail}</td>
                           <td>{p.promos.length ? <div className="promo-stack">{p.promos.map((x) => <span className="promotion" key={x.id}>{promoText(x)}</span>)}</div> : <span className="muted">—</span>}</td>
                           <td><div className="actions">
-                          <button className="icon-btn" title="Editar producto" onClick={() => { setModalArg(p.id); setModal('editProduct'); }}><GearIcon /></button>
+                          <button className="icon-btn" title="Menú del producto" onClick={() => setMenuPid(menuPid === p.id ? null : p.id)}><GearIcon /></button>
+                          {menuPid === p.id && (
+                            <>
+                              <div className="menu-backdrop" onClick={() => setMenuPid(null)} />
+                              <div className="action-menu">
+                                <button type="button" onClick={() => { setMenuPid(null); setModalArg(p.id); setModal('editProduct'); }}>Editar producto</button>
+                                <button type="button" className="danger" onClick={() => { setMenuPid(null); void removeProduct(p); }}>Eliminar producto</button>
+                              </div>
+                            </>
+                          )}
                         </div></td>
                         </tr>
                       );
