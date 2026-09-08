@@ -46,7 +46,7 @@ html,body,#app{max-width:100%;overflow-x:hidden}
 .dd-caret{color:#8f73bf;font-size:12px;flex:0 0 auto;transition:transform .2s}
 .dd.open .dd-caret{transform:rotate(180deg)}
 .dd-options{position:absolute;top:calc(100% + 8px);left:0;right:0;z-index:60;max-height:0;opacity:0;overflow:hidden;transform:translateY(-6px);transition:max-height .32s ease,opacity .26s ease,transform .3s ease}
-.dd.open .dd-options{max-height:340px;opacity:1;transform:translateY(0)}
+.dd.open .dd-options{max-height:340px;opacity:1;transform:translateY(0);overflow-y:auto}
 .dd-pop{background:#fff;border:1px solid var(--line);border-radius:12px;padding:8px;box-shadow:var(--shadow)}
 .dd-opt{display:flex;align-items:center;justify-content:space-between;gap:8px;width:100%;margin-top:6px;padding:10px 12px;background:#f8f6fb;border:1px solid var(--line);border-radius:10px;color:var(--ink);font-size:14px;text-align:left}
 .dd-opt:first-child{margin-top:0}

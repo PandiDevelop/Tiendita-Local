@@ -103,11 +103,19 @@ export function createSync(
       updatedBy: cid(),
     };
     if (typeof s.notes === 'string' && s.notes) payload.notes = s.notes;
-    // Firestore con merge reemplaza arrays completos, así que subimos cada
-    // entrada con path punteado (noteLog.<id>) para fusionar campo a campo y
-    // nunca pisar lo que otro dispositivo agrego.
-    (s.noteLog || []).forEach((e) => { if (e && e.id) payload['noteLog.' + e.id] = e; });
-    (s.invLog || []).forEach((e) => { if (e && e.id) payload['invLog.' + e.id] = e; });
+    // OJO: setDoc(..., {merge:true}) NO interpreta claves con puntos como
+    // field paths (eso solo aplica a updateDoc). Antes se escribia
+    // payload['noteLog.'+id], lo que creaba un campo LITERAL llamado
+    // "noteLog.<id>" en vez de fusionar dentro del mapa noteLog, y notas/
+    // inventario nunca llegaban al campo real. Construimos objetos anidados
+    // normales: setDoc con merge:true SI fusiona mapas anidados por clave,
+    // sin pisar las entradas que subio otro dispositivo.
+    const noteLogPatch: Record<string, unknown> = {};
+    (s.noteLog || []).forEach((e) => { if (e && e.id) noteLogPatch[e.id] = e; });
+    if (Object.keys(noteLogPatch).length) payload.noteLog = noteLogPatch;
+    const invLogPatch: Record<string, unknown> = {};
+    (s.invLog || []).forEach((e) => { if (e && e.id) invLogPatch[e.id] = e; });
+    if (Object.keys(invLogPatch).length) payload.invLog = invLogPatch;
     payload.inventory = s.inventory || {};
     if (!s.createdBy || s.createdBy === cid()) { payload.name = s.name; payload.image = s.image; }
     try {
@@ -232,10 +240,16 @@ export function applyRemote(getState: () => AppState, mutate: (fn: (d: AppState)
   });
 }
 
-export async function joinStore(pin: string, mutate: (fn: (d: AppState) => void) => void, attach: (id: string) => void) {
+export async function joinStore(pin: string, getState: () => AppState, mutate: (fn: (d: AppState) => void) => void, attach: (id: string) => void) {
   if (!pin) return alert('Escribe el código.');
   if (!syncReady()) return alert('Configura Firebase primero');
   const key = syncKeyOf(pin);
+  const existing = getState().stores.find((x) => x.syncKey === key);
+  if (existing) {
+    mutate((d) => { d.activeStoreId = existing.id; d.tab = 'inicio'; });
+    attach(existing.id);
+    return alert('Ya tienes esta tienda vinculada en este dispositivo.');
+  }
   try {
     const snap = await getDoc(doc(collection(DB!, 'stores'), key));
     if (!snap.exists()) return alert('No existe una tienda con ese código.');

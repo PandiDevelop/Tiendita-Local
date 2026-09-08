@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useStore } from '../store';
-import { DEFAULT_PRODUCT_IMAGE, catLabel, money, saleCatsOf, today, uid } from '../lib/core';
+import { DEFAULT_PRODUCT_IMAGE, catLabel, money, saleCatsOf, syncName, today, uid } from '../lib/core';
 import { Dropdown } from '../Dropdown';
 import { Image, Modal } from '../ui';
 import type { Product } from '../types';
@@ -11,7 +11,7 @@ export function SaleRegistration({ onClose }: { onClose: () => void }) {
   const { store, state, replace, toast } = useStore();
   const s = store!;
   const draft = state.saleDraft && state.saleDraft.storeId === s.id ? state.saleDraft : null;
-  const [employee, setEmployee] = useState(draft?.employee ?? '');
+  const [employee, setEmployee] = useState(draft?.employee ?? syncName());
   const [category, setCategory] = useState(draft?.category ?? '');
   const [lines, setLines] = useState<Line[]>(draft ? JSON.parse(JSON.stringify(draft.lines)) : []);
 
@@ -66,7 +66,7 @@ export function SaleRegistration({ onClose }: { onClose: () => void }) {
   }
 
   function register() {
-    const emp = (employee.trim() || 'Trabajador');
+    const emp = (employee.trim() || syncName());
     const items = lines.filter((l) => l.qty > 0).map((l) => ({ productId: l.pid, promotionId: null, qty: l.qty, price: l.price }));
     if (!items.length) return toast('Añade al menos un producto con cantidad mayor a cero.');
     const now = new Date();

@@ -15,7 +15,7 @@ export function ProductForm({ editingId, onClose }: { editingId?: string; onClos
   const [name, setName] = useState(p?.name || '');
   const [price, setPrice] = useState(p?.price != null ? String(p.price) : '');
   const [image, setImage] = useState(p?.image || '');
-  const [qty, setQty] = useState((s.inventory && s.inventory[p?.id || ''] != null) ? String(s.inventory[p!.id]) : '');
+  const [qty, setQty] = useState('');
   const [promos, setPromos] = useState<Promo[]>(p ? JSON.parse(JSON.stringify(p.promos || [])) : []);
 
   const showCatNew = cat === '__new__';
@@ -42,13 +42,12 @@ export function ProductForm({ editingId, onClose }: { editingId?: string; onClos
       } else {
         st.products.push({ id: uid(), name: nm, price: pr, image: image || DEFAULT_PRODUCT_IMAGE, promos: promoList, category: catVal });
       }
-      if (qty.trim() !== '') {
+      if (!editingId && qty.trim() !== '') {
         const q = Math.round(Number(qty));
         if (Number.isFinite(q) && q >= 0) {
           st.inventory = st.inventory || {};
-          const pid = editingId || st.products[st.products.length - 1].id;
-          const prev = st.inventory[pid] || 0;
-          adoptInvLog(st, pid, q - prev, 'Catálogo');
+          const pid = st.products[st.products.length - 1].id;
+          adoptInvLog(st, pid, q, 'Catálogo');
         }
       }
     });
@@ -78,10 +77,12 @@ export function ProductForm({ editingId, onClose }: { editingId?: string; onClos
           </div>
         </div>
       </div>
-      <div className="field"><label>Cantidad en inventario</label>
-        <input min={0} step={1} type="number" inputMode="numeric" placeholder="0" value={qty} onChange={(e) => setQty(e.target.value)} />
-        <p className="muted">Se guarda como existencias del producto y se descuenta solo con cada venta.</p>
-      </div>
+      {!editingId && (
+        <div className="field"><label>Cantidad en inventario</label>
+          <input min={0} step={1} type="number" inputMode="numeric" placeholder="0" value={qty} onChange={(e) => setQty(e.target.value)} />
+          <p className="muted">Se guarda como existencias del producto y se descuenta solo con cada venta. Despues podras ajustarla desde Catalogo o Inventario.</p>
+        </div>
+      )}
       <div className="field"><label>Promociones <span className="muted">(cada una se vende por separado)</span></label>
         <div id="promo-list">
           {promos.map((x, n) => (

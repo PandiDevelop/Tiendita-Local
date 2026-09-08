@@ -81,7 +81,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
   const attach = useCallback((id: string) => { sync.current!.attach(id); }, []);
   const activate = useCallback((storeId: string, pin: string) => activateSync(storeId, pin, () => stateRef.current, replace, attach), [replace, attach]);
-  const join = useCallback((pin: string) => joinStore(pin, replace, attach), [replace, attach]);
+  const join = useCallback((pin: string) => joinStore(pin, () => stateRef.current, replace, attach), [replace, attach]);
 
   const active = state.stores.find((s) => s.id === state.activeStoreId) ?? state.stores[0];
 

@@ -10,6 +10,7 @@ export function Catalog() {
   const sold = inventorySold(s);
   const inv = s.inventory || {};
   const [edit, setEdit] = useState<{ p: Product; qty: number } | null>(null);
+  const [newCat, setNewCat] = useState<string | null>(null);
 
   function cur(p: Product): number {
     return Math.round(inv[p.id] || 0);
@@ -58,14 +59,22 @@ export function Catalog() {
     });
   }
   function addCategory() {
-    const v = (prompt('Nombre de la nueva categoría') || '').trim();
-    if (!v) return;
-    if (storeCats().includes(v)) return;
+    setNewCat('');
+  }
+  function saveNewCategory() {
+    const v = (newCat || '').trim();
+    if (!v) { setNewCat(null); return; }
+    if (storeCats().includes(v)) { toast('Esa categoría ya existe.'); return; }
     replace((d) => {
       const st = d.stores.find((x) => x.id === s.id);
       st!.categories = st!.categories || [];
       st!.categories.push(v);
+      d.openCats = d.openCats || {};
+      d.openCats[s.id] = d.openCats[s.id] || {};
+      d.openCats[s.id][v] = true;
     });
+    setNewCat(null);
+    toast('Categoría añadida.');
   }
 
   return (
@@ -132,6 +141,26 @@ export function Catalog() {
           <div className="modal-actions">
             <button className="button secondary" onClick={() => setEdit(null)}>Cancelar</button>
             <button className="button primary" onClick={saveEdit}>Guardar</button>
+          </div>
+        </Modal>
+      )}
+
+      {newCat !== null && (
+        <Modal onClose={() => setNewCat(null)}>
+          <h2>Nueva categoría</h2>
+          <div className="field"><label>Nombre de la categoría</label>
+            <input
+              maxLength={30}
+              placeholder="Ej. Bebidas"
+              value={newCat}
+              onChange={(e) => setNewCat(e.target.value)}
+              onKeyDown={(e) => { if (e.key === 'Enter') saveNewCategory(); }}
+              autoFocus
+            />
+          </div>
+          <div className="modal-actions">
+            <button className="button secondary" onClick={() => setNewCat(null)}>Cancelar</button>
+            <button className="button primary" onClick={saveNewCategory}>Guardar</button>
           </div>
         </Modal>
       )}

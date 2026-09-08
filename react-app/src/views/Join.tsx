@@ -8,12 +8,19 @@ export function JoinModal({ onClose }: { onClose: () => void }) {
   const myName = syncName();
   const [name, setName] = useState(myName === 'Trabajador' ? '' : myName);
   const [pin, setPin] = useState('');
+  const [busy, setBusy] = useState(false);
 
   async function submit() {
+    if (busy) return;
     if (!pin.trim()) return toast('Escribe el código.');
     if (name.trim()) syncSetName(name.trim());
-    await join(pin.trim());
-    onClose();
+    setBusy(true);
+    try {
+      await join(pin.trim());
+      onClose();
+    } finally {
+      setBusy(false);
+    }
   }
 
   return (
@@ -28,7 +35,7 @@ export function JoinModal({ onClose }: { onClose: () => void }) {
       <p className="muted">Pega el código que te dio quien creó la tienda. Sus productos y ventas aparecerán aquí.</p>
       <div className="modal-actions">
         <button className="button secondary" onClick={onClose}>Cancelar</button>
-        <button className="button primary" onClick={submit}>Vincular</button>
+        <button className="button primary" onClick={submit} disabled={busy}>{busy ? 'Vinculando…' : 'Vincular'}</button>
       </div>
     </Modal>
   );
