@@ -20,7 +20,8 @@ const ChevDown = () => (
 // Editor reutilizable de promociones (lo usan el formulario de producto y el
 // de categoría). La recompensa es un precio fijo o un % de descuento. La
 // condición es de CANTIDAD de unidades de la misma categoría en la venta:
-//  - "Cantidad fija": se aplica con EXACTAMENTE N unidades. Varias promos
+//  - "Cantidad fija": se aplica con EXACTAMENTE N unidades y su precio es el
+//    TOTAL del paquete (lo que cuestan las N unidades juntas). Varias promos
 //    fijas crean un precio por BLOQUE que se reinicia (el bloque es la
 //    cantidad más grande; el sobrante usa la promo fija exacta o el precio
 //    base). Ej: fija 2 = 8.000 y fija 3 = 10.000 hace que la cuarta unidad
@@ -39,7 +40,7 @@ export function PromoEditor({ promos, onChange, priceHint }: Props) {
   };
   return (
     <div className="promo-editor">
-      {promos.length === 0 && <p className="muted">Sin promociones. La primera promo que cumpla su condición se aplica sola en la venta; el orden = prioridad. Con "Cantidad fija" armas un precio por bloques que se reinicia: por ejemplo fija 2 = 8.000 y fija 3 = 10.000 hace que la 4ª unidad vuelva a costar el precio base.</p>}
+      {promos.length === 0 && <p className="muted">Sin promociones. La primera promo que cumpla su condición se aplica sola en la venta; el orden = prioridad. Con "Cantidad fija" pones el PRECIO DEL PAQUETE: por ejemplo fija 2 = 8.000 y fija 3 = 10.000 (total de las 3) hace que la 4ª unidad vuelva a costar el precio base.</p>}
       {promos.map((x, n) => (
         <div className="promo-input" key={x.id}>
           <div className="promo-row-top">
@@ -54,7 +55,7 @@ export function PromoEditor({ promos, onChange, priceHint }: Props) {
               <option value="pct">% de descuento</option>
             </select>
             {x.type === 'price'
-              ? <input className="promo-price" min={0} type="number" placeholder="Precio" value={x.price} onChange={(e) => setAt(n, { price: e.target.value })} />
+              ? <input className="promo-price" min={0} type="number" placeholder={x.cond === 'qtyeq' ? 'Precio total del paquete' : 'Precio por unidad'} value={x.price} onChange={(e) => setAt(n, { price: e.target.value })} />
               : <input className="promo-pct" min={0} max={100} type="number" placeholder="% de descuento" value={x.pct} onChange={(e) => setAt(n, { pct: e.target.value })} />}
             <select className="promo-select" value={x.cond} onChange={(e) => setAt(n, { cond: e.target.value as EditablePromo['cond'] })}>
               <option value="qtyeq">Cantidad fija</option>

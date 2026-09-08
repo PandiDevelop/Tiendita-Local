@@ -45,11 +45,14 @@ export function money(n: number | string | null | undefined): string {
 }
 
 // Etiqueta corta de una promocion para listas: muestra la recompensa segun su
-// tipo (precio fijo o porcentaje de descuento), no solo el nombre.
+// tipo y condicion (precio fijo/paquete o porcentaje), no solo el nombre.
 export function promoText(x: Promo | undefined | null): string {
   const base = (x && x.label) || 'Promoción';
-  if (x && x.type === 'pct') return base + ' · −' + (Number.isFinite(x.pct) ? x.pct : 0) + '%';
-  if (x && Number.isFinite(x.price)) return base + ' · ' + money(x.price);
+  if (!x) return base;
+  const pack = x.cond === 'qtyeq' ? ' las ' + (x.min || 1) : '';
+  const dscto = '−' + (Number.isFinite(x.pct) ? x.pct : 0) + '%';
+  if (x.type === 'pct') return base + ' · ' + dscto + pack;
+  if (Number.isFinite(x.price)) return base + ' · ' + money(x.price) + pack;
   return base;
 }
 
@@ -612,16 +615,26 @@ export function promoUnitReward(pr: Promo, base: number): number {
   return Math.max(0, pr.price);
 }
 
+// Para una promo de cantidad fija (qtyeq) el "price" es el PRECIO DEL PAQUETE:
+// lo que cuestan las N unidades juntas (no es por unidad). Para % de
+// descuento son las N unidades a ese % sobre el precio base.
+export function fixedPackageTotal(pr: Promo, base: number): number {
+  const n = Math.max(1, pr.min || 1);
+  if (pr.type === 'pct') return promoUnitReward(pr, base) * n;
+  return Math.max(0, pr.price);
+}
+
 // Precio por unidad con las promos del producto aplicadas. La cantidad es el
 // total de unidades de la MISMA CATEGORIA en la venta.
-//  - "Cantidad mayor a" (qtygt): la primera en prioridad con unidades > N
-//    gana y fija el precio de TODAS las unidades.
-//  - "Cantidad fija" (qtyeq): define un precio por BLOQUE que se reinicia.
-//    El bloque es la cantidad fija MAS GRANDE entre las promos fijas del
-//    producto; cada bloque completo se cobra el precio de esa promo y el
-//    sobrante se cobra segun la promo fija exacta que le toque (o el precio
-//    base si no hay). Ej: fija 1 = 5.000, fija 2 = 8.000 y fija 3 = 10.000
-//    da 3 unidades = 10.000 y 4 unidades = 15.000: la cuarta unidad vuelve a
+//  - "Cantidad mayor a" (qtygt): el price es POR UNIDAD. La primera en
+//    prioridad con unidades > N gana y fija el precio de TODAS las unidades.
+//  - "Cantidad fija" (qtyeq): el price es el TOTAL del paquete (lo que
+//    cuestan esas N unidades juntas). Varias promos fijas forman un precio
+//    por BLOQUE que se reinicia: el bloque es la cantidad fija MAS GRANDE,
+//    cada bloque completo se cobra el total de su promo y el sobrante se
+//    cobra con la promo fija exacta que le toque (o el precio base por
+//    unidad). Ej: fija 1 = 5.000, fija 2 = 8.000 y fija 3 = 10.000 da
+//    3 unidades = 10.000 y 4 unidades = 15.000: la cuarta unidad vuelve a
 //    costar 5.000 (bloque de 3 + 1).
 export function promoPrice(p: Product, qty: number): number {
   if (!p || qty <= 0) return p ? p.price : 0;
@@ -635,10 +648,10 @@ export function promoPrice(p: Product, qty: number): number {
   const block = fixed.find((f) => n(f) === k)!;
   const groups = Math.floor(qty / k);
   const rem = qty % k;
-  let total = groups * promoUnitReward(block, p.price) * k;
+  let total = groups * fixedPackageTotal(block, p.price);
   if (rem > 0) {
     const rp = fixed.find((f) => n(f) === rem);
-    total += (rp ? promoUnitReward(rp, p.price) : p.price) * rem;
+    total += (rp ? fixedPackageTotal(rp, p.price) : p.price * rem);
   }
   return round2(total / qty);
 }
