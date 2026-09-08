@@ -5,7 +5,7 @@ import { createSync, applyRemote, activateSync, joinStore, SyncHandle } from './
 
 export type ModalKind = 'none' | 'sale' | 'newProduct' | 'editProduct' | 'newStore' | 'editStore' | 'join';
 
-interface Ctx {
+export interface Ctx {
   state: AppState;
   store: Store | undefined;
   replace: (updater: (draft: AppState) => void) => void;
@@ -21,7 +21,7 @@ interface Ctx {
   join: (pin: string) => Promise<void>;
 }
 
-const AppCtx = createContext<Ctx | null>(null);
+export const AppCtx = createContext<Ctx | null>(null);
 
 export function useStore(): Ctx {
   const ctx = useContext(AppCtx);
