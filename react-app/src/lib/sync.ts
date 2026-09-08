@@ -201,35 +201,33 @@ export function createSync(
 
       const sales: Record<string, Sale> = {};
       s.sales.forEach((x) => (sales[x.id] = x));
-      const payload: Record<string, unknown> = {
+      // OJO: para fundir dentro de mapas ANIDADOS (noteLog, invLog) hay que
+      // usar updateDoc (o batch.update) con paths punteados: "noteLog.<id>".
+      // con setDoc(..., {merge:true}) un objeto anidado REEMPLAZA el campo
+      // noteLog entero (el merge solo es por campo top-level, no recursivo) y
+      // unas claves con punto se guardan como un nombre de campo literal
+      // ("noteLog.<id>") en vez de entrar al mapa, asi que notas e historial
+      // de inventario nunca llegaban a su campo real y se quedaban solo en el
+      // dispositivo que las escribio. updateDoc SI entiende esos paths y
+      // agrega/actualiza UNA entrada del mapa sin pisar las demas.
+      const main: Record<string, unknown> = {
         sales,
         categories: s.categories || [],
         categoryPricing: s.categoryPricing || {},
         updatedBy: cid(),
       };
-      if (typeof s.notes === 'string' && s.notes) payload.notes = s.notes;
-      // OJO: setDoc(..., {merge:true}) NO interpreta claves con puntos como
-      // field paths (eso solo aplica a updateDoc). Antes se escribia
-      // payload['noteLog.'+id], lo que creaba un campo LITERAL llamado
-      // "noteLog.<id>" en vez de fusionar dentro del mapa noteLog, y notas/
-      // inventario nunca llegaban al campo real. Construimos objetos anidados
-      // normales: setDoc con merge:true SI fusiona mapas anidados por clave,
-      // sin pisar las entradas que subio otro dispositivo.
-      const noteLogPatch: Record<string, unknown> = {};
-      (s.noteLog || []).forEach((e) => { if (e && e.id) noteLogPatch[e.id] = e; });
-      if (Object.keys(noteLogPatch).length) payload.noteLog = noteLogPatch;
-      const invLogPatch: Record<string, unknown> = {};
-      (s.invLog || []).forEach((e) => { if (e && e.id) invLogPatch[e.id] = e; });
-      if (Object.keys(invLogPatch).length) payload.invLog = invLogPatch;
-      payload.inventory = s.inventory || {};
-      if (!s.createdBy || s.createdBy === cid()) { payload.name = s.name; payload.image = s.image; }
+      if (typeof s.notes === 'string' && s.notes) main.notes = s.notes;
+      main.inventory = s.inventory || {};
+      (s.noteLog || []).forEach((e) => { if (e && e.id) main['noteLog.' + e.id] = e; });
+      (s.invLog || []).forEach((e) => { if (e && e.id) main['invLog.' + e.id] = e; });
+      if (!s.createdBy || s.createdBy === cid()) { main.name = s.name; main.image = s.image; }
 
       // Un solo batch: el documento principal (chico, sin fotos) mas un
       // documento por cada producto que cambio. Como cada producto viaja
       // en su propio documento, el batch entero se queda muy por debajo
       // del limite de tamaño aunque el catalogo tenga muchos productos.
       const batch = writeBatch(DB);
-      batch.set(storeDocRef(s.syncKey), payload, { merge: true });
+      batch.update(storeDocRef(s.syncKey), main);
       changedProducts.forEach((p) => {
         batch.set(doc(productsColRef(s.syncKey!), p.id), productDocPayload(p, cid()), { merge: true });
       });

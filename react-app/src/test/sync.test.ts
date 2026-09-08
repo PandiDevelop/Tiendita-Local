@@ -292,6 +292,7 @@ describe('createSync push() incremental y con reintento', () => {
     });
     const factory = vi.fn(() => ({
       set: (ref: { id?: string }, data: Record<string, unknown>) => { current.push({ id: ref.id, data }); },
+      update: (ref: { id?: string }, data: Record<string, unknown>) => { current.push({ id: ref.id, data }); },
       commit,
     }));
     return { factory, commit, batches: sets };
@@ -353,6 +354,36 @@ describe('createSync push() incremental y con reintento', () => {
     vi.useRealTimers();
   });
 
+  it('las notas y el log de inventario viajan con path punteado (noteLog.id / invLog.id), no como objeto anidado', async () => {
+    const { createSync } = await import('../lib/sync');
+    const { writeBatch } = await import('firebase/firestore');
+    const writeBatchMock = writeBatch as unknown as ReturnType<typeof vi.fn>;
+    const { factory, batches } = mockBatches();
+    writeBatchMock.mockImplementation(factory);
+
+    const dev = device('A');
+    dev.st.syncKey = 'clave-notas';
+    addProduct(dev.st, 'Agua', 1000);
+    addNote(dev.st, 'Hola equipo');
+    addNote(dev.st, 'Segunda nota');
+    const pid = dev.st.products[0].id;
+    adoptInvLog(dev.st, pid, 5, 'Distribuidora');
+
+    const sync = createSync(() => dev.ref, () => {}, () => {});
+    await sync.push(dev.st.id);
+
+    const mainBatch = batches[0].filter((b) => b.id === 'clave-notas');
+    expect(mainBatch.length).toBe(1);
+    const data = mainBatch[0].data;
+    // Debe haber UNA clave por nota/log, con el id como parte del path.
+    const noteKeys = Object.keys(data).filter((k) => k.startsWith('noteLog.'));
+    const invKeys = Object.keys(data).filter((k) => k.startsWith('invLog.'));
+    expect(noteKeys.length).toBe(2);
+    expect(invKeys.length).toBe(1);
+    expect(Object.keys(data).some((k) => k === 'noteLog')).toBe(false);
+    expect(Object.keys(data).some((k) => k === 'invLog')).toBe(false);
+  });
+
   it('si llega un segundo push mientras el primero sigue en curso, se encola en vez de dispararse en paralelo', async () => {
     const { createSync } = await import('../lib/sync');
     const { writeBatch } = await import('firebase/firestore');
@@ -362,6 +393,7 @@ describe('createSync push() incremental y con reintento', () => {
     let commitCalls = 0;
     writeBatchMock.mockImplementation(() => ({
       set: () => {},
+      update: () => {},
       commit: () => {
         commitCalls++;
         if (commitCalls === 1) return new Promise<void>((resolve) => { resolveFirstCommit = resolve; });
