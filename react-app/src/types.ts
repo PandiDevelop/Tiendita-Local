@@ -60,6 +60,7 @@ export interface InventoryLogEntry {
   qty: number;
   supplier: string;
   by?: string;
+  byName?: string;
 }
 
 export interface NoteEntry {

@@ -56,6 +56,11 @@ export function createSync(
 ): SyncHandle {
   const subs = new Map<string, () => void>();
   const timers = new Map<string, ReturnType<typeof setTimeout>>();
+  // Tope maximo de espera: si el usuario sigue editando sin parar (cada
+  // cambio reinicia el debounce corto de abajo), esto fuerza un push cada
+  // ~1s de todas formas, para que la sincronizacion no se sienta lenta
+  // durante una edicion larga.
+  const maxTimers = new Map<string, ReturnType<typeof setTimeout>>();
   const lastPush = new Map<string, string>();
   const cid = () => syncClientId();
 
@@ -126,12 +131,26 @@ export function createSync(
     } catch (e) { console.warn('Push fallido:', e); }
   }
 
+  function clearScheduled(storeId: string) {
+    const t = timers.get(storeId);
+    if (t) { clearTimeout(t); timers.delete(storeId); }
+    const mt = maxTimers.get(storeId);
+    if (mt) { clearTimeout(mt); maxTimers.delete(storeId); }
+  }
+
+  // Debounce corto (250ms) para no mandar un push por cada tecla, mas un
+  // tope de ~1s que fuerza el push aunque el usuario siga escribiendo sin
+  // parar: antes esperaba 600ms desde el ULTIMO cambio, asi que una edicion
+  // continua podia posponer el push indefinidamente y sentirse lenta.
   function schedule(storeId: string) {
     const s = getState().stores.find((x) => x.id === storeId);
     if (!s || !s.syncKey || !syncReady() || !DB) return;
     const t = timers.get(storeId);
     if (t) clearTimeout(t);
-    timers.set(storeId, setTimeout(() => { timers.delete(storeId); push(storeId); }, 600));
+    timers.set(storeId, setTimeout(() => { clearScheduled(storeId); push(storeId); }, 250));
+    if (!maxTimers.has(storeId)) {
+      maxTimers.set(storeId, setTimeout(() => { clearScheduled(storeId); push(storeId); }, 1000));
+    }
   }
 
   function attach(storeId: string) {

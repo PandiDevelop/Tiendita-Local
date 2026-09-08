@@ -1,12 +1,14 @@
 import { useState } from 'react';
 import { useStore } from '../store';
-import { esc, inventorySold, adoptInvLog } from '../lib/core';
-import { Modal } from '../ui';
+import { DEFAULT_PRODUCT_IMAGE, esc, inventorySold, adoptInvLog, syncName } from '../lib/core';
+import { Image, Modal } from '../ui';
 import type { Product } from '../types';
 
 // qty se maneja como texto mientras se edita para no forzar un '0' que no
 // se pueda borrar; se interpreta como numero (0 si esta vacio) al guardar.
-interface QtyPopup { p: Product; qty: string; }
+// who es quien hace el cambio (igual que el empleado en Registrar venta):
+// arranca con el nombre configurado del dispositivo, pero se puede editar.
+interface QtyPopup { p: Product; qty: string; who: string; }
 
 function parseQty(v: string): number {
   const n = Math.round(Number(v));
@@ -38,12 +40,12 @@ export function Inventory() {
 
   // Lápiz: fijar la cantidad exacta (sin proveedor).
   function openEdit(p: Product) {
-    setEdit({ p, qty: String(cur(p)) });
+    setEdit({ p, qty: String(cur(p)), who: syncName() });
   }
 
   // Cargamento: añadir un lote nuevo con distribuidor.
   function openCargo(p: Product) {
-    setCargo({ p, qty: '' });
+    setCargo({ p, qty: '', who: syncName() });
   }
 
   function saveEdit() {
@@ -53,7 +55,7 @@ export function Inventory() {
     if (delta !== 0) {
       replace((x) => {
         const st = x.stores.find((y) => y.id === s.id)!;
-        adoptInvLog(st, edit.p.id, delta, '');
+        adoptInvLog(st, edit.p.id, delta, '', edit.who);
       });
     }
     toast('Cantidad actualizada.');
@@ -66,7 +68,7 @@ export function Inventory() {
     if (q <= 0) return toast('Escribe una cantidad mayor a 0.');
     replace((x) => {
       const st = x.stores.find((y) => y.id === s.id)!;
-      adoptInvLog(st, cargo.p.id, q, cargoSupplier);
+      adoptInvLog(st, cargo.p.id, q, cargoSupplier, cargo.who);
     });
     toast('Cargamento registrado.');
     setCargo(null);
@@ -89,13 +91,14 @@ export function Inventory() {
 
       {mode === 'log' ? (
         log.length ? (
-          <table><thead><tr><th>Fecha</th><th>Hora</th><th>Producto</th><th>Cantidad</th><th>Proveedor</th></tr></thead><tbody>
+          <table><thead><tr><th>Fecha</th><th>Hora</th><th>Producto</th><th>Cantidad</th><th>Quién</th><th>Proveedor</th></tr></thead><tbody>
             {log.map((e) => (
               <tr key={e.id}>
                 <td className="muted">{esc(e.date || '—')}</td>
                 <td className="muted">{esc(e.time || '—')}</td>
                 <td className="product-name">{esc(nameOf(e.productId))}</td>
                 <td className={'inv-qty ' + (e.qty >= 0 ? 'add' : 'sub')}>{e.qty >= 0 ? '+' + e.qty : e.qty}</td>
+                <td className="muted">{esc(e.byName || 'Alguien')}</td>
                 <td className="muted">{e.supplier ? esc(e.supplier) : '—'}</td>
               </tr>
             ))}
@@ -109,7 +112,7 @@ export function Inventory() {
             const avail = has ? Math.max(0, buy! - (sold[p.id] || 0)) : null;
             return (
               <tr key={p.id}>
-                <td className="product-name">{esc(p.name)}</td>
+                <td className="cat-bar"><div className="product-cell"><div className="product-name">{esc(p.name)}</div><Image src={p.image || DEFAULT_PRODUCT_IMAGE} cls="product-image-cell" /></div></td>
                 <td>{buy == null ? '—' : buy}</td>
                 <td>{avail == null ? '—' : avail}</td>
                 <td className="inv-actions">
@@ -140,6 +143,9 @@ export function Inventory() {
             </div>
             <p className="muted">Escribe el total de unidades compradas (no lo que queda tras las ventas).</p>
           </div>
+          <div className="field"><label>Quién hace el ajuste</label>
+            <input maxLength={40} placeholder="Tu nombre" value={edit.who} onChange={(e) => setEdit({ ...edit, who: e.target.value })} />
+          </div>
           <div className="modal-actions">
             <button className="button secondary" onClick={() => setEdit(null)}>Cancelar</button>
             <button className="button primary" onClick={saveEdit}>Guardar</button>
@@ -163,6 +169,9 @@ export function Inventory() {
           </div>
           <div className="field"><label>Distribuidor / proveedor</label>
             <input maxLength={60} placeholder="Ej. Distribuidora del Sur" value={cargoSupplier} onChange={(e) => setCargoSupplier(e.target.value)} />
+          </div>
+          <div className="field"><label>Quién recibe el cargamento</label>
+            <input maxLength={40} placeholder="Tu nombre" value={cargo.who} onChange={(e) => setCargo({ ...cargo, who: e.target.value })} />
           </div>
           <div className="modal-actions">
             <button className="button secondary" onClick={() => setCargo(null)}>Cancelar</button>

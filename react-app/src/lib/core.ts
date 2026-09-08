@@ -207,14 +207,16 @@ export interface InvLogRow extends InventoryLogEntry {
 
 // Registra un cambio de inventario (delta: + suma, - resta) y aplica el ajuste
 // al conteo local. El log es inmutable y se fusiona por id al sincronizar; el
-// total por producto viaja como mapa y se une por el mayor valor.
-export function adoptInvLog(s: Store, productId: string, delta: number, supplier: string): void {
+// total por producto viaja como mapa y se une por el mayor valor. Guarda
+// quien hizo el cambio igual que en las ventas (nombre editable, con el
+// nombre configurado del dispositivo como valor por defecto).
+export function adoptInvLog(s: Store, productId: string, delta: number, supplier: string, byName?: string): void {
   const d = Math.round(delta);
   if (!d) return;
   s.invLog ||= [];
   s.inventory = s.inventory || {};
   const total = Math.max(0, Math.round(s.inventory[productId] || 0) + d);
-  (s.invLog as InvLogRow[]).push({ id: uid(), productId, date: today(), time: timeNow(), qty: d, total, supplier: (supplier || '').trim(), by: syncClientId() });
+  (s.invLog as InvLogRow[]).push({ id: uid(), productId, date: today(), time: timeNow(), qty: d, total, supplier: (supplier || '').trim(), by: syncClientId(), byName: (byName || syncName()).trim() || syncName() });
   s.inventory[productId] = total;
 }
 

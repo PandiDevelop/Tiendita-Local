@@ -11,13 +11,21 @@ export function Image({ src, cls, alt = '' }: { src?: string; cls?: string; alt?
 // el mismo selector de archivos, asi que no rompe nada ahi.
 export function ImagePicker({ id, src, cls, hint, onFile, disabled }: { id: string; src?: string; cls?: string; hint?: string; onFile: (f: File | undefined) => void; disabled?: boolean }) {
   const cameraId = id + '-camera';
+  // Los dos inputs de archivo van ocultos y cada uno se dispara desde un
+  // boton propio con el MISMO estilo (antes uno era el selector nativo del
+  // navegador, gris y distinto en cada sistema, y el otro un boton de la
+  // app: se veian como dos cosas distintas). Asi 'Elegir archivo' y 'Tomar
+  // foto' se ven como una sola pareja de acciones coherente.
   return (
     <div className="image-picker">
       <Image src={src} cls={cls} />
       <div>
-        <input id={id} type="file" accept="image/*" onChange={(e) => onFile(e.target.files?.[0])} disabled={disabled} />
-        <input id={cameraId} type="file" accept="image/*" capture="environment" onChange={(e) => onFile(e.target.files?.[0])} disabled={disabled} style={{ display: 'none' }} />
-        <button type="button" className="button secondary camera-btn" disabled={disabled} onClick={() => document.getElementById(cameraId)?.click()}>Tomar foto</button>
+        <div className="image-picker-actions">
+          <input id={id} type="file" accept="image/*" onChange={(e) => onFile(e.target.files?.[0])} disabled={disabled} style={{ display: 'none' }} />
+          <button type="button" className="button secondary" disabled={disabled} onClick={() => document.getElementById(id)?.click()}>Elegir archivo</button>
+          <input id={cameraId} type="file" accept="image/*" capture="environment" onChange={(e) => onFile(e.target.files?.[0])} disabled={disabled} style={{ display: 'none' }} />
+          <button type="button" className="button secondary" disabled={disabled} onClick={() => document.getElementById(cameraId)?.click()}>Tomar foto</button>
+        </div>
         {hint && <p className="muted">{hint}</p>}
       </div>
     </div>
