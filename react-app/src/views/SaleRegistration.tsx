@@ -46,9 +46,7 @@ export function SaleRegistration({ onClose }: { onClose: () => void }) {
   for (let i = 0; i < filtered.length; i += SALE_PAGE_SIZE) pages.push(filtered.slice(i, i + SALE_PAGE_SIZE));
   const maxPage = Math.max(0, pages.length - 1);
   const curPage = Math.min(page, maxPage);
-  // Monto en bruto (precios base, sin promos ni evento) que usan las
-  // promos con condicion de total de venta y el descuento automatico.
-  const baseTotal = lines.reduce((n, l) => { const p = s.products.find((x) => x.id === l.pid); return n + (p ? p.price : 0) * l.qty; }, 0);
+  // Total de la venta con los precios ya aplicados (promos + evento).
   const total = lines.reduce((n, l) => n + l.price * l.qty, 0);
 
   // Unidades de la MISMA CATEGORIA que este producto dentro de la venta.
@@ -69,8 +67,7 @@ export function SaleRegistration({ onClose }: { onClose: () => void }) {
       if (l.manual) return l;
       const p = s.products.find((x) => x.id === l.pid);
       if (!p) return l;
-      const base = next.reduce((n, o) => { const pp = s.products.find((x) => x.id === o.pid); return n + (pp ? pp.price : 0) * o.qty; }, 0);
-      return { ...l, price: saleUnitPrice(s, p, catUnits(next, p), base) };
+      return { ...l, price: saleUnitPrice(s, p, catUnits(next, p)) };
     });
   }
 
@@ -181,7 +178,7 @@ export function SaleRegistration({ onClose }: { onClose: () => void }) {
   const lineRow = (l: Line, n: number) => {
     const p = s.products.find((x) => x.id === l.pid);
     if (!p) return null;
-    const promo = findActivePromo(p, catUnits(lines, p), baseTotal);
+    const promo = findActivePromo(p, catUnits(lines, p));
     return (
       <div className="sale-builder-line" data-pid={p.id} data-price={l.price} key={n}>
         <div className="sale-builder-head">

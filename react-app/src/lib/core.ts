@@ -107,19 +107,31 @@ export function mergeItems(a: SaleItem[] | undefined, b: SaleItem[] | undefined)
 }
 
 // Normaliza cualquier forma de promo (nueva, vieja o escrita a mano durante
-// una migracion) al modelo actual. En el nuevo modelo una promo se aplica de
-// forma automatica al rastro de la venta: el tipo de recompensa es 'price'
-// (precio fijo) o 'pct' (porcentaje de descuento) y la condicion de
-// activacion es 'qty' (cantidad del producto), 'saleTotal' (monto total de la
-// venta) o 'date' (rango de fechas).
+// una migracion) al modelo actual. La recompensa es 'price' (precio fijo) o
+// 'pct' (% de descuento). La condicion es de CANTIDAD de la misma categoria
+// en la venta:
+//  - 'qtyeq' ("Cantidad fija"): cuando hay EXACTAMENTE N unidades. Varias
+//    promos fijas del mismo producto forman un precio por BLOQUE (ver
+//    promoPrice): el bloque es la cantidad mas grande y el sobrante se cobra
+//    con la promo fija exacta que corresponda o el precio base.
+//  - 'qtygt' ("Cantidad mayor a"): cuando hay MAS de N unidades.
+// Las promos viejas (con 'cond' faltante, 'qty' >= N, 'saleTotal' o 'date')
+// se migran a 'qtygt' conservando lo mas fiel posible su comportamiento.
 export function normalizePromo(x: string | Partial<Promo> | undefined | null, fallback: number): Promo {
   if (typeof x === 'string') {
-    return { id: uid(), label: x, type: 'price', price: fallback, pct: 0, cond: 'qty', min: 1, start: '', end: '' };
+    return { id: uid(), label: x, type: 'price', price: fallback, pct: 0, cond: 'qtygt', min: 0, start: '', end: '' };
   }
   const base = (x || {}) as Partial<Promo>;
   const type = base.type === 'pct' ? 'pct' : 'price';
-  const cond = base.cond === 'saleTotal' || base.cond === 'date' ? base.cond : 'qty';
-  const min = Number.isFinite(base.min) ? (base.min as number) : cond === 'qty' ? 1 : 0;
+  const given = Number.isFinite(base.min) ? (base.min as number) : 1;
+  const rc = base.cond as string | undefined;
+  let cond: Promo['cond'] = 'qtygt';
+  let min = 0;
+  if (rc === 'qtyeq') { cond = 'qtyeq'; min = Math.max(1, Math.round(given)); }
+  else if (rc === 'qtygt') { cond = 'qtygt'; min = Math.max(0, Math.round(given)); }
+  else if (rc === 'qty') { cond = 'qtygt'; min = Math.max(0, Math.round(given) - 1); } // ">= N" pasa a "> N-1"
+  else if (rc === 'saleTotal') { cond = 'qtygt'; min = Math.max(0, Math.round(given)); }
+  // 'date' o sin condicion (precios viejos permanentes) -> "mayor a 0"
   return {
     id: base.id || uid(),
     label: String(base.label || '').trim(),
@@ -387,15 +399,15 @@ export function setCategoryPricing(s: Store, cat: string, price: number, cost: n
 // Las promociones se editan como texto (no numero) para poder borrar un '0' y
 // escribir otra cosa sin que se reponga solo; se convierten a numero (0 si
 // queda vacio) al guardar. Se usa tanto en el formulario de producto como en
-// el modal de precio de categoria. Un campo 'start'/'end' en el rango de
-// fechas (cond 'date') con valor vacio significa 'sin limite' de ese lado.
+// el modal de precio de categoria. La unica condicion es de cantidad de la
+// misma categoria: 'qtyeq' (exacta) o 'qtygt' (mayor a) N unidades.
 export interface EditablePromo {
   id: string;
   label: string;
   type: 'price' | 'pct';
   price: string;
   pct: string;
-  cond: 'qty' | 'saleTotal' | 'date';
+  cond: 'qtyeq' | 'qtygt';
   min: string;
   start: string;
   end: string;
@@ -410,7 +422,7 @@ export function toEditablePromos(list: Promo[] | undefined): EditablePromo[] {
     type: x.type === 'pct' ? 'pct' : 'price',
     price: numText(x.price),
     pct: numText(x.pct),
-    cond: x.cond === 'saleTotal' || x.cond === 'date' ? x.cond : 'qty',
+    cond: x.cond === 'qtyeq' ? 'qtyeq' : 'qtygt',
     min: numText(x.min),
     start: x.start || '',
     end: x.end || '',
@@ -592,48 +604,68 @@ export function activeEvent(s: Store): StoreEvent | undefined {
   return (s.events || []).find((e) => e && e.name && e.active && (!e.start || t >= e.start) && (!e.end || t <= e.end));
 }
 
-// True si una promo esta activa para una venta dada. El "total" es el monto
-// en bruto (precios base, antes de aplicar ninguna promo/evento) para evitar
-// depedencias circulares entre el descuento y su propia condicion. El "qty"
-// es el total de unidades de la MISMA CATEGORIA del producto dentro de la
-// venta (no las del producto solo): asi una promo de "2 unidades" se activa
-// cuando hay dos productos cualesquiera de esa categoria.
-export function promoApplies(pr: Promo | undefined, qty: number, saleTotal: number): boolean {
-  if (!pr || !pr.label || qty <= 0) return false;
-  const t = today();
-  if (pr.cond === 'date') {
-    if (pr.start && t < pr.start) return false;
-    if (pr.end && t > pr.end) return false;
-    return true;
-  }
-  if (pr.cond === 'saleTotal') return saleTotal >= (pr.min || 0);
-  return qty >= (pr.min || 1);
+export function round2(n: number): number { return Math.round((n + Number.EPSILON) * 100) / 100; }
+
+// Recompensa por unidad que da una promo (precio fijo o % sobre el base).
+export function promoUnitReward(pr: Promo, base: number): number {
+  if (pr.type === 'pct') return Math.max(0, base * (1 - (pr.pct || 0) / 100));
+  return Math.max(0, pr.price);
 }
 
-// Primera promo (en su orden = prioridad, gana la primera que cumpla) que se
-// aplica automaticamente a este producto dentro de la venta.
-export function findActivePromo(p: Product | undefined, qty: number, saleTotal: number): Promo | undefined {
-  if (!p) return undefined;
-  for (const pr of p.promos || []) {
-    if (promoApplies(pr, qty, saleTotal)) return pr;
+// Precio por unidad con las promos del producto aplicadas. La cantidad es el
+// total de unidades de la MISMA CATEGORIA en la venta.
+//  - "Cantidad mayor a" (qtygt): la primera en prioridad con unidades > N
+//    gana y fija el precio de TODAS las unidades.
+//  - "Cantidad fija" (qtyeq): define un precio por BLOQUE que se reinicia.
+//    El bloque es la cantidad fija MAS GRANDE entre las promos fijas del
+//    producto; cada bloque completo se cobra el precio de esa promo y el
+//    sobrante se cobra segun la promo fija exacta que le toque (o el precio
+//    base si no hay). Ej: fija 1 = 5.000, fija 2 = 8.000 y fija 3 = 10.000
+//    da 3 unidades = 10.000 y 4 unidades = 15.000: la cuarta unidad vuelve a
+//    costar 5.000 (bloque de 3 + 1).
+export function promoPrice(p: Product, qty: number): number {
+  if (!p || qty <= 0) return p ? p.price : 0;
+  const promos = p.promos || [];
+  const n = (pr: Promo) => Math.max(1, pr.min || 1);
+  const gt = promos.find((pr) => pr.cond === 'qtygt' && qty > Math.max(0, pr.min || 0));
+  if (gt) return round2(promoUnitReward(gt, p.price));
+  const fixed = promos.filter((pr) => pr.cond === 'qtyeq' && n(pr) <= qty);
+  if (!fixed.length) return p.price;
+  const k = Math.max(...fixed.map(n));
+  const block = fixed.find((f) => n(f) === k)!;
+  const groups = Math.floor(qty / k);
+  const rem = qty % k;
+  let total = groups * promoUnitReward(block, p.price) * k;
+  if (rem > 0) {
+    const rp = fixed.find((f) => n(f) === rem);
+    total += (rp ? promoUnitReward(rp, p.price) : p.price) * rem;
   }
+  return round2(total / qty);
+}
+
+// Primera promo (en su orden = prioridad) que se aplica a este producto con
+// esa cantidad: se muestra como la "Promo aplicada" en la linea de venta.
+export function findActivePromo(p: Product | undefined, qty: number): Promo | undefined {
+  if (!p || qty <= 0) return undefined;
+  const promos = p.promos || [];
+  const n = (pr: Promo) => Math.max(1, pr.min || 1);
+  const gt = promos.find((pr) => pr.cond === 'qtygt' && qty > Math.max(0, pr.min || 0));
+  if (gt) return gt;
+  const fixed = promos.filter((pr) => pr.cond === 'qtyeq' && n(pr) <= qty);
+  if (!fixed.length) return undefined;
+  const k = Math.max(...fixed.map(n));
+  if (qty % k === 0) return fixed.find((f) => n(f) === k);
+  const exact = fixed.find((f) => n(f) === qty);
+  if (exact) return exact;
+  if (qty > k) return fixed.find((f) => n(f) === k);
   return undefined;
 }
 
-// Precio por unidad de un producto ya con la promo aplicada (precio fijo o
-// porcentaje sobre el precio base).
-export function promoPrice(p: Product, qty: number, saleTotal: number): number {
-  const pr = findActivePromo(p, qty, saleTotal);
-  if (pr?.type === 'pct') return Math.max(0, p.price * (1 - (pr.pct || 0) / 100));
-  if (pr) return Math.max(0, pr.price);
-  return p.price;
-}
-
-// Precio final por unidad: promo del producto y, encima de eso, el descuento
+// Precio final por unidad: promos del producto y, encima de eso, el descuento
 // del evento activo (que aplica a todo durante el evento).
-export function saleUnitPrice(s: Store, p: Product, qty: number, saleTotal: number): number {
-  let price = promoPrice(p, qty, saleTotal);
+export function saleUnitPrice(s: Store, p: Product, qty: number): number {
+  let price = promoPrice(p, qty);
   const ev = activeEvent(s);
   if (ev && ev.pct) price = price * (1 - (ev.pct || 0) / 100);
-  return Math.max(0, Math.round(price));
+  return Math.max(0, round2(price));
 }

@@ -185,6 +185,10 @@ th,td{text-align:left;vertical-align:middle}
 .drag-cell .drag-handle{display:inline-flex;align-items:center;justify-content:center;margin:0 auto;line-height:1}
 .drag-handle{display:inline-flex;align-items:center;justify-content:center;margin:0 auto;line-height:1}
 .cat-group table th,.cat-group table td{vertical-align:middle}
+/* Handle de reorden de productos: pegado a la IZQUIERDA de la celda (el user
+   lo prefirio asi en vez del centro) y verticalmente centrado en la fila. */
+.drag-cell{width:36px;min-width:36px;text-align:left;vertical-align:middle;padding:0 0 0 4px}
+.drag-cell .drag-handle{margin:0}
 .inv-actions{text-align:center}
 .inv-actions .inv-stepper{justify-content:center;margin:0 auto}
 

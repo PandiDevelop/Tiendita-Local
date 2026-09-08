@@ -8,11 +8,7 @@ interface Props {
   priceHint?: string;
 }
 
-const today = () => new Date().toISOString().slice(0, 10);
-
-function blank(priceHint?: string): EditablePromo {
-  return { id: uid(), label: '', type: 'price', price: priceHint || '0', pct: '', cond: 'qty', min: '1', start: today(), end: '' };
-}
+const blank = (priceHint?: string): EditablePromo => ({ id: uid(), label: '', type: 'price', price: priceHint || '0', pct: '', cond: 'qtyeq', min: '1', start: '', end: '' });
 
 const ChevUp = () => (
   <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round"><path d="M6 14l6 -6 6 6" /></svg>
@@ -22,11 +18,16 @@ const ChevDown = () => (
 );
 
 // Editor reutilizable de promociones (lo usan el formulario de producto y el
-// de categoría). El ORDEN de la lista es la prioridad: cuando una promo se
-// cumple en la venta, la PRIMERA de la lista que aplique es la que gana. Cada
-// promo define su recompensa (precio fijo o % de descuento) y su condición
-// de activación (unidades de la misma categoría, monto total de la venta o
-// rango de fechas).
+// de categoría). La recompensa es un precio fijo o un % de descuento. La
+// condición es de CANTIDAD de unidades de la misma categoría en la venta:
+//  - "Cantidad fija": se aplica con EXACTAMENTE N unidades. Varias promos
+//    fijas crean un precio por BLOQUE que se reinicia (el bloque es la
+//    cantidad más grande; el sobrante usa la promo fija exacta o el precio
+//    base). Ej: fija 2 = 8.000 y fija 3 = 10.000 hace que la cuarta unidad
+//    vuelva a costar el precio base.
+//  - "Cantidad mayor a": se aplica cuando hay MÁS de N unidades.
+// El ORDEN de la lista es la prioridad: cuando una promo se cumple en la
+// venta, la PRIMERA de la lista que aplique es la que gana.
 export function PromoEditor({ promos, onChange, priceHint }: Props) {
   const setAt = (n: number, p: Partial<EditablePromo>) => onChange(promos.map((y, i) => i === n ? { ...y, ...p } : y));
   const move = (n: number, dir: -1 | 1) => {
@@ -38,7 +39,7 @@ export function PromoEditor({ promos, onChange, priceHint }: Props) {
   };
   return (
     <div className="promo-editor">
-      {promos.length === 0 && <p className="muted">Sin promociones. La primera promo de la lista que cumpla su condición se aplica sola en la venta; el orden = prioridad.</p>}
+      {promos.length === 0 && <p className="muted">Sin promociones. La primera promo que cumpla su condición se aplica sola en la venta; el orden = prioridad. Con "Cantidad fija" armas un precio por bloques que se reinicia: por ejemplo fija 2 = 8.000 y fija 3 = 10.000 hace que la 4ª unidad vuelva a costar el precio base.</p>}
       {promos.map((x, n) => (
         <div className="promo-input" key={x.id}>
           <div className="promo-row-top">
@@ -56,16 +57,12 @@ export function PromoEditor({ promos, onChange, priceHint }: Props) {
               ? <input className="promo-price" min={0} type="number" placeholder="Precio" value={x.price} onChange={(e) => setAt(n, { price: e.target.value })} />
               : <input className="promo-pct" min={0} max={100} type="number" placeholder="% de descuento" value={x.pct} onChange={(e) => setAt(n, { pct: e.target.value })} />}
             <select className="promo-select" value={x.cond} onChange={(e) => setAt(n, { cond: e.target.value as EditablePromo['cond'] })}>
-              <option value="qty">Cuando haya N de la misma categoría</option>
-              <option value="saleTotal">Cuando el total sea ≥ N</option>
-              <option value="date">Entre fechas</option>
+              <option value="qtyeq">Cantidad fija</option>
+              <option value="qtygt">Cantidad mayor a</option>
             </select>
-            {x.cond === 'qty' && <input className="promo-min" min={1} type="number" placeholder="Unidades por categoría" value={x.min} onChange={(e) => setAt(n, { min: e.target.value })} />}
-            {x.cond === 'saleTotal' && <input className="promo-min" min={0} type="number" placeholder="Total mínimo" value={x.min} onChange={(e) => setAt(n, { min: e.target.value })} />}
-            {x.cond === 'date' && <>
-              <input className="promo-date" type="date" value={x.start} onChange={(e) => setAt(n, { start: e.target.value })} />
-              <input className="promo-date" type="date" value={x.end} onChange={(e) => setAt(n, { end: e.target.value })} />
-            </>}
+            {x.cond === 'qtyeq'
+              ? <input className="promo-min" min={1} type="number" placeholder="Unidades exactas" value={x.min} onChange={(e) => setAt(n, { min: e.target.value })} />
+              : <input className="promo-min" min={0} type="number" placeholder="Unidades mínimas" value={x.min} onChange={(e) => setAt(n, { min: e.target.value })} />}
           </div>
         </div>
       ))}
