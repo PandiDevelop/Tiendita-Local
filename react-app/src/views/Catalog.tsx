@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import type { PointerEvent as ReactPointerEvent } from 'react';
 import { useStore } from '../store';
-import { money, esc, inventorySold, setCategoryPricing, reorderCategoryProducts, toEditablePromos, fromEditablePromos, uid, DEFAULT_PRODUCT_IMAGE } from '../lib/core';
+import { money, esc, inventorySold, setCategoryPricing, reorderCategoryProducts, sortByOrder, toEditablePromos, fromEditablePromos, uid, DEFAULT_PRODUCT_IMAGE } from '../lib/core';
 import type { EditablePromo } from '../lib/core';
 import { Image, Modal } from '../ui';
 import type { Product } from '../types';
@@ -36,6 +36,7 @@ export function Catalog() {
 
   const grouped: Record<string, typeof s.products> = {};
   s.products.forEach((p) => { const c = (p.category || '').trim() || 'Sin categoría'; (grouped[c] = grouped[c] || []).push(p); });
+  Object.keys(grouped).forEach((c) => { grouped[c] = sortByOrder(grouped[c]); });
   const groups = storeCats().map((c) => ({ name: c, list: grouped[c] || [] }));
   if (grouped['Sin categoría']) groups.push({ name: 'Sin categoría', list: grouped['Sin categoría'] });
 
@@ -170,7 +171,7 @@ export function Catalog() {
       setProdDrag(null);
       replace((d) => {
         const st = d.stores.find((x) => x.id === s.id)!;
-        reorderCategoryProducts(st, cat, order);
+        reorderCategoryProducts(st, order);
       });
     };
     document.addEventListener('pointermove', move);

@@ -1,6 +1,6 @@
 import { initializeApp, FirebaseApp } from 'firebase/app';
 import { getFirestore, Firestore, collection, doc, onSnapshot, setDoc, getDoc, deleteField } from 'firebase/firestore';
-import type { AppState, Member, Product, Sale, Store } from '../types';
+import type { AppState, Member, Product, Role, Sale, Store } from '../types';
 import { toProductsArr, toSalesArr, toInvLogArr, toNoteLogArr, mergeItems, mergeInvLog, mergeNoteLog, syncKeyOf, syncClientId, syncName, normalizeStore, DEFAULT_STORE_IMAGE, uid } from './core';
 import { customAlert, customConfirm } from './dialog';
 
@@ -216,10 +216,16 @@ export function applyRemote(getState: () => AppState, mutate: (fn: (d: AppState)
     });
     st.sales = Array.from(sales.values());
 
-    if (remote.categories) {
-      const cur = st.categories || [];
-      (remote.categories as string[]).forEach((c) => { const v = (c || '').trim(); if (v && !cur.includes(v)) cur.push(v); });
-      st.categories = cur;
+    // El orden de las categorias ahora importa (se puede arrastrar en el
+    // Catalogo). Firestore SI conserva el orden de un arreglo, asi que se
+    // adopta tal cual viene del remoto (quien empujo de ultimas gano el
+    // orden); cualquier categoria que solo exista localmente (creada aqui y
+    // aun no reflejada en ese snapshot remoto) se conserva al final para no
+    // perderla.
+    if (remote.categories && Array.isArray(remote.categories)) {
+      const remoteCats = (remote.categories as string[]).map((c) => (c || '').trim()).filter(Boolean);
+      const localOnly = (st.categories || []).filter((c) => !remoteCats.includes(c));
+      st.categories = [...remoteCats, ...localOnly];
     }
     if (remote.categoryPricing && typeof remote.categoryPricing === 'object') {
       st.categoryPricing = Object.assign({}, st.categoryPricing || {}, JSON.parse(JSON.stringify(remote.categoryPricing)));
@@ -362,6 +368,24 @@ export async function removeMemberFn(storeId: string, memberId: string, getState
     await setDoc(doc(collection(DB, 'stores'), s.syncKey), { members: { [memberId]: del } }, { merge: true });
     toast('Trabajador eliminado de la tienda.');
   } catch (e) { console.warn(e); toast('No se pudo eliminar al trabajador.'); }
+}
+
+// Solo el dueño real (createdBy) puede ascender/descender a un trabajador a
+// administrador. Un admin puede ver el equipo y quitar trabajadores, pero no
+// cambiar roles ni quitar a otro admin (eso evita que dos admins se
+// enreden entre ellos).
+export async function setMemberRoleFn(storeId: string, memberId: string, role: Role, getState: () => AppState, mutate: (fn: (d: AppState) => void) => void, toast: (m: string) => void) {
+  const s = getState().stores.find((x) => x.id === storeId);
+  if (!s || !s.syncKey || !DB || memberId === syncClientId()) return;
+  if (s.createdBy !== syncClientId()) return;
+  const cur = (s.members && s.members[memberId]) || { name: 'Trabajador', role: 'worker' as Role, joinedAt: Date.now() };
+  const updated: Member = { ...cur, role };
+  const members = Object.assign({}, s.members || {}, { [memberId]: updated });
+  mutate((d) => { const st = d.stores.find((x) => x.id === storeId); if (st) st.members = members; });
+  try {
+    await setDoc(doc(collection(DB, 'stores'), s.syncKey), { members: { [memberId]: updated } }, { merge: true });
+    toast(role === 'admin' ? 'Ahora es administrador.' : 'Ya no es administrador.');
+  } catch (e) { console.warn(e); toast('No se pudo actualizar el permiso.'); }
 }
 
 export function deactivateSyncFn(id: string, getState: () => AppState, mutate: (fn: (d: AppState) => void) => void, detach: (storeId: string) => void) {

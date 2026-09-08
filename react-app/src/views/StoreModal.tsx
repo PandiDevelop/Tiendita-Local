@@ -1,9 +1,9 @@
 import { useState } from 'react';
 import { useStore } from '../store';
-import { DEFAULT_STORE_IMAGE, compressImage, esc, syncClientId, syncGenPin, syncName, syncSetName, uid } from '../lib/core';
-import { deactivateSyncFn, leaveStoreFn, deleteStoreFn, removeMemberFn } from '../lib/sync';
+import { DEFAULT_STORE_IMAGE, compressImage, esc, myRole, syncClientId, syncGenPin, syncName, syncSetName, uid } from '../lib/core';
+import { deactivateSyncFn, leaveStoreFn, deleteStoreFn, removeMemberFn, setMemberRoleFn } from '../lib/sync';
 import { ImagePicker, Modal } from '../ui';
-import type { Member } from '../types';
+import type { Member, Role } from '../types';
 
 export function StoreModal({ editing, onClose }: { editing?: boolean; onClose: () => void }) {
   const { state, store, replace, activate, toast, attach } = useStore();
@@ -11,6 +11,10 @@ export function StoreModal({ editing, onClose }: { editing?: boolean; onClose: (
   const me = syncClientId();
   const isEmployee = !!(s && s.syncKey && s.createdBy && s.createdBy !== me);
   const isOwner = !(s && s.syncKey && s.createdBy && s.createdBy !== me);
+  // Un admin (trabajador con permiso especial que el dueño le dio) tambien
+  // puede ver y gestionar el equipo, aunque solo el dueño real puede
+  // ascender/descender admins o quitar a otro admin.
+  const canManage = isOwner || (!!s && myRole(s) === 'admin');
 
   const [name, setName] = useState(s?.name || '');
   const [image, setImage] = useState(s?.image || '');
@@ -87,6 +91,12 @@ export function StoreModal({ editing, onClose }: { editing?: boolean; onClose: (
     renderAgain();
   }
 
+  function setRole(memberId: string, role: Role) {
+    if (!s) return;
+    setMemberRoleFn(s.id, memberId, role, () => state, replace, toast);
+    renderAgain();
+  }
+
   return (
     <Modal onClose={onClose}>
       <h2>{editing ? 'Editar tienda' : 'Nueva tienda'}</h2>
@@ -108,21 +118,30 @@ export function StoreModal({ editing, onClose }: { editing?: boolean; onClose: (
                 <div className="pin-box"><strong style={{ letterSpacing: '1.5px' }}>{esc(s.syncPin || s.syncKey)}</strong></div>
                 <p className="muted">Comparte este código con tu equipo. Los cambios se ven en tiempo real.</p>
               </div>
-              {isOwner && <>
+              {canManage && <>
                 <div className="label" style={{ margin: '2px 0 6px' }}>Trabajadores vinculados</div>
                 {others.length ? (
                   <div style={{ display: 'grid', gap: 6 }}>
                     {others.map((mi) => {
                       const mm = members[mi] as Member;
+                      const isAdmin = !!mm && mm.role === 'admin';
                       return (
-                        <div key={mi} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 8 }}>
-                          <span>{esc(mm && mm.name ? mm.name : 'Trabajador')}</span>
-                          <button className="icon-btn" title="Quitar de la tienda" onClick={() => removeMember(mi)}>×</button>
+                        <div key={mi} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+                          <span>{esc(mm && mm.name ? mm.name : 'Trabajador')}{isAdmin && <span className="tag" style={{ marginLeft: 6 }}>Admin</span>}</span>
+                          <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
+                            {isOwner && (
+                              <button className="button secondary" style={{ padding: '5px 9px', fontSize: 12 }} onClick={() => setRole(mi, isAdmin ? 'worker' : 'admin')}>
+                                {isAdmin ? 'Quitar admin' : 'Hacer admin'}
+                              </button>
+                            )}
+                            {(isOwner || !isAdmin) && <button className="icon-btn" title="Quitar de la tienda" onClick={() => removeMember(mi)}>×</button>}
+                          </div>
                         </div>
                       );
                     })}
                   </div>
                 ) : <p className="muted">Aún no hay trabajadores vinculados.</p>}
+                {!isOwner && <p className="muted">Como administrador puedes ver el equipo y quitar trabajadores. Solo el dueño puede dar o quitar el permiso de administrador.</p>}
               </>}
             </div>
             {isOwner && <button className="icon-btn" title="Desvincular" onClick={deactivate}>×</button>}

@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import type { AppState, Product, Store } from '../types';
-import { makeDraft, normalizeStore, addNote, adoptInvLog, uid } from '../lib/core';
+import { makeDraft, normalizeStore, addNote, adoptInvLog, sortByOrder, uid } from '../lib/core';
 import { applyRemote } from '../lib/sync';
 
 beforeEach(() => {
@@ -64,6 +64,8 @@ function makePayload(st: Store) {
     noteLog,
     notes: st.notes || '',
     products,
+    categories: st.categories || [],
+    categoryPricing: st.categoryPricing || {},
     updatedBy: 'device-' + st.id,
     members: st.members || {},
     createdBy: st.createdBy,
@@ -155,5 +157,46 @@ describe('sync de inventario y notas entre dos dispositivos', () => {
     expect(b.st.noteLog.length).toBe(1);
     expect(b.st.invLog.length).toBe(1);
     expect(b.st.inventory[pid]).toBe(3);
+  });
+
+  it('el orden de categorias que reordena A (arrastrar) se refleja en B', () => {
+    const a = device('A');
+    const b = device('B');
+    a.st.categories = ['Bebidas', 'Snacks'];
+    apply(a.st, b);
+    expect(b.st.categories).toEqual(['Bebidas', 'Snacks']);
+
+    // A arrastra Snacks antes que Bebidas y vuelve a empujar.
+    a.st.categories = ['Snacks', 'Bebidas'];
+    apply(a.st, b);
+    expect(b.st.categories).toEqual(['Snacks', 'Bebidas']);
+  });
+
+  it('una categoria creada solo en B no se pierde al recibir el orden de A', () => {
+    const a = device('A');
+    const b = device('B');
+    a.st.categories = ['Bebidas'];
+    b.st.categories = ['Bebidas', 'Snacks'];
+
+    apply(a.st, b);
+
+    expect(b.st.categories).toEqual(['Bebidas', 'Snacks']);
+  });
+
+  it('el orden de productos (campo order) que arrastra A dentro de una categoria se refleja en B', () => {
+    const a = device('A');
+    const b = device('B');
+    const p1 = addProduct(a.st, 'Agua', 2000);
+    const p2 = addProduct(a.st, 'Gaseosa', 3000);
+    a.st.products.forEach((p) => { p.category = 'Bebidas'; });
+    apply(a.st, b);
+
+    // A arrastra para poner Gaseosa primero.
+    a.st.products.find((p) => p.id === p2)!.order = 0;
+    a.st.products.find((p) => p.id === p1)!.order = 1;
+    apply(a.st, b);
+
+    const ordered = sortByOrder(b.st.products).map((p) => p.id);
+    expect(ordered).toEqual([p2, p1]);
   });
 });

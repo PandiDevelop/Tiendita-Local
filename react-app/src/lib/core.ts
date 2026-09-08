@@ -1,4 +1,4 @@
-import type { AppState, CategoryPricing, InventoryLogEntry, NoteEntry, Product, Promo, Sale, SaleDraft, SaleItem, Store } from '../types';
+import type { AppState, CategoryPricing, InventoryLogEntry, NoteEntry, Product, Promo, Role, Sale, SaleDraft, SaleItem, Store } from '../types';
 
 export const KEY = 'mi-tiendita-v1';
 export const CLIENT_KEY = 'mi-tiendita-client';
@@ -303,19 +303,32 @@ export function fromEditablePromos(list: EditablePromo[]): Promo[] {
     });
 }
 
-// Reordena los productos de UNA categoria segun el nuevo orden de ids que
-// llega del arrastre en el Catalogo, sin tocar la posicion relativa de los
-// productos de las demas categorias (se recorren en el orden original y solo
-// se van sustituyendo, en orden, los que pertenecen a la categoria movida).
-export function reorderCategoryProducts(s: Store, cat: string, orderedIds: string[]): void {
+// Fija el campo 'order' de cada producto de UNA categoria segun el nuevo
+// orden que llega del arrastre en el Catalogo. Antes esto reordenaba el
+// arreglo st.products, pero esa posicion NO viaja de forma confiable por
+// Firestore (los productos se sincronizan como mapa por id, y al fusionar
+// remoto con local cada dispositivo conserva su PROPIA posicion). Guardar el
+// orden como un campo normal del producto si se sincroniza, porque cada
+// producto se reemplaza entero con la version mas reciente al recibir un
+// cambio remoto.
+export function reorderCategoryProducts(s: Store, orderedIds: string[]): void {
   const byId = new Map(s.products.map((p) => [p.id, p]));
-  const queue = orderedIds.slice();
-  s.products = s.products.map((p) => {
-    const c = (p.category || '').trim() || 'Sin categoría';
-    if (c !== cat) return p;
-    const nextId = queue.shift();
-    return nextId ? byId.get(nextId) || p : p;
-  });
+  orderedIds.forEach((id, i) => { const p = byId.get(id); if (p) p.order = i; });
+}
+
+// Ordena una lista de productos por su campo 'order' (los que no lo tienen
+// mantienen su orden relativo original, al final). Se usa para mostrar cada
+// categoria del Catalogo siempre en el mismo orden sin importar el
+// dispositivo, en vez de confiar en la posicion dentro del arreglo.
+export function sortByOrder<T extends { order?: number }>(list: T[]): T[] {
+  return list
+    .map((x, i) => ({ x, i }))
+    .sort((a, b) => {
+      const ao = a.x.order ?? Number.MAX_SAFE_INTEGER;
+      const bo = b.x.order ?? Number.MAX_SAFE_INTEGER;
+      return ao !== bo ? ao - bo : a.i - b.i;
+    })
+    .map((e) => e.x);
 }
 
 export function storeCats(s: Store): string[] {
@@ -365,6 +378,26 @@ export function saleCatsOf(s: Store): string[] {
   const cats = storeCats(s);
   if (s.products.some((p) => !((p.category || '').trim()))) cats.push('Sin categoría');
   return cats;
+}
+
+// El dueño de verdad es siempre quien creo la tienda (createdBy), o
+// cualquiera en una tienda que no esta sincronizada. Los 'admin' son
+// trabajadores a los que el dueño les dio permisos extra (ver Empleados,
+// gestionar el equipo), pero seguir sin poder borrar la tienda ni
+// desactivar la sincronizacion: eso sigue siendo solo del dueño.
+export function isStoreOwner(s: Store): boolean {
+  return !s.syncKey || !s.createdBy || s.createdBy === syncClientId();
+}
+
+export function myRole(s: Store): Role {
+  if (isStoreOwner(s)) return 'owner';
+  const m = s.members && s.members[syncClientId()];
+  return m && m.role === 'admin' ? 'admin' : 'worker';
+}
+
+export function canManageTeam(s: Store): boolean {
+  const r = myRole(s);
+  return r === 'owner' || r === 'admin';
 }
 
 export function saleDraftOf(state: AppState, s: Store): SaleDraft | null {

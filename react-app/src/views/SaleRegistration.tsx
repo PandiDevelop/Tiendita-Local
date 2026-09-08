@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useStore } from '../store';
-import { DEFAULT_PRODUCT_IMAGE, catLabel, money, saleCatsOf, syncName, today, uid } from '../lib/core';
+import { DEFAULT_PRODUCT_IMAGE, catLabel, money, saleCatsOf, sortByOrder, syncName, today, uid } from '../lib/core';
 import { Dropdown } from '../Dropdown';
 import { Image, Modal } from '../ui';
 import type { Product } from '../types';
@@ -21,7 +21,7 @@ export function SaleRegistration({ onClose }: { onClose: () => void }) {
 
   const cats = saleCatsOf(s).map((c) => ({ v: c, label: c, count: s.products.filter((p) => catLabel(p) === c).length }));
   const catsOpen = cats.length;
-  const list = category ? s.products.filter((p) => catLabel(p) === category) : [];
+  const list = category ? sortByOrder(s.products.filter((p) => catLabel(p) === category)) : [];
   const total = lines.reduce((n, l) => n + l.price * l.qty, 0);
 
   function persist(next: { employee?: string; category?: string; lines?: Line[] }, immediate = false) {

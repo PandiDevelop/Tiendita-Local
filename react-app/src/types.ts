@@ -19,6 +19,11 @@ export interface Product {
   image: string;
   promos: Promo[];
   category: string;
+  // Posicion dentro de su categoria (menor = mas arriba). Se asigna al
+  // arrastrar en el Catalogo; viaja como un campo mas del producto para que
+  // el orden SI se sincronice entre dispositivos (a diferencia de la
+  // posicion dentro del arreglo, que Firestore no garantiza conservar).
+  order?: number;
 }
 
 export interface SaleItem {
@@ -39,7 +44,7 @@ export interface Sale {
   items: SaleItem[];
 }
 
-export type Role = 'owner' | 'worker';
+export type Role = 'owner' | 'admin' | 'worker';
 
 export interface Member {
   name: string;

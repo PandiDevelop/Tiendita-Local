@@ -30,9 +30,12 @@ export function Notes() {
     if (ev.key === 'Enter' && !ev.shiftKey) { ev.preventDefault(); send(); }
   }
 
+  // Las notas se muestran de mas reciente a mas antigua (ver .reverse() mas
+  // abajo), asi que la nota nueva queda arriba del todo: hay que llevar el
+  // scroll al INICIO (no al final) para que se vea sin tener que desplazarse.
   useEffect(() => {
     const box = document.querySelector<HTMLElement>('.notes-scroll');
-    if (box) box.scrollTop = box.scrollHeight;
+    if (box) box.scrollTop = 0;
   }, [notes.length, s.id]);
 
   return (

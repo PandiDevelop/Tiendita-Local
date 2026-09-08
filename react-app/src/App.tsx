@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useStore } from './store';
-import { APP_VERSION, DEFAULT_STORE_IMAGE, esc } from './lib/core';
-import { syncClientId } from './lib/sync';
+import { APP_VERSION, DEFAULT_STORE_IMAGE, canManageTeam, esc } from './lib/core';
 import { DialogHost, Image, Toast } from './ui';
 import { Dashboard } from './views/Dashboard';
 import { Catalog } from './views/Catalog';
@@ -18,7 +17,9 @@ export function App() {
   const { state, store, setTab, replace, modal, modalArg, setModal, toastMsg } = useStore();
   const s = store;
   const [menuOpen, setMenuOpen] = useState(false);
-  const owner = !s || !s.syncKey || !s.createdBy || s.createdBy === syncClientId();
+  // Dueño real o admin (permiso que el dueño le dio a un trabajador): ambos
+  // ven la pestaña de Empleados.
+  const owner = !s || canManageTeam(s);
 
   useEffect(() => {
     document.body.classList.toggle('menu-open', menuOpen);
