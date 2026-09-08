@@ -124,18 +124,21 @@ export function StoreModal({ editing, onClose }: { editing?: boolean; onClose: (
                   <div style={{ display: 'grid', gap: 6 }}>
                     {others.map((mi) => {
                       const mm = members[mi] as Member;
+                      const isTheOwner = mi === s.createdBy || (!!mm && mm.role === 'owner');
                       const isAdmin = !!mm && mm.role === 'admin';
                       return (
                         <div key={mi} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
-                          <span>{esc(mm && mm.name ? mm.name : 'Trabajador')}{isAdmin && <span className="tag" style={{ marginLeft: 6 }}>Admin</span>}</span>
-                          <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
-                            {isOwner && (
-                              <button className="button secondary" style={{ padding: '5px 9px', fontSize: 12 }} onClick={() => setRole(mi, isAdmin ? 'worker' : 'admin')}>
-                                {isAdmin ? 'Quitar admin' : 'Hacer admin'}
-                              </button>
-                            )}
-                            {(isOwner || !isAdmin) && <button className="icon-btn" title="Quitar de la tienda" onClick={() => removeMember(mi)}>×</button>}
-                          </div>
+                          <span>{esc(mm && mm.name ? mm.name : 'Trabajador')}{isTheOwner && <span className="tag" style={{ marginLeft: 6 }}>Dueño</span>}{isAdmin && <span className="tag" style={{ marginLeft: 6 }}>Admin</span>}</span>
+                          {!isTheOwner && (
+                            <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
+                              {isOwner && (
+                                <button className="button secondary" style={{ padding: '5px 9px', fontSize: 12 }} onClick={() => setRole(mi, isAdmin ? 'worker' : 'admin')}>
+                                  {isAdmin ? 'Quitar admin' : 'Hacer admin'}
+                                </button>
+                              )}
+                              {(isOwner || !isAdmin) && <button className="icon-btn" title="Quitar de la tienda" onClick={() => removeMember(mi)}>×</button>}
+                            </div>
+                          )}
                         </div>
                       );
                     })}

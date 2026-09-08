@@ -160,7 +160,7 @@ export function createSync(
     const s = getState().stores.find((x) => x.id === storeId);
     if (!s || !s.syncKey) return;
     const un = onSnapshot(doc(collection(DB, 'stores'), s.syncKey), (snap) => {
-      if (!snap || !snap.exists) return;
+      if (!snap || !snap.exists()) return;
       const d = snap.data();
       if (!d) return;
       if ((d.deleted as boolean)) {
@@ -346,6 +346,12 @@ export async function activateSync(storeId: string, pin: string, getState: () =>
         createdBy: syncClientId(), members, updatedBy: syncClientId(),
       }, { merge: true });
       mutate((d) => { const st = d.stores.find((x) => x.id === storeId); if (st) { st.localRole = 'owner'; st.syncKey = key; st.syncPin = pin; } });
+      // Conectar el listener YA, antes del aviso: si se espera a que el
+      // usuario cierre el mensaje (el await de abajo no continua hasta que
+      // toque "Aceptar"), este dispositivo se queda sordo a cambios remotos
+      // (incluido un borrado desde otro dispositivo) mientras el aviso siga
+      // en pantalla.
+      attach(storeId);
       await customAlert('Sincronización activada. Comparte el código con tu equipo.');
     } else {
       const r = snap.data();
@@ -367,9 +373,9 @@ export async function activateSync(storeId: string, pin: string, getState: () =>
         st.syncKey = key;
         st.syncPin = pin;
       });
+      attach(storeId);
       await customAlert(isOwner ? 'Tienda actualizada y sincronización confirmada.' : 'Vinculado a la tienda compartida.');
     }
-    attach(storeId);
   } catch (e) {
     console.warn(e);
     await customAlert('No se pudo sincronizar. Revisa tu conexión.');
@@ -378,7 +384,10 @@ export async function activateSync(storeId: string, pin: string, getState: () =>
 
 export async function removeMemberFn(storeId: string, memberId: string, getState: () => AppState, mutate: (fn: (d: AppState) => void) => void, toast: (m: string) => void) {
   const s = getState().stores.find((x) => x.id === storeId);
-  if (!s || !s.syncKey || !DB || memberId === syncClientId()) return;
+  // Nunca se puede quitar al dueño real (createdBy) del equipo: la tienda
+  // siempre debe tener un dueño. Ni un admin ni el propio dueño pueden
+  // hacerlo desde aqui (para borrar la tienda existe 'Borrar tienda').
+  if (!s || !s.syncKey || !DB || memberId === syncClientId() || memberId === s.createdBy) return;
   const members = Object.assign({}, s.members || {});
   delete members[memberId];
   mutate((d) => { const st = d.stores.find((x) => x.id === storeId); if (st) st.members = members; });
@@ -395,7 +404,9 @@ export async function removeMemberFn(storeId: string, memberId: string, getState
 // enreden entre ellos).
 export async function setMemberRoleFn(storeId: string, memberId: string, role: Role, getState: () => AppState, mutate: (fn: (d: AppState) => void) => void, toast: (m: string) => void) {
   const s = getState().stores.find((x) => x.id === storeId);
-  if (!s || !s.syncKey || !DB || memberId === syncClientId()) return;
+  // El rol del dueño real (createdBy) nunca cambia por aqui: siempre es
+  // 'owner'. Y solo el dueño real puede ascender/descender a los demas.
+  if (!s || !s.syncKey || !DB || memberId === syncClientId() || memberId === s.createdBy) return;
   if (s.createdBy !== syncClientId()) return;
   const cur = (s.members && s.members[memberId]) || { name: 'Trabajador', role: 'worker' as Role, joinedAt: Date.now() };
   const updated: Member = { ...cur, role };

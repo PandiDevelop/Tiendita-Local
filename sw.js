@@ -1,4 +1,4 @@
-const CACHE = 'mi-tiendita-1.1.8';
+const CACHE = 'mi-tiendita-1.1.9';
 self.addEventListener('install', () => self.skipWaiting());
 self.addEventListener('activate', event => event.waitUntil(Promise.all([self.clients.claim(), caches.keys().then(keys => Promise.all(keys.filter(key => key !== CACHE).map(key => caches.delete(key))))])));
 self.addEventListener('fetch', event => {
