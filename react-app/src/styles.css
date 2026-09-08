@@ -187,9 +187,17 @@ th,td{text-align:left;vertical-align:middle}
 .cat-group table th,.cat-group table td{vertical-align:middle}
 /* Handle de reorden de productos: pegado a la IZQUIERDA de la celda y con
    espacio hasta la linea morada que divide la informacion del producto. */
-.drag-cell{width:48px;min-width:48px;text-align:left;vertical-align:middle;padding:0 0 0 0}
-.drag-cell .drag-handle{margin:0}
+.drag-cell{width:48px;min-width:48px;text-align:center;vertical-align:middle;padding:0}
+.drag-cell .drag-handle{margin:0 auto}
 .inv-actions{text-align:center}
+/* Eventos: campo de nombre con los bordes redondeados. */
+.ev-card .ev-name{border-radius:12px}
+/* Detalles de venta: cuando aplica un paquete de promocion, las unidades se
+   agrupan bajo una linea "Paquete: X" con el total, y cada producto aparte. */
+.sale-detail-group{display:grid;gap:6px}
+.sale-detail-pack{display:flex;justify-content:space-between;align-items:baseline;gap:10px;margin:8px 0 2px;padding-top:9px;border-top:1px dashed #e8e2f2}
+.sale-detail-pack .sale-detail-title{font-size:12px;text-transform:uppercase;letter-spacing:.8px;font-weight:700;color:#a98dde;margin:0}
+.sale-detail-pack .sale-detail-cost{white-space:nowrap}
 .inv-actions .inv-stepper{justify-content:center;margin:0 auto}
 
 /* Caja de la categoria encima del nombre en las tarjetas de producto de

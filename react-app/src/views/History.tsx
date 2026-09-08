@@ -1,7 +1,7 @@
-import { Fragment, useState } from 'react';
+import { Fragment, ReactNode, useState } from 'react';
 import { useStore } from '../store';
-import { money, esc, total, shortDate, saleUnits, priceFor, formatDate } from '../lib/core';
-import type { Sale } from '../types';
+import { money, esc, total, shortDate, saleUnits, priceFor, formatDate, catLabel, findActivePromo } from '../lib/core';
+import type { Product, Sale, SaleItem } from '../types';
 
 export function History() {
   const { store } = useStore();
@@ -31,18 +31,51 @@ export function History() {
   sales.forEach((x) => { const d = x.date || ''; (groups[d] = groups[d] || []).push(x); });
   const dates = Object.keys(groups).sort((a, b) => b.localeCompare(a));
 
-  function details(x: Sale) {
-    return x.items.filter((i) => i.qty > 0).map((i) => {
-      const p = s.products.find((pp) => pp.id === i.productId);
-      const pr = p && p.promos.find((z) => z.id === i.promotionId);
-      const name = p ? p.name : 'Producto eliminado';
-      return (
-        <div className="sale-detail-line" key={i.productId + '|' + (i.promotionId || '')}>
-          <div className="sale-detail-name"><span>{esc(name)}{pr ? <span className="prod-sub">{esc(pr.label)}</span> : null}</span><b>× {i.qty}</b></div>
-          <b className="sale-detail-cost">{money(priceFor(i, s) * i.qty)}</b>
-        </div>
-      );
-    }    );
+  function details(x: Sale): ReactNode[] {
+    const cats = new Map<string, { name: string; p: Product | null; items: SaleItem[]; qty: number }>();
+    x.items.filter((i) => i.qty > 0).forEach((i) => {
+      const p = s.products.find((pp) => pp.id === i.productId) || null;
+      const name = p ? catLabel(p) : 'Sin categoría';
+      let g = cats.get(name);
+      if (!g) { g = { name, p, items: [], qty: 0 }; cats.set(name, g); }
+      g.items.push(i);
+      g.qty += i.qty;
+    });
+    const out: ReactNode[] = [];
+    cats.forEach((g) => {
+      const subtotal = g.items.reduce((n, i) => n + priceFor(i, s) * i.qty, 0);
+      const pr = g.p && findActivePromo(g.p, g.qty);
+      const pack = pr && pr.cond === 'qtyeq' ? pr : undefined;
+      if (pack) {
+        // Paquete de promocion: agrupa en una sola linea el total y aparte cada
+        // producto del paquete para leer la informacion mas clara.
+        out.push(
+          <div className="sale-detail-group" key={'p:' + g.name}>
+            <div className="sale-detail-pack"><span className="sale-detail-title">Paquete: {esc(pack.label)}</span><b className="sale-detail-cost">{money(subtotal)}</b></div>
+            {g.items.map((i, k) => {
+              const p = s.products.find((pp) => pp.id === i.productId);
+              return (
+                <div className="sale-detail-line" key={i.productId + ':' + k}>
+                  <div className="sale-detail-name"><span>{esc(p ? p.name : 'Producto eliminado')}</span><b>× {i.qty}</b></div>
+                </div>
+              );
+            })}
+          </div>
+        );
+      } else {
+        g.items.forEach((i, k) => {
+          const p = s.products.find((pp) => pp.id === i.productId);
+          const pr2 = p && p.promos.find((z) => z.id === i.promotionId);
+          out.push(
+            <div className="sale-detail-line" key={i.productId + ':' + (i.promotionId || '')}>
+              <div className="sale-detail-name"><span>{esc(p ? p.name : 'Producto eliminado')}{pr2 ? <span className="prod-sub">{esc(pr2.label)}</span> : null}</span><b>× {i.qty}</b></div>
+              <b className="sale-detail-cost">{money(priceFor(i, s) * i.qty)}</b>
+            </div>
+          );
+        });
+      }
+    });
+    return out;
   }
 
   return (

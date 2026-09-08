@@ -255,7 +255,7 @@ export function SaleRegistration({ onClose }: { onClose: () => void }) {
               </div>
             )}
             {ev && (
-              <div className="event-banner">Evento “{ev.name}” activo: −{ev.pct}% en toda la venta</div>
+              <div className="event-banner">Evento “{ev.name}” activo{ev.pct > 0 ? `: −${ev.pct}% en toda la venta` : ''}</div>
             )}
             <div id="sale-lines" className="sale-lines">{lines.map(lineRow)}</div>
             <div className="sale-total"><span>Total de la venta</span><b>{money(total)}</b></div>
