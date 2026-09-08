@@ -390,7 +390,13 @@ export function groupedByCategory(s: Store): CategoryGroup[] {
 // documento la primera vez que un dispositivo se conecta: se bajó un poco
 // el tamaño/calidad por defecto (sigue viéndose bien en las listas y
 // tarjetas donde se usa) para dejar más margen.
-export function compressImage(file: File, maxSize = 420, quality = 0.72): Promise<string> {
+// Fotos mas livianas por defecto (antes 420px/0.72 de calidad): cada foto de
+// producto viaja embebida dentro del documento principal de la tienda en
+// Firestore (ver la nota junto a storeDocRef en sync.ts), asi que catalogos
+// con muchas fotos podian acercarse al limite de ~1MB de un documento. Sigue
+// siendo una foto nitida para el tamaño en que se ve normalmente (y al darle
+// tab para verla en grande), solo que ocupa bastante menos espacio guardada.
+export function compressImage(file: File, maxSize = 320, quality = 0.62): Promise<string> {
   return new Promise((resolve) => {
     const reader = new FileReader();
     reader.onload = () => {

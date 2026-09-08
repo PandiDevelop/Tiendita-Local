@@ -8,14 +8,13 @@ vi.mock('firebase/firestore', () => ({
   initializeFirestore: () => ({}),
   collection: () => ({}),
   // El id pasa de largo para que las pruebas puedan saber a que documento
-  // (tienda o producto especifico) apuntaba cada escritura del batch.
+  // apuntaba cada setDoc (todo el catalogo vive en un unico documento por
+  // tienda, ver la nota junto a storeDocRef en sync.ts).
   doc: (_parent: unknown, id?: string) => ({ id }),
   onSnapshot: () => () => {},
   setDoc: vi.fn(() => Promise.resolve()),
   getDoc: vi.fn(),
-  getDocs: vi.fn(() => Promise.resolve({ forEach: () => {} })),
   deleteField: () => ({}),
-  writeBatch: vi.fn(),
 }));
 
 beforeEach(() => {
@@ -283,26 +282,22 @@ describe('categorias: precio y costo base, agrupado por categoria', () => {
 });
 
 describe('createSync push() incremental y con reintento', () => {
-  function mockBatches(commitImpl?: () => Promise<void>) {
-    const sets: { id?: string; data: Record<string, unknown> }[][] = [];
-    let current: { id?: string; data: Record<string, unknown> }[] = [];
-    const commit = vi.fn(() => {
-      const impl = commitImpl ? commitImpl() : Promise.resolve();
-      return impl.then(() => { sets.push(current); current = []; });
+  function mockSetDoc(impl?: () => Promise<void>) {
+    const calls: { id?: string; data: Record<string, unknown> }[] = [];
+    const setDocMock = vi.fn((ref: { id?: string }, data: Record<string, unknown>) => {
+      const run = impl ? impl() : Promise.resolve();
+      return run.then(() => { calls.push({ id: ref.id, data }); });
     });
-    const factory = vi.fn(() => ({
-      set: (ref: { id?: string }, data: Record<string, unknown>) => { current.push({ id: ref.id, data }); },
-      commit,
-    }));
-    return { factory, commit, batches: sets };
+    return { setDocMock, calls };
   }
 
   it('solo reenvia los productos que cambiaron desde el ultimo push exitoso', async () => {
     const { createSync } = await import('../lib/sync');
-    const { writeBatch } = await import('firebase/firestore');
-    const writeBatchMock = writeBatch as unknown as ReturnType<typeof vi.fn>;
-    const { factory, batches } = mockBatches();
-    writeBatchMock.mockImplementation(factory);
+    const { setDoc } = await import('firebase/firestore');
+    const setDocMock = setDoc as unknown as ReturnType<typeof vi.fn>;
+    setDocMock.mockClear();
+    const { setDocMock: impl, calls } = mockSetDoc();
+    setDocMock.mockImplementation(impl);
 
     const dev = device('A');
     dev.st.syncKey = 'clave-1';
@@ -311,30 +306,31 @@ describe('createSync push() incremental y con reintento', () => {
 
     const sync = createSync(() => dev.ref, () => {}, () => {});
     await sync.push(dev.st.id);
-    expect(batches.length).toBe(1);
-    const ids1 = batches[0].map((s) => s.id).filter((id) => id === pid1 || id === pid2);
-    expect(ids1.sort()).toEqual([pid1, pid2].sort());
+    expect(calls.length).toBe(1);
+    const products1 = calls[0].data.products as Record<string, Product> | undefined;
+    expect(Object.keys(products1 || {}).sort()).toEqual([pid1, pid2].sort());
 
     // Solo se edita el nombre de un producto: el siguiente push debe llevar
     // UNICAMENTE ese producto, no todo el catalogo de nuevo.
     dev.st.products.find((p) => p.id === pid1)!.name = 'Agua fría';
     await sync.push(dev.st.id);
-    expect(batches.length).toBe(2);
-    const ids2 = batches[1].map((s) => s.id).filter((id) => id === pid1 || id === pid2);
-    expect(ids2).toEqual([pid1]);
+    expect(calls.length).toBe(2);
+    const products2 = calls[1].data.products as Record<string, Product> | undefined;
+    expect(Object.keys(products2 || {})).toEqual([pid1]);
   });
 
   it('si el push falla no lo marca como enviado y reintenta solo', async () => {
     vi.useFakeTimers();
     const { createSync } = await import('../lib/sync');
-    const { writeBatch } = await import('firebase/firestore');
-    const writeBatchMock = writeBatch as unknown as ReturnType<typeof vi.fn>;
+    const { setDoc } = await import('firebase/firestore');
+    const setDocMock = setDoc as unknown as ReturnType<typeof vi.fn>;
+    setDocMock.mockClear();
     let attempt = 0;
-    const { factory, commit } = mockBatches(() => {
+    const { setDocMock: impl } = mockSetDoc(() => {
       attempt++;
       return attempt === 1 ? Promise.reject(new Error('sin conexión')) : Promise.resolve();
     });
-    writeBatchMock.mockImplementation(factory);
+    setDocMock.mockImplementation(impl);
 
     const dev = device('A');
     dev.st.syncKey = 'clave-2';
@@ -343,28 +339,29 @@ describe('createSync push() incremental y con reintento', () => {
     let failing = 0;
     const sync = createSync(() => dev.ref, () => {}, () => {}, () => { failing++; });
     await sync.push(dev.st.id);
-    expect(commit).toHaveBeenCalledTimes(1);
+    expect(setDocMock).toHaveBeenCalledTimes(1);
 
     // Sin ningun cambio local nuevo, el reintento automatico (4s) debe
     // volver a intentar el mismo push por su cuenta, y esta vez si guardarlo.
     await vi.advanceTimersByTimeAsync(4100);
-    expect(commit).toHaveBeenCalledTimes(2);
+    expect(setDocMock).toHaveBeenCalledTimes(2);
 
     vi.useRealTimers();
   });
 
-  it('las notas y el log de inventario van como objeto anidado (noteLog: {id: entry}) por documento principal, vía set+merge', async () => {
-    // Probado a mano contra Firestore real: batch.set(ref, {noteLog:{...}},
+  it('las notas y el log de inventario van como objeto anidado (noteLog: {id: entry}) dentro del documento principal, vía set+merge', async () => {
+    // Probado a mano contra Firestore real: setDoc(ref, {noteLog:{...}},
     // {merge:true}) SI fusiona el mapa noteLog por clave sin pisar lo que
-    // subio otro dispositivo, y batch.update() falla si el documento
-    // todavia no existe (p.ej. la primerisima vez que se activa la
-    // sincronizacion). Por eso el documento principal siempre va con
-    // batch.set(...,{merge:true}), nunca con batch.update().
+    // subio otro dispositivo, y updateDoc() falla si el documento todavia
+    // no existe (p.ej. la primerisima vez que se activa la sincronizacion).
+    // Por eso el documento principal siempre va con setDoc(...,{merge:true}),
+    // nunca con updateDoc().
     const { createSync } = await import('../lib/sync');
-    const { writeBatch } = await import('firebase/firestore');
-    const writeBatchMock = writeBatch as unknown as ReturnType<typeof vi.fn>;
-    const { factory, batches } = mockBatches();
-    writeBatchMock.mockImplementation(factory);
+    const { setDoc } = await import('firebase/firestore');
+    const setDocMock = setDoc as unknown as ReturnType<typeof vi.fn>;
+    setDocMock.mockClear();
+    const { setDocMock: impl, calls } = mockSetDoc();
+    setDocMock.mockImplementation(impl);
 
     const dev = device('A');
     dev.st.syncKey = 'clave-notas';
@@ -377,9 +374,8 @@ describe('createSync push() incremental y con reintento', () => {
     const sync = createSync(() => dev.ref, () => {}, () => {});
     await sync.push(dev.st.id);
 
-    const mainBatch = batches[0].filter((b) => b.id === 'clave-notas');
-    expect(mainBatch.length).toBe(1);
-    const data = mainBatch[0].data as { noteLog?: Record<string, unknown>; invLog?: Record<string, unknown> };
+    expect(calls.length).toBe(1);
+    const data = calls[0].data as { noteLog?: Record<string, unknown>; invLog?: Record<string, unknown> };
     // Ningun campo con un punto LITERAL en el nombre (ese era el bug viejo).
     expect(Object.keys(data).some((k) => k.includes('.'))).toBe(false);
     expect(Object.keys(data.noteLog || {}).length).toBe(2);
@@ -388,41 +384,62 @@ describe('createSync push() incremental y con reintento', () => {
 
   it('si llega un segundo push mientras el primero sigue en curso, se encola en vez de dispararse en paralelo', async () => {
     const { createSync } = await import('../lib/sync');
-    const { writeBatch } = await import('firebase/firestore');
-    const writeBatchMock = writeBatch as unknown as ReturnType<typeof vi.fn>;
+    const { setDoc } = await import('firebase/firestore');
+    const setDocMock = setDoc as unknown as ReturnType<typeof vi.fn>;
+    setDocMock.mockClear();
 
-    let resolveFirstCommit: (() => void) | null = null;
-    let commitCalls = 0;
-    writeBatchMock.mockImplementation(() => ({
-      set: () => {},
-      commit: () => {
-        commitCalls++;
-        if (commitCalls === 1) return new Promise<void>((resolve) => { resolveFirstCommit = resolve; });
-        return Promise.resolve();
-      },
-    }));
+    let resolveFirstSetDoc: (() => void) | null = null;
+    let setDocCalls = 0;
+    setDocMock.mockImplementation(() => {
+      setDocCalls++;
+      if (setDocCalls === 1) return new Promise<void>((resolve) => { resolveFirstSetDoc = resolve; });
+      return Promise.resolve();
+    });
 
     const dev = device('A');
     dev.st.syncKey = 'clave-3';
     addProduct(dev.st, 'Agua', 1000);
 
     const sync = createSync(() => dev.ref, () => {}, () => {});
-    // Arranca el primer push: corre en sincrono hasta su await batch.commit(),
+    // Arranca el primer push: corre en sincrono hasta su await setDoc(),
     // que se queda "colgado" a proposito para simular que sigue en curso.
     const p1 = sync.push(dev.st.id);
-    expect(commitCalls).toBe(1);
+    expect(setDocCalls).toBe(1);
 
     // Mientras el primero sigue en curso, cambia algo mas y se pide otro
-    // push: NO debe disparar un segundo commit en paralelo.
+    // push: NO debe disparar un segundo setDoc en paralelo.
     addProduct(dev.st, 'Pan', 2000);
     await sync.push(dev.st.id);
-    expect(commitCalls).toBe(1);
+    expect(setDocCalls).toBe(1);
 
     // Al terminar el primero, el que quedo encolado se dispara solo.
-    resolveFirstCommit!();
+    resolveFirstSetDoc!();
     await p1;
     await Promise.resolve();
     await Promise.resolve();
-    expect(commitCalls).toBe(2);
+    expect(setDocCalls).toBe(2);
+  });
+
+  it('si el catalogo (con fotos) ya casi llega al limite de tamaño de Firestore, avisa una sola vez y no lo manda', async () => {
+    const { createSync } = await import('../lib/sync');
+    const { setDoc } = await import('firebase/firestore');
+    const setDocMock = setDoc as unknown as ReturnType<typeof vi.fn>;
+    setDocMock.mockClear();
+    setDocMock.mockImplementation(() => Promise.resolve());
+
+    const dev = device('A');
+    dev.st.syncKey = 'clave-grande';
+    // Una sola "foto" enorme (string) alcanza para pasar el umbral de aviso.
+    const pid = addProduct(dev.st, 'Producto con foto grande', 1000);
+    dev.st.products.find((p) => p.id === pid)!.image = 'x'.repeat(900_000);
+
+    const warnings: { storeId: string; code?: string }[] = [];
+    const sync = createSync(() => dev.ref, () => {}, () => {}, (storeId, code) => warnings.push({ storeId, code }));
+    await sync.push(dev.st.id);
+    await sync.push(dev.st.id);
+
+    expect(setDocMock).not.toHaveBeenCalled();
+    expect(warnings.length).toBe(1);
+    expect(warnings[0].code).toBe('catalog-too-big');
   });
 });
