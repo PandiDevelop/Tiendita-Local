@@ -61,9 +61,20 @@ export function createSync(
   getState: () => AppState,
   applyRemote: (storeId: string, remote: Record<string, unknown>) => void,
   removeStore: (storeId: string, msg: string) => void,
+  onPushFailing?: (storeId: string) => void,
 ): SyncHandle {
   const subs = new Map<string, () => void>();
   const timers = new Map<string, ReturnType<typeof setTimeout>>();
+  const retryTimers = new Map<string, ReturnType<typeof setTimeout>>();
+  const failCount = new Map<string, number>();
+  // Ultimo contenido de cada producto que SI se confirmo guardado en la
+  // nube (por tienda). Antes cada push mandaba el catalogo COMPLETO (con
+  // cada imagen) sin importar que hubiera cambiado, asi que agregar una
+  // venta o renombrar un producto se sentia cada vez mas lento segun
+  // crecia el catalogo, y ademas aumentaba el riesgo de pasarse del limite
+  // de tamano de un documento de Firestore. Ahora solo se reenvian los
+  // productos que de verdad cambiaron desde el ultimo push exitoso.
+  const lastPushedProducts = new Map<string, Map<string, string>>();
   // Tope maximo de espera: si el usuario sigue editando sin parar (cada
   // cambio reinicia el debounce corto de abajo), esto fuerza un push cada
   // ~1s de todas formas, para que la sincronizacion no se sienta lenta
@@ -105,19 +116,34 @@ export function createSync(
   async function push(storeId: string) {
     const s = getState().stores.find((x) => x.id === storeId);
     if (!s || !s.syncKey || !syncReady() || !DB) return;
+    const t = retryTimers.get(storeId);
+    if (t) { clearTimeout(t); retryTimers.delete(storeId); }
     const f = fp(storeId);
     if (lastPush.get(storeId) === f) return;
-    lastPush.set(storeId, f);
-    const products: Record<string, Product> = {}, sales: Record<string, Sale> = {};
-    s.products.forEach((p) => (products[p.id] = p));
+
+    // Solo se incluyen los productos cuyo contenido cambio desde el ultimo
+    // push que SI se confirmo guardado (ver comentario junto a
+    // lastPushedProducts arriba). Si el dispositivo se acaba de conectar
+    // (no hay historial todavia) se manda el catalogo completo una vez,
+    // como antes.
+    const prevProd = lastPushedProducts.get(storeId) || new Map<string, string>();
+    const nextProd = new Map<string, string>();
+    const products: Record<string, Product> = {};
+    s.products.forEach((p) => {
+      const j = JSON.stringify(p);
+      nextProd.set(p.id, j);
+      if (prevProd.get(p.id) !== j) products[p.id] = p;
+    });
+
+    const sales: Record<string, Sale> = {};
     s.sales.forEach((x) => (sales[x.id] = x));
     const payload: Record<string, unknown> = {
-      products,
       sales,
       categories: s.categories || [],
       categoryPricing: s.categoryPricing || {},
       updatedBy: cid(),
     };
+    if (Object.keys(products).length) payload.products = products;
     if (typeof s.notes === 'string' && s.notes) payload.notes = s.notes;
     // OJO: setDoc(..., {merge:true}) NO interpreta claves con puntos como
     // field paths (eso solo aplica a updateDoc). Antes se escribia
@@ -136,7 +162,28 @@ export function createSync(
     if (!s.createdBy || s.createdBy === cid()) { payload.name = s.name; payload.image = s.image; }
     try {
       await setDoc(doc(collection(DB, 'stores'), s.syncKey), payload, { merge: true });
-    } catch (e) { console.warn('Push fallido:', e); }
+      // Antes se marcaba "ya lo mande" (lastPush) ANTES de saber si el
+      // guardado en la nube funciono. Si ese intento fallaba (sin señal,
+      // el documento crecio demasiado, lo que sea), quedaba registrado
+      // como si SI se hubiera sincronizado y nunca se volvia a intentar
+      // hasta que la persona hiciera otro cambio distinto: los cambios de
+      // ese momento (un producto nuevo, un nombre editado) se quedaban
+      // pegados en ese dispositivo para siempre sin avisar a nadie. Ahora
+      // solo se marca como enviado cuando la nube de verdad lo confirma.
+      lastPush.set(storeId, f);
+      lastPushedProducts.set(storeId, nextProd);
+      failCount.delete(storeId);
+    } catch (e) {
+      console.warn('Push fallido:', e);
+      const n = (failCount.get(storeId) || 0) + 1;
+      failCount.set(storeId, n);
+      if (n === 3 && onPushFailing) onPushFailing(storeId);
+      // Sin este reintento, un push fallido se queda esperando a que la
+      // persona vuelva a tocar algo distinto en esa tienda para que
+      // schedule() se vuelva a llamar: si nada mas cambia, esos datos
+      // jamas llegarian a la nube.
+      retryTimers.set(storeId, setTimeout(() => push(storeId), 4000));
+    }
   }
 
   function clearScheduled(storeId: string) {
@@ -194,6 +241,10 @@ export function createSync(
   function detach(storeId: string) {
     const un = subs.get(storeId);
     if (un) { un(); subs.delete(storeId); }
+    const rt = retryTimers.get(storeId);
+    if (rt) { clearTimeout(rt); retryTimers.delete(storeId); }
+    failCount.delete(storeId);
+    lastPushedProducts.delete(storeId);
   }
 
   // Firestore no deja fusionar paths de mapa (noteLog.<id>) cuando el campo es

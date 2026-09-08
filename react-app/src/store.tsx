@@ -67,6 +67,9 @@ export function AppProvider({ children }: { children: ReactNode }) {
         });
         toast(msg);
       },
+      () => {
+        toast('No se pudo sincronizar con la nube. Revisa tu conexión.');
+      },
     );
   }
 

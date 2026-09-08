@@ -384,8 +384,13 @@ export function groupedByCategory(s: Store): CategoryGroup[] {
 }
 
 // Redimensiona y comprime una foto del dispositivo para que quepa en
-// localStorage y en el documento de Firestore (límite ~1 MiB).
-export function compressImage(file: File, maxSize = 480, quality = 0.82): Promise<string> {
+// localStorage y en el documento de Firestore (límite ~1 MiB). Los
+// productos ahora solo se resuben a la nube cuando cambian (ver push() en
+// sync.ts), pero un catálogo grande igual puede acercarse al límite del
+// documento la primera vez que un dispositivo se conecta: se bajó un poco
+// el tamaño/calidad por defecto (sigue viéndose bien en las listas y
+// tarjetas donde se usa) para dejar más margen.
+export function compressImage(file: File, maxSize = 420, quality = 0.72): Promise<string> {
   return new Promise((resolve) => {
     const reader = new FileReader();
     reader.onload = () => {

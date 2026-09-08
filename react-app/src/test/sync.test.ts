@@ -1,7 +1,18 @@
-import { describe, it, expect, beforeEach } from 'vitest';
+import { describe, it, expect, beforeEach, vi } from 'vitest';
 import type { AppState, Product, Store } from '../types';
 import { makeDraft, normalizeStore, addNote, adoptInvLog, sortByOrder, uid, costFor, priceFor, total, costTotal, profitTotal, setCategoryPricing, groupedByCategory } from '../lib/core';
 import { applyRemote } from '../lib/sync';
+
+vi.mock('firebase/app', () => ({ initializeApp: () => ({}) }));
+vi.mock('firebase/firestore', () => ({
+  initializeFirestore: () => ({}),
+  collection: () => ({}),
+  doc: () => ({}),
+  onSnapshot: () => () => {},
+  setDoc: vi.fn(() => Promise.resolve()),
+  getDoc: vi.fn(),
+  deleteField: () => ({}),
+}));
 
 beforeEach(() => {
   const mem = new Map<string, string>();
@@ -264,5 +275,60 @@ describe('categorias: precio y costo base, agrupado por categoria', () => {
     const groups = groupedByCategory(s);
     expect(groups.map((g) => g.name)).toEqual(['Bebidas', 'Sin categoría']);
     expect(groups[0].list.map((p) => p.id)).toEqual([p1]);
+  });
+});
+
+describe('createSync push() incremental y con reintento', () => {
+  it('solo reenvia los productos que cambiaron desde el ultimo push exitoso', async () => {
+    const { createSync } = await import('../lib/sync');
+    const { setDoc } = await import('firebase/firestore');
+    const setDocMock = setDoc as unknown as ReturnType<typeof vi.fn>;
+    setDocMock.mockClear();
+    setDocMock.mockImplementation(() => Promise.resolve());
+
+    const dev = device('A');
+    dev.st.syncKey = 'clave-1';
+    const pid1 = addProduct(dev.st, 'Agua', 1000);
+    const pid2 = addProduct(dev.st, 'Pan', 2000);
+
+    const sync = createSync(() => dev.ref, () => {}, () => {});
+    await sync.push(dev.st.id);
+    expect(setDocMock).toHaveBeenCalledTimes(1);
+    const payload1 = setDocMock.mock.calls[0][1] as { products: Record<string, Product> };
+    expect(Object.keys(payload1.products).sort()).toEqual([pid1, pid2].sort());
+
+    // Solo se edita el nombre de un producto: el siguiente push debe llevar
+    // UNICAMENTE ese producto, no todo el catalogo de nuevo.
+    dev.st.products.find((p) => p.id === pid1)!.name = 'Agua fría';
+    await sync.push(dev.st.id);
+    expect(setDocMock).toHaveBeenCalledTimes(2);
+    const payload2 = setDocMock.mock.calls[1][1] as { products?: Record<string, Product> };
+    expect(Object.keys(payload2.products || {})).toEqual([pid1]);
+  });
+
+  it('si el push falla no lo marca como enviado y reintenta solo', async () => {
+    vi.useFakeTimers();
+    const { createSync } = await import('../lib/sync');
+    const { setDoc } = await import('firebase/firestore');
+    const setDocMock = setDoc as unknown as ReturnType<typeof vi.fn>;
+    setDocMock.mockClear();
+    setDocMock.mockImplementationOnce(() => Promise.reject(new Error('sin conexión')));
+    setDocMock.mockImplementation(() => Promise.resolve());
+
+    const dev = device('A');
+    dev.st.syncKey = 'clave-2';
+    addProduct(dev.st, 'Agua', 1000);
+
+    let failing = 0;
+    const sync = createSync(() => dev.ref, () => {}, () => {}, () => { failing++; });
+    await sync.push(dev.st.id);
+    expect(setDocMock).toHaveBeenCalledTimes(1);
+
+    // Sin ningun cambio local nuevo, el reintento automatico (4s) debe
+    // volver a intentar el mismo push por su cuenta, y esta vez si guardarlo.
+    await vi.advanceTimersByTimeAsync(4100);
+    expect(setDocMock).toHaveBeenCalledTimes(2);
+
+    vi.useRealTimers();
   });
 });

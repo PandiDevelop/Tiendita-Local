@@ -46,10 +46,11 @@ export function SaleRegistration({ onClose }: { onClose: () => void }) {
     const next = [...lines, { pid: p.id, price: p.price, cost: p.cost ?? 0, qty: 0 }];
     setLines(next);
     persist({ lines: next }, false);
-    requestAnimationFrame(() => {
-      const inp = document.querySelector('#sale-lines .sale-builder-line:last-child .qty-input') as HTMLInputElement | null;
-      if (inp) inp.focus();
-    });
+    // Antes esto enfocaba a la fuerza el input de cantidad recien
+    // agregado, lo que en celular abre el teclado solo sin que la persona
+    // haya tocado nada. Owen ya habia pedido que nada abra el teclado
+    // automaticamente: se deja la linea agregada sin enfocar, el usuario
+    // toca el campo cuando quiera escribir la cantidad.
   }
 
   function setLine(n: number, patch: Partial<Line>) {
