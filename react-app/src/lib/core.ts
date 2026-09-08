@@ -31,8 +31,15 @@ export function money(n: number | string | null | undefined): string {
   return new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', maximumFractionDigits: 0 }).format(Number.isFinite(num) ? num : 0);
 }
 
+// Antes esta funcion reemplazaba &, <, >, comillas y apostrofes por sus
+// entidades HTML (&amp; &lt; etc). Eso tenia sentido solo si el resultado se
+// fuera a insertar como HTML crudo (innerHTML), pero en toda la app se usa
+// dentro de JSX como texto normal ({esc(valor)}), y React YA escapa el texto
+// de forma segura por su cuenta. El resultado era doble escape: un producto
+// llamado Pan & Queso o con un apostrofe se veia literalmente como
+// "Pan &amp; Queso" en pantalla. Ahora solo normaliza a string.
 export function esc(v: string | number | null | undefined): string {
-  return String(v ?? '').replace(/[&<>'"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[c] as string));
+  return String(v ?? '');
 }
 
 export function formatDate(d: string | null | undefined): string {
