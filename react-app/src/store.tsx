@@ -75,6 +75,23 @@ export function AppProvider({ children }: { children: ReactNode }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  // Los celulares suspenden la pestaña/app en segundo plano (y a veces
+  // cortan la conexion en ese rato): el listener de Firestore deberia
+  // reconectar solo, pero en la practica eso a veces tarda o se queda a
+  // medias, y se siente como que "no llegan" los cambios de otros
+  // dispositivos hasta que uno toca algo. Al volver a primer plano se
+  // vuelve a suscribir cada tienda sincronizada: fuerza una lectura fresca
+  // y garantiza que el oido en tiempo real siga vivo.
+  useEffect(() => {
+    function onVisible() {
+      if (document.visibilityState !== 'visible') return;
+      stateRef.current.stores.forEach((s) => { if (s.syncKey) sync.current!.attach(s.id); });
+    }
+    document.addEventListener('visibilitychange', onVisible);
+    return () => document.removeEventListener('visibilitychange', onVisible);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   useEffect(() => {
     state.stores.forEach((s) => { if (s.syncKey) sync.current!.schedule(s.id); });
   }, [state]);

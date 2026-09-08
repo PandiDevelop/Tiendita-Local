@@ -1,5 +1,5 @@
 import { initializeApp, FirebaseApp } from 'firebase/app';
-import { getFirestore, Firestore, collection, doc, onSnapshot, setDoc, getDoc, deleteField } from 'firebase/firestore';
+import { initializeFirestore, Firestore, collection, doc, onSnapshot, setDoc, getDoc, deleteField } from 'firebase/firestore';
 import type { AppState, Member, Product, Role, Sale, Store } from '../types';
 import { toProductsArr, toSalesArr, toInvLogArr, toNoteLogArr, mergeItems, mergeInvLog, mergeNoteLog, syncKeyOf, syncClientId, syncName, normalizeStore, DEFAULT_STORE_IMAGE, uid } from './core';
 import { customAlert, customConfirm } from './dialog';
@@ -34,7 +34,15 @@ export function syncReady(): boolean {
   if (!FIREBASE_CONFIG?.projectId) return false;
   try {
     if (!app) app = initializeApp(FIREBASE_CONFIG);
-    DB = getFirestore(app);
+    // Antes: getFirestore(app) (deja que el SDK detecte el transporte). En
+    // redes moviles/datos con proxys raros, esa deteccion a veces se queda
+    // en un modo lento o se traba, y los cambios en tiempo real tardan
+    // mucho mas de lo normal en llegar. experimentalAutoDetectLongPolling
+    // hace que el SDK pruebe long-polling automaticamente si detecta que
+    // el streaming normal no esta funcionando bien, sin que el usuario
+    // note nada: es la configuracion recomendada por Firebase para apps
+    // que se usan mucho desde el celular.
+    DB = initializeFirestore(app, { experimentalAutoDetectLongPolling: true });
     return true;
   } catch (e) {
     console.warn('Firebase no disponible:', e);
@@ -169,7 +177,17 @@ export function createSync(
       }
       if (d.updatedBy !== cid()) applyRemote(storeId, d);
       if (Array.isArray(d.noteLog) || Array.isArray(d.invLog)) repairDoc(storeId, d);
-    }, (e) => console.warn('Suscripción:', e));
+    }, (e) => {
+      // Cuando el listener de Firestore falla (un corte de red, el celular
+      // se quedo sin señal un rato, etc.) el SDK NO lo reconecta solo: una
+      // vez que este callback de error se dispara, ese "oido" queda muerto
+      // para siempre hasta que alguien lo vuelva a suscribir. Antes eso
+      // significaba quedarse sin tiempo real hasta recargar la pagina a
+      // mano. Ahora se reintenta solo despues de un momento.
+      console.warn('Suscripción:', e);
+      subs.delete(storeId);
+      setTimeout(() => attach(storeId), 3000);
+    });
     subs.set(storeId, un);
   }
 
