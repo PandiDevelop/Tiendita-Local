@@ -69,8 +69,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
       },
       (_storeId, code) => {
         toast(
-          code === 'catalog-too-big'
-            ? 'El catálogo (con fotos) ya casi llega al límite de tamaño que permite la nube: los últimos cambios no se guardaron. Usa fotos más livianas o borra productos que ya no vendas.'
+          code === 'invalid-argument'
+            ? 'Uno de los productos (con su foto) supera el límite de tamaño que permite la nube: ese cambio no se guardó en este intento. Usa una foto más liviana para ese producto.'
             : code === 'permission-denied'
             ? 'La nube rechazó el guardado (permisos de Firestore). Avisa a quien administra la app.'
             : 'No se pudo sincronizar con la nube. Revisa tu conexión.'

@@ -51,12 +51,16 @@ service cloud.firestore {
   match /databases/{database}/documents {
     match /stores/{storeKey} {
       allow read, write: if true;
+      match /products/{productId} {
+        allow read, write: if true;
+      }
     }
   }
 }
 ```
 
 > ⚠️ Estas reglas son abiertas a propósito (el PIN actúa como llave). Cualquiera que consiga el código puede leer/escribir esa tienda, así que usa códigos privados entre tu equipo. Para un control real por usuario se puede añadir autenticación más adelante.
+> Importante: las reglas del subpath `/products/{productId}` son necesarias para que cada producto viva en su propio documento (ver modelo de datos más abajo). Sin esta regla, la sincronización falla con error de permisos.
 
 ### Cómo se usa
 
@@ -71,7 +75,7 @@ service cloud.firestore {
 - En el modal de edición también puedes **Borrar la tienda**. Si estaba compartida, se borra de tu dispositivo y se avisa a todos los que tienen el código: los que estén en línea lo aplican al instante y los que estén desconectados, apenas vuelvan a conectarse. Advertencia: el código queda marcado como eliminado (no se puede reutilizar tal cual; para reusarlo, borra el documento correspondiente en la consola de Firebase).
 - Cada día de ventas guarda **quién lo registró**: en la pestaña **Ventas del día** aparece "Registrando: [nombre]" y en **Historial** se ve una etiqueta con el nombre junto a la fecha. El nombre viaja con la tienda compartida, así el dueño ve quién registró aunque sea otro trabajador el que anota.
 
-> Límites prácticos: cada tienda vive en un documento de Firestore, adecuado para catálogos y ventas de una tienda pequeña. Si necesitas muchos miles de registros, el modelo se puede migrar a subcolecciones.
+> Límites prácticos: los productos se guardan cada uno en su propio documento dentro de la subcolección `stores/{codigo}/products`, de modo que el límite de ~1 MiB de Firestore aplica por producto (no por catálogo completo). El documento principal solo contiene ventas, categorías, notas, inventario y datos de miembros, que ocupan muy poco espacio.
 > Nota: la expulsión de un trabajador es una medida práctica; si alguien conoce el código, puede volver a vincularse. Para un control estricto por usuario haría falta autenticación (futuro).
 
 ### Inventario (opcional)

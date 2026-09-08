@@ -7,13 +7,13 @@ vi.mock('firebase/app', () => ({ initializeApp: () => ({}) }));
 vi.mock('firebase/firestore', () => ({
   initializeFirestore: () => ({}),
   collection: () => ({}),
-  // El id pasa de largo para que las pruebas puedan saber a que documento
-  // apuntaba cada setDoc (todo el catalogo vive en un unico documento por
-  // tienda, ver la nota junto a storeDocRef en sync.ts).
   doc: (_parent: unknown, id?: string) => ({ id }),
+  query: (q: unknown) => q,
   onSnapshot: () => () => {},
   setDoc: vi.fn(() => Promise.resolve()),
   getDoc: vi.fn(),
+  getDocs: vi.fn(() => Promise.resolve({ forEach: () => {} })),
+  deleteDoc: vi.fn(() => Promise.resolve()),
   deleteField: () => ({}),
 }));
 
@@ -306,17 +306,19 @@ describe('createSync push() incremental y con reintento', () => {
 
     const sync = createSync(() => dev.ref, () => {}, () => {});
     await sync.push(dev.st.id);
-    expect(calls.length).toBe(1);
-    const products1 = calls[0].data.products as Record<string, Product> | undefined;
-    expect(Object.keys(products1 || {}).sort()).toEqual([pid1, pid2].sort());
+    // 2 documentos de producto + 1 documento principal = 3 llamadas
+    const productCalls1 = calls.filter((c) => !('updatedBy' in c.data));
+    expect(productCalls1.map((c) => c.id).sort()).toEqual([pid1, pid2].sort());
 
-    // Solo se edita el nombre de un producto: el siguiente push debe llevar
-    // UNICAMENTE ese producto, no todo el catalogo de nuevo.
+    // Solo se edita el nombre de un producto: el siguiente push debe reescribir
+    // UNICAMENTE ese documento de producto, no todo el catalogo de nuevo.
     dev.st.products.find((p) => p.id === pid1)!.name = 'Agua fría';
     await sync.push(dev.st.id);
-    expect(calls.length).toBe(2);
-    const products2 = calls[1].data.products as Record<string, Product> | undefined;
-    expect(Object.keys(products2 || {})).toEqual([pid1]);
+    const productCalls2 = calls.filter((c) => !('updatedBy' in c.data));
+    // Las mismas 2 del primer push + 1 del segundo push = 3
+    expect(productCalls2.length).toBe(3);
+    // El documento reescrito es el de pid1
+    expect(productCalls2[2].id).toBe(pid1);
   });
 
   it('si el push falla no lo marca como enviado y reintenta solo', async () => {
@@ -343,8 +345,9 @@ describe('createSync push() incremental y con reintento', () => {
 
     // Sin ningun cambio local nuevo, el reintento automatico (4s) debe
     // volver a intentar el mismo push por su cuenta, y esta vez si guardarlo.
+    const callsBefore = setDocMock.mock.calls.length;
     await vi.advanceTimersByTimeAsync(4100);
-    expect(setDocMock).toHaveBeenCalledTimes(2);
+    expect(setDocMock.mock.calls.length).toBeGreaterThan(callsBefore);
 
     vi.useRealTimers();
   });
@@ -374,8 +377,10 @@ describe('createSync push() incremental y con reintento', () => {
     const sync = createSync(() => dev.ref, () => {}, () => {});
     await sync.push(dev.st.id);
 
-    expect(calls.length).toBe(1);
-    const data = calls[0].data as { noteLog?: Record<string, unknown>; invLog?: Record<string, unknown> };
+    expect(calls.length).toBe(2);
+    const mainCall = calls.find((c) => 'updatedBy' in c.data);
+    expect(mainCall).toBeDefined();
+    const data = mainCall!.data as { noteLog?: Record<string, unknown>; invLog?: Record<string, unknown> };
     // Ningun campo con un punto LITERAL en el nombre (ese era el bug viejo).
     expect(Object.keys(data).some((k) => k.includes('.'))).toBe(false);
     expect(Object.keys(data.noteLog || {}).length).toBe(2);
@@ -401,8 +406,8 @@ describe('createSync push() incremental y con reintento', () => {
     addProduct(dev.st, 'Agua', 1000);
 
     const sync = createSync(() => dev.ref, () => {}, () => {});
-    // Arranca el primer push: corre en sincrono hasta su await setDoc(),
-    // que se queda "colgado" a proposito para simular que sigue en curso.
+    // Arranca el primer push: el primer setDoc (producto) se queda "colgado"
+    // a proposito para simular que sigue en curso.
     const p1 = sync.push(dev.st.id);
     expect(setDocCalls).toBe(1);
 
@@ -417,29 +422,36 @@ describe('createSync push() incremental y con reintento', () => {
     await p1;
     await Promise.resolve();
     await Promise.resolve();
-    expect(setDocCalls).toBe(2);
+    // 1 (producto colgado) + 1 (doc principal, push 1) + 1 (producto, push 2) + 1 (doc principal, push 2) = 4
+    expect(setDocCalls).toBe(4);
   });
 
-  it('si el catalogo (con fotos) ya casi llega al limite de tamaño de Firestore, avisa una sola vez y no lo manda', async () => {
+  it('los productos se guardan como documentos individuales (subcoleccion), no embebidos en el doc principal', async () => {
     const { createSync } = await import('../lib/sync');
     const { setDoc } = await import('firebase/firestore');
     const setDocMock = setDoc as unknown as ReturnType<typeof vi.fn>;
     setDocMock.mockClear();
-    setDocMock.mockImplementation(() => Promise.resolve());
+    const { setDocMock: impl, calls } = mockSetDoc();
+    setDocMock.mockImplementation(impl);
 
     const dev = device('A');
     dev.st.syncKey = 'clave-grande';
-    // Una sola "foto" enorme (string) alcanza para pasar el umbral de aviso.
-    const pid = addProduct(dev.st, 'Producto con foto grande', 1000);
-    dev.st.products.find((p) => p.id === pid)!.image = 'x'.repeat(900_000);
+    addProduct(dev.st, 'Agua', 1000);
+    addProduct(dev.st, 'Pan', 2000);
 
-    const warnings: { storeId: string; code?: string }[] = [];
-    const sync = createSync(() => dev.ref, () => {}, () => {}, (storeId, code) => warnings.push({ storeId, code }));
-    await sync.push(dev.st.id);
+    const sync = createSync(() => dev.ref, () => {}, () => {});
     await sync.push(dev.st.id);
 
-    expect(setDocMock).not.toHaveBeenCalled();
-    expect(warnings.length).toBe(1);
-    expect(warnings[0].code).toBe('catalog-too-big');
+    // 2 documentos de producto + 1 documento principal = 3 llamadas
+    expect(calls.length).toBe(3);
+    // Los documentos de producto NO tienen updatedBy
+    const productCalls = calls.filter((c) => !('updatedBy' in c.data));
+    expect(productCalls.length).toBe(2);
+    expect(productCalls.every((c) => c.data && typeof c.data.name === 'string' && 'price' in c.data)).toBe(true);
+    // El documento principal SI tiene updatedBy
+    const mainCall = calls.find((c) => 'updatedBy' in c.data);
+    expect(mainCall).toBeDefined();
+    // El documento principal NO tiene products embebidos
+    expect(mainCall!.data.products).toBeUndefined();
   });
 });

@@ -1,5 +1,5 @@
 import { initializeApp, FirebaseApp } from 'firebase/app';
-import { initializeFirestore, Firestore, collection, doc, onSnapshot, setDoc, getDoc, deleteField } from 'firebase/firestore';
+import { initializeFirestore, Firestore, collection, doc, query, onSnapshot, setDoc, getDoc, getDocs, deleteDoc, deleteField } from 'firebase/firestore';
 import type { AppState, Member, Product, Role, Sale, Store } from '../types';
 import { toProductsArr, toSalesArr, toInvLogArr, toNoteLogArr, mergeItems, mergeInvLog, mergeNoteLog, syncKeyOf, syncClientId, syncName, normalizeStore, DEFAULT_STORE_IMAGE, uid } from './core';
 import { customAlert, customConfirm } from './dialog';
@@ -55,24 +55,30 @@ export function syncReady(): boolean {
 // que el limite de ~1MB de un documento de Firestore no dependiera de
 // cuantos productos tuviera el catalogo. Se revirtio: las reglas de
 // seguridad de Firestore de este proyecto (configuradas aparte, en la
-// consola de Firebase, no en este repo) solo dan permiso sobre el
+// consola de Firebase, no en este repo) solo daban permiso sobre el
 // documento "stores/{codigo}", no sobre esa subcoleccion nueva, y nadie
 // del equipo tenia acceso a la consola para agregar el permiso que hacia
-// falta. Volvemos a guardar todo en el documento principal (que SI tiene
-// permiso), y en su lugar se ataca el tamaño desde otro angulo: fotos mas
-// livianas por defecto (ver compressImage en core.ts) y un aviso temprano
-// y claro si un catalogo se acerca al limite, en vez de reintentos
-// silenciosos para siempre. Si en el futuro alguien consigue acceso a la
-// consola de Firebase, la subcoleccion sigue siendo la mejor solucion de
-// fondo (revisar el historial de git).
+// falta. Ese acceso YA existe, asi que volvemos al modelo de subcoleccion:
+// cada producto vive en su propio documento bajo "stores/{codigo}/products",
+// de modo que el limite de ~1 MiB de Firestore aplica por producto (no por
+// catalogo) y un catalogo con muchas fotos ya no bloquea la sincronizacion.
+// IMPORTANTE: recordar actualizar las reglas en la consola de Firebase
+// (match /stores/{storeKey}/products/{productId}) - ver el README.
 function storeDocRef(key: string) {
   return doc(collection(DB!, 'stores'), key);
 }
-// Un documento de Firestore no puede pasar de ~1 MiB. Se avisa con
-// bastante margen (no justo en el limite) porque este calculo con
-// JSON.stringify es solo un estimado: la codificacion real de Firestore no
-// es byte-a-byte identica.
-const CATALOG_SIZE_WARN_BYTES = 850_000;
+// Coleccion de productos de una tienda: un documento por producto.
+function productsColRef(key: string) {
+  return collection(storeDocRef(key), 'products');
+}
+function productDocRef(key: string, productId: string) {
+  return doc(productsColRef(key), productId);
+}
+// Un documento de Firestore no puede pasar de ~1 MiB. Como los productos ya
+// no viven en el documento principal, el catalogo ya no esta limitado por
+// ese tope; el tamaño del documento principal ahora es casi constante.
+// IMPORTANTE: si alguien agrega mas adelante datos pesados al propio
+// documento principal, recordar que el limite de Firestore es ~1 MiB.
 
 export interface SyncHandle {
   attach: (storeId: string) => void;
@@ -99,17 +105,12 @@ export function createSync(
   // termine el actual, en vez de salir al tiempo.
   const inFlight = new Set<string>();
   const pendingAgain = new Set<string>();
-  // Tiendas para las que ya se aviso "tu catalogo esta muy grande" en esta
-  // sesion, para no repetir el aviso en cada push mientras siga igual de
-  // grande. Se limpia sola si el catalogo vuelve a bajar del limite.
-  const catalogTooBigWarned = new Set<string>();
   // Ultimo contenido de cada producto que SI se confirmo guardado en la
-  // nube (por tienda). Antes cada push mandaba el catalogo COMPLETO (con
-  // cada imagen) sin importar que hubiera cambiado, asi que agregar una
-  // venta o renombrar un producto se sentia cada vez mas lento segun
-  // crecia el catalogo, y ademas aumentaba el riesgo de pasarse del limite
-  // de tamano de un documento de Firestore. Ahora solo se reenvian los
-  // productos que de verdad cambiaron desde el ultimo push exitoso.
+  // nube (por tienda). Cada producto vive en su propio documento de la
+  // subcoleccion, pero igual solo se reescribe el que de verdad cambio desde
+  // el ultimo push exitoso, para no gastar lecturas/escrituras de mas y para
+  // no pisar con un JSON mas grande una edicion que otro dispositivo haya
+  // hecho mientras tanto.
   const lastPushedProducts = new Map<string, Map<string, string>>();
   // Tope maximo de espera: si el usuario sigue editando sin parar (cada
   // cambio reinicia el debounce corto de abajo), esto fuerza un push cada
@@ -164,34 +165,33 @@ export function createSync(
 
     inFlight.add(storeId);
     try {
-      // Aviso temprano si el catalogo completo (no solo lo que cambio en
-      // este push) ya se acerca al limite de tamaño de un documento de
-      // Firestore: mejor decir claramente "tu catalogo esta muy grande"
-      // que quedarse reintentando en silencio para siempre (lo que se
-      // sentia como "la sincronizacion no funciona" sin ninguna pista).
-      const catalogBytes = JSON.stringify(s.products).length;
-      if (catalogBytes > CATALOG_SIZE_WARN_BYTES) {
-        if (!catalogTooBigWarned.has(storeId)) {
-          catalogTooBigWarned.add(storeId);
-          if (onPushFailing) onPushFailing(storeId, 'catalog-too-big');
-        }
-        return;
-      }
-      catalogTooBigWarned.delete(storeId);
-
-      // Solo se incluyen los productos cuyo contenido cambio desde el
-      // ultimo push que SI se confirmo guardado (ver comentario junto a
-      // lastPushedProducts arriba). Si el dispositivo se acaba de conectar
-      // (no hay historial todavia) se manda el catalogo completo una vez,
-      // como antes.
+      // Los productos ahora viven cada uno en su propio documento de la
+      // subcoleccion "products" (ver la nota junto a productDocRef), asi
+      // que el catalogo completo ya no esta atado al limite de ~1 MiB del
+      // documento principal. Aqui solo se reenvian los productos que de
+      // verdad cambiaron desde el ultimo push que SI se confirmo guardado
+      // (ver lastPushedProducts arriba), y se borran en la nube los que se
+      // eliminaron localmente.
       const prevProd = lastPushedProducts.get(storeId) || new Map<string, string>();
       const nextProd = new Map<string, string>();
-      const changedProducts: Record<string, Product> = {};
-      s.products.forEach((p) => {
+      const seenNow = new Set<string>();
+      for (const p of s.products) {
         const j = JSON.stringify(p);
         nextProd.set(p.id, j);
-        if (prevProd.get(p.id) !== j) changedProducts[p.id] = p;
-      });
+        seenNow.add(p.id);
+        if (prevProd.get(p.id) !== j) {
+          // setDoc con merge escribe/actualiza el documento del producto.
+          // El push falla de a un producto a la vez: si un catalogo tiene un
+          // solo producto enorme que Firestore rechaza, solo ese falla y el
+          // aviso le dice al usuario cual es, mientras el resto se guarda.
+          await setDoc(productDocRef(s.syncKey!, p.id), JSON.parse(JSON.stringify(p)), { merge: true });
+        }
+      }
+      // Productos que existian en la nube (estaban en prevProd) y ya no
+      // estan en el catalogo local: se borran de la subcoleccion.
+      for (const pid of prevProd.keys()) {
+        if (!seenNow.has(pid)) await deleteDoc(productDocRef(s.syncKey!, pid));
+      }
 
       const sales: Record<string, Sale> = {};
       s.sales.forEach((x) => (sales[x.id] = x));
@@ -201,7 +201,6 @@ export function createSync(
         categoryPricing: s.categoryPricing || {},
         updatedBy: cid(),
       };
-      if (Object.keys(changedProducts).length) main.products = changedProducts;
       if (typeof s.notes === 'string' && s.notes) main.notes = s.notes;
       // OJO: setDoc(..., {merge:true}) NO interpreta claves con puntos como
       // field paths (eso solo aplica a updateDoc). Probado a mano contra la
@@ -235,15 +234,12 @@ export function createSync(
       failCount.set(storeId, n);
       // 'permission-denied' significa que las reglas de seguridad de
       // Firestore no dejan escribir ahi (no es un problema de red del
-      // dispositivo). Un rechazo por tamaño normalmente llega como
-      // 'invalid-argument' con "size"/"byte"/"maximum" en el mensaje: se
-      // trata igual que el aviso preventivo de arriba. Cualquiera de los
-      // dos casos se avisa especificamente en vez del generico "revisa tu
-      // conexión", para no perder tiempo de diagnostico.
+      // dispositivo). Un rechazo por tamaño de un producto individual llega
+      // como 'invalid-argument' con "size"/"byte"/"maximum" en el mensaje.
+      // Cualquiera de los dos se avisa especificamente en vez del generico
+      // "revisa tu conexión", para no perder tiempo de diagnostico.
       const code = e && typeof e === 'object' && 'code' in e ? String((e as { code?: unknown }).code) : undefined;
-      const msg = e instanceof Error ? e.message : String(e);
-      const tooBig = code === 'invalid-argument' && /size|byte|maximum/i.test(msg);
-      if (n === 3 && onPushFailing) onPushFailing(storeId, tooBig ? 'catalog-too-big' : code);
+      if (n === 3 && onPushFailing) onPushFailing(storeId, code);
       // Sin este reintento, un push fallido se queda esperando a que la
       // persona vuelva a tocar algo distinto en esa tienda para que
       // schedule() se vuelva a llamar: si nada mas cambia, esos datos
@@ -283,7 +279,11 @@ export function createSync(
     if (prev) { prev(); subs.delete(storeId); }
     const s = getState().stores.find((x) => x.id === storeId);
     if (!s || !s.syncKey) return;
-    const un = onSnapshot(storeDocRef(s.syncKey), (snap) => {
+    const unsubs: (() => void)[] = [];
+    // Listener del documento principal: la meta de la tienda (nombre, foto,
+    // ventas, categorias, notas, inventario, miembros, ...). Los productos
+    // ya NO llegan por aqui (viven en la subcoleccion de abajo).
+    const unMain = onSnapshot(storeDocRef(s.syncKey), (snap) => {
       if (!snap || !snap.exists()) return;
       const d = snap.data();
       if (!d) return;
@@ -293,6 +293,9 @@ export function createSync(
       }
       if (d.updatedBy !== cid()) applyRemote(storeId, d);
       if (Array.isArray(d.noteLog) || Array.isArray(d.invLog)) repairDoc(storeId, d);
+      // Tiendas creadas con el modelo viejo llevan los productos embebidos en
+      // el documento principal: se migran una sola vez a la subcoleccion.
+      if (d.products) migrateLegacyProducts(storeId, d.products);
     }, (e) => {
       // Cuando el listener de Firestore falla (un corte de red, el celular
       // se quedo sin señal un rato, etc.) el SDK NO lo reconecta solo: una
@@ -300,10 +303,54 @@ export function createSync(
       // para siempre hasta que alguien lo vuelva a suscribir. Antes eso
       // significaba quedarse sin tiempo real hasta recargar la pagina a
       // mano. Ahora se reintenta solo despues de un momento.
-      console.warn('Suscripción:', e);
+      console.warn('Suscripción doc:', e);
       setTimeout(() => attach(storeId), 3000);
     });
-    subs.set(storeId, un);
+    unsubs.push(unMain);
+    // Listener de la subcoleccion de productos: cada producto es un documento
+    // propio (ver la nota junto a productDocRef). Se aplica el catalogo que
+    // llega desde la nube, fusionandolo por id en el estado local.
+    const unProducts = onSnapshot(query(productsColRef(s.syncKey)), (snap) => {
+      const remoteProducts: Record<string, unknown> = {};
+      snap.forEach((pd) => { remoteProducts[pd.id] = pd.data(); });
+      // El snapshot de productos no trae updatedBy, asi que applyRemote lo
+      // aplica siempre. El merge es por id y no duplica: aplicar el mismo
+      // catalogo dos veces da el mismo resultado (idempotente).
+      applyRemote(storeId, { products: remoteProducts });
+    }, (e) => {
+      console.warn('Suscripción productos:', e);
+      setTimeout(() => attach(storeId), 3000);
+    });
+    unsubs.push(unProducts);
+    subs.set(storeId, () => { unsubs.forEach((u) => u()); });
+  }
+
+  // Una sola vez por tienda: copia los productos que estan embebidos en el
+  // documento principal (modelo viejo) a su propio documento en la
+  // subcoleccion y los borra del documento principal. Idempotente: si ya no
+  // hay la clave "products" en el documento, no hace nada.
+  function migrateLegacyProducts(storeId: string, legacy: unknown) {
+    if (!legacy || typeof legacy !== 'object') return;
+    const s = getState().stores.find((x) => x.id === storeId);
+    if (!s || !s.syncKey || !DB) return;
+    const products = Array.isArray(legacy)
+      ? legacy as unknown[]
+      : Object.values(legacy as Record<string, unknown>);
+    if (!products.length) return;
+    (async () => {
+      const writes: Promise<unknown>[] = [];
+      for (const p of products) {
+        const prod = p as { id?: unknown } & Record<string, unknown>;
+        if (!prod || !prod.id) continue;
+        writes.push(setDoc(productDocRef(s.syncKey!, String(prod.id)), JSON.parse(JSON.stringify(p)), { merge: true }));
+      }
+      // Se quita "products" del documento principal para no duplicar datos:
+      // con deleteField la clave se elimina del documento remoto.
+      if (writes.length) {
+        writes.push(setDoc(storeDocRef(s.syncKey!), { products: deleteField(), updatedBy: cid() }, { merge: true }));
+      }
+      await Promise.all(writes);
+    })().catch((e) => console.warn('Migración de productos fallida:', e));
   }
 
   function detach(storeId: string) {
@@ -313,7 +360,6 @@ export function createSync(
     if (rt) { clearTimeout(rt); retryTimers.delete(storeId); }
     failCount.delete(storeId);
     lastPushedProducts.delete(storeId);
-    catalogTooBigWarned.delete(storeId);
   }
 
   // Firestore no deja fusionar paths de mapa (noteLog.<id>) cuando el campo es
@@ -409,6 +455,18 @@ export function applyRemote(getState: () => AppState, mutate: (fn: (d: AppState)
   });
 }
 
+// Lee todos los productos de la subcoleccion de una tienda (un documento por
+// producto). El modelo nuevo guarda cada producto en su propio documento para
+// que el limite de ~1 MiB de Firestore no limite el tamaño del catalogo.
+async function loadProducts(key: string): Promise<Product[]> {
+  if (!DB) return [];
+  const q = query(productsColRef(key));
+  const snap = await getDocs(q);
+  const out: Product[] = [];
+  snap.forEach((pd) => { const d = pd.data(); if (d) out.push(d as Product); });
+  return out;
+}
+
 export async function joinStore(pin: string, getState: () => AppState, mutate: (fn: (d: AppState) => void) => void, attach: (id: string) => void) {
   if (!pin) { await customAlert('Escribe el código.'); return; }
   if (!syncReady()) { await customAlert('Configura Firebase primero'); return; }
@@ -429,11 +487,19 @@ export async function joinStore(pin: string, getState: () => AppState, mutate: (
     const members: Record<string, Member> = {};
     members[syncClientId()] = { name: syncName(), role: 'worker', joinedAt: Date.now() };
     await setDoc(ref, { members }, { merge: true });
+    // Productos: se combinan los que aun puedan vivir embebidos en el
+    // documento principal (modelo viejo) con los de la subcoleccion (modelo
+    // nuevo), ganando la subcoleccion en caso de conflicto.
+    const legacyProducts = toProductsArr(r.products);
+    const subProducts = await loadProducts(key);
+    const mergedProducts = new Map<string, Product>();
+    legacyProducts.forEach((p) => mergedProducts.set(p.id, p));
+    subProducts.forEach((p) => mergedProducts.set(p.id, p));
     const s: Store = {
       id: uid(),
       name: r.name || 'Tienda compartida',
       image: r.image || DEFAULT_STORE_IMAGE,
-      products: toProductsArr(r.products),
+      products: Array.from(mergedProducts.values()),
       sales: toSalesArr(r.sales),
       categories: JSON.parse(JSON.stringify((r.categories || []))),
       categoryPricing: r.categoryPricing && typeof r.categoryPricing === 'object' ? JSON.parse(JSON.stringify(r.categoryPricing)) : {},
@@ -477,12 +543,14 @@ export async function activateSync(storeId: string, pin: string, getState: () =>
       const noteLog: Record<string, unknown> = {}, invLog: Record<string, unknown> = {};
       (s.noteLog || []).forEach((e) => { if (e && e.id) noteLog[e.id] = e; });
       (s.invLog || []).forEach((e) => { if (e && e.id) invLog[e.id] = e; });
-      const products: Record<string, Product> = {};
-      s.products.forEach((p) => { products[p.id] = p; });
+      // Los productos se guardan cada uno en su propio documento de la
+      // subcoleccion (ver la nota junto a productDocRef), no embebidos en el
+      // documento principal.
+      await Promise.all(s.products.map((p) => setDoc(productDocRef(key, p.id), JSON.parse(JSON.stringify(p)), { merge: true })));
       await setDoc(ref, {
         name: s.name, image: s.image, sales, categories: s.categories || [],
         categoryPricing: s.categoryPricing || {},
-        notes: s.notes || '', noteLog, invLog, inventory: s.inventory || {}, products,
+        notes: s.notes || '', noteLog, invLog, inventory: s.inventory || {},
         createdBy: syncClientId(), members, updatedBy: syncClientId(),
       }, { merge: true });
       mutate((d) => { const st = d.stores.find((x) => x.id === storeId); if (st) { st.localRole = 'owner'; st.syncKey = key; st.syncPin = pin; } });
@@ -504,6 +572,13 @@ export async function activateSync(storeId: string, pin: string, getState: () =>
       upd[syncClientId()] = { name: syncName(), role: isOwner ? 'owner' : 'worker', joinedAt: (prev as Member).joinedAt || Date.now() };
       await setDoc(ref, { members: upd }, { merge: true });
       if (isOwner && !r.createdBy) await setDoc(ref, { createdBy: syncClientId() }, { merge: true });
+      // Se incorporan tambien los productos de la subcoleccion, para que el
+      // estado local quede completo desde ya (el listener attach() los
+      // actualiza igual luego, en tiempo real).
+      const remoteProducts = await loadProducts(key);
+      const mergedProducts = new Map<string, Product>();
+      s.products.forEach((p) => mergedProducts.set(p.id, p));
+      remoteProducts.forEach((p) => mergedProducts.set(p.id, p));
       mutate((d) => {
         const st = d.stores.find((x) => x.id === storeId);
         if (!st) return;
@@ -512,6 +587,7 @@ export async function activateSync(storeId: string, pin: string, getState: () =>
         st.localRole = isOwner ? 'owner' : 'worker';
         st.syncKey = key;
         st.syncPin = pin;
+        st.products = Array.from(mergedProducts.values());
       });
       attach(storeId);
       await customAlert(isOwner ? 'Tienda actualizada y sincronización confirmada.' : 'Vinculado a la tienda compartida.');
