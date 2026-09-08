@@ -292,7 +292,6 @@ describe('createSync push() incremental y con reintento', () => {
     });
     const factory = vi.fn(() => ({
       set: (ref: { id?: string }, data: Record<string, unknown>) => { current.push({ id: ref.id, data }); },
-      update: (ref: { id?: string }, data: Record<string, unknown>) => { current.push({ id: ref.id, data }); },
       commit,
     }));
     return { factory, commit, batches: sets };
@@ -354,7 +353,13 @@ describe('createSync push() incremental y con reintento', () => {
     vi.useRealTimers();
   });
 
-  it('las notas y el log de inventario viajan con path punteado (noteLog.id / invLog.id), no como objeto anidado', async () => {
+  it('las notas y el log de inventario van como objeto anidado (noteLog: {id: entry}) por documento principal, vía set+merge', async () => {
+    // Probado a mano contra Firestore real: batch.set(ref, {noteLog:{...}},
+    // {merge:true}) SI fusiona el mapa noteLog por clave sin pisar lo que
+    // subio otro dispositivo, y batch.update() falla si el documento
+    // todavia no existe (p.ej. la primerisima vez que se activa la
+    // sincronizacion). Por eso el documento principal siempre va con
+    // batch.set(...,{merge:true}), nunca con batch.update().
     const { createSync } = await import('../lib/sync');
     const { writeBatch } = await import('firebase/firestore');
     const writeBatchMock = writeBatch as unknown as ReturnType<typeof vi.fn>;
@@ -374,14 +379,11 @@ describe('createSync push() incremental y con reintento', () => {
 
     const mainBatch = batches[0].filter((b) => b.id === 'clave-notas');
     expect(mainBatch.length).toBe(1);
-    const data = mainBatch[0].data;
-    // Debe haber UNA clave por nota/log, con el id como parte del path.
-    const noteKeys = Object.keys(data).filter((k) => k.startsWith('noteLog.'));
-    const invKeys = Object.keys(data).filter((k) => k.startsWith('invLog.'));
-    expect(noteKeys.length).toBe(2);
-    expect(invKeys.length).toBe(1);
-    expect(Object.keys(data).some((k) => k === 'noteLog')).toBe(false);
-    expect(Object.keys(data).some((k) => k === 'invLog')).toBe(false);
+    const data = mainBatch[0].data as { noteLog?: Record<string, unknown>; invLog?: Record<string, unknown> };
+    // Ningun campo con un punto LITERAL en el nombre (ese era el bug viejo).
+    expect(Object.keys(data).some((k) => k.includes('.'))).toBe(false);
+    expect(Object.keys(data.noteLog || {}).length).toBe(2);
+    expect(Object.keys(data.invLog || {}).length).toBe(1);
   });
 
   it('si llega un segundo push mientras el primero sigue en curso, se encola en vez de dispararse en paralelo', async () => {
@@ -393,7 +395,6 @@ describe('createSync push() incremental y con reintento', () => {
     let commitCalls = 0;
     writeBatchMock.mockImplementation(() => ({
       set: () => {},
-      update: () => {},
       commit: () => {
         commitCalls++;
         if (commitCalls === 1) return new Promise<void>((resolve) => { resolveFirstCommit = resolve; });

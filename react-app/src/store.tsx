@@ -67,8 +67,10 @@ export function AppProvider({ children }: { children: ReactNode }) {
         });
         toast(msg);
       },
-      () => {
-        toast('No se pudo sincronizar con la nube. Revisa tu conexión.');
+      (_storeId, code) => {
+        toast(code === 'permission-denied'
+          ? 'La nube rechazó el guardado (permisos de Firestore). Avisa a quien administra la app.'
+          : 'No se pudo sincronizar con la nube. Revisa tu conexión.');
       },
     );
   }

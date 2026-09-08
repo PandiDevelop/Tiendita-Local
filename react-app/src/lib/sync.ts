@@ -106,7 +106,7 @@ export function createSync(
   getState: () => AppState,
   applyRemote: (storeId: string, remote: Record<string, unknown>) => void,
   removeStore: (storeId: string, msg: string) => void,
-  onPushFailing?: (storeId: string) => void,
+  onPushFailing?: (storeId: string, code?: string) => void,
 ): SyncHandle {
   const subs = new Map<string, () => void>();
   const timers = new Map<string, ReturnType<typeof setTimeout>>();
@@ -201,15 +201,16 @@ export function createSync(
 
       const sales: Record<string, Sale> = {};
       s.sales.forEach((x) => (sales[x.id] = x));
-      // OJO: para fundir dentro de mapas ANIDADOS (noteLog, invLog) hay que
-      // usar updateDoc (o batch.update) con paths punteados: "noteLog.<id>".
-      // con setDoc(..., {merge:true}) un objeto anidado REEMPLAZA el campo
-      // noteLog entero (el merge solo es por campo top-level, no recursivo) y
-      // unas claves con punto se guardan como un nombre de campo literal
-      // ("noteLog.<id>") en vez de entrar al mapa, asi que notas e historial
-      // de inventario nunca llegaban a su campo real y se quedaban solo en el
-      // dispositivo que las escribio. updateDoc SI entiende esos paths y
-      // agrega/actualiza UNA entrada del mapa sin pisar las demas.
+      // OJO: setDoc(..., {merge:true}) NO interpreta claves con puntos como
+      // field paths (eso solo aplica a updateDoc): probado a mano contra la
+      // base de datos real, escribir {'noteLog.'+id: entry} con setDoc/
+      // batch.set crea un campo LITERAL llamado "noteLog.<id>" en vez de
+      // entrar al mapa. Lo que SI funciona (tambien probado a mano) es
+      // mandar objetos anidados normales: setDoc/batch.set con merge:true
+      // SI fusiona mapas anidados por clave de forma recursiva, sin pisar
+      // las entradas que subio otro dispositivo. Se usa batch.set (no
+      // batch.update) a proposito: update() falla si el documento no
+      // existe todavia, set con merge lo crea si hace falta.
       const main: Record<string, unknown> = {
         sales,
         categories: s.categories || [],
@@ -217,9 +218,13 @@ export function createSync(
         updatedBy: cid(),
       };
       if (typeof s.notes === 'string' && s.notes) main.notes = s.notes;
+      const noteLogPatch: Record<string, unknown> = {};
+      (s.noteLog || []).forEach((e) => { if (e && e.id) noteLogPatch[e.id] = e; });
+      if (Object.keys(noteLogPatch).length) main.noteLog = noteLogPatch;
+      const invLogPatch: Record<string, unknown> = {};
+      (s.invLog || []).forEach((e) => { if (e && e.id) invLogPatch[e.id] = e; });
+      if (Object.keys(invLogPatch).length) main.invLog = invLogPatch;
       main.inventory = s.inventory || {};
-      (s.noteLog || []).forEach((e) => { if (e && e.id) main['noteLog.' + e.id] = e; });
-      (s.invLog || []).forEach((e) => { if (e && e.id) main['invLog.' + e.id] = e; });
       if (!s.createdBy || s.createdBy === cid()) { main.name = s.name; main.image = s.image; }
 
       // Un solo batch: el documento principal (chico, sin fotos) mas un
@@ -227,7 +232,7 @@ export function createSync(
       // en su propio documento, el batch entero se queda muy por debajo
       // del limite de tamaño aunque el catalogo tenga muchos productos.
       const batch = writeBatch(DB);
-      batch.update(storeDocRef(s.syncKey), main);
+      batch.set(storeDocRef(s.syncKey), main, { merge: true });
       changedProducts.forEach((p) => {
         batch.set(doc(productsColRef(s.syncKey!), p.id), productDocPayload(p, cid()), { merge: true });
       });
@@ -247,7 +252,12 @@ export function createSync(
       console.warn('Push fallido:', e);
       const n = (failCount.get(storeId) || 0) + 1;
       failCount.set(storeId, n);
-      if (n === 3 && onPushFailing) onPushFailing(storeId);
+      // 'permission-denied' significa que las reglas de seguridad de
+      // Firestore no dejan escribir ahi (no es un problema de red del
+      // dispositivo): avisar eso especificamente evita que se confunda con
+      // "revisa tu conexión" y se pierda tiempo de diagnostico.
+      const code = e && typeof e === 'object' && 'code' in e ? String((e as { code?: unknown }).code) : undefined;
+      if (n === 3 && onPushFailing) onPushFailing(storeId, code);
       // Sin este reintento, un push fallido se queda esperando a que la
       // persona vuelva a tocar algo distinto en esa tienda para que
       // schedule() se vuelva a llamar: si nada mas cambia, esos datos
