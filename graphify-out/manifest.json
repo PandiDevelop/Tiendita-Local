@@ -6,9 +6,9 @@
     "semantic_hash": ""
   },
   "react-app/public/sw.js": {
-    "mtime": 1788892317.7082415,
-    "seen": 1788903163.6280794,
-    "ast_hash": "5cf388a5a6ff30ff2c380f8d4d37afe9",
+    "mtime": 1788918783.1612358,
+    "seen": 1788919004.046557,
+    "ast_hash": "1c68b0a76dd8b5a9a55bd3d08b52e232",
     "semantic_hash": ""
   },
   "react-app/src/App.tsx": {
@@ -72,75 +72,75 @@
     "semantic_hash": ""
   },
   "react-app/src/ui.tsx": {
-    "mtime": 1788902900.229905,
-    "seen": 1788903163.6280794,
-    "ast_hash": "8dd8ecaac024e32884c663cc1ccf8bfe",
+    "mtime": 1788918758.0222564,
+    "seen": 1788919004.046557,
+    "ast_hash": "986788a1e7dbb34f99fff401ea266a2b",
     "semantic_hash": ""
   },
   "react-app/src/views/Catalog.tsx": {
-    "mtime": 1788914490.7174416,
-    "seen": 1788914579.1258073,
-    "ast_hash": "c5c3e535ca0832292bc267473d6fd404",
+    "mtime": 1788918549.1873584,
+    "seen": 1788919004.046557,
+    "ast_hash": "ca1d4bc3b6a22857cb73515b4c704e9f",
     "semantic_hash": ""
   },
   "react-app/src/views/Dashboard.tsx": {
-    "mtime": 1788795989.5762994,
-    "seen": 1788880681.2695267,
-    "ast_hash": "8bd517605c7e302737bd1e6eecb5ff3e",
-    "semantic_hash": "8bd517605c7e302737bd1e6eecb5ff3e"
+    "mtime": 1788918677.352701,
+    "seen": 1788919004.046557,
+    "ast_hash": "917e47cedc054aa8860783d73f58c736",
+    "semantic_hash": ""
   },
   "react-app/src/views/Employees.tsx": {
-    "mtime": 1788902876.3111598,
-    "seen": 1788903163.6280794,
-    "ast_hash": "0a340072f703a4355efb87a755073eca",
+    "mtime": 1788918690.126571,
+    "seen": 1788919004.046557,
+    "ast_hash": "926dce20c98f0660851aa18e5564a04f",
     "semantic_hash": ""
   },
   "react-app/src/views/History.tsx": {
-    "mtime": 1788915884.9759614,
-    "seen": 1788915953.9010537,
-    "ast_hash": "e19c7d9df2fcac69c19c6524eec54f28",
+    "mtime": 1788918682.1193967,
+    "seen": 1788919004.046557,
+    "ast_hash": "3be4664a904ec780e1c507b8efb1c8ee",
     "semantic_hash": ""
   },
   "react-app/src/views/Inventory.tsx": {
-    "mtime": 1788907156.2841868,
-    "seen": 1788907223.6630912,
-    "ast_hash": "b213a85c791405ba4e34c5cfb6849779",
+    "mtime": 1788918591.3207188,
+    "seen": 1788919004.046557,
+    "ast_hash": "13faaf041e1dbe1515dcf463dbac5903",
     "semantic_hash": ""
   },
   "react-app/src/views/Join.tsx": {
-    "mtime": 1788835417.6790037,
-    "seen": 1788880681.2695267,
-    "ast_hash": "438df0f05b304fce03160fca57b71ee7",
-    "semantic_hash": "438df0f05b304fce03160fca57b71ee7"
+    "mtime": 1788918708.862268,
+    "seen": 1788919004.046557,
+    "ast_hash": "ada2947d74c70fa29431ef575b54d8db",
+    "semantic_hash": ""
   },
   "react-app/src/views/Notes.tsx": {
-    "mtime": 1788836290.5172982,
-    "seen": 1788880681.2695267,
-    "ast_hash": "05c9f8c28ffcd31472ff787ff80dfc38",
-    "semantic_hash": "05c9f8c28ffcd31472ff787ff80dfc38"
+    "mtime": 1788918696.0491579,
+    "seen": 1788919004.046557,
+    "ast_hash": "e264c1ef3c716eaba5827e41ff7e8fd0",
+    "semantic_hash": ""
   },
   "react-app/src/views/ProductForm.tsx": {
-    "mtime": 1788902845.9505825,
-    "seen": 1788903163.6280794,
-    "ast_hash": "6a3c4063b4800ab1ee762ab5278be82a",
+    "mtime": 1788918775.594429,
+    "seen": 1788919004.046557,
+    "ast_hash": "794445af325ec4138111a3bbfccdcbfa",
     "semantic_hash": ""
   },
   "react-app/src/views/Profit.tsx": {
-    "mtime": 1788888219.4698565,
-    "seen": 1788889271.138436,
-    "ast_hash": "5d248ddf5e5dbefa91dc075ed6928046",
+    "mtime": 1788918704.816271,
+    "seen": 1788919004.046557,
+    "ast_hash": "5a884df6032da95c71932c6137dc6fa0",
     "semantic_hash": ""
   },
   "react-app/src/views/SaleRegistration.tsx": {
-    "mtime": 1788911629.969077,
-    "seen": 1788911767.833982,
-    "ast_hash": "d86da962ba9d4430b7c457947ad8aad5",
+    "mtime": 1788918736.2313254,
+    "seen": 1788919004.046557,
+    "ast_hash": "b51f983b6eaa121fe74c93f2919a233b",
     "semantic_hash": ""
   },
   "react-app/src/views/StoreModal.tsx": {
-    "mtime": 1788905616.5659125,
-    "seen": 1788905665.2992861,
-    "ast_hash": "9b49913cca5999a58cfff99f1a91298c",
+    "mtime": 1788918726.5525753,
+    "seen": 1788919004.046557,
+    "ast_hash": "d1c8bfbf26fa4d9dc473872d88a04ac0",
     "semantic_hash": ""
   },
   "react-app/src/vite-env.d.ts": {
@@ -162,9 +162,9 @@
     "semantic_hash": ""
   },
   "sw.js": {
-    "mtime": 1788892317.6901286,
-    "seen": 1788903163.6280794,
-    "ast_hash": "5cf388a5a6ff30ff2c380f8d4d37afe9",
+    "mtime": 1788918783.1612358,
+    "seen": 1788919004.046557,
+    "ast_hash": "1c68b0a76dd8b5a9a55bd3d08b52e232",
     "semantic_hash": ""
   },
   "AGENTS.md": {
@@ -180,9 +180,9 @@
     "semantic_hash": ""
   },
   "index.html": {
-    "mtime": 1788917131.3796785,
-    "seen": 1788917152.962327,
-    "ast_hash": "c35e463b8e3ae988b946d589e976d6d8",
+    "mtime": 1788918802.944021,
+    "seen": 1788919004.046557,
+    "ast_hash": "c10c84b50fe56e30b5642cc82c60ff96",
     "semantic_hash": ""
   },
   "react-app/index.html": {
@@ -252,9 +252,9 @@
     "semantic_hash": ""
   },
   "react-app/src/views/CategoryModal.tsx": {
-    "mtime": 1788911675.7310894,
-    "seen": 1788911767.833982,
-    "ast_hash": "03fdc0e9d05b48cb86c35300dcf98da1",
+    "mtime": 1788918660.7008216,
+    "seen": 1788919004.046557,
+    "ast_hash": "3336095aec95c3d3c9b05261b7ee1070",
     "semantic_hash": ""
   },
   "react-app/src/test/features.test.tsx": {
@@ -276,15 +276,15 @@
     "semantic_hash": ""
   },
   "react-app/src/views/Events.tsx": {
-    "mtime": 1788917095.9047706,
-    "seen": 1788917152.962327,
-    "ast_hash": "4d497be5313093af0f79d51418939bfb",
+    "mtime": 1788918480.0521746,
+    "seen": 1788919004.046557,
+    "ast_hash": "05286a7a86c15cba5a26e2a34f2c0200",
     "semantic_hash": ""
   },
   "react-app/src/views/PromoEditor.tsx": {
-    "mtime": 1788908666.9598885,
-    "seen": 1788910103.5517817,
-    "ast_hash": "48d0a89fb76f8c1881209bf667959cb4",
+    "mtime": 1788918664.6442027,
+    "seen": 1788919004.046557,
+    "ast_hash": "ee0e4d49ddcf4b9588108e061c93f432",
     "semantic_hash": ""
   },
   "Claude outputs/TEST_RESULTS.txt": {
