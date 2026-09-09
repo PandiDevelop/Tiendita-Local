@@ -97,6 +97,7 @@ export function Employees() {
       ) : null}
 
       {rows.length ? (
+        <div className="table-scroll">
         <table><thead><tr><th>Empleado</th><th>Unidades vendidas</th><th>Producido</th><th>Días con ventas</th><th></th></tr></thead><tbody>
           {rows.map((r) => (
             <Fragment key={r.name}>
@@ -107,6 +108,7 @@ export function Employees() {
             </Fragment>
           ))}
         </tbody></table>
+        </div>
       ) : <div className="notice">Aún no hay ventas registradas.{teamRows.length ? '' : ' Cuando alguien registre una venta con su nombre, aquí verás lo que produjo.'}</div>}
     </div>
   );

@@ -118,7 +118,7 @@ th,td{text-align:left;vertical-align:middle}
 .cat-head b{white-space:nowrap;overflow-wrap:break-word}
 .cat-head .cat-caret{color:#8f73bf;font-size:13px;transition:transform .15s}
 .cat-head .muted{font-weight:600}
-.cat-body{padding:2px 0 10px;overflow-x:auto;overflow-y:clip}
+.cat-body{padding:2px 0 10px;overflow:auto;overflow-x:auto;overflow-y:auto;max-height:272px;overscroll-behavior:contain}
 @media (min-width:761px){.cat-body table{margin:0 15px}}
 @media (max-width:760px){.cat-actions{max-width:none}.cat-head{padding:12px 13px}}
 .inv-modes{display:inline-flex;gap:4px;padding:3px;background:var(--lav);border-radius:12px}
@@ -211,6 +211,9 @@ td.cat-bar .product-name .prod-tag{margin-left:auto;flex:0 0 auto}
 .action-menu button{display:block;width:100%;text-align:left;padding:8px 12px;border-radius:8px;background:none;border:none;cursor:pointer;font-weight:600;font-size:13px;color:#4b4358}
 .action-menu button:hover{background:#f6f1fd}
 .action-menu button.danger{color:#c15555}
+/* El menu de la tuerca va en un portal al body con posicion fija: se
+   SUPERPONE a las demas cajas de la pagina y ningun overflow lo corta. */
+.gear-menu-portal{position:fixed;right:auto;top:auto;z-index:400}
 /* Fondo invisible del menu de la tuerca (clase propia para NO pisar el
    menu-backdrop del menu movil del sidebar). */
 .gear-backdrop{position:fixed;inset:0;z-index:39}
@@ -222,7 +225,11 @@ td.cat-bar .product-name .prod-tag{margin-left:auto;flex:0 0 auto}
 .sale-detail-line .sale-detail-name .detail-prod{display:inline-flex;align-items:baseline;gap:7px;flex:0 0 auto;max-width:100%;min-width:0}
 .sale-detail-line .sale-detail-name .detail-prod .prod-cat{margin:0;flex:0 0 auto}
 .sale-detail-line .sale-detail-name .detail-prod .prod-sub{margin:0}
-.sale-detail-line .sale-detail-name .pkg-tag{margin-left:0}
+/* Historial de ventas: cantidad antes del paquete, con el nombre del paquete
+   completo (nunca se corta con "..." y puede partirse en dos lineas). */
+.history-table .sale-detail-row td{white-space:normal}
+.sale-detail-line .sale-detail-name .detail-qty{font-weight:800;color:#625276;font-size:13px;white-space:nowrap}
+.sale-detail-line .sale-detail-name .pkg-tag{display:inline-block;margin:0;padding:2px 8px;border-radius:999px;background:#e6f0ff;color:#3d6bb3;font-size:11px;font-weight:700;line-height:1.35;text-transform:none;white-space:normal;overflow-wrap:anywhere;max-width:100%}
 /* Historial de eventos: lista con nombre, duracion y promociones. */
 .ev-history{margin-top:18px}
 .ev-history-title{font-size:12px;text-transform:uppercase;letter-spacing:1px;font-weight:700;color:#8a84a0;margin:0 0 8px}
@@ -241,7 +248,7 @@ td.cat-bar .product-name .prod-tag{margin-left:auto;flex:0 0 auto}
 
 /* Ventanas de edicion: que quepan en la pantalla sin desbordes ni scroll
    largo; el contenido sobrante si acaso usa el scroll interno del modal. */
-.modal{max-height:calc(100dvh - 26px);overflow-y:auto}
+.modal{max-height:calc(100dvh - 26px);overflow-x:hidden;overflow-y:auto}
 .modal > h2{margin:0 0 14px}
 .modal .field{margin:12px 0}
 .modal .modal-actions{margin-top:16px}
@@ -300,3 +307,10 @@ td.cat-bar .product-name .prod-tag{margin-left:auto;flex:0 0 auto}
 .switch span::before{content:'';position:absolute;height:18px;width:18px;left:3px;top:3px;background:#fff;border-radius:50%;transition:.15s;box-shadow:0 1px 3px rgba(0,0,0,.22)}
 .switch input:checked+span{background:#6fae82}
 .switch input:checked+span::before{transform:translateX(18px)}
+/* Listas largas (equipo, historial…): se muestran como maximo unas 5 filas y
+   el resto se ve bajando con el scroll DENTRO de la tabla, en vez de estirar
+   toda la pagina. */
+.table-scroll{overflow:auto;max-height:272px;overscroll-behavior:contain}
+/* Opcion "Nueva categoria / Nuevo tag" con su lapicito en las sugerencias. */
+.cat-suggest .cat-suggest-list .cat-suggest-new{display:flex;align-items:center;gap:7px;color:#8061b4;font-weight:700;border-top:1px solid var(--line);margin-top:2px;border-radius:8px}
+.cat-suggest .cat-suggest-list .cat-suggest-new svg{flex:0 0 auto}

@@ -1,4 +1,5 @@
 import { ReactNode, useEffect, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { DialogRequest, customConfirm, resolveDialog, subscribeDialog } from './lib/dialog';
 import { closeLightbox, openLightbox, subscribeLightbox } from './lib/lightbox';
 
@@ -127,53 +128,95 @@ export function GearIcon({ size = 19 }: { size?: number }) {
   );
 }
 
+// Icono de lapiz, con el mismo trazo de los demas iconos. Se usa en la opcion
+// "Nueva categoria / Nuevo tag" que aparece cuando el valor que se escribe no
+// coincide con ninguno ya registrado.
+export function PencilIcon({ size = 14 }: { size?: number }) {
+  return (
+    <svg viewBox="0 0 24 24" width={size} height={size} fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M17.5 3.5a2.6 2.6 0 1 1 3.7 3.6L7.7 20.6 2 22l1.4-5.6z" />
+    </svg>
+  );
+}
+
 // Menú desplegable de la tuerca: Editar y Eliminar (productos y categorías).
-// Siempre cae hacia abajo; si quedaría cortado por el borde de la pantalla,
-// la página se desplaza solo para mostrarlo completo. No usa fondo bloqueante,
-// así que la página sigue haciendo scroll. Se cierra al tocar fuera o elegir.
+// Se renderiza en un portal pegado al body y con posición fija, así que se
+// SUPERPONE a las demás cajas (nunca lo corta una tabla o tarjeta con
+// overflow). Siempre cae hacia abajo del botón; si quedaría debajo del borde
+// de la pantalla, la página se desplaza suave y el menú se pega al botón
+// mientras el scroll lo acomoda. Se cierra al tocar fuera o elegir una opción.
 export function GearMenu({ items }: { items: { label: string; danger?: boolean; onClick: () => void }[] }) {
   const [open, setOpen] = useState(false);
+  const [pos, setPos] = useState<{ left: number; top: number } | null>(null);
+  const [w, setW] = useState(170);
   const wrapRef = useRef<HTMLDivElement>(null);
   const menuRef = useRef<HTMLDivElement>(null);
+
+  const syncPos = () => {
+    const el = wrapRef.current;
+    if (!el) return;
+    const r = el.getBoundingClientRect();
+    setPos({ left: Math.min(Math.max(6, r.right - w), window.innerWidth - w - 6), top: r.bottom + 5 });
+  };
+
   useEffect(() => {
     if (!open) return;
-    const onDown = (e: MouseEvent) => { if (wrapRef.current && !wrapRef.current.contains(e.target as Node)) setOpen(false); };
+    const onDown = (e: MouseEvent) => {
+      const t = e.target as Node;
+      if (wrapRef.current && menuRef.current && !wrapRef.current.contains(t) && !menuRef.current.contains(t)) setOpen(false);
+    };
     document.addEventListener('mousedown', onDown);
+    const onScroll = () => syncPos();
+    window.addEventListener('scroll', onScroll, { passive: true });
     const raf = requestAnimationFrame(() => {
       const m = menuRef.current;
-      if (m && m.getBoundingClientRect().bottom > window.innerHeight) {
-        m.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      if (!m) return;
+      setW(m.offsetWidth);
+      syncPos();
+      const r = wrapRef.current!.getBoundingClientRect();
+      if (r.bottom + 5 + m.offsetHeight > window.innerHeight - 4) {
+        window.scrollBy({ top: r.bottom + 5 + m.offsetHeight - window.innerHeight + 12, behavior: 'smooth' });
       }
     });
-    return () => { document.removeEventListener('mousedown', onDown); cancelAnimationFrame(raf); };
+    return () => { document.removeEventListener('mousedown', onDown); window.removeEventListener('scroll', onScroll); cancelAnimationFrame(raf); };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open]);
   return (
-    <div className="actions" ref={wrapRef}>
-      <button type="button" className="icon-btn" title="Opciones"
-        onClick={() => setOpen((o) => !o)}>
-        <GearIcon />
-      </button>
-      {open && (
-        <div className="action-menu" ref={menuRef}>
+    <>
+      <div className="actions" ref={wrapRef}>
+        <button type="button" className="icon-btn" title="Opciones"
+          onClick={() => setOpen((o) => !o)}>
+          <GearIcon />
+        </button>
+      </div>
+      {open && pos && createPortal(
+        <div className="action-menu gear-menu-portal" ref={menuRef} style={{ left: pos.left, top: pos.top }}>
           {items.map((it) => (
             <button key={it.label} type="button" className={it.danger ? 'danger' : ''}
               onClick={() => { setOpen(false); it.onClick(); }}>{it.label}</button>
           ))}
-        </div>
+        </div>,
+        document.body
       )}
-    </div>
+    </>
   );
 }
 
 // Campo de texto con sugerencias de valores ya registrados (categorías, tags…):
 // se tocan para elegirlos con un clic, o se puede escribir un valor nuevo.
-export function SuggestInput({ options, value, onChange, onPick, placeholder, maxLength = 30 }: {
-  options: string[]; value: string; onChange: (v: string) => void; onPick: (v: string) => void; placeholder?: string; maxLength?: number;
+// Cuando lo escrito no coincide con nada existente, aparece la opción
+// "Nueva categoría / Nuevo tag" (con un lápiz) para crearlo.
+export function SuggestInput({ options, value, onChange, onPick, placeholder, maxLength = 30, newLabel, onNewPick }: {
+  options: string[]; value: string; onChange: (v: string) => void; onPick: (v: string) => void; placeholder?: string; maxLength?: number; newLabel?: string; onNewPick?: (v: string) => void;
 }) {
   const [open, setOpen] = useState(false);
   const wrapRef = useRef<HTMLDivElement>(null);
   const q = ((value || '').trim()).toLowerCase();
   const shown = options.filter((c) => c.trim().toLowerCase() !== q && c.trim().toLowerCase().includes(q)).slice(0, 6);
+  // Si lo que se escribe ya está registrado exactamente, no hace falta
+  // sugerir "Nueva…": lo normal es que quiera elegir el que ya existe.
+  const isExisting = !!q && options.some((c) => c.trim().toLowerCase() === q);
+  const showNew = !!newLabel && !!q && !isExisting;
   useEffect(() => {
     if (!open) return;
     const onDown = (e: MouseEvent) => { if (wrapRef.current && !wrapRef.current.contains(e.target as Node)) setOpen(false); };
@@ -185,19 +228,24 @@ export function SuggestInput({ options, value, onChange, onPick, placeholder, ma
       <input maxLength={maxLength} placeholder={placeholder} value={value}
         onChange={(e) => { onChange(e.target.value); setOpen(true); }}
         onFocus={() => setOpen(true)} />
-      {open && shown.length > 0 && (
+      {open && (shown.length > 0 || showNew) && (
         <div className="cat-suggest-list">
           {shown.map((c) => (
             <button type="button" key={c} onMouseDown={(e) => { e.preventDefault(); setOpen(false); onPick(c); }}>{c}</button>
           ))}
+          {showNew && (
+            <button type="button" className="cat-suggest-new" onMouseDown={(e) => { e.preventDefault(); setOpen(false); if (onNewPick) onNewPick(value); }}>
+              <PencilIcon size={13} /> {newLabel}
+            </button>
+          )}
         </div>
       )}
     </div>
   );
 }
 
-export function CategorySuggest({ cats, value, onChange, onPick, placeholder, maxLength = 30 }: {
-  cats: string[]; value: string; onChange: (v: string) => void; onPick: (v: string) => void; placeholder?: string; maxLength?: number;
+export function CategorySuggest({ cats, value, onChange, onPick, placeholder, maxLength = 30, newLabel, onNewPick }: {
+  cats: string[]; value: string; onChange: (v: string) => void; onPick: (v: string) => void; placeholder?: string; maxLength?: number; newLabel?: string; onNewPick?: (v: string) => void;
 }) {
-  return <SuggestInput options={cats} value={value} onChange={onChange} onPick={onPick} placeholder={placeholder} maxLength={maxLength} />;
+  return <SuggestInput options={cats} value={value} onChange={onChange} onPick={onPick} placeholder={placeholder} maxLength={maxLength} newLabel={newLabel} onNewPick={onNewPick} />;
 }

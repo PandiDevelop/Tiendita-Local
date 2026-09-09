@@ -166,7 +166,7 @@ export function Events() {
       {events.length > 0 && (
         <div className="ev-history">
           <div className="ev-history-title">Historial de eventos</div>
-          <table><thead><tr><th>Evento</th><th>Estado</th><th>Duración</th><th>Promociones</th></tr></thead><tbody>
+          <div className="table-scroll"><table><thead><tr><th>Evento</th><th>Estado</th><th>Duración</th><th>Promociones</th></tr></thead><tbody>
             {history.map((e) => {
               const fin = (!!e.end && e.end < today()) || (!e.active && !!e.end);
               return (
@@ -182,7 +182,7 @@ export function Events() {
               </tr>
               );
             })}
-          </tbody></table>
+          </tbody></table></div>
         </div>
       )}
     </div>

@@ -2,17 +2,15 @@ import { useState } from 'react';
 import { useStore } from '../store';
 import { DEFAULT_PRODUCT_IMAGE, DEFAULT_PRODUCT_TAG, compressImage, storeCats, adoptInvLog, setCategoryPricing, insertCatSorted, toEditablePromos, fromEditablePromos, uid } from '../lib/core';
 import type { EditablePromo } from '../lib/core';
-import { Dropdown } from '../Dropdown';
-import { ImagePicker, Modal, SuggestInput, CategorySuggest } from '../ui';
+import { ImagePicker, Modal, CategorySuggest, SuggestInput } from '../ui';
 import { PromoEditor } from './PromoEditor';
 
 export function ProductForm({ editingId, onClose }: { editingId?: string; onClose: () => void }) {
   const { store, replace, toast } = useStore();
   const s = store!;
   const p = editingId ? s.products.find((x) => x.id === editingId) : undefined;
-  const cats = [{ v: '__new__', label: '＋ Añadir categoría' }, { v: '', label: 'Sin categoría' }, ...storeCats(s).map((c) => ({ v: c, label: c }))];
+  const cats = storeCats(s);
   const [cat, setCat] = useState((p?.category || '').trim());
-  const [catNew, setCatNew] = useState('');
   const [name, setName] = useState(p?.name || '');
   const [price, setPrice] = useState(p?.price != null ? String(p.price) : '');
   const [cost, setCost] = useState(p?.cost != null ? String(p.cost) : '');
@@ -23,7 +21,6 @@ export function ProductForm({ editingId, onClose }: { editingId?: string; onClos
   // valor por defecto global; se puede cambiar o vaciar.
   const [tag, setTag] = useState(editingId ? (p?.tag || '') : (p?.tag || DEFAULT_PRODUCT_TAG));
 
-  const showCatNew = cat === '__new__';
   // Tags que ya usan otros productos, para sugerirlos al escribir (se puede
   // escribir uno nuevo o elegir uno existente con un clic).
   const existingTags = [...new Set(s.products.map((x) => (x.tag || '').trim()).filter(Boolean))];
@@ -41,7 +38,7 @@ export function ProductForm({ editingId, onClose }: { editingId?: string; onClos
     if (!nm) return toast('Escribe el nombre del producto.');
     if (!Number.isFinite(pr) || pr < 0) return toast('Añade un precio válido.');
     if (!Number.isFinite(cst) || cst < 0) return toast('Añade un costo válido.');
-    const catVal = showCatNew ? catNew.trim() : cat;
+    const catVal = cat.trim();
     const promoList = fromEditablePromos(promos);
     replace((d) => {
       const st = d.stores.find((x) => x.id === s.id)!;
@@ -79,26 +76,24 @@ export function ProductForm({ editingId, onClose }: { editingId?: string; onClos
   return (
     <Modal onClose={onClose}>
       <h2>{editingId ? 'Editar producto' : 'Añadir producto'}</h2>
-      <div className="field"><label>Categoría</label>
-        <Dropdown value={cat} ph="Sin categoría" items={cats} onPick={(v) => {
-          setCat(v);
-          if (v === '__new__') { setCatNew(''); return; }
-          if (!editingId && v && s.categoryPricing && s.categoryPricing[v]) {
-            const cp = s.categoryPricing[v];
-            setPrice(String(cp.price));
-            setCost(cp.cost != null ? String(cp.cost) : '');
-            setPromos(toEditablePromos(cp.promos));
-          }
-        }} />
-        {showCatNew && <div className="field" style={{ marginTop: 8 }}>
-          <CategorySuggest cats={storeCats(s)} value={catNew} placeholder="Nombre de la nueva categoría" onChange={setCatNew} onPick={(c) => { setCat(c); setCatNew(''); }} />
-        </div>}
+      <div className="field"><label>Categoría <span className="muted">(opcional)</span></label>
+        <CategorySuggest cats={cats} value={cat} onChange={setCat} placeholder="Escribe o elige una categoría" newLabel="Nueva categoría"
+          onPick={(c) => {
+            setCat(c);
+            if (!editingId && c && s.categoryPricing && s.categoryPricing[c]) {
+              const cp = s.categoryPricing[c];
+              setPrice(String(cp.price));
+              setCost(cp.cost != null ? String(cp.cost) : '');
+              setPromos(toEditablePromos(cp.promos));
+            }
+          }}
+          onNewPick={() => undefined} />
       </div>
       <div className="field"><label>Nombre del producto</label>
         <input maxLength={80} placeholder="Ej. Caja de galletas" value={name} onChange={(e) => setName(e.target.value)} />
       </div>
       <div className="field"><label>Etiqueta / tag <span className="muted">(opcional)</span></label>
-        <SuggestInput options={existingTags} value={tag} onChange={setTag} onPick={setTag} placeholder="Ej. general" maxLength={30} />
+        <SuggestInput options={existingTags} value={tag} onChange={setTag} onPick={setTag} placeholder="Ej. general" maxLength={30} newLabel="Nuevo tag" onNewPick={() => undefined} />
         <p className="muted">Etiqueta corta para agrupar productos (opcional).</p>
       </div>
       <div className="field"><label>Precio del producto</label>

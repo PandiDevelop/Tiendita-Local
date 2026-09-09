@@ -56,8 +56,8 @@ export function History() {
               <span className="prod-cat">{pcat}</span><span>{esc(p ? p.name : 'Producto eliminado')}</span>
               {pr2 ? <span className="prod-sub">{esc(pr2.label)}</span> : null}
             </span>
-            {pack && <span className="prod-tag pkg-tag">Paquete: {esc(pack.label)}</span>}
-            <b>× {i.qty}</b>
+            <b className="detail-qty">× {i.qty}</b>
+            {pack && <span className="pkg-tag">Paquete: {esc(pack.label)}</span>}
           </div>
           <b className="sale-detail-cost">{money(priceFor(i, s) * i.qty)}</b>
         </div>
@@ -83,7 +83,7 @@ export function History() {
         return (
           <div className="history-day" key={d}>
             <div className="history-day-title"><b>{formatDate(d)}</b><span className="muted">{list.length} venta{list.length === 1 ? '' : 's'} · {dayUnits} unidades · {money(dayMoney)}</span></div>
-            <table className="history-table"><thead><tr><th>Fecha</th><th>Hora</th><th>Productos</th><th>Precio</th><th>Empleado</th><th></th></tr></thead><tbody>
+            <div className="table-scroll"><table className="history-table"><thead><tr><th>Fecha</th><th>Hora</th><th>Productos</th><th>Precio</th><th>Empleado</th><th></th></tr></thead><tbody>
               {list.map((x) => (
                 <Fragment key={x.id}>
                   <tr>
@@ -93,7 +93,7 @@ export function History() {
                   {open[x.id] && <tr className="sale-detail-row"><td colSpan={6}><div className="sale-detail"><div className="sale-detail-title">Detalles de la venta</div>{details(x).length ? details(x) : <p className="muted" style={{ margin: 0 }}>Sin productos en esta venta.</p>}</div></td></tr>}
                 </Fragment>
               ))}
-            </tbody></table>
+            </tbody></table></div>
           </div>
         );
       })}
