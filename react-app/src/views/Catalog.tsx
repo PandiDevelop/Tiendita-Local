@@ -3,8 +3,9 @@ import type { PointerEvent as ReactPointerEvent } from 'react';
 import { useStore } from '../store';
 import { money, esc, inventorySold, reorderCategoryProducts, groupedByCategory, storeCats, shortTag, promoText, DEFAULT_PRODUCT_IMAGE } from '../lib/core';
 import { customConfirm } from '../lib/dialog';
-import { GearMenu, Image } from '../ui';
+import { GearMenu, Image, StorefrontIcon } from '../ui';
 import { CategoryModal } from './CategoryModal';
+import { VirtualCatalog } from './VirtualCatalog';
 import type { Product } from '../types';
 
 export function Catalog() {
@@ -14,6 +15,12 @@ export function Catalog() {
   const inv = s.inventory || {};
   // Categoria cuya configuracion se abre con la tuerca del encabezado.
   const [catModal, setCatModal] = useState<{ mode: 'new' | 'edit'; name: string } | null>(null);
+  // Buscador en vivo: mientras se escribe, solo se ven los productos que
+  // coinciden (por nombre o tag), manteniendo las categorías.
+  const [query, setQuery] = useState('');
+  // Libro de catálogo virtual a pantalla completa (todos los productos con
+  // su foto, separados por categoría).
+  const [bookOpen, setBookOpen] = useState(false);
 
   // Orden de categorias/productos mientras se arrastran (solo visual hasta
   // soltar); se limpia al terminar el arrastre, momento en el que se guarda
@@ -56,6 +63,17 @@ export function Catalog() {
   function editCategoryPrice(cat: string) {
     setCatModal({ mode: 'edit', name: cat });
   }
+
+  // Filtro del buscador (por nombre o tag, sin distinguir mayúsculas), igual
+  // que el de Registro de venta. Mientras se busca, las categorías con
+  // coincidencias se muestran abiertas y las vacías se ocultan.
+  const q = query.trim().toLowerCase();
+  const searching = q.length > 0;
+  const productMatches = (p: Product) => p.name.toLowerCase().includes(q) || (!!p.tag && p.tag.trim().toLowerCase().includes(q));
+  const visibleGroups = searching
+    ? orderedGroups.map((g) => ({ ...g, list: g.list.filter(productMatches) })).filter((g) => g.list.length > 0)
+    : orderedGroups;
+  const foundCount = visibleGroups.reduce((a, g) => a + g.list.length, 0);
 
   // Eliminar producto desde el menú de la tuerca: sale del catálogo y del
   // inventario (sus ventas viejas se siguen viendo como "Producto eliminado").
@@ -167,9 +185,17 @@ export function Catalog() {
         <button className="button primary" onClick={addCategory}>＋ Añadir categoría</button>
         <div className="cat-divider"></div>
         <button className="button primary" onClick={() => setModal('newProduct')}>＋ Añadir producto</button>
+        <button className="button" disabled={!s.products.length} onClick={() => setBookOpen(true)}><StorefrontIcon size={16} /> Ver catálogo virtual</button>
       </div>
-      {s.products.length || storeCats(s).length ? orderedGroups.map((g) => {
-        const open = catOpen(g.name);
+      <div className="panel-search">
+        <input type="search" inputMode="search" placeholder="Buscar producto…" value={query} onChange={(e) => setQuery(e.target.value)} />
+        {searching && <button type="button" className="panel-search-clear" title="Limpiar búsqueda" onClick={() => setQuery('')}>×</button>}
+      </div>
+      {searching && <p className="muted panel-search-info">{foundCount} resultado{foundCount === 1 ? '' : 's'} para «{esc(query.trim())}».</p>}
+      {s.products.length || storeCats(s).length ? (searching && !visibleGroups.length ? (
+        <div className="notice">No se encontraron productos para «{esc(query.trim())}».</div>
+      ) : visibleGroups.map((g) => {
+        const open = searching ? true : catOpen(g.name);
         const editable = g.name !== 'Sin categoría';
         const list = prodDrag && prodDrag.cat === g.name
           ? prodDrag.order.map((id) => g.list.find((p) => p.id === id)).filter((p): p is Product => !!p)
@@ -177,7 +203,7 @@ export function Catalog() {
         return (
           <div className={'cat-group' + (draggingCat === g.name ? ' dragging' : '')} key={g.name} data-cat={g.name}>
             <div className="cat-head">
-              {editable && (
+              {editable && !searching && (
                 <button type="button" className="icon-btn drag-handle" title="Arrastrar para reordenar" onPointerDown={(e) => startCatDrag(e, g.name)}>⠿</button>
               )}
               <button className="cat-head-toggle" onClick={() => toggleCat(g.name)}>
@@ -200,7 +226,7 @@ export function Catalog() {
                       const avail = base == null ? '—' : Math.max(0, base - (sold[p.id] || 0));
                       return (
                         <tr key={p.id} data-pid={p.id} className={prodDrag?.pid === p.id ? 'dragging' : ''}>
-                          <td className="drag-cell"><button type="button" className="icon-btn drag-handle" title="Arrastrar para reordenar" onPointerDown={(e) => startProdDrag(e, g.name, p.id, g.list)}>⠿</button></td>
+                          <td className="drag-cell">{!searching && <button type="button" className="icon-btn drag-handle" title="Arrastrar para reordenar" onPointerDown={(e) => startProdDrag(e, g.name, p.id, g.list)}>⠿</button>}</td>
                           <td className="cat-bar"><div className="product-cell"><Image src={p.image || DEFAULT_PRODUCT_IMAGE} cls="product-image-cell" /><div className="product-name">{esc(p.name)}{p.tag && p.tag.trim() ? <span className="prod-tag" title={esc(p.tag)}>{esc(shortTag(p.tag))}</span> : null}</div></div></td>
                           <td>{money(p.price)}</td><td>{avail}</td>
                           <td>{p.promos.length ? <div className="promo-stack">{p.promos.map((x) => <span className="promotion" key={x.id}>{promoText(x)}</span>)}</div> : <span className="muted">—</span>}</td>
@@ -219,7 +245,7 @@ export function Catalog() {
             )}
           </div>
         );
-      }) : <div className="empty"><div className="emoji">
+      })) : <div className="empty"><div className="emoji">
           <svg viewBox="0 0 24 24" width="40" height="40" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" style={{ color: '#a98dde', display: 'block', margin: '0 auto' }}>
             <path d="M4 4h10l6 6v10h-10l-6 -6z" /><circle cx="9" cy="9" r="1.3" fill="currentColor" stroke="none" />
           </svg>
@@ -238,6 +264,9 @@ export function Catalog() {
             });
           }}
         />
+      )}
+    {bookOpen && (
+        <VirtualCatalog onClose={() => setBookOpen(false)} />
       )}
     </div>
   );

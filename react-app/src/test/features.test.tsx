@@ -7,6 +7,7 @@ import { ProductForm } from '../views/ProductForm';
 import { Employees } from '../views/Employees';
 import { Profit } from '../views/Profit';
 import { Notes } from '../views/Notes';
+import { VirtualCatalog } from '../views/VirtualCatalog';
 import { CLIENT_KEY, DEFAULT_PRODUCT_TAG } from '../lib/core';
 import { TestProvider, fieldControl, makeProduct, makeState, makeStore } from './testUtils';
 import type { AppState, Store } from '../types';
@@ -281,5 +282,87 @@ describe('Ganancias: íconos SVG en vez de emoji, ícono antes que texto', () =>
 
     // eslint-disable-next-line no-misleading-character-class
     expect(container.textContent).not.toMatch(/[\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}]/u);
+  });
+});
+
+describe('Buscador de productos en Catálogo e Inventario', () => {
+  it('Catálogo: al escribir, solo quedan las categorías con coincidencias (por nombre o tag)', () => {
+    const store = makeStore({
+      categories: ['Bebidas', 'Snacks'],
+      products: [
+        makeProduct({ id: 'p1', name: 'Agua', category: 'Bebidas' }),
+        makeProduct({ id: 'p2', name: 'Jugo', category: 'Bebidas' }),
+        makeProduct({ id: 'p3', name: 'Papas', category: 'Snacks', tag: 'executivo' }),
+      ],
+    });
+    render(<TestProvider initialState={makeState(store)}><Catalog /></TestProvider>);
+    expect(screen.getByText('Agua')).toBeInTheDocument();
+
+    const input = screen.getByPlaceholderText('Buscar producto…') as HTMLInputElement;
+    fireEvent.change(input, { target: { value: 'j' } });
+    expect(screen.getByText('Jugo')).toBeInTheDocument();
+    expect(screen.queryByText('Agua')).not.toBeInTheDocument();
+    expect(screen.queryByText('Papas')).not.toBeInTheDocument();
+    expect(screen.queryByText('Snacks')).not.toBeInTheDocument();
+    expect(screen.getByText(/1 resultado/)).toBeInTheDocument();
+
+    // El filtro también busca en el tag.
+    fireEvent.change(input, { target: { value: 'executivo' } });
+    expect(screen.getByText('Papas')).toBeInTheDocument();
+
+    // Sin coincidencias: aviso, sin productos a la vista.
+    fireEvent.change(input, { target: { value: 'zzz' } });
+    expect(screen.getByText(/No se encontraron productos/)).toBeInTheDocument();
+    expect(screen.queryByText('Jugo')).not.toBeInTheDocument();
+  });
+
+  it('Inventario: mismo filtro en vivo sobre las existencias (modo Existencias)', () => {
+    const store = makeStore({
+      categories: ['Bebidas', 'Snacks'],
+      products: [
+        makeProduct({ id: 'p1', name: 'Agua', category: 'Bebidas' }),
+        makeProduct({ id: 'p2', name: 'Jugo', category: 'Bebidas' }),
+        makeProduct({ id: 'p3', name: 'Papas', category: 'Snacks' }),
+      ],
+      inventory: { p1: 5, p2: 3, p3: 8 },
+    });
+    render(<TestProvider initialState={makeState(store)}><Inventory /></TestProvider>);
+    expect(screen.getByText('Agua')).toBeInTheDocument();
+
+    const input = screen.getByPlaceholderText('Buscar producto…') as HTMLInputElement;
+    fireEvent.change(input, { target: { value: 'jugo' } });
+    expect(screen.getByText('Jugo')).toBeInTheDocument();
+    expect(screen.queryByText('Agua')).not.toBeInTheDocument();
+    expect(screen.queryByText('Papas')).not.toBeInTheDocument();
+    expect(screen.getByText(/1 resultado/)).toBeInTheDocument();
+  });
+});
+
+describe('Libro de catálogo virtual', () => {
+  it('muestra todos los productos separados por categoría con imagen, nombre y precio', () => {
+    const store = makeStore({
+      categories: ['Bebidas', 'Snacks'],
+      products: [
+        makeProduct({ id: 'p1', name: 'Agua', price: 1500, category: 'Bebidas', image: 'data:image/png;base64,AAA' }),
+        makeProduct({ id: 'p2', name: 'Papas', price: 2000, category: 'Snacks' }),
+      ],
+    });
+    render(<TestProvider initialState={makeState(store)}><VirtualCatalog onClose={() => {}} /></TestProvider>);
+    expect(screen.getByText('Bebidas')).toBeInTheDocument();
+    expect(screen.getByText('Snacks')).toBeInTheDocument();
+    expect(screen.getByText('Agua')).toBeInTheDocument();
+    expect(screen.getByText('Papas')).toBeInTheDocument();
+    expect(screen.getByText(/\$[\s\u00a0]*1\.500/)).toBeInTheDocument();
+    expect(screen.getByText(/\$[\s\u00a0]*2\.000/)).toBeInTheDocument();
+    const card = screen.getByText('Agua').closest('.vc-card') as HTMLElement;
+    expect(card.querySelector('img.vc-img')).toBeTruthy();
+  });
+
+  it('se abre desde el botón "Ver catálogo virtual" de Catálogo', () => {
+    const store = makeStore({ products: [makeProduct({ id: 'p1', name: 'Agua', price: 1000, category: 'Bebidas' })] });
+    render(<TestProvider initialState={makeState(store)}><Catalog /></TestProvider>);
+    fireEvent.click(screen.getByRole('button', { name: /Ver catálogo virtual/ }));
+    expect(screen.getByText(/Catálogo virtual/)).toBeInTheDocument();
+    expect(screen.getAllByText('Agua').length).toBeGreaterThan(0);
   });
 });

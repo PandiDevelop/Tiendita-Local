@@ -37,6 +37,18 @@ export function Inventory() {
   const byId = new Map(s.products.map((p) => [p.id, p]));
   const groups = groupedByCategory(s);
 
+  // Buscador en vivo (solo vale en Existencias): mientras se escribe, se ven
+  // los productos que coinciden por nombre o tag, manteniendo las categorías
+  // (las de coincidencias se abren, las demás se ocultan).
+  const [query, setQuery] = useState('');
+  const q = query.trim().toLowerCase();
+  const searching = q.length > 0;
+  const productMatches = (p: Product) => p.name.toLowerCase().includes(q) || (!!p.tag && p.tag.trim().toLowerCase().includes(q));
+  const visibleGroups = searching
+    ? groups.map((g) => ({ ...g, list: g.list.filter(productMatches) })).filter((g) => g.list.length > 0)
+    : groups;
+  const foundCount = visibleGroups.reduce((a, g) => a + g.list.length, 0);
+
   // Independencia de vistas: Catalog guarda sus categorias abiertas bajo la
   // clave "c:cat" y Inventario bajo "i:cat". Asi abrir una categoria aqui no
   // la abre en Catálogo ni al reves (ver Catalog.tsx).
@@ -183,65 +195,78 @@ export function Inventory() {
             ))}
           </tbody></table>
         ) : <div className="notice">Aún no hay cambios registrados en el inventario.</div>
-      ) : s.products.length || storeCats(s).length ? (
-        <>
-          {groups.map((g) => {
-            const open = catOpen(g.name);
-            const editable = g.name !== 'Sin categoría';
-            return (
-              <div className="cat-group" key={g.name}>
-                <div className="cat-head">
-                  <button className="cat-head-toggle" onClick={() => toggleCat(g.name)}>
-                    <span className="cat-caret">{open ? '▾' : '▸'}</span><b>{esc(g.name)}</b>
-                    <span className="muted">· {g.list.length} producto{g.list.length === 1 ? '' : 's'}</span>
-                  </button>
-                  {editable && (
-                    <GearMenu items={[
-                      { label: 'Editar categoría', onClick: () => setCatModal(g.name) },
-                      { label: 'Eliminar categoría', danger: true, onClick: () => void removeCategory(g.name) },
-                    ]} />
+      ) : <>
+        {(s.products.length || storeCats(s).length) && (
+          <>
+            <div className="panel-search">
+              <input type="search" inputMode="search" placeholder="Buscar producto…" value={query} onChange={(e) => setQuery(e.target.value)} />
+              {searching && <button type="button" className="panel-search-clear" title="Limpiar búsqueda" onClick={() => setQuery('')}>×</button>}
+            </div>
+            {searching && <p className="muted panel-search-info">{foundCount} resultado{foundCount === 1 ? '' : 's'} para «{esc(query.trim())}».</p>}
+          </>
+        )}
+        {s.products.length || storeCats(s).length ? (
+          searching && !visibleGroups.length ? (
+            <div className="notice">No se encontraron productos para «{esc(query.trim())}».</div>
+          ) : (
+            visibleGroups.map((g) => {
+              const open = searching ? true : catOpen(g.name);
+              const editable = g.name !== 'Sin categoría';
+              return (
+                <div className="cat-group" key={g.name}>
+                  <div className="cat-head">
+                    <button className="cat-head-toggle" onClick={() => toggleCat(g.name)}>
+                      <span className="cat-caret">{open ? '▾' : '▸'}</span><b>{esc(g.name)}</b>
+                      <span className="muted">· {g.list.length} producto{g.list.length === 1 ? '' : 's'}</span>
+                    </button>
+                    {editable && (
+                      <GearMenu items={[
+                        { label: 'Editar categoría', onClick: () => setCatModal(g.name) },
+                        { label: 'Eliminar categoría', danger: true, onClick: () => void removeCategory(g.name) },
+                      ]} />
+                    )}
+                  </div>
+                  {open && (
+                    <div className="cat-body">
+                      {g.list.length ? (
+                        <table><thead><tr><th></th><th>Producto</th><th>Disponible</th><th>Vendido</th><th>Adquirido</th><th>Ajustar</th></tr></thead><tbody>
+                          {g.list.map((p) => {
+                            const has = base[p.id] != null;
+                            const buy = has ? Math.round(base[p.id]) : null;
+                            const soldQty = sold[p.id] || 0;
+                            const avail = has ? Math.max(0, buy! - soldQty) : null;
+                            return (
+                              <tr key={p.id} data-pid={p.id} className={prodDrag?.pid === p.id ? 'dragging' : ''}>
+                                <td className="drag-cell">{!searching && <button type="button" className="icon-btn drag-handle" title="Arrastrar para reordenar" onPointerDown={(e) => startProdDrag(e, g.name, p.id, g.list)}>⠿</button>}</td>
+                                <td className="cat-bar"><div className="product-cell"><Image src={p.image || DEFAULT_PRODUCT_IMAGE} cls="product-image-cell" /><div className="product-name">{esc(p.name)}{p.tag && p.tag.trim() ? <span className="prod-tag" title={esc(p.tag)}>{esc(shortTag(p.tag))}</span> : null}</div></div></td>
+                                <td>{avail == null ? '—' : avail}</td>
+                                <td>{soldQty}</td>
+                                <td>{buy == null ? '—' : buy}</td>
+                                <td className="inv-actions">
+                                  <div className="inv-stepper">
+                                    <button className="qty-btn" title="Restar 1" onClick={() => bump(p, -1)}>−</button>
+                                    <button className="icon-btn" title="Editar cantidad exacta" onClick={() => openEdit(p)}><PencilIcon size={14} /></button>
+                                    <button className="qty-btn" title="Sumar 1" onClick={() => bump(p, 1)}>+</button>
+                                    <button className="inv-cargo" title="Nuevo cargamento" onClick={() => openCargo(p)}><TruckIcon size={16} /></button>
+                                  </div>
+                                </td>
+                              </tr>
+                            );
+                          })}
+                        </tbody></table>
+                      ) : <div className="notice">Sin productos en esta categoría todavía.</div>}
+                    </div>
                   )}
                 </div>
-                {open && (
-                  <div className="cat-body">
-                    {g.list.length ? (
-                      <table><thead><tr><th></th><th>Producto</th><th>Disponible</th><th>Vendido</th><th>Adquirido</th><th>Ajustar</th></tr></thead><tbody>
-                        {g.list.map((p) => {
-                          const has = base[p.id] != null;
-                          const buy = has ? Math.round(base[p.id]) : null;
-                          const soldQty = sold[p.id] || 0;
-                          const avail = has ? Math.max(0, buy! - soldQty) : null;
-                          return (
-                            <tr key={p.id} data-pid={p.id} className={prodDrag?.pid === p.id ? 'dragging' : ''}>
-                              <td className="drag-cell"><button type="button" className="icon-btn drag-handle" title="Arrastrar para reordenar" onPointerDown={(e) => startProdDrag(e, g.name, p.id, g.list)}>⠿</button></td>
-                              <td className="cat-bar"><div className="product-cell"><Image src={p.image || DEFAULT_PRODUCT_IMAGE} cls="product-image-cell" /><div className="product-name">{esc(p.name)}{p.tag && p.tag.trim() ? <span className="prod-tag" title={esc(p.tag)}>{esc(shortTag(p.tag))}</span> : null}</div></div></td>
-                              <td>{avail == null ? '—' : avail}</td>
-                              <td>{soldQty}</td>
-                              <td>{buy == null ? '—' : buy}</td>
-                              <td className="inv-actions">
-                                <div className="inv-stepper">
-                                  <button className="qty-btn" title="Restar 1" onClick={() => bump(p, -1)}>−</button>
-                                  <button className="icon-btn" title="Editar cantidad exacta" onClick={() => openEdit(p)}><PencilIcon size={14} /></button>
-                                  <button className="qty-btn" title="Sumar 1" onClick={() => bump(p, 1)}>+</button>
-                                  <button className="inv-cargo" title="Nuevo cargamento" onClick={() => openCargo(p)}><TruckIcon size={16} /></button>
-                                </div>
-                              </td>
-                            </tr>
-                          );
-                        })}
-                      </tbody></table>
-                    ) : <div className="notice">Sin productos en esta categoría todavía.</div>}
-                  </div>
-                )}
-              </div>
-            );
-          })}
-        </>
-      ) : <div className="empty"><div className="emoji">
+              );
+            })
+          )
+        ) : <div className="empty"><div className="emoji">
           <svg viewBox="0 0 24 24" width="40" height="40" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" style={{ color: '#a98dde', display: 'block', margin: '0 auto' }}>
             <path d="M4 8l8 -4 8 4 -8 4z" /><path d="M4 8v8l8 4 8 -4V8" /><path d="M12 12v8" />
           </svg>
         </div><b>Aún no hay productos en el catálogo.</b><p>Agrega productos al catálogo para verlos aquí y llevar el control de existencias.</p></div>}
+        </>}
 
       {catModal && (
         <CategoryModal mode="edit" catName={catModal} onClose={() => setCatModal(null)} />
