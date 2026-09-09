@@ -23,11 +23,11 @@ import { firebaseApp, savePushToken, syncReady } from './sync';
 // en Firebase Console > Configuracion del proyecto > Cloud Messaging >
 // "Certificados push web" > "Generar par de claves". No es secreta (viaja
 // al navegador de todas formas), pero sin ella getToken() no funciona.
-export const VAPID_PUBLIC_KEY = '';
+export const VAPID_PUBLIC_KEY = 'BFNUyldTq43ZFSoK6V-persj79KsBs3r_And6ZZRq5lFT6fu4ufrdHUoWzaqMJ1qdtiL6Rlab_vXiBPFxHM7AP4';
 
 // URL del Worker ya desplegado en Cloudflare (ver push-worker/), algo como
 // 'https://mi-tiendita-push.<tu-usuario>.workers.dev'. Sin barra al final.
-export const PUSH_WORKER_URL = '';
+export const PUSH_WORKER_URL = 'https://mi-tiendita-push.pandi.workers.dev';
 
 export function pushConfigured(): boolean {
   return !!VAPID_PUBLIC_KEY && !!PUSH_WORKER_URL;
