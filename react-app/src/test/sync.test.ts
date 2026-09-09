@@ -9,7 +9,13 @@ vi.mock('firebase/firestore', () => ({
   collection: () => ({}),
   doc: (_parent: unknown, id?: string) => ({ id }),
   query: (q: unknown) => q,
-  onSnapshot: () => () => {},
+  onSnapshot: (_ref: unknown, onNext: (snap: unknown) => void) => {
+    // Snapshot minimo que sirve tanto para el listener del doc principal
+    // (exists/data) como para el de la subcoleccion de productos (forEach):
+    // el codigo real de sync.ts solo toca lo que le corresponde a cada uno.
+    try { onNext({ exists: () => false, data: () => undefined, forEach: () => {} }); } catch { /* ignorar */ }
+    return () => {};
+  },
   setDoc: vi.fn(() => Promise.resolve()),
   getDoc: vi.fn(),
   getDocs: vi.fn(() => Promise.resolve({ forEach: () => {} })),
@@ -306,6 +312,7 @@ describe('createSync push() incremental y con reintento', () => {
     const pid2 = addProduct(dev.st, 'Pan', 2000);
 
     const sync = createSync(() => dev.ref, () => {}, () => {});
+    sync.attach(dev.st.id);
     await sync.push(dev.st.id);
     // 2 documentos de producto + 1 documento principal = 3 llamadas
     const productCalls1 = calls.filter((c) => !('updatedBy' in c.data));
@@ -341,6 +348,7 @@ describe('createSync push() incremental y con reintento', () => {
 
     let failing = 0;
     const sync = createSync(() => dev.ref, () => {}, () => {}, () => { failing++; });
+    sync.attach(dev.st.id);
     await sync.push(dev.st.id);
     expect(setDocMock).toHaveBeenCalledTimes(1);
 
@@ -376,6 +384,7 @@ describe('createSync push() incremental y con reintento', () => {
     adoptInvLog(dev.st, pid, 5, 'Distribuidora');
 
     const sync = createSync(() => dev.ref, () => {}, () => {});
+    sync.attach(dev.st.id);
     await sync.push(dev.st.id);
 
     expect(calls.length).toBe(2);
@@ -407,6 +416,7 @@ describe('createSync push() incremental y con reintento', () => {
     addProduct(dev.st, 'Agua', 1000);
 
     const sync = createSync(() => dev.ref, () => {}, () => {});
+    sync.attach(dev.st.id);
     // Arranca el primer push: el primer setDoc (producto) se queda "colgado"
     // a proposito para simular que sigue en curso.
     const p1 = sync.push(dev.st.id);
@@ -441,6 +451,7 @@ describe('createSync push() incremental y con reintento', () => {
     addProduct(dev.st, 'Pan', 2000);
 
     const sync = createSync(() => dev.ref, () => {}, () => {});
+    sync.attach(dev.st.id);
     await sync.push(dev.st.id);
 
     // 2 documentos de producto + 1 documento principal = 3 llamadas

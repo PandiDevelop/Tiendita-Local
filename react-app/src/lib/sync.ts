@@ -175,6 +175,31 @@ export function createSync(
   // termine el actual, en vez de salir al tiempo.
   const inFlight = new Set<string>();
   const pendingAgain = new Set<string>();
+  // "Primed": ya llego al menos un snapshot real del documento principal Y
+  // de la subcoleccion de productos de esta tienda desde la ultima vez que
+  // se (re)conecto el listener (attach). Bug real que esto arregla: push()
+  // se disparaba apenas arrancaba la app (o volvia de segundo plano),
+  // usando el estado guardado en localStorage tal cual estaba antes de
+  // cerrarla. Si mientras tanto OTRO dispositivo habia borrado una nota o
+  // un producto, ese primer push - que salia ANTES de que llegara el
+  // primer snapshot remoto que ya reflejaba ese borrado - volvia a subir
+  // la version vieja (todavia con la nota/producto adentro) y la
+  // "resucitaba" para todo el mundo. Ahora push() espera a que la tienda
+  // quede "primed" antes de mandar nada: asi el estado local ya se
+  // reconcilio con lo que de verdad hay en la nube (borrados incluidos)
+  // antes de reenviar. pendingAgain (ver arriba) hace que, si un push
+  // queria salir mientras tanto, se reintente solo apenas quede primed.
+  const primedMain = new Set<string>();
+  const primedProducts = new Set<string>();
+  function isPrimed(storeId: string): boolean {
+    return primedMain.has(storeId) && primedProducts.has(storeId);
+  }
+  function markPrimed(which: 'main' | 'products', storeId: string) {
+    const set = which === 'main' ? primedMain : primedProducts;
+    if (set.has(storeId)) return;
+    set.add(storeId);
+    if (isPrimed(storeId) && pendingAgain.delete(storeId)) push(storeId);
+  }
   // Ultimo contenido de cada producto que SI se confirmo guardado en la
   // nube (por tienda). Cada producto vive en su propio documento de la
   // subcoleccion, pero igual solo se reescribe el que de verdad cambio desde
@@ -239,6 +264,15 @@ export function createSync(
     if (inFlight.has(storeId)) { pendingAgain.add(storeId); return; }
     const s = getState().stores.find((x) => x.id === storeId);
     if (!s || !s.syncKey || !syncReady() || !DB) return;
+    if (!isPrimed(storeId)) {
+      // Todavia no llego el primer snapshot remoto de esta tienda (ver el
+      // comentario junto a primedMain/primedProducts arriba): no reenviar
+      // el estado local todavia, podria estar desactualizado justo
+      // despues de recargar la app o reconectar. markPrimed() reintenta
+      // esto solo apenas la tienda quede "primed".
+      pendingAgain.add(storeId);
+      return;
+    }
     const t = retryTimers.get(storeId);
     if (t) { clearTimeout(t); retryTimers.delete(storeId); }
     const f = fp(storeId);
@@ -388,11 +422,14 @@ export function createSync(
     if (prev) { prev(); subs.delete(storeId); }
     const s = getState().stores.find((x) => x.id === storeId);
     if (!s || !s.syncKey) return;
+    primedMain.delete(storeId);
+    primedProducts.delete(storeId);
     const unsubs: (() => void)[] = [];
     // Listener del documento principal: la meta de la tienda (nombre, foto,
     // ventas, categorias, notas, inventario, miembros, ...). Los productos
     // ya NO llegan por aqui (viven en la subcoleccion de abajo).
     const unMain = onSnapshot(storeDocRef(s.syncKey), (snap) => {
+      markPrimed('main', storeId);
       if (!snap || !snap.exists()) return;
       const d = snap.data();
       if (!d) return;
@@ -420,6 +457,7 @@ export function createSync(
     // propio (ver la nota junto a productDocRef). Se aplica el catalogo que
     // llega desde la nube, fusionandolo por id en el estado local.
     const unProducts = onSnapshot(query(productsColRef(s.syncKey)), (snap) => {
+      markPrimed('products', storeId);
       const remoteProducts: Record<string, unknown> = {};
       snap.forEach((pd) => { remoteProducts[pd.id] = pd.data(); });
       // El snapshot de productos no trae updatedBy, asi que applyRemote lo
@@ -470,6 +508,9 @@ export function createSync(
     failCount.delete(storeId);
     lastPushedProducts.delete(storeId);
     lastPushedNotes.delete(storeId);
+    primedMain.delete(storeId);
+    primedProducts.delete(storeId);
+    pendingAgain.delete(storeId);
     // Se borra tambien lo persistido en localStorage: detach() solo se
     // llama cuando la tienda de verdad se quita de este dispositivo (o se
     // desactiva la sincronizacion), no en cada re-suscripcion normal - ver

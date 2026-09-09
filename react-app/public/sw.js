@@ -1,4 +1,4 @@
-const CACHE = 'mi-tiendita-1.8.1';
+const CACHE = 'mi-tiendita-1.8.2';
 self.addEventListener('install', () => self.skipWaiting());
 self.addEventListener('activate', event => event.waitUntil(Promise.all([self.clients.claim(), caches.keys().then(keys => Promise.all(keys.filter(key => key !== CACHE).map(key => caches.delete(key))))])));
 self.addEventListener('fetch', event => {
@@ -35,6 +35,14 @@ self.addEventListener('push', event => {
     icon: './icon-192.png',
     badge: './icon-192.png',
     tag: 'mi-tiendita-notas',
+    // requireInteraction: que se quede en pantalla (no se autoborre a los
+    // pocos segundos como un aviso normal) hasta que la persona la toque o
+    // la quite a mano - como las apps normales. renotify: aunque reuse el
+    // mismo "tag" (para no amontonar un aviso por cada nota nueva, solo
+    // actualiza el mas reciente), que SI vuelva a sonar/vibrar cada vez en
+    // vez de actualizarse en silencio.
+    requireInteraction: true,
+    renotify: true,
     data: { link },
   }));
 });

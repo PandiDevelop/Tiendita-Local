@@ -137,6 +137,8 @@ async function sendToToken(accessToken, projectId, token, title, body, link) {
     token,
     notification: { title, body },
     webpush: {
+      // requireInteraction/renotify van en el payload de sw.js (quien de
+      // verdad muestra el aviso); aca solo hace falta el link a abrir.
       fcmOptions: link ? { link } : undefined,
     },
   };
@@ -180,16 +182,29 @@ export default {
       const accessToken = await getAccessToken(env);
       let sent = 0;
       let failed = 0;
+      // Se guarda el motivo de cada fallo (y a que clientId correspondia)
+      // para poder ver en la respuesta - o en "npx wrangler tail" - POR QUE
+      // no llego un aviso (token vencido/invalido, proyecto mal
+      // configurado, lo que sea) en vez de solo un numero sin explicacion.
+      const errors = [];
       await Promise.all(targets.map(async function (entry) {
+        const clientId = entry[0];
         const token = entry[1];
         try {
           const r = await sendToToken(accessToken, env.FIREBASE_PROJECT_ID, token, title, msgBody, link);
-          if (r.ok) sent++; else failed++;
+          if (r.ok) {
+            sent++;
+          } else {
+            failed++;
+            const errText = await r.text().catch(function () { return ''; });
+            errors.push({ clientId: clientId, status: r.status, error: errText.slice(0, 500) });
+          }
         } catch (e) {
           failed++;
+          errors.push({ clientId: clientId, error: String((e && e.message) || e) });
         }
       }));
-      return jsonResponse({ ok: true, sent: sent, failed: failed, total: targets.length });
+      return jsonResponse({ ok: true, sent: sent, failed: failed, total: targets.length, errors: errors });
     } catch (e) {
       return jsonResponse({ ok: false, error: String((e && e.message) || e) }, 500);
     }
