@@ -145,6 +145,13 @@ export function PencilIcon({ size = 14 }: { size?: number }) {
 // overflow). Siempre cae hacia abajo del botón; si quedaría debajo del borde
 // de la pantalla, la página se desplaza suave y el menú se pega al botón
 // mientras el scroll lo acomoda. Se cierra al tocar fuera o elegir una opción.
+// Cual de todos los menus de tuerca de la pantalla esta abierto ahora mismo
+// (cada fila/categoria tiene su propio GearMenu, componente independiente).
+// Se guarda aca el "setOpen" de ese, para poder cerrarlo de una al abrir
+// otro: asi solo hay uno abierto a la vez siempre, sin depender de que el
+// listener de "clic afuera" del anterior alcance a llegar a tiempo.
+let closeOpenGearMenu: ((open: boolean) => void) | null = null;
+
 export function GearMenu({ items }: { items: { label: string; danger?: boolean; onClick: () => void }[] }) {
   const [open, setOpen] = useState(false);
   const [pos, setPos] = useState<{ left: number; top: number } | null>(null);
@@ -159,24 +166,36 @@ export function GearMenu({ items }: { items: { label: string; danger?: boolean; 
     setPos({ left: Math.min(Math.max(6, r.right - width), window.innerWidth - width - 6), top: r.bottom + 5 });
   };
 
-  // Al abrir, se calcula la posicion de una vez (con el ancho aproximado de
-  // la ultima vez) para que el menu no aparezca en 0,0 ni parpadee: antes
-  // esto se dejaba para el requestAnimationFrame de abajo, pero ese efecto
-  // solo mide el menu real (menuRef) despues de que el menu ya este en el
-  // DOM, y el menu solo aparece en el DOM cuando "pos" deja de ser null -
-  // un candado que nunca se abria solo (el menu jamas llegaba a mostrarse).
+  const closeMenu = () => {
+    setOpen(false);
+    if (closeOpenGearMenu === setOpen) closeOpenGearMenu = null;
+  };
+
+  // Al abrir: si habia otro menu de tuerca abierto en la pantalla, se cierra
+  // primero (garantiza que nunca queden dos a la vez, pase lo que pase con
+  // el orden de eventos). Luego se calcula la posicion de una vez (con el
+  // ancho aproximado de la ultima vez) para que el menu no aparezca en 0,0
+  // ni parpadee: antes esto se dejaba para el requestAnimationFrame de
+  // abajo, pero ese efecto solo mide el menu real (menuRef) despues de que
+  // el menu ya este en el DOM, y el menu solo aparece en el DOM cuando
+  // "pos" deja de ser null - un candado que a veces nunca se abria solo.
   function openMenu() {
+    if (closeOpenGearMenu && closeOpenGearMenu !== setOpen) closeOpenGearMenu(false);
+    closeOpenGearMenu = setOpen;
     syncPos();
     setOpen(true);
   }
 
   useEffect(() => {
     if (!open) return;
-    const onDown = (e: MouseEvent) => {
+    // pointerdown (no mousedown) cubre igual el mouse, el touch y el lapiz,
+    // asi que el "clic afuera" cierra el menu de forma pareja en celular y
+    // en escritorio.
+    const onDown = (e: PointerEvent) => {
       const t = e.target as Node;
-      if (wrapRef.current && menuRef.current && !wrapRef.current.contains(t) && !menuRef.current.contains(t)) setOpen(false);
+      if (wrapRef.current && menuRef.current && !wrapRef.current.contains(t) && !menuRef.current.contains(t)) closeMenu();
     };
-    document.addEventListener('mousedown', onDown);
+    document.addEventListener('pointerdown', onDown);
     const onScroll = () => syncPos();
     window.addEventListener('scroll', onScroll, { passive: true });
     const raf = requestAnimationFrame(() => {
@@ -189,14 +208,19 @@ export function GearMenu({ items }: { items: { label: string; danger?: boolean; 
         window.scrollBy({ top: r.bottom + 5 + m.offsetHeight - window.innerHeight + 12, behavior: 'smooth' });
       }
     });
-    return () => { document.removeEventListener('mousedown', onDown); window.removeEventListener('scroll', onScroll); cancelAnimationFrame(raf); };
+    return () => {
+      document.removeEventListener('pointerdown', onDown);
+      window.removeEventListener('scroll', onScroll);
+      cancelAnimationFrame(raf);
+      if (closeOpenGearMenu === setOpen) closeOpenGearMenu = null;
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open]);
   return (
     <>
       <div className="actions" ref={wrapRef}>
         <button type="button" className="icon-btn" title="Opciones"
-          onClick={() => (open ? setOpen(false) : openMenu())}>
+          onClick={() => (open ? closeMenu() : openMenu())}>
           <GearIcon />
         </button>
       </div>
@@ -204,7 +228,7 @@ export function GearMenu({ items }: { items: { label: string; danger?: boolean; 
         <div className="action-menu gear-menu-portal" ref={menuRef} style={{ left: pos.left, top: pos.top }}>
           {items.map((it) => (
             <button key={it.label} type="button" className={it.danger ? 'danger' : ''}
-              onClick={() => { setOpen(false); it.onClick(); }}>{it.label}</button>
+              onClick={() => { closeMenu(); it.onClick(); }}>{it.label}</button>
           ))}
         </div>,
         document.body
