@@ -67,15 +67,18 @@ export function esc(v: string | number | null | undefined): string {
   return String(v ?? '');
 }
 
+// Formato de fecha para TODA la pagina: dia/mes/año de dos digitos (DD/MM/AA).
+function pad2(n: number): string {
+  return String(n).padStart(2, '0');
+}
 export function formatDate(d: string | null | undefined): string {
   if (!d) return '—';
-  const s = new Intl.DateTimeFormat('es-CO', { day: 'numeric', month: 'long', year: 'numeric' }).format(new Date(d + 'T12:00:00'));
-  return s.charAt(0).toUpperCase() + s.slice(1);
+  const dt = new Date(d + 'T12:00:00');
+  return [pad2(dt.getDate()), pad2(dt.getMonth() + 1), String(dt.getFullYear()).slice(-2)].join('/');
 }
 
 export function shortDate(d: string | null | undefined): string {
-  if (!d) return '—';
-  return new Intl.DateTimeFormat('es-CO', { day: '2-digit', month: '2-digit', year: '2-digit' }).format(new Date(d + 'T12:00:00'));
+  return formatDate(d);
 }
 
 export function toProductsArr(src: unknown): Product[] {

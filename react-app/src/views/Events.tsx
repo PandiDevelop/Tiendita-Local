@@ -163,10 +163,13 @@ export function Events() {
       {events.length > 0 && (
         <div className="ev-history">
           <div className="ev-history-title">Historial de eventos</div>
-          <table><thead><tr><th>Evento</th><th>Duración</th><th>Promociones</th></tr></thead><tbody>
-            {history.map((e) => (
+          <table><thead><tr><th>Evento</th><th>Estado</th><th>Duración</th><th>Promociones</th></tr></thead><tbody>
+            {history.map((e) => {
+              const fin = (!!e.end && e.end < today()) || (!e.active && !!e.end);
+              return (
               <tr key={e.id} className={e.id === (act && act.id) ? 'ev-row-active' : ''}>
-                <td className="product-name"><b>{esc(e.name || 'Sin nombre')}</b>{e.id === (act && act.id) ? <span className="ev-badge on">ahora</span> : null}</td>
+                <td className="product-name"><b>{esc(e.name || 'Sin nombre')}</b></td>
+                <td>{fin ? <span className="ev-badge off">Finalizado</span> : <span className="ev-badge on">Activo</span>}</td>
                 <td className="muted">
                   {e.start || e.end
                     ? (e.start ? formatDate(e.start) : '…') + ' → ' + (e.end ? formatDate(e.end) : 'sin fin')
@@ -174,7 +177,8 @@ export function Events() {
                 </td>
                 <td>{e.pct > 0 ? <span className="ev-badge on">{e.pct}% de descuento</span> : <span className="muted">Sin promoción</span>}</td>
               </tr>
-            ))}
+              );
+            })}
           </tbody></table>
         </div>
       )}
