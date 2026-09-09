@@ -10,8 +10,6 @@ import { CLIENT_KEY, DEFAULT_PRODUCT_TAG } from '../lib/core';
 import { TestProvider, fieldControl, makeProduct, makeState, makeStore } from './testUtils';
 import type { AppState, Store } from '../types';
 
-const GEAR_TITLE = 'Configurar la categoría (precio, costo y promociones por defecto)';
-
 beforeEach(() => {
   localStorage.clear();
 });
@@ -21,19 +19,25 @@ afterEach(() => {
 });
 
 describe('Icono de configuración de categoría (tuerca, no moneda)', () => {
-  it('Catálogo muestra una tuerca ⚙ en el encabezado de la categoría', () => {
+  const headerGear = (container: HTMLElement) =>
+    container.querySelector('.cat-head .actions button[title="Opciones"]') as HTMLButtonElement | null;
+
+  it('Catálogo muestra una tuerca (SVG) en el encabezado de la categoría', () => {
     const store = makeStore({ categories: ['Bebidas'], products: [makeProduct({ category: 'Bebidas' })] });
-    render(<TestProvider initialState={makeState(store)}><Catalog /></TestProvider>);
-    const gear = screen.getByTitle(GEAR_TITLE);
-    expect(gear).toHaveTextContent('⚙');
-    expect(gear.textContent).not.toMatch(/[$₱฿€£¥]/);
+    const { container } = render(<TestProvider initialState={makeState(store)}><Catalog /></TestProvider>);
+    const gear = headerGear(container);
+    expect(gear).not.toBeNull();
+    expect(gear!.querySelector('svg')).not.toBeNull();
+    expect(gear!.textContent).not.toMatch(/[$₱฿€£¥]/);
   });
 
   it('Inventario usa la misma tuerca (no un ícono de peso/moneda distinto)', () => {
     const store = makeStore({ categories: ['Bebidas'], products: [makeProduct({ category: 'Bebidas' })] });
-    render(<TestProvider initialState={makeState(store)}><Inventory /></TestProvider>);
-    const gear = screen.getByTitle(GEAR_TITLE);
-    expect(gear).toHaveTextContent('⚙');
+    const { container } = render(<TestProvider initialState={makeState(store)}><Inventory /></TestProvider>);
+    const gear = headerGear(container);
+    expect(gear).not.toBeNull();
+    expect(gear!.querySelector('svg')).not.toBeNull();
+    expect(gear!.textContent).not.toMatch(/[$₱฿€£¥]/);
   });
 });
 

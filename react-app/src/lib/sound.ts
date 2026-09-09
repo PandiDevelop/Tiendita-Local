@@ -73,7 +73,7 @@ export async function requestNotifyPermission(): Promise<NotificationPermission 
 export function showSystemNotification(title: string, body: string, tag = 'mi-tiendita-aviso'): void {
   if (typeof Notification === 'undefined' || Notification.permission !== 'granted') return;
   if (document.visibilityState === 'visible') return;
-  const opts: NotificationOptions = {
+  const opts: NotificationOptions & { vibrate?: number[] } = {
     body,
     icon: './icon-192.png',
     badge: './icon-192.png',

@@ -91,12 +91,19 @@ export function makeProduct(overrides: Partial<Product> = {}): Product {
   };
 }
 
-// Un <label> y su <input>/<select> viven como hermanos dentro del mismo
-// .field (no hay htmlFor/id que los enlace), asi que getByLabelText no los
-// encuentra: se toma el siguiente hermano del texto de la etiqueta.
+// Un <label> y su control viven dentro del mismo .field (no hay htmlFor/id
+// que los enlace), asi que getByLabelText no los encuentra: se toma el
+// siguiente hermano del texto de la etiqueta. Los campos simples son el
+// <input>/<select> en si; los compuestos (p.ej. SuggestInput con su lista de
+// sugerencias) envuelven el <input> en un contenedor, asi que se baja a buscar
+// el control real dentro.
 export function fieldControl(labelText: string | RegExp, container: HTMLElement): HTMLInputElement {
   const labels = Array.from(container.querySelectorAll('label'));
   const label = labels.find((l) => (typeof labelText === 'string' ? l.textContent?.trim().startsWith(labelText) : labelText.test(l.textContent || '')));
   if (!label) throw new Error('No se encontro la etiqueta: ' + labelText);
-  return label.nextElementSibling as HTMLInputElement;
+  const el = label.nextElementSibling as HTMLElement | null;
+  if (el && (el instanceof HTMLInputElement || el instanceof HTMLSelectElement || el instanceof HTMLTextAreaElement)) return el as HTMLInputElement;
+  const inner = el?.querySelector('input, select, textarea') as HTMLInputElement | null;
+  if (inner) return inner;
+  return el as HTMLInputElement;
 }
