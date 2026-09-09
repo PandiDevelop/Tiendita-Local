@@ -22,8 +22,10 @@ export function Events() {
   const [draft, setDraft] = useState<StoreEvent>(blankEvent());
 
   const act = activeEvent(s);
-  // Historial: eventos que ya terminaron (con fecha de fin anterior a hoy).
-  const ended = events.filter((e) => e.end && e.end < today());
+  // Historial: una lista con TODOS los eventos (nombre, duración y promoción),
+  // ordenados del más reciente al más antiguo. Antes solo salían los que ya
+  // tenían fecha de fin pasada, y por eso no aparecía.
+  const history = [...events].sort((a, b) => ((b.start || b.end) || '').localeCompare((a.start || a.end) || ''));
 
   function patch(id: string, p: Partial<StoreEvent>) {
     replace((d) => {
@@ -153,13 +155,13 @@ export function Events() {
         );
       })}
 
-      {ended.length > 0 && (
+      {events.length > 0 && (
         <div className="ev-history">
           <div className="ev-history-title">Historial de eventos</div>
           <table><thead><tr><th>Evento</th><th>Duración</th><th>Promociones</th></tr></thead><tbody>
-            {ended.map((e) => (
-              <tr key={e.id}>
-                <td className="product-name"><b>{esc(e.name || 'Sin nombre')}</b></td>
+            {history.map((e) => (
+              <tr key={e.id} className={e.id === (act && act.id) ? 'ev-row-active' : ''}>
+                <td className="product-name"><b>{esc(e.name || 'Sin nombre')}</b>{e.id === (act && act.id) ? <span className="ev-badge on">ahora</span> : null}</td>
                 <td className="muted">
                   {e.start || e.end
                     ? (e.start ? formatDate(e.start) : '…') + ' → ' + (e.end ? formatDate(e.end) : 'sin fin')
