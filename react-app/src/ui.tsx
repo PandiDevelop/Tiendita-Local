@@ -152,12 +152,23 @@ export function GearMenu({ items }: { items: { label: string; danger?: boolean; 
   const wrapRef = useRef<HTMLDivElement>(null);
   const menuRef = useRef<HTMLDivElement>(null);
 
-  const syncPos = () => {
+  const syncPos = (width: number = w) => {
     const el = wrapRef.current;
     if (!el) return;
     const r = el.getBoundingClientRect();
-    setPos({ left: Math.min(Math.max(6, r.right - w), window.innerWidth - w - 6), top: r.bottom + 5 });
+    setPos({ left: Math.min(Math.max(6, r.right - width), window.innerWidth - width - 6), top: r.bottom + 5 });
   };
+
+  // Al abrir, se calcula la posicion de una vez (con el ancho aproximado de
+  // la ultima vez) para que el menu no aparezca en 0,0 ni parpadee: antes
+  // esto se dejaba para el requestAnimationFrame de abajo, pero ese efecto
+  // solo mide el menu real (menuRef) despues de que el menu ya este en el
+  // DOM, y el menu solo aparece en el DOM cuando "pos" deja de ser null -
+  // un candado que nunca se abria solo (el menu jamas llegaba a mostrarse).
+  function openMenu() {
+    syncPos();
+    setOpen(true);
+  }
 
   useEffect(() => {
     if (!open) return;
@@ -172,7 +183,7 @@ export function GearMenu({ items }: { items: { label: string; danger?: boolean; 
       const m = menuRef.current;
       if (!m) return;
       setW(m.offsetWidth);
-      syncPos();
+      syncPos(m.offsetWidth);
       const r = wrapRef.current!.getBoundingClientRect();
       if (r.bottom + 5 + m.offsetHeight > window.innerHeight - 4) {
         window.scrollBy({ top: r.bottom + 5 + m.offsetHeight - window.innerHeight + 12, behavior: 'smooth' });
@@ -185,7 +196,7 @@ export function GearMenu({ items }: { items: { label: string; danger?: boolean; 
     <>
       <div className="actions" ref={wrapRef}>
         <button type="button" className="icon-btn" title="Opciones"
-          onClick={() => setOpen((o) => !o)}>
+          onClick={() => (open ? setOpen(false) : openMenu())}>
           <GearIcon />
         </button>
       </div>
