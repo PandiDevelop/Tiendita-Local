@@ -108,12 +108,51 @@
       "source_location": "L142"
     },
     {
+      "id": "react_app_src_dropdown_dropdownitem",
+      "label": "DropdownItem",
+      "_callable": true,
+      "_callable_class": true,
+      "_origin": "ast",
+      "community": 15,
+      "community_name": "SaleRegistration.tsx",
+      "file_type": "code",
+      "norm_label": "dropdownitem",
+      "source_file": "react-app/src/Dropdown.tsx",
+      "source_location": "L3"
+    },
+    {
+      "id": "react_app_src_types_storeevent",
+      "label": "StoreEvent",
+      "_callable": true,
+      "_callable_class": true,
+      "_origin": "ast",
+      "community": 15,
+      "community_name": "SaleRegistration.tsx",
+      "file_type": "code",
+      "norm_label": "storeevent",
+      "source_file": "react-app/src/types.ts",
+      "source_location": "L83"
+    },
+    {
+      "id": "react_app_src_views_saleregistration_line",
+      "label": "Line",
+      "_callable": true,
+      "_callable_class": true,
+      "_origin": "ast",
+      "community": 15,
+      "community_name": "SaleRegistration.tsx",
+      "file_type": "code",
+      "norm_label": "line",
+      "source_file": "react-app/src/views/SaleRegistration.tsx",
+      "source_location": "L8"
+    },
+    {
       "id": "react_app_src_lib_core_invlogrow",
       "label": "InvLogRow",
       "_callable": true,
       "_callable_class": true,
       "_origin": "ast",
-      "community": 15,
+      "community": 3,
       "community_name": "core.ts",
       "file_type": "code",
       "norm_label": "invlogrow",
@@ -126,7 +165,7 @@
       "_callable": true,
       "_callable_class": true,
       "_origin": "ast",
-      "community": 15,
+      "community": 3,
       "community_name": "core.ts",
       "file_type": "code",
       "norm_label": "categorypricing",
@@ -139,7 +178,7 @@
       "_callable": true,
       "_callable_class": true,
       "_origin": "ast",
-      "community": 15,
+      "community": 3,
       "community_name": "core.ts",
       "file_type": "code",
       "norm_label": "inventorylogentry",
@@ -152,7 +191,7 @@
       "_callable": true,
       "_callable_class": true,
       "_origin": "ast",
-      "community": 15,
+      "community": 3,
       "community_name": "core.ts",
       "file_type": "code",
       "norm_label": "member",
@@ -165,7 +204,7 @@
       "_callable": true,
       "_callable_class": true,
       "_origin": "ast",
-      "community": 15,
+      "community": 3,
       "community_name": "core.ts",
       "file_type": "code",
       "norm_label": "noteentry",
@@ -178,7 +217,7 @@
       "_callable": true,
       "_callable_class": true,
       "_origin": "ast",
-      "community": 15,
+      "community": 3,
       "community_name": "core.ts",
       "file_type": "code",
       "norm_label": "promo",
@@ -191,7 +230,7 @@
       "_callable": true,
       "_callable_class": true,
       "_origin": "ast",
-      "community": 15,
+      "community": 3,
       "community_name": "core.ts",
       "file_type": "code",
       "norm_label": "role",
@@ -204,7 +243,7 @@
       "_callable": true,
       "_callable_class": true,
       "_origin": "ast",
-      "community": 15,
+      "community": 3,
       "community_name": "core.ts",
       "file_type": "code",
       "norm_label": "sale",
@@ -217,7 +256,7 @@
       "_callable": true,
       "_callable_class": true,
       "_origin": "ast",
-      "community": 15,
+      "community": 3,
       "community_name": "core.ts",
       "file_type": "code",
       "norm_label": "saledraft",
@@ -230,25 +269,12 @@
       "_callable": true,
       "_callable_class": true,
       "_origin": "ast",
-      "community": 15,
+      "community": 3,
       "community_name": "core.ts",
       "file_type": "code",
       "norm_label": "saleitem",
       "source_file": "react-app/src/types.ts",
       "source_location": "L53"
-    },
-    {
-      "id": "react_app_src_types_storeevent",
-      "label": "StoreEvent",
-      "_callable": true,
-      "_callable_class": true,
-      "_origin": "ast",
-      "community": 15,
-      "community_name": "core.ts",
-      "file_type": "code",
-      "norm_label": "storeevent",
-      "source_file": "react-app/src/types.ts",
-      "source_location": "L83"
     },
     {
       "id": "react_app_src_views_dashboard_line",
@@ -257,7 +283,7 @@
       "_callable_class": true,
       "_origin": "ast",
       "community": 3,
-      "community_name": "App.tsx",
+      "community_name": "core.ts",
       "file_type": "code",
       "norm_label": "line",
       "source_file": "react-app/src/views/Dashboard.tsx",
@@ -270,7 +296,7 @@
       "_callable_class": true,
       "_origin": "ast",
       "community": 3,
-      "community_name": "App.tsx",
+      "community_name": "core.ts",
       "file_type": "code",
       "norm_label": "empacc",
       "source_file": "react-app/src/views/Employees.tsx",
@@ -283,7 +309,7 @@
       "_callable_class": true,
       "_origin": "ast",
       "community": 3,
-      "community_name": "App.tsx",
+      "community_name": "core.ts",
       "file_type": "code",
       "norm_label": "pline",
       "source_file": "react-app/src/views/Profit.tsx",
@@ -296,7 +322,7 @@
       "_callable_class": true,
       "_origin": "ast",
       "community": 3,
-      "community_name": "App.tsx",
+      "community_name": "core.ts",
       "file_type": "code",
       "norm_label": "rangemode",
       "source_file": "react-app/src/views/Profit.tsx",
@@ -309,24 +335,11 @@
       "_callable_class": true,
       "_origin": "ast",
       "community": 3,
-      "community_name": "App.tsx",
+      "community_name": "core.ts",
       "file_type": "code",
       "norm_label": "viewmode",
       "source_file": "react-app/src/views/Profit.tsx",
       "source_location": "L9"
-    },
-    {
-      "id": "react_app_src_dropdown_dropdownitem",
-      "label": "DropdownItem",
-      "_callable": true,
-      "_callable_class": true,
-      "_origin": "ast",
-      "community": 6,
-      "community_name": "ui.tsx",
-      "file_type": "code",
-      "norm_label": "dropdownitem",
-      "source_file": "react-app/src/Dropdown.tsx",
-      "source_location": "L3"
     },
     {
       "id": "react_app_src_lib_core_categorygroup",
@@ -334,12 +347,38 @@
       "_callable": true,
       "_callable_class": true,
       "_origin": "ast",
-      "community": 6,
-      "community_name": "ui.tsx",
+      "community": 5,
+      "community_name": "Inventory.tsx",
       "file_type": "code",
       "norm_label": "categorygroup",
       "source_file": "react-app/src/lib/core.ts",
       "source_location": "L500"
+    },
+    {
+      "id": "react_app_src_types_product",
+      "label": "Product",
+      "_callable": true,
+      "_callable_class": true,
+      "_origin": "ast",
+      "community": 5,
+      "community_name": "Inventory.tsx",
+      "file_type": "code",
+      "norm_label": "product",
+      "source_file": "react-app/src/types.ts",
+      "source_location": "L32"
+    },
+    {
+      "id": "react_app_src_views_inventory_qtypopup",
+      "label": "QtyPopup",
+      "_callable": true,
+      "_callable_class": true,
+      "_origin": "ast",
+      "community": 5,
+      "community_name": "Inventory.tsx",
+      "file_type": "code",
+      "norm_label": "qtypopup",
+      "source_file": "react-app/src/views/Inventory.tsx",
+      "source_location": "L14"
     },
     {
       "id": "react_app_src_lib_core_editablepromo",
@@ -407,19 +446,6 @@
       "source_location": "L6"
     },
     {
-      "id": "react_app_src_types_product",
-      "label": "Product",
-      "_callable": true,
-      "_callable_class": true,
-      "_origin": "ast",
-      "community": 6,
-      "community_name": "ui.tsx",
-      "file_type": "code",
-      "norm_label": "product",
-      "source_file": "react-app/src/types.ts",
-      "source_location": "L32"
-    },
-    {
       "id": "react_app_src_views_categorymodal_props",
       "label": "Props",
       "_callable": true,
@@ -433,19 +459,6 @@
       "source_location": "L9"
     },
     {
-      "id": "react_app_src_views_inventory_qtypopup",
-      "label": "QtyPopup",
-      "_callable": true,
-      "_callable_class": true,
-      "_origin": "ast",
-      "community": 6,
-      "community_name": "ui.tsx",
-      "file_type": "code",
-      "norm_label": "qtypopup",
-      "source_file": "react-app/src/views/Inventory.tsx",
-      "source_location": "L14"
-    },
-    {
       "id": "react_app_src_views_promoeditor_props",
       "label": "Props",
       "_callable": true,
@@ -457,19 +470,6 @@
       "norm_label": "props",
       "source_file": "react-app/src/views/PromoEditor.tsx",
       "source_location": "L4"
-    },
-    {
-      "id": "react_app_src_views_saleregistration_line",
-      "label": "Line",
-      "_callable": true,
-      "_callable_class": true,
-      "_origin": "ast",
-      "community": 6,
-      "community_name": "ui.tsx",
-      "file_type": "code",
-      "norm_label": "line",
-      "source_file": "react-app/src/views/SaleRegistration.tsx",
-      "source_location": "L8"
     },
     {
       "id": "react_app_src_vite_env_d_importmeta",
@@ -520,6 +520,42 @@
       "norm_label": "isstoreowner()",
       "source_file": "react-app/src/lib/core.ts",
       "source_location": "L586"
+    },
+    {
+      "id": "react_app_src_lib_core_mergeinvlog",
+      "label": "mergeInvLog()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 0,
+      "community_name": "sync.ts",
+      "file_type": "code",
+      "norm_label": "mergeinvlog()",
+      "source_file": "react-app/src/lib/core.ts",
+      "source_location": "L336"
+    },
+    {
+      "id": "react_app_src_lib_core_mergeitems",
+      "label": "mergeItems()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 0,
+      "community_name": "sync.ts",
+      "file_type": "code",
+      "norm_label": "mergeitems()",
+      "source_file": "react-app/src/lib/core.ts",
+      "source_location": "L97"
+    },
+    {
+      "id": "react_app_src_lib_core_mergenotelog",
+      "label": "mergeNoteLog()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 0,
+      "community_name": "sync.ts",
+      "file_type": "code",
+      "norm_label": "mergenotelog()",
+      "source_file": "react-app/src/lib/core.ts",
+      "source_location": "L372"
     },
     {
       "id": "react_app_src_lib_core_myrole",
@@ -652,6 +688,18 @@
       "norm_label": "activatesync()",
       "source_file": "react-app/src/lib/sync.ts",
       "source_location": "L555"
+    },
+    {
+      "id": "react_app_src_lib_sync_applyremote",
+      "label": "applyRemote()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 0,
+      "community_name": "sync.ts",
+      "file_type": "code",
+      "norm_label": "applyremote()",
+      "source_file": "react-app/src/lib/sync.ts",
+      "source_location": "L385"
     },
     {
       "id": "react_app_src_lib_sync_clashname",
@@ -930,6 +978,30 @@
       "source_location": "L32"
     },
     {
+      "id": "react_app_src_store_appprovider",
+      "label": "AppProvider()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 0,
+      "community_name": "sync.ts",
+      "file_type": "code",
+      "norm_label": "appprovider()",
+      "source_file": "react-app/src/store.tsx",
+      "source_location": "L32"
+    },
+    {
+      "id": "react_app_src_store_appprovider_onvisible",
+      "label": "onVisible()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 0,
+      "community_name": "sync.ts",
+      "file_type": "code",
+      "norm_label": "onvisible()",
+      "source_file": "react-app/src/store.tsx",
+      "source_location": "L95"
+    },
+    {
       "id": "react_app_src_views_join_joinmodal_submit",
       "label": "submit()",
       "_callable": true,
@@ -951,7 +1023,7 @@
       "file_type": "code",
       "norm_label": "onfile()",
       "source_file": "react-app/src/views/ProductForm.tsx",
-      "source_location": "L31"
+      "source_location": "L28"
     },
     {
       "id": "react_app_src_views_storemodal_storemodal",
@@ -1086,18 +1158,6 @@
       "source_location": "L107"
     },
     {
-      "id": "react_app_src_lib_core_costtotal",
-      "label": "costTotal()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 12,
-      "community_name": "store.tsx",
-      "file_type": "code",
-      "norm_label": "costtotal()",
-      "source_file": "react-app/src/lib/core.ts",
-      "source_location": "L282"
-    },
-    {
       "id": "react_app_src_lib_core_loadstate",
       "label": "loadState()",
       "_callable": true,
@@ -1120,54 +1180,6 @@
       "norm_label": "makedraft()",
       "source_file": "react-app/src/lib/core.ts",
       "source_location": "L196"
-    },
-    {
-      "id": "react_app_src_lib_core_mergeinvlog",
-      "label": "mergeInvLog()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 12,
-      "community_name": "store.tsx",
-      "file_type": "code",
-      "norm_label": "mergeinvlog()",
-      "source_file": "react-app/src/lib/core.ts",
-      "source_location": "L336"
-    },
-    {
-      "id": "react_app_src_lib_core_mergeitems",
-      "label": "mergeItems()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 12,
-      "community_name": "store.tsx",
-      "file_type": "code",
-      "norm_label": "mergeitems()",
-      "source_file": "react-app/src/lib/core.ts",
-      "source_location": "L97"
-    },
-    {
-      "id": "react_app_src_lib_core_mergenotelog",
-      "label": "mergeNoteLog()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 12,
-      "community_name": "store.tsx",
-      "file_type": "code",
-      "norm_label": "mergenotelog()",
-      "source_file": "react-app/src/lib/core.ts",
-      "source_location": "L372"
-    },
-    {
-      "id": "react_app_src_lib_core_normalizepromo",
-      "label": "normalizePromo()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 12,
-      "community_name": "store.tsx",
-      "file_type": "code",
-      "norm_label": "normalizepromo()",
-      "source_file": "react-app/src/lib/core.ts",
-      "source_location": "L126"
     },
     {
       "id": "react_app_src_lib_core_normalizestore",
@@ -1204,42 +1216,6 @@
       "norm_label": "uid()",
       "source_file": "react-app/src/lib/core.ts",
       "source_location": "L224"
-    },
-    {
-      "id": "react_app_src_lib_sync_applyremote",
-      "label": "applyRemote()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 12,
-      "community_name": "store.tsx",
-      "file_type": "code",
-      "norm_label": "applyremote()",
-      "source_file": "react-app/src/lib/sync.ts",
-      "source_location": "L385"
-    },
-    {
-      "id": "react_app_src_store_appprovider",
-      "label": "AppProvider()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 12,
-      "community_name": "store.tsx",
-      "file_type": "code",
-      "norm_label": "appprovider()",
-      "source_file": "react-app/src/store.tsx",
-      "source_location": "L32"
-    },
-    {
-      "id": "react_app_src_store_appprovider_onvisible",
-      "label": "onVisible()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 12,
-      "community_name": "store.tsx",
-      "file_type": "code",
-      "norm_label": "onvisible()",
-      "source_file": "react-app/src/store.tsx",
-      "source_location": "L95"
     },
     {
       "id": "react_app_src_test_features_test_roleof",
@@ -1422,16 +1398,40 @@
       "source_location": "L152"
     },
     {
+      "id": "react_app_src_dropdown_dropdown",
+      "label": "Dropdown()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 15,
+      "community_name": "SaleRegistration.tsx",
+      "file_type": "code",
+      "norm_label": "dropdown()",
+      "source_file": "react-app/src/Dropdown.tsx",
+      "source_location": "L9"
+    },
+    {
       "id": "react_app_src_lib_core_activeevent",
       "label": "activeEvent()",
       "_callable": true,
       "_origin": "ast",
       "community": 15,
-      "community_name": "core.ts",
+      "community_name": "SaleRegistration.tsx",
       "file_type": "code",
       "norm_label": "activeevent()",
       "source_file": "react-app/src/lib/core.ts",
       "source_location": "L608"
+    },
+    {
+      "id": "react_app_src_lib_core_catlabel",
+      "label": "catLabel()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 15,
+      "community_name": "SaleRegistration.tsx",
+      "file_type": "code",
+      "norm_label": "catlabel()",
+      "source_file": "react-app/src/lib/core.ts",
+      "source_location": "L571"
     },
     {
       "id": "react_app_src_lib_core_fixedpackagetotal",
@@ -1439,7 +1439,7 @@
       "_callable": true,
       "_origin": "ast",
       "community": 15,
-      "community_name": "core.ts",
+      "community_name": "SaleRegistration.tsx",
       "file_type": "code",
       "norm_label": "fixedpackagetotal()",
       "source_file": "react-app/src/lib/core.ts",
@@ -1451,7 +1451,7 @@
       "_callable": true,
       "_origin": "ast",
       "community": 15,
-      "community_name": "core.ts",
+      "community_name": "SaleRegistration.tsx",
       "file_type": "code",
       "norm_label": "promoprice()",
       "source_file": "react-app/src/lib/core.ts",
@@ -1463,7 +1463,7 @@
       "_callable": true,
       "_origin": "ast",
       "community": 15,
-      "community_name": "core.ts",
+      "community_name": "SaleRegistration.tsx",
       "file_type": "code",
       "norm_label": "promounitreward()",
       "source_file": "react-app/src/lib/core.ts",
@@ -1475,23 +1475,23 @@
       "_callable": true,
       "_origin": "ast",
       "community": 15,
-      "community_name": "core.ts",
+      "community_name": "SaleRegistration.tsx",
       "file_type": "code",
       "norm_label": "round2()",
       "source_file": "react-app/src/lib/core.ts",
       "source_location": "L613"
     },
     {
-      "id": "react_app_src_lib_core_saledraftof",
-      "label": "saleDraftOf()",
+      "id": "react_app_src_lib_core_salecatsof",
+      "label": "saleCatsOf()",
       "_callable": true,
       "_origin": "ast",
       "community": 15,
-      "community_name": "core.ts",
+      "community_name": "SaleRegistration.tsx",
       "file_type": "code",
-      "norm_label": "saledraftof()",
+      "norm_label": "salecatsof()",
       "source_file": "react-app/src/lib/core.ts",
-      "source_location": "L601"
+      "source_location": "L575"
     },
     {
       "id": "react_app_src_lib_core_saleunitprice",
@@ -1499,7 +1499,7 @@
       "_callable": true,
       "_origin": "ast",
       "community": 15,
-      "community_name": "core.ts",
+      "community_name": "SaleRegistration.tsx",
       "file_type": "code",
       "norm_label": "saleunitprice()",
       "source_file": "react-app/src/lib/core.ts",
@@ -1511,7 +1511,7 @@
       "_callable": true,
       "_origin": "ast",
       "community": 15,
-      "community_name": "core.ts",
+      "community_name": "SaleRegistration.tsx",
       "file_type": "code",
       "norm_label": "sortbyorder()",
       "source_file": "react-app/src/lib/core.ts",
@@ -1523,23 +1523,11 @@
       "_callable": true,
       "_origin": "ast",
       "community": 15,
-      "community_name": "core.ts",
+      "community_name": "SaleRegistration.tsx",
       "file_type": "code",
       "norm_label": "sortproducts()",
       "source_file": "react-app/src/lib/core.ts",
       "source_location": "L495"
-    },
-    {
-      "id": "react_app_src_lib_core_syncsale",
-      "label": "syncSale()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 15,
-      "community_name": "core.ts",
-      "file_type": "code",
-      "norm_label": "syncsale()",
-      "source_file": "react-app/src/lib/core.ts",
-      "source_location": "L301"
     },
     {
       "id": "react_app_src_views_events_blankevent",
@@ -1547,7 +1535,7 @@
       "_callable": true,
       "_origin": "ast",
       "community": 15,
-      "community_name": "core.ts",
+      "community_name": "SaleRegistration.tsx",
       "file_type": "code",
       "norm_label": "blankevent()",
       "source_file": "react-app/src/views/Events.tsx",
@@ -1559,7 +1547,7 @@
       "_callable": true,
       "_origin": "ast",
       "community": 15,
-      "community_name": "core.ts",
+      "community_name": "SaleRegistration.tsx",
       "file_type": "code",
       "norm_label": "events()",
       "source_file": "react-app/src/views/Events.tsx",
@@ -1571,7 +1559,7 @@
       "_callable": true,
       "_origin": "ast",
       "community": 15,
-      "community_name": "core.ts",
+      "community_name": "SaleRegistration.tsx",
       "file_type": "code",
       "norm_label": "create()",
       "source_file": "react-app/src/views/Events.tsx",
@@ -1583,7 +1571,7 @@
       "_callable": true,
       "_origin": "ast",
       "community": 15,
-      "community_name": "core.ts",
+      "community_name": "SaleRegistration.tsx",
       "file_type": "code",
       "norm_label": "finalize()",
       "source_file": "react-app/src/views/Events.tsx",
@@ -1595,7 +1583,7 @@
       "_callable": true,
       "_origin": "ast",
       "community": 15,
-      "community_name": "core.ts",
+      "community_name": "SaleRegistration.tsx",
       "file_type": "code",
       "norm_label": "openadding()",
       "source_file": "react-app/src/views/Events.tsx",
@@ -1607,7 +1595,7 @@
       "_callable": true,
       "_origin": "ast",
       "community": 15,
-      "community_name": "core.ts",
+      "community_name": "SaleRegistration.tsx",
       "file_type": "code",
       "norm_label": "patch()",
       "source_file": "react-app/src/views/Events.tsx",
@@ -1619,18 +1607,174 @@
       "_callable": true,
       "_origin": "ast",
       "community": 15,
-      "community_name": "core.ts",
+      "community_name": "SaleRegistration.tsx",
       "file_type": "code",
       "norm_label": "today()",
       "source_file": "react-app/src/views/Events.tsx",
       "source_location": "L192"
     },
     {
+      "id": "react_app_src_views_saleregistration_saleregistration",
+      "label": "SaleRegistration()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 15,
+      "community_name": "SaleRegistration.tsx",
+      "file_type": "code",
+      "norm_label": "saleregistration()",
+      "source_file": "react-app/src/views/SaleRegistration.tsx",
+      "source_location": "L12"
+    },
+    {
+      "id": "react_app_src_views_saleregistration_saleregistration_addline",
+      "label": "addLine()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 15,
+      "community_name": "SaleRegistration.tsx",
+      "file_type": "code",
+      "norm_label": "addline()",
+      "source_file": "react-app/src/views/SaleRegistration.tsx",
+      "source_location": "L111"
+    },
+    {
+      "id": "react_app_src_views_saleregistration_saleregistration_catunits",
+      "label": "catUnits()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 15,
+      "community_name": "SaleRegistration.tsx",
+      "file_type": "code",
+      "norm_label": "catunits()",
+      "source_file": "react-app/src/views/SaleRegistration.tsx",
+      "source_location": "L56"
+    },
+    {
+      "id": "react_app_src_views_saleregistration_saleregistration_cleardraft",
+      "label": "clearDraft()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 15,
+      "community_name": "SaleRegistration.tsx",
+      "file_type": "code",
+      "norm_label": "cleardraft()",
+      "source_file": "react-app/src/views/SaleRegistration.tsx",
+      "source_location": "L105"
+    },
+    {
+      "id": "react_app_src_views_saleregistration_saleregistration_clearqtydraft",
+      "label": "clearQtyDraft()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 15,
+      "community_name": "SaleRegistration.tsx",
+      "file_type": "code",
+      "norm_label": "clearqtydraft()",
+      "source_file": "react-app/src/views/SaleRegistration.tsx",
+      "source_location": "L136"
+    },
+    {
+      "id": "react_app_src_views_saleregistration_saleregistration_gopage",
+      "label": "goPage()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 15,
+      "community_name": "SaleRegistration.tsx",
+      "file_type": "code",
+      "norm_label": "gopage()",
+      "source_file": "react-app/src/views/SaleRegistration.tsx",
+      "source_location": "L76"
+    },
+    {
+      "id": "react_app_src_views_saleregistration_saleregistration_onpagerscroll",
+      "label": "onPagerScroll()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 15,
+      "community_name": "SaleRegistration.tsx",
+      "file_type": "code",
+      "norm_label": "onpagerscroll()",
+      "source_file": "react-app/src/views/SaleRegistration.tsx",
+      "source_location": "L86"
+    },
+    {
+      "id": "react_app_src_views_saleregistration_saleregistration_persist",
+      "label": "persist()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 15,
+      "community_name": "SaleRegistration.tsx",
+      "file_type": "code",
+      "norm_label": "persist()",
+      "source_file": "react-app/src/views/SaleRegistration.tsx",
+      "source_location": "L93"
+    },
+    {
+      "id": "react_app_src_views_saleregistration_saleregistration_recomputeautos",
+      "label": "recomputeAutos()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 15,
+      "community_name": "SaleRegistration.tsx",
+      "file_type": "code",
+      "norm_label": "recomputeautos()",
+      "source_file": "react-app/src/views/SaleRegistration.tsx",
+      "source_location": "L65"
+    },
+    {
+      "id": "react_app_src_views_saleregistration_saleregistration_removeline",
+      "label": "removeLine()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 15,
+      "community_name": "SaleRegistration.tsx",
+      "file_type": "code",
+      "norm_label": "removeline()",
+      "source_file": "react-app/src/views/SaleRegistration.tsx",
+      "source_location": "L140"
+    },
+    {
+      "id": "react_app_src_views_saleregistration_saleregistration_setline",
+      "label": "setLine()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 15,
+      "community_name": "SaleRegistration.tsx",
+      "file_type": "code",
+      "norm_label": "setline()",
+      "source_file": "react-app/src/views/SaleRegistration.tsx",
+      "source_location": "L123"
+    },
+    {
+      "id": "react_app_src_views_saleregistration_saleregistration_setmanualprice",
+      "label": "setManualPrice()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 15,
+      "community_name": "SaleRegistration.tsx",
+      "file_type": "code",
+      "norm_label": "setmanualprice()",
+      "source_file": "react-app/src/views/SaleRegistration.tsx",
+      "source_location": "L146"
+    },
+    {
+      "id": "react_app_src_views_saleregistration_saleregistration_setqtytext",
+      "label": "setQtyText()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 15,
+      "community_name": "SaleRegistration.tsx",
+      "file_type": "code",
+      "norm_label": "setqtytext()",
+      "source_file": "react-app/src/views/SaleRegistration.tsx",
+      "source_location": "L130"
+    },
+    {
       "id": "react_app_src_app_app",
       "label": "App()",
       "_callable": true,
       "_origin": "ast",
-      "community": 3,
+      "community": 2,
       "community_name": "App.tsx",
       "file_type": "code",
       "norm_label": "app()",
@@ -1642,7 +1786,7 @@
       "label": "selectStore()",
       "_callable": true,
       "_origin": "ast",
-      "community": 3,
+      "community": 2,
       "community_name": "App.tsx",
       "file_type": "code",
       "norm_label": "selectstore()",
@@ -1654,7 +1798,7 @@
       "label": "setMenu()",
       "_callable": true,
       "_origin": "ast",
-      "community": 3,
+      "community": 2,
       "community_name": "App.tsx",
       "file_type": "code",
       "norm_label": "setmenu()",
@@ -1666,7 +1810,7 @@
       "label": "addNote()",
       "_callable": true,
       "_origin": "ast",
-      "community": 3,
+      "community": 2,
       "community_name": "App.tsx",
       "file_type": "code",
       "norm_label": "addnote()",
@@ -1678,7 +1822,7 @@
       "label": "canManageTeam()",
       "_callable": true,
       "_origin": "ast",
-      "community": 3,
+      "community": 2,
       "community_name": "App.tsx",
       "file_type": "code",
       "norm_label": "canmanageteam()",
@@ -1686,131 +1830,11 @@
       "source_location": "L596"
     },
     {
-      "id": "react_app_src_lib_core_costfor",
-      "label": "costFor()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 3,
-      "community_name": "App.tsx",
-      "file_type": "code",
-      "norm_label": "costfor()",
-      "source_file": "react-app/src/lib/core.ts",
-      "source_location": "L272"
-    },
-    {
-      "id": "react_app_src_lib_core_esc",
-      "label": "esc()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 3,
-      "community_name": "App.tsx",
-      "file_type": "code",
-      "norm_label": "esc()",
-      "source_file": "react-app/src/lib/core.ts",
-      "source_location": "L66"
-    },
-    {
-      "id": "react_app_src_lib_core_findactivepromo",
-      "label": "findActivePromo()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 3,
-      "community_name": "App.tsx",
-      "file_type": "code",
-      "norm_label": "findactivepromo()",
-      "source_file": "react-app/src/lib/core.ts",
-      "source_location": "L664"
-    },
-    {
-      "id": "react_app_src_lib_core_formatdate",
-      "label": "formatDate()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 3,
-      "community_name": "App.tsx",
-      "file_type": "code",
-      "norm_label": "formatdate()",
-      "source_file": "react-app/src/lib/core.ts",
-      "source_location": "L74"
-    },
-    {
-      "id": "react_app_src_lib_core_itemlabel",
-      "label": "itemLabel()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 3,
-      "community_name": "App.tsx",
-      "file_type": "code",
-      "norm_label": "itemlabel()",
-      "source_file": "react-app/src/lib/core.ts",
-      "source_location": "L294"
-    },
-    {
-      "id": "react_app_src_lib_core_pad2",
-      "label": "pad2()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 3,
-      "community_name": "App.tsx",
-      "file_type": "code",
-      "norm_label": "pad2()",
-      "source_file": "react-app/src/lib/core.ts",
-      "source_location": "L71"
-    },
-    {
-      "id": "react_app_src_lib_core_pricefor",
-      "label": "priceFor()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 3,
-      "community_name": "App.tsx",
-      "file_type": "code",
-      "norm_label": "pricefor()",
-      "source_file": "react-app/src/lib/core.ts",
-      "source_location": "L262"
-    },
-    {
-      "id": "react_app_src_lib_core_profittotal",
-      "label": "profitTotal()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 3,
-      "community_name": "App.tsx",
-      "file_type": "code",
-      "norm_label": "profittotal()",
-      "source_file": "react-app/src/lib/core.ts",
-      "source_location": "L286"
-    },
-    {
-      "id": "react_app_src_lib_core_saleunits",
-      "label": "saleUnits()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 3,
-      "community_name": "App.tsx",
-      "file_type": "code",
-      "norm_label": "saleunits()",
-      "source_file": "react-app/src/lib/core.ts",
-      "source_location": "L290"
-    },
-    {
-      "id": "react_app_src_lib_core_shortdate",
-      "label": "shortDate()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 3,
-      "community_name": "App.tsx",
-      "file_type": "code",
-      "norm_label": "shortdate()",
-      "source_file": "react-app/src/lib/core.ts",
-      "source_location": "L80"
-    },
-    {
       "id": "react_app_src_lib_core_syncname",
       "label": "syncName()",
       "_callable": true,
       "_origin": "ast",
-      "community": 3,
+      "community": 2,
       "community_name": "App.tsx",
       "file_type": "code",
       "norm_label": "syncname()",
@@ -1818,35 +1842,11 @@
       "source_location": "L240"
     },
     {
-      "id": "react_app_src_lib_core_today",
-      "label": "today()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 3,
-      "community_name": "App.tsx",
-      "file_type": "code",
-      "norm_label": "today()",
-      "source_file": "react-app/src/lib/core.ts",
-      "source_location": "L34"
-    },
-    {
-      "id": "react_app_src_lib_core_total",
-      "label": "total()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 3,
-      "community_name": "App.tsx",
-      "file_type": "code",
-      "norm_label": "total()",
-      "source_file": "react-app/src/lib/core.ts",
-      "source_location": "L278"
-    },
-    {
       "id": "react_app_src_store_usestore",
       "label": "useStore()",
       "_callable": true,
       "_origin": "ast",
-      "community": 3,
+      "community": 2,
       "community_name": "App.tsx",
       "file_type": "code",
       "norm_label": "usestore()",
@@ -1854,143 +1854,11 @@
       "source_location": "L26"
     },
     {
-      "id": "react_app_src_ui_toast",
-      "label": "Toast()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 3,
-      "community_name": "App.tsx",
-      "file_type": "code",
-      "norm_label": "toast()",
-      "source_file": "react-app/src/ui.tsx",
-      "source_location": "L86"
-    },
-    {
-      "id": "react_app_src_views_dashboard_dashboard",
-      "label": "Dashboard()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 3,
-      "community_name": "App.tsx",
-      "file_type": "code",
-      "norm_label": "dashboard()",
-      "source_file": "react-app/src/views/Dashboard.tsx",
-      "source_location": "L28"
-    },
-    {
-      "id": "react_app_src_views_dashboard_monthlabel",
-      "label": "monthLabel()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 3,
-      "community_name": "App.tsx",
-      "file_type": "code",
-      "norm_label": "monthlabel()",
-      "source_file": "react-app/src/views/Dashboard.tsx",
-      "source_location": "L23"
-    },
-    {
-      "id": "react_app_src_views_dashboard_monthlines",
-      "label": "monthLines()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 3,
-      "community_name": "App.tsx",
-      "file_type": "code",
-      "norm_label": "monthlines()",
-      "source_file": "react-app/src/views/Dashboard.tsx",
-      "source_location": "L7"
-    },
-    {
-      "id": "react_app_src_views_dashboard_monthof",
-      "label": "monthOf()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 3,
-      "community_name": "App.tsx",
-      "file_type": "code",
-      "norm_label": "monthof()",
-      "source_file": "react-app/src/views/Dashboard.tsx",
-      "source_location": "L22"
-    },
-    {
-      "id": "react_app_src_views_dashboard_monthshift",
-      "label": "monthShift()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 3,
-      "community_name": "App.tsx",
-      "file_type": "code",
-      "norm_label": "monthshift()",
-      "source_file": "react-app/src/views/Dashboard.tsx",
-      "source_location": "L89"
-    },
-    {
-      "id": "react_app_src_views_employees_employees",
-      "label": "Employees()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 3,
-      "community_name": "App.tsx",
-      "file_type": "code",
-      "norm_label": "employees()",
-      "source_file": "react-app/src/views/Employees.tsx",
-      "source_location": "L17"
-    },
-    {
-      "id": "react_app_src_views_employees_rolelabel",
-      "label": "roleLabel()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 3,
-      "community_name": "App.tsx",
-      "file_type": "code",
-      "norm_label": "rolelabel()",
-      "source_file": "react-app/src/views/Employees.tsx",
-      "source_location": "L11"
-    },
-    {
-      "id": "react_app_src_views_history_history",
-      "label": "History()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 3,
-      "community_name": "App.tsx",
-      "file_type": "code",
-      "norm_label": "history()",
-      "source_file": "react-app/src/views/History.tsx",
-      "source_location": "L6"
-    },
-    {
-      "id": "react_app_src_views_history_history_details",
-      "label": "details()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 3,
-      "community_name": "App.tsx",
-      "file_type": "code",
-      "norm_label": "details()",
-      "source_file": "react-app/src/views/History.tsx",
-      "source_location": "L34"
-    },
-    {
-      "id": "react_app_src_views_history_history_exportexcel",
-      "label": "exportExcel()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 3,
-      "community_name": "App.tsx",
-      "file_type": "code",
-      "norm_label": "exportexcel()",
-      "source_file": "react-app/src/views/History.tsx",
-      "source_location": "L11"
-    },
-    {
       "id": "react_app_src_views_join_joinmodal",
       "label": "JoinModal()",
       "_callable": true,
       "_origin": "ast",
-      "community": 3,
+      "community": 2,
       "community_name": "App.tsx",
       "file_type": "code",
       "norm_label": "joinmodal()",
@@ -2002,7 +1870,7 @@
       "label": "Notes()",
       "_callable": true,
       "_origin": "ast",
-      "community": 3,
+      "community": 2,
       "community_name": "App.tsx",
       "file_type": "code",
       "norm_label": "notes()",
@@ -2014,7 +1882,7 @@
       "label": "nameOf()",
       "_callable": true,
       "_origin": "ast",
-      "community": 3,
+      "community": 2,
       "community_name": "App.tsx",
       "file_type": "code",
       "norm_label": "nameof()",
@@ -2026,7 +1894,7 @@
       "label": "onEnter()",
       "_callable": true,
       "_origin": "ast",
-      "community": 3,
+      "community": 2,
       "community_name": "App.tsx",
       "file_type": "code",
       "norm_label": "onenter()",
@@ -2038,7 +1906,7 @@
       "label": "send()",
       "_callable": true,
       "_origin": "ast",
-      "community": 3,
+      "community": 2,
       "community_name": "App.tsx",
       "file_type": "code",
       "norm_label": "send()",
@@ -2046,12 +1914,336 @@
       "source_location": "L21"
     },
     {
+      "id": "react_app_src_views_productform_productform",
+      "label": "ProductForm()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 2,
+      "community_name": "App.tsx",
+      "file_type": "code",
+      "norm_label": "productform()",
+      "source_file": "react-app/src/views/ProductForm.tsx",
+      "source_location": "L8"
+    },
+    {
+      "id": "react_app_src_lib_core_costfor",
+      "label": "costFor()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 3,
+      "community_name": "core.ts",
+      "file_type": "code",
+      "norm_label": "costfor()",
+      "source_file": "react-app/src/lib/core.ts",
+      "source_location": "L272"
+    },
+    {
+      "id": "react_app_src_lib_core_costtotal",
+      "label": "costTotal()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 3,
+      "community_name": "core.ts",
+      "file_type": "code",
+      "norm_label": "costtotal()",
+      "source_file": "react-app/src/lib/core.ts",
+      "source_location": "L282"
+    },
+    {
+      "id": "react_app_src_lib_core_esc",
+      "label": "esc()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 3,
+      "community_name": "core.ts",
+      "file_type": "code",
+      "norm_label": "esc()",
+      "source_file": "react-app/src/lib/core.ts",
+      "source_location": "L66"
+    },
+    {
+      "id": "react_app_src_lib_core_findactivepromo",
+      "label": "findActivePromo()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 3,
+      "community_name": "core.ts",
+      "file_type": "code",
+      "norm_label": "findactivepromo()",
+      "source_file": "react-app/src/lib/core.ts",
+      "source_location": "L664"
+    },
+    {
+      "id": "react_app_src_lib_core_formatdate",
+      "label": "formatDate()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 3,
+      "community_name": "core.ts",
+      "file_type": "code",
+      "norm_label": "formatdate()",
+      "source_file": "react-app/src/lib/core.ts",
+      "source_location": "L74"
+    },
+    {
+      "id": "react_app_src_lib_core_itemlabel",
+      "label": "itemLabel()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 3,
+      "community_name": "core.ts",
+      "file_type": "code",
+      "norm_label": "itemlabel()",
+      "source_file": "react-app/src/lib/core.ts",
+      "source_location": "L294"
+    },
+    {
+      "id": "react_app_src_lib_core_money",
+      "label": "money()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 3,
+      "community_name": "core.ts",
+      "file_type": "code",
+      "norm_label": "money()",
+      "source_file": "react-app/src/lib/core.ts",
+      "source_location": "L42"
+    },
+    {
+      "id": "react_app_src_lib_core_pad2",
+      "label": "pad2()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 3,
+      "community_name": "core.ts",
+      "file_type": "code",
+      "norm_label": "pad2()",
+      "source_file": "react-app/src/lib/core.ts",
+      "source_location": "L71"
+    },
+    {
+      "id": "react_app_src_lib_core_pricefor",
+      "label": "priceFor()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 3,
+      "community_name": "core.ts",
+      "file_type": "code",
+      "norm_label": "pricefor()",
+      "source_file": "react-app/src/lib/core.ts",
+      "source_location": "L262"
+    },
+    {
+      "id": "react_app_src_lib_core_profittotal",
+      "label": "profitTotal()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 3,
+      "community_name": "core.ts",
+      "file_type": "code",
+      "norm_label": "profittotal()",
+      "source_file": "react-app/src/lib/core.ts",
+      "source_location": "L286"
+    },
+    {
+      "id": "react_app_src_lib_core_saledraftof",
+      "label": "saleDraftOf()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 3,
+      "community_name": "core.ts",
+      "file_type": "code",
+      "norm_label": "saledraftof()",
+      "source_file": "react-app/src/lib/core.ts",
+      "source_location": "L601"
+    },
+    {
+      "id": "react_app_src_lib_core_saleunits",
+      "label": "saleUnits()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 3,
+      "community_name": "core.ts",
+      "file_type": "code",
+      "norm_label": "saleunits()",
+      "source_file": "react-app/src/lib/core.ts",
+      "source_location": "L290"
+    },
+    {
+      "id": "react_app_src_lib_core_shortdate",
+      "label": "shortDate()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 3,
+      "community_name": "core.ts",
+      "file_type": "code",
+      "norm_label": "shortdate()",
+      "source_file": "react-app/src/lib/core.ts",
+      "source_location": "L80"
+    },
+    {
+      "id": "react_app_src_lib_core_syncsale",
+      "label": "syncSale()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 3,
+      "community_name": "core.ts",
+      "file_type": "code",
+      "norm_label": "syncsale()",
+      "source_file": "react-app/src/lib/core.ts",
+      "source_location": "L301"
+    },
+    {
+      "id": "react_app_src_lib_core_today",
+      "label": "today()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 3,
+      "community_name": "core.ts",
+      "file_type": "code",
+      "norm_label": "today()",
+      "source_file": "react-app/src/lib/core.ts",
+      "source_location": "L34"
+    },
+    {
+      "id": "react_app_src_lib_core_total",
+      "label": "total()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 3,
+      "community_name": "core.ts",
+      "file_type": "code",
+      "norm_label": "total()",
+      "source_file": "react-app/src/lib/core.ts",
+      "source_location": "L278"
+    },
+    {
+      "id": "react_app_src_views_dashboard_dashboard",
+      "label": "Dashboard()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 3,
+      "community_name": "core.ts",
+      "file_type": "code",
+      "norm_label": "dashboard()",
+      "source_file": "react-app/src/views/Dashboard.tsx",
+      "source_location": "L28"
+    },
+    {
+      "id": "react_app_src_views_dashboard_monthlabel",
+      "label": "monthLabel()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 3,
+      "community_name": "core.ts",
+      "file_type": "code",
+      "norm_label": "monthlabel()",
+      "source_file": "react-app/src/views/Dashboard.tsx",
+      "source_location": "L23"
+    },
+    {
+      "id": "react_app_src_views_dashboard_monthlines",
+      "label": "monthLines()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 3,
+      "community_name": "core.ts",
+      "file_type": "code",
+      "norm_label": "monthlines()",
+      "source_file": "react-app/src/views/Dashboard.tsx",
+      "source_location": "L7"
+    },
+    {
+      "id": "react_app_src_views_dashboard_monthof",
+      "label": "monthOf()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 3,
+      "community_name": "core.ts",
+      "file_type": "code",
+      "norm_label": "monthof()",
+      "source_file": "react-app/src/views/Dashboard.tsx",
+      "source_location": "L22"
+    },
+    {
+      "id": "react_app_src_views_dashboard_monthshift",
+      "label": "monthShift()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 3,
+      "community_name": "core.ts",
+      "file_type": "code",
+      "norm_label": "monthshift()",
+      "source_file": "react-app/src/views/Dashboard.tsx",
+      "source_location": "L89"
+    },
+    {
+      "id": "react_app_src_views_employees_employees",
+      "label": "Employees()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 3,
+      "community_name": "core.ts",
+      "file_type": "code",
+      "norm_label": "employees()",
+      "source_file": "react-app/src/views/Employees.tsx",
+      "source_location": "L17"
+    },
+    {
+      "id": "react_app_src_views_employees_rolelabel",
+      "label": "roleLabel()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 3,
+      "community_name": "core.ts",
+      "file_type": "code",
+      "norm_label": "rolelabel()",
+      "source_file": "react-app/src/views/Employees.tsx",
+      "source_location": "L11"
+    },
+    {
+      "id": "react_app_src_views_history_history",
+      "label": "History()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 3,
+      "community_name": "core.ts",
+      "file_type": "code",
+      "norm_label": "history()",
+      "source_file": "react-app/src/views/History.tsx",
+      "source_location": "L6"
+    },
+    {
+      "id": "react_app_src_views_history_history_details",
+      "label": "details()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 3,
+      "community_name": "core.ts",
+      "file_type": "code",
+      "norm_label": "details()",
+      "source_file": "react-app/src/views/History.tsx",
+      "source_location": "L34"
+    },
+    {
+      "id": "react_app_src_views_history_history_exportexcel",
+      "label": "exportExcel()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 3,
+      "community_name": "core.ts",
+      "file_type": "code",
+      "norm_label": "exportexcel()",
+      "source_file": "react-app/src/views/History.tsx",
+      "source_location": "L11"
+    },
+    {
       "id": "react_app_src_views_profit_profit",
       "label": "Profit()",
       "_callable": true,
       "_origin": "ast",
       "community": 3,
-      "community_name": "App.tsx",
+      "community_name": "core.ts",
       "file_type": "code",
       "norm_label": "profit()",
       "source_file": "react-app/src/views/Profit.tsx",
@@ -2063,7 +2255,7 @@
       "_callable": true,
       "_origin": "ast",
       "community": 3,
-      "community_name": "App.tsx",
+      "community_name": "core.ts",
       "file_type": "code",
       "norm_label": "profitlines()",
       "source_file": "react-app/src/views/Profit.tsx",
@@ -2075,11 +2267,83 @@
       "_callable": true,
       "_origin": "ast",
       "community": 5,
-      "community_name": "Inventory",
+      "community_name": "Inventory.tsx",
       "file_type": "code",
       "norm_label": "adoptinvlog()",
       "source_file": "react-app/src/lib/core.ts",
       "source_location": "L326"
+    },
+    {
+      "id": "react_app_src_lib_core_groupedbycategory",
+      "label": "groupedByCategory()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 5,
+      "community_name": "Inventory.tsx",
+      "file_type": "code",
+      "norm_label": "groupedbycategory()",
+      "source_file": "react-app/src/lib/core.ts",
+      "source_location": "L507"
+    },
+    {
+      "id": "react_app_src_lib_core_inventorysold",
+      "label": "inventorySold()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 5,
+      "community_name": "Inventory.tsx",
+      "file_type": "code",
+      "norm_label": "inventorysold()",
+      "source_file": "react-app/src/lib/core.ts",
+      "source_location": "L311"
+    },
+    {
+      "id": "react_app_src_lib_core_promotext",
+      "label": "promoText()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 5,
+      "community_name": "Inventory.tsx",
+      "file_type": "code",
+      "norm_label": "promotext()",
+      "source_file": "react-app/src/lib/core.ts",
+      "source_location": "L49"
+    },
+    {
+      "id": "react_app_src_lib_core_reordercategoryproducts",
+      "label": "reorderCategoryProducts()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 5,
+      "community_name": "Inventory.tsx",
+      "file_type": "code",
+      "norm_label": "reordercategoryproducts()",
+      "source_file": "react-app/src/lib/core.ts",
+      "source_location": "L462"
+    },
+    {
+      "id": "react_app_src_lib_core_shorttag",
+      "label": "shortTag()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 5,
+      "community_name": "Inventory.tsx",
+      "file_type": "code",
+      "norm_label": "shorttag()",
+      "source_file": "react-app/src/lib/core.ts",
+      "source_location": "L28"
+    },
+    {
+      "id": "react_app_src_lib_core_storecats",
+      "label": "storeCats()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 5,
+      "community_name": "Inventory.tsx",
+      "file_type": "code",
+      "norm_label": "storecats()",
+      "source_file": "react-app/src/lib/core.ts",
+      "source_location": "L482"
     },
     {
       "id": "react_app_src_lib_core_timenow",
@@ -2087,11 +2351,203 @@
       "_callable": true,
       "_origin": "ast",
       "community": 5,
-      "community_name": "Inventory",
+      "community_name": "Inventory.tsx",
       "file_type": "code",
       "norm_label": "timenow()",
       "source_file": "react-app/src/lib/core.ts",
       "source_location": "L38"
+    },
+    {
+      "id": "react_app_src_lib_dialog_customconfirm",
+      "label": "customConfirm()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 5,
+      "community_name": "Inventory.tsx",
+      "file_type": "code",
+      "norm_label": "customconfirm()",
+      "source_file": "react-app/src/lib/dialog.ts",
+      "source_location": "L49"
+    },
+    {
+      "id": "react_app_src_ui_confirmdialog",
+      "label": "confirmDialog()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 5,
+      "community_name": "Inventory.tsx",
+      "file_type": "code",
+      "norm_label": "confirmdialog()",
+      "source_file": "react-app/src/ui.tsx",
+      "source_location": "L113"
+    },
+    {
+      "id": "react_app_src_ui_gearmenu",
+      "label": "GearMenu()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 5,
+      "community_name": "Inventory.tsx",
+      "file_type": "code",
+      "norm_label": "gearmenu()",
+      "source_file": "react-app/src/ui.tsx",
+      "source_location": "L148"
+    },
+    {
+      "id": "react_app_src_ui_image",
+      "label": "Image()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 5,
+      "community_name": "Inventory.tsx",
+      "file_type": "code",
+      "norm_label": "image()",
+      "source_file": "react-app/src/ui.tsx",
+      "source_location": "L13"
+    },
+    {
+      "id": "react_app_src_views_catalog_catalog",
+      "label": "Catalog()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 5,
+      "community_name": "Inventory.tsx",
+      "file_type": "code",
+      "norm_label": "catalog()",
+      "source_file": "react-app/src/views/Catalog.tsx",
+      "source_location": "L10"
+    },
+    {
+      "id": "react_app_src_views_catalog_catalog_addcategory",
+      "label": "addCategory()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 5,
+      "community_name": "Inventory.tsx",
+      "file_type": "code",
+      "norm_label": "addcategory()",
+      "source_file": "react-app/src/views/Catalog.tsx",
+      "source_location": "L53"
+    },
+    {
+      "id": "react_app_src_views_catalog_catalog_catkey",
+      "label": "catKey()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 5,
+      "community_name": "Inventory.tsx",
+      "file_type": "code",
+      "norm_label": "catkey()",
+      "source_file": "react-app/src/views/Catalog.tsx",
+      "source_location": "L41"
+    },
+    {
+      "id": "react_app_src_views_catalog_catalog_catopen",
+      "label": "catOpen()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 5,
+      "community_name": "Inventory.tsx",
+      "file_type": "code",
+      "norm_label": "catopen()",
+      "source_file": "react-app/src/views/Catalog.tsx",
+      "source_location": "L42"
+    },
+    {
+      "id": "react_app_src_views_catalog_catalog_editcategoryprice",
+      "label": "editCategoryPrice()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 5,
+      "community_name": "Inventory.tsx",
+      "file_type": "code",
+      "norm_label": "editcategoryprice()",
+      "source_file": "react-app/src/views/Catalog.tsx",
+      "source_location": "L56"
+    },
+    {
+      "id": "react_app_src_views_catalog_catalog_removecategory",
+      "label": "removeCategory()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 5,
+      "community_name": "Inventory.tsx",
+      "file_type": "code",
+      "norm_label": "removecategory()",
+      "source_file": "react-app/src/views/Catalog.tsx",
+      "source_location": "L74"
+    },
+    {
+      "id": "react_app_src_views_catalog_catalog_removeproduct",
+      "label": "removeProduct()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 5,
+      "community_name": "Inventory.tsx",
+      "file_type": "code",
+      "norm_label": "removeproduct()",
+      "source_file": "react-app/src/views/Catalog.tsx",
+      "source_location": "L62"
+    },
+    {
+      "id": "react_app_src_views_catalog_catalog_startcatdrag",
+      "label": "startCatDrag()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 5,
+      "community_name": "Inventory.tsx",
+      "file_type": "code",
+      "norm_label": "startcatdrag()",
+      "source_file": "react-app/src/views/Catalog.tsx",
+      "source_location": "L88"
+    },
+    {
+      "id": "react_app_src_views_catalog_catalog_startproddrag",
+      "label": "startProdDrag()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 5,
+      "community_name": "Inventory.tsx",
+      "file_type": "code",
+      "norm_label": "startproddrag()",
+      "source_file": "react-app/src/views/Catalog.tsx",
+      "source_location": "L127"
+    },
+    {
+      "id": "react_app_src_views_catalog_catalog_togglecat",
+      "label": "toggleCat()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 5,
+      "community_name": "Inventory.tsx",
+      "file_type": "code",
+      "norm_label": "togglecat()",
+      "source_file": "react-app/src/views/Catalog.tsx",
+      "source_location": "L45"
+    },
+    {
+      "id": "react_app_src_views_categorymodal_categorymodal",
+      "label": "CategoryModal()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 5,
+      "community_name": "Inventory.tsx",
+      "file_type": "code",
+      "norm_label": "categorymodal()",
+      "source_file": "react-app/src/views/CategoryModal.tsx",
+      "source_location": "L22"
+    },
+    {
+      "id": "react_app_src_views_categorymodal_categorymodal_removecategory",
+      "label": "removeCategory()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 5,
+      "community_name": "Inventory.tsx",
+      "file_type": "code",
+      "norm_label": "removecategory()",
+      "source_file": "react-app/src/views/CategoryModal.tsx",
+      "source_location": "L71"
     },
     {
       "id": "react_app_src_views_inventory_inventory",
@@ -2099,7 +2555,7 @@
       "_callable": true,
       "_origin": "ast",
       "community": 5,
-      "community_name": "Inventory",
+      "community_name": "Inventory.tsx",
       "file_type": "code",
       "norm_label": "inventory()",
       "source_file": "react-app/src/views/Inventory.tsx",
@@ -2111,7 +2567,7 @@
       "_callable": true,
       "_origin": "ast",
       "community": 5,
-      "community_name": "Inventory",
+      "community_name": "Inventory.tsx",
       "file_type": "code",
       "norm_label": "bump()",
       "source_file": "react-app/src/views/Inventory.tsx",
@@ -2123,7 +2579,7 @@
       "_callable": true,
       "_origin": "ast",
       "community": 5,
-      "community_name": "Inventory",
+      "community_name": "Inventory.tsx",
       "file_type": "code",
       "norm_label": "catkey()",
       "source_file": "react-app/src/views/Inventory.tsx",
@@ -2135,7 +2591,7 @@
       "_callable": true,
       "_origin": "ast",
       "community": 5,
-      "community_name": "Inventory",
+      "community_name": "Inventory.tsx",
       "file_type": "code",
       "norm_label": "catopen()",
       "source_file": "react-app/src/views/Inventory.tsx",
@@ -2147,7 +2603,7 @@
       "_callable": true,
       "_origin": "ast",
       "community": 5,
-      "community_name": "Inventory",
+      "community_name": "Inventory.tsx",
       "file_type": "code",
       "norm_label": "cur()",
       "source_file": "react-app/src/views/Inventory.tsx",
@@ -2159,7 +2615,7 @@
       "_callable": true,
       "_origin": "ast",
       "community": 5,
-      "community_name": "Inventory",
+      "community_name": "Inventory.tsx",
       "file_type": "code",
       "norm_label": "opencargo()",
       "source_file": "react-app/src/views/Inventory.tsx",
@@ -2171,11 +2627,23 @@
       "_callable": true,
       "_origin": "ast",
       "community": 5,
-      "community_name": "Inventory",
+      "community_name": "Inventory.tsx",
       "file_type": "code",
       "norm_label": "openedit()",
       "source_file": "react-app/src/views/Inventory.tsx",
       "source_location": "L119"
+    },
+    {
+      "id": "react_app_src_views_inventory_inventory_removecategory",
+      "label": "removeCategory()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 5,
+      "community_name": "Inventory.tsx",
+      "file_type": "code",
+      "norm_label": "removecategory()",
+      "source_file": "react-app/src/views/Inventory.tsx",
+      "source_location": "L61"
     },
     {
       "id": "react_app_src_views_inventory_inventory_savecargo",
@@ -2183,7 +2651,7 @@
       "_callable": true,
       "_origin": "ast",
       "community": 5,
-      "community_name": "Inventory",
+      "community_name": "Inventory.tsx",
       "file_type": "code",
       "norm_label": "savecargo()",
       "source_file": "react-app/src/views/Inventory.tsx",
@@ -2195,11 +2663,23 @@
       "_callable": true,
       "_origin": "ast",
       "community": 5,
-      "community_name": "Inventory",
+      "community_name": "Inventory.tsx",
       "file_type": "code",
       "norm_label": "saveedit()",
       "source_file": "react-app/src/views/Inventory.tsx",
       "source_location": "L128"
+    },
+    {
+      "id": "react_app_src_views_inventory_inventory_startproddrag",
+      "label": "startProdDrag()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 5,
+      "community_name": "Inventory.tsx",
+      "file_type": "code",
+      "norm_label": "startproddrag()",
+      "source_file": "react-app/src/views/Inventory.tsx",
+      "source_location": "L75"
     },
     {
       "id": "react_app_src_views_inventory_inventory_togglecat",
@@ -2207,7 +2687,7 @@
       "_callable": true,
       "_origin": "ast",
       "community": 5,
-      "community_name": "Inventory",
+      "community_name": "Inventory.tsx",
       "file_type": "code",
       "norm_label": "togglecat()",
       "source_file": "react-app/src/views/Inventory.tsx",
@@ -2219,23 +2699,11 @@
       "_callable": true,
       "_origin": "ast",
       "community": 5,
-      "community_name": "Inventory",
+      "community_name": "Inventory.tsx",
       "file_type": "code",
       "norm_label": "parseqty()",
       "source_file": "react-app/src/views/Inventory.tsx",
       "source_location": "L16"
-    },
-    {
-      "id": "react_app_src_dropdown_dropdown",
-      "label": "Dropdown()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 6,
-      "community_name": "ui.tsx",
-      "file_type": "code",
-      "norm_label": "dropdown()",
-      "source_file": "react-app/src/Dropdown.tsx",
-      "source_location": "L9"
     },
     {
       "id": "react_app_src_lib_core_fromeditablepromos",
@@ -2250,18 +2718,6 @@
       "source_location": "L437"
     },
     {
-      "id": "react_app_src_lib_core_groupedbycategory",
-      "label": "groupedByCategory()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 6,
-      "community_name": "ui.tsx",
-      "file_type": "code",
-      "norm_label": "groupedbycategory()",
-      "source_file": "react-app/src/lib/core.ts",
-      "source_location": "L507"
-    },
-    {
       "id": "react_app_src_lib_core_insertcatsorted",
       "label": "insertCatSorted()",
       "_callable": true,
@@ -2274,28 +2730,16 @@
       "source_location": "L520"
     },
     {
-      "id": "react_app_src_lib_core_inventorysold",
-      "label": "inventorySold()",
+      "id": "react_app_src_lib_core_normalizepromo",
+      "label": "normalizePromo()",
       "_callable": true,
       "_origin": "ast",
       "community": 6,
       "community_name": "ui.tsx",
       "file_type": "code",
-      "norm_label": "inventorysold()",
+      "norm_label": "normalizepromo()",
       "source_file": "react-app/src/lib/core.ts",
-      "source_location": "L311"
-    },
-    {
-      "id": "react_app_src_lib_core_money",
-      "label": "money()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 6,
-      "community_name": "ui.tsx",
-      "file_type": "code",
-      "norm_label": "money()",
-      "source_file": "react-app/src/lib/core.ts",
-      "source_location": "L42"
+      "source_location": "L126"
     },
     {
       "id": "react_app_src_lib_core_numtext",
@@ -2310,30 +2754,6 @@
       "source_location": "L421"
     },
     {
-      "id": "react_app_src_lib_core_promotext",
-      "label": "promoText()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 6,
-      "community_name": "ui.tsx",
-      "file_type": "code",
-      "norm_label": "promotext()",
-      "source_file": "react-app/src/lib/core.ts",
-      "source_location": "L49"
-    },
-    {
-      "id": "react_app_src_lib_core_reordercategoryproducts",
-      "label": "reorderCategoryProducts()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 6,
-      "community_name": "ui.tsx",
-      "file_type": "code",
-      "norm_label": "reordercategoryproducts()",
-      "source_file": "react-app/src/lib/core.ts",
-      "source_location": "L462"
-    },
-    {
       "id": "react_app_src_lib_core_setcategorypricing",
       "label": "setCategoryPricing()",
       "_callable": true,
@@ -2346,30 +2766,6 @@
       "source_location": "L385"
     },
     {
-      "id": "react_app_src_lib_core_shorttag",
-      "label": "shortTag()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 6,
-      "community_name": "ui.tsx",
-      "file_type": "code",
-      "norm_label": "shorttag()",
-      "source_file": "react-app/src/lib/core.ts",
-      "source_location": "L28"
-    },
-    {
-      "id": "react_app_src_lib_core_storecats",
-      "label": "storeCats()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 6,
-      "community_name": "ui.tsx",
-      "file_type": "code",
-      "norm_label": "storecats()",
-      "source_file": "react-app/src/lib/core.ts",
-      "source_location": "L482"
-    },
-    {
       "id": "react_app_src_lib_core_toeditablepromos",
       "label": "toEditablePromos()",
       "_callable": true,
@@ -2380,18 +2776,6 @@
       "norm_label": "toeditablepromos()",
       "source_file": "react-app/src/lib/core.ts",
       "source_location": "L424"
-    },
-    {
-      "id": "react_app_src_lib_dialog_customconfirm",
-      "label": "customConfirm()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 6,
-      "community_name": "ui.tsx",
-      "file_type": "code",
-      "norm_label": "customconfirm()",
-      "source_file": "react-app/src/lib/dialog.ts",
-      "source_location": "L49"
     },
     {
       "id": "react_app_src_lib_dialog_emit",
@@ -2499,19 +2883,7 @@
       "file_type": "code",
       "norm_label": "categorysuggest()",
       "source_file": "react-app/src/ui.tsx",
-      "source_location": "L199"
-    },
-    {
-      "id": "react_app_src_ui_confirmdialog",
-      "label": "confirmDialog()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 6,
-      "community_name": "ui.tsx",
-      "file_type": "code",
-      "norm_label": "confirmdialog()",
-      "source_file": "react-app/src/ui.tsx",
-      "source_location": "L112"
+      "source_location": "L247"
     },
     {
       "id": "react_app_src_ui_dialoghost",
@@ -2523,7 +2895,7 @@
       "file_type": "code",
       "norm_label": "dialoghost()",
       "source_file": "react-app/src/ui.tsx",
-      "source_location": "L93"
+      "source_location": "L94"
     },
     {
       "id": "react_app_src_ui_gearicon",
@@ -2535,31 +2907,7 @@
       "file_type": "code",
       "norm_label": "gearicon()",
       "source_file": "react-app/src/ui.tsx",
-      "source_location": "L121"
-    },
-    {
-      "id": "react_app_src_ui_gearmenu",
-      "label": "GearMenu()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 6,
-      "community_name": "ui.tsx",
-      "file_type": "code",
-      "norm_label": "gearmenu()",
-      "source_file": "react-app/src/ui.tsx",
-      "source_location": "L134"
-    },
-    {
-      "id": "react_app_src_ui_image",
-      "label": "Image()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 6,
-      "community_name": "ui.tsx",
-      "file_type": "code",
-      "norm_label": "image()",
-      "source_file": "react-app/src/ui.tsx",
-      "source_location": "L12"
+      "source_location": "L122"
     },
     {
       "id": "react_app_src_ui_imagelightboxhost",
@@ -2571,7 +2919,7 @@
       "file_type": "code",
       "norm_label": "imagelightboxhost()",
       "source_file": "react-app/src/ui.tsx",
-      "source_location": "L27"
+      "source_location": "L28"
     },
     {
       "id": "react_app_src_ui_imagepicker",
@@ -2583,7 +2931,7 @@
       "file_type": "code",
       "norm_label": "imagepicker()",
       "source_file": "react-app/src/ui.tsx",
-      "source_location": "L48"
+      "source_location": "L49"
     },
     {
       "id": "react_app_src_ui_modal",
@@ -2595,7 +2943,19 @@
       "file_type": "code",
       "norm_label": "modal()",
       "source_file": "react-app/src/ui.tsx",
-      "source_location": "L73"
+      "source_location": "L74"
+    },
+    {
+      "id": "react_app_src_ui_pencilicon",
+      "label": "PencilIcon()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 6,
+      "community_name": "ui.tsx",
+      "file_type": "code",
+      "norm_label": "pencilicon()",
+      "source_file": "react-app/src/ui.tsx",
+      "source_location": "L134"
     },
     {
       "id": "react_app_src_ui_suggestinput",
@@ -2607,151 +2967,19 @@
       "file_type": "code",
       "norm_label": "suggestinput()",
       "source_file": "react-app/src/ui.tsx",
-      "source_location": "L170"
+      "source_location": "L209"
     },
     {
-      "id": "react_app_src_views_catalog_catalog",
-      "label": "Catalog()",
+      "id": "react_app_src_ui_toast",
+      "label": "Toast()",
       "_callable": true,
       "_origin": "ast",
       "community": 6,
       "community_name": "ui.tsx",
       "file_type": "code",
-      "norm_label": "catalog()",
-      "source_file": "react-app/src/views/Catalog.tsx",
-      "source_location": "L10"
-    },
-    {
-      "id": "react_app_src_views_catalog_catalog_addcategory",
-      "label": "addCategory()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 6,
-      "community_name": "ui.tsx",
-      "file_type": "code",
-      "norm_label": "addcategory()",
-      "source_file": "react-app/src/views/Catalog.tsx",
-      "source_location": "L53"
-    },
-    {
-      "id": "react_app_src_views_catalog_catalog_catkey",
-      "label": "catKey()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 6,
-      "community_name": "ui.tsx",
-      "file_type": "code",
-      "norm_label": "catkey()",
-      "source_file": "react-app/src/views/Catalog.tsx",
-      "source_location": "L41"
-    },
-    {
-      "id": "react_app_src_views_catalog_catalog_catopen",
-      "label": "catOpen()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 6,
-      "community_name": "ui.tsx",
-      "file_type": "code",
-      "norm_label": "catopen()",
-      "source_file": "react-app/src/views/Catalog.tsx",
-      "source_location": "L42"
-    },
-    {
-      "id": "react_app_src_views_catalog_catalog_editcategoryprice",
-      "label": "editCategoryPrice()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 6,
-      "community_name": "ui.tsx",
-      "file_type": "code",
-      "norm_label": "editcategoryprice()",
-      "source_file": "react-app/src/views/Catalog.tsx",
-      "source_location": "L56"
-    },
-    {
-      "id": "react_app_src_views_catalog_catalog_removecategory",
-      "label": "removeCategory()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 6,
-      "community_name": "ui.tsx",
-      "file_type": "code",
-      "norm_label": "removecategory()",
-      "source_file": "react-app/src/views/Catalog.tsx",
-      "source_location": "L74"
-    },
-    {
-      "id": "react_app_src_views_catalog_catalog_removeproduct",
-      "label": "removeProduct()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 6,
-      "community_name": "ui.tsx",
-      "file_type": "code",
-      "norm_label": "removeproduct()",
-      "source_file": "react-app/src/views/Catalog.tsx",
-      "source_location": "L62"
-    },
-    {
-      "id": "react_app_src_views_catalog_catalog_startcatdrag",
-      "label": "startCatDrag()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 6,
-      "community_name": "ui.tsx",
-      "file_type": "code",
-      "norm_label": "startcatdrag()",
-      "source_file": "react-app/src/views/Catalog.tsx",
-      "source_location": "L88"
-    },
-    {
-      "id": "react_app_src_views_catalog_catalog_startproddrag",
-      "label": "startProdDrag()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 6,
-      "community_name": "ui.tsx",
-      "file_type": "code",
-      "norm_label": "startproddrag()",
-      "source_file": "react-app/src/views/Catalog.tsx",
-      "source_location": "L127"
-    },
-    {
-      "id": "react_app_src_views_catalog_catalog_togglecat",
-      "label": "toggleCat()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 6,
-      "community_name": "ui.tsx",
-      "file_type": "code",
-      "norm_label": "togglecat()",
-      "source_file": "react-app/src/views/Catalog.tsx",
-      "source_location": "L45"
-    },
-    {
-      "id": "react_app_src_views_categorymodal_categorymodal",
-      "label": "CategoryModal()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 6,
-      "community_name": "ui.tsx",
-      "file_type": "code",
-      "norm_label": "categorymodal()",
-      "source_file": "react-app/src/views/CategoryModal.tsx",
-      "source_location": "L22"
-    },
-    {
-      "id": "react_app_src_views_categorymodal_categorymodal_removecategory",
-      "label": "removeCategory()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 6,
-      "community_name": "ui.tsx",
-      "file_type": "code",
-      "norm_label": "removecategory()",
-      "source_file": "react-app/src/views/CategoryModal.tsx",
-      "source_location": "L71"
+      "norm_label": "toast()",
+      "source_file": "react-app/src/ui.tsx",
+      "source_location": "L87"
     },
     {
       "id": "react_app_src_views_categorymodal_categorymodal_save",
@@ -2766,42 +2994,6 @@
       "source_location": "L31"
     },
     {
-      "id": "react_app_src_views_inventory_inventory_removecategory",
-      "label": "removeCategory()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 6,
-      "community_name": "ui.tsx",
-      "file_type": "code",
-      "norm_label": "removecategory()",
-      "source_file": "react-app/src/views/Inventory.tsx",
-      "source_location": "L61"
-    },
-    {
-      "id": "react_app_src_views_inventory_inventory_startproddrag",
-      "label": "startProdDrag()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 6,
-      "community_name": "ui.tsx",
-      "file_type": "code",
-      "norm_label": "startproddrag()",
-      "source_file": "react-app/src/views/Inventory.tsx",
-      "source_location": "L75"
-    },
-    {
-      "id": "react_app_src_views_productform_productform",
-      "label": "ProductForm()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 6,
-      "community_name": "ui.tsx",
-      "file_type": "code",
-      "norm_label": "productform()",
-      "source_file": "react-app/src/views/ProductForm.tsx",
-      "source_location": "L9"
-    },
-    {
       "id": "react_app_src_views_productform_productform_save",
       "label": "save()",
       "_callable": true,
@@ -2811,7 +3003,7 @@
       "file_type": "code",
       "norm_label": "save()",
       "source_file": "react-app/src/views/ProductForm.tsx",
-      "source_location": "L36"
+      "source_location": "L33"
     },
     {
       "id": "react_app_src_views_promoeditor_blank",
@@ -2860,186 +3052,6 @@
       "norm_label": "promoeditor()",
       "source_file": "react-app/src/views/PromoEditor.tsx",
       "source_location": "L32"
-    },
-    {
-      "id": "react_app_src_lib_core_catlabel",
-      "label": "catLabel()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 8,
-      "community_name": "SaleRegistration",
-      "file_type": "code",
-      "norm_label": "catlabel()",
-      "source_file": "react-app/src/lib/core.ts",
-      "source_location": "L571"
-    },
-    {
-      "id": "react_app_src_lib_core_salecatsof",
-      "label": "saleCatsOf()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 8,
-      "community_name": "SaleRegistration",
-      "file_type": "code",
-      "norm_label": "salecatsof()",
-      "source_file": "react-app/src/lib/core.ts",
-      "source_location": "L575"
-    },
-    {
-      "id": "react_app_src_views_saleregistration_saleregistration",
-      "label": "SaleRegistration()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 8,
-      "community_name": "SaleRegistration",
-      "file_type": "code",
-      "norm_label": "saleregistration()",
-      "source_file": "react-app/src/views/SaleRegistration.tsx",
-      "source_location": "L12"
-    },
-    {
-      "id": "react_app_src_views_saleregistration_saleregistration_addline",
-      "label": "addLine()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 8,
-      "community_name": "SaleRegistration",
-      "file_type": "code",
-      "norm_label": "addline()",
-      "source_file": "react-app/src/views/SaleRegistration.tsx",
-      "source_location": "L111"
-    },
-    {
-      "id": "react_app_src_views_saleregistration_saleregistration_catunits",
-      "label": "catUnits()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 8,
-      "community_name": "SaleRegistration",
-      "file_type": "code",
-      "norm_label": "catunits()",
-      "source_file": "react-app/src/views/SaleRegistration.tsx",
-      "source_location": "L56"
-    },
-    {
-      "id": "react_app_src_views_saleregistration_saleregistration_cleardraft",
-      "label": "clearDraft()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 8,
-      "community_name": "SaleRegistration",
-      "file_type": "code",
-      "norm_label": "cleardraft()",
-      "source_file": "react-app/src/views/SaleRegistration.tsx",
-      "source_location": "L105"
-    },
-    {
-      "id": "react_app_src_views_saleregistration_saleregistration_clearqtydraft",
-      "label": "clearQtyDraft()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 8,
-      "community_name": "SaleRegistration",
-      "file_type": "code",
-      "norm_label": "clearqtydraft()",
-      "source_file": "react-app/src/views/SaleRegistration.tsx",
-      "source_location": "L136"
-    },
-    {
-      "id": "react_app_src_views_saleregistration_saleregistration_gopage",
-      "label": "goPage()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 8,
-      "community_name": "SaleRegistration",
-      "file_type": "code",
-      "norm_label": "gopage()",
-      "source_file": "react-app/src/views/SaleRegistration.tsx",
-      "source_location": "L76"
-    },
-    {
-      "id": "react_app_src_views_saleregistration_saleregistration_onpagerscroll",
-      "label": "onPagerScroll()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 8,
-      "community_name": "SaleRegistration",
-      "file_type": "code",
-      "norm_label": "onpagerscroll()",
-      "source_file": "react-app/src/views/SaleRegistration.tsx",
-      "source_location": "L86"
-    },
-    {
-      "id": "react_app_src_views_saleregistration_saleregistration_persist",
-      "label": "persist()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 8,
-      "community_name": "SaleRegistration",
-      "file_type": "code",
-      "norm_label": "persist()",
-      "source_file": "react-app/src/views/SaleRegistration.tsx",
-      "source_location": "L93"
-    },
-    {
-      "id": "react_app_src_views_saleregistration_saleregistration_recomputeautos",
-      "label": "recomputeAutos()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 8,
-      "community_name": "SaleRegistration",
-      "file_type": "code",
-      "norm_label": "recomputeautos()",
-      "source_file": "react-app/src/views/SaleRegistration.tsx",
-      "source_location": "L65"
-    },
-    {
-      "id": "react_app_src_views_saleregistration_saleregistration_removeline",
-      "label": "removeLine()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 8,
-      "community_name": "SaleRegistration",
-      "file_type": "code",
-      "norm_label": "removeline()",
-      "source_file": "react-app/src/views/SaleRegistration.tsx",
-      "source_location": "L140"
-    },
-    {
-      "id": "react_app_src_views_saleregistration_saleregistration_setline",
-      "label": "setLine()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 8,
-      "community_name": "SaleRegistration",
-      "file_type": "code",
-      "norm_label": "setline()",
-      "source_file": "react-app/src/views/SaleRegistration.tsx",
-      "source_location": "L123"
-    },
-    {
-      "id": "react_app_src_views_saleregistration_saleregistration_setmanualprice",
-      "label": "setManualPrice()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 8,
-      "community_name": "SaleRegistration",
-      "file_type": "code",
-      "norm_label": "setmanualprice()",
-      "source_file": "react-app/src/views/SaleRegistration.tsx",
-      "source_location": "L146"
-    },
-    {
-      "id": "react_app_src_views_saleregistration_saleregistration_setqtytext",
-      "label": "setQtyText()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 8,
-      "community_name": "SaleRegistration",
-      "file_type": "code",
-      "norm_label": "setqtytext()",
-      "source_file": "react-app/src/views/SaleRegistration.tsx",
-      "source_location": "L130"
     },
     {
       "id": "react_app_src_lib_core_default_store_image",
@@ -3139,17 +3151,6 @@
       "norm_label": "default_product_tag",
       "source_file": "react-app/src/lib/core.ts",
       "source_location": "L24"
-    },
-    {
-      "id": "react_app_src_main",
-      "label": "main.tsx",
-      "_origin": "ast",
-      "community": 12,
-      "community_name": "store.tsx",
-      "file_type": "code",
-      "norm_label": "main.tsx",
-      "source_file": "react-app/src/main.tsx",
-      "source_location": "L1"
     },
     {
       "id": "react_app_src_store",
@@ -3386,91 +3387,14 @@
       "source_location": "L1"
     },
     {
-      "id": "react_app_src_lib_core",
-      "label": "core.ts",
+      "id": "react_app_src_dropdown",
+      "label": "Dropdown.tsx",
       "_origin": "ast",
       "community": 15,
-      "community_name": "core.ts",
+      "community_name": "SaleRegistration.tsx",
       "file_type": "code",
-      "norm_label": "core.ts",
-      "source_file": "react-app/src/lib/core.ts",
-      "source_location": "L1"
-    },
-    {
-      "id": "react_app_src_lib_core_app_version",
-      "label": "APP_VERSION",
-      "_origin": "ast",
-      "community": 15,
-      "community_name": "core.ts",
-      "file_type": "code",
-      "norm_label": "app_version",
-      "source_file": "react-app/src/lib/core.ts",
-      "source_location": "L7"
-    },
-    {
-      "id": "react_app_src_lib_core_default_prod_svg",
-      "label": "DEFAULT_PROD_SVG",
-      "_origin": "ast",
-      "community": 15,
-      "community_name": "core.ts",
-      "file_type": "code",
-      "norm_label": "default_prod_svg",
-      "source_file": "react-app/src/lib/core.ts",
-      "source_location": "L14"
-    },
-    {
-      "id": "react_app_src_lib_core_default_store_svg",
-      "label": "DEFAULT_STORE_SVG",
-      "_origin": "ast",
-      "community": 15,
-      "community_name": "core.ts",
-      "file_type": "code",
-      "norm_label": "default_store_svg",
-      "source_file": "react-app/src/lib/core.ts",
-      "source_location": "L9"
-    },
-    {
-      "id": "react_app_src_lib_core_key",
-      "label": "KEY",
-      "_origin": "ast",
-      "community": 15,
-      "community_name": "core.ts",
-      "file_type": "code",
-      "norm_label": "key",
-      "source_file": "react-app/src/lib/core.ts",
-      "source_location": "L3"
-    },
-    {
-      "id": "react_app_src_lib_core_sync_default_name",
-      "label": "SYNC_DEFAULT_NAME",
-      "_origin": "ast",
-      "community": 15,
-      "community_name": "core.ts",
-      "file_type": "code",
-      "norm_label": "sync_default_name",
-      "source_file": "react-app/src/lib/core.ts",
-      "source_location": "L19"
-    },
-    {
-      "id": "react_app_src_lib_core_user_key",
-      "label": "USER_KEY",
-      "_origin": "ast",
-      "community": 15,
-      "community_name": "core.ts",
-      "file_type": "code",
-      "norm_label": "user_key",
-      "source_file": "react-app/src/lib/core.ts",
-      "source_location": "L5"
-    },
-    {
-      "id": "react_app_src_types",
-      "label": "types.ts",
-      "_origin": "ast",
-      "community": 15,
-      "community_name": "core.ts",
-      "file_type": "code",
-      "norm_label": "types.ts",
-      "source_file": "react-app/src/types.ts",
+      "norm_label": "dropdown.tsx",
+      "source_file": "react-app/src/Dropdown.tsx",
       "source_location": "L1"
     },
     {
@@ -3478,17 +3402,28 @@
       "label": "Events.tsx",
       "_origin": "ast",
       "community": 15,
-      "community_name": "core.ts",
+      "community_name": "SaleRegistration.tsx",
       "file_type": "code",
       "norm_label": "events.tsx",
       "source_file": "react-app/src/views/Events.tsx",
       "source_location": "L1"
     },
     {
+      "id": "react_app_src_views_saleregistration",
+      "label": "SaleRegistration.tsx",
+      "_origin": "ast",
+      "community": 15,
+      "community_name": "SaleRegistration.tsx",
+      "file_type": "code",
+      "norm_label": "saleregistration.tsx",
+      "source_file": "react-app/src/views/SaleRegistration.tsx",
+      "source_location": "L1"
+    },
+    {
       "id": "react_app_src_app",
       "label": "App.tsx",
       "_origin": "ast",
-      "community": 3,
+      "community": 2,
       "community_name": "App.tsx",
       "file_type": "code",
       "norm_label": "app.tsx",
@@ -3496,43 +3431,21 @@
       "source_location": "L1"
     },
     {
-      "id": "react_app_src_views_dashboard",
-      "label": "Dashboard.tsx",
+      "id": "react_app_src_main",
+      "label": "main.tsx",
       "_origin": "ast",
-      "community": 3,
+      "community": 2,
       "community_name": "App.tsx",
       "file_type": "code",
-      "norm_label": "dashboard.tsx",
-      "source_file": "react-app/src/views/Dashboard.tsx",
-      "source_location": "L1"
-    },
-    {
-      "id": "react_app_src_views_employees",
-      "label": "Employees.tsx",
-      "_origin": "ast",
-      "community": 3,
-      "community_name": "App.tsx",
-      "file_type": "code",
-      "norm_label": "employees.tsx",
-      "source_file": "react-app/src/views/Employees.tsx",
-      "source_location": "L1"
-    },
-    {
-      "id": "react_app_src_views_history",
-      "label": "History.tsx",
-      "_origin": "ast",
-      "community": 3,
-      "community_name": "App.tsx",
-      "file_type": "code",
-      "norm_label": "history.tsx",
-      "source_file": "react-app/src/views/History.tsx",
+      "norm_label": "main.tsx",
+      "source_file": "react-app/src/main.tsx",
       "source_location": "L1"
     },
     {
       "id": "react_app_src_views_join",
       "label": "Join.tsx",
       "_origin": "ast",
-      "community": 3,
+      "community": 2,
       "community_name": "App.tsx",
       "file_type": "code",
       "norm_label": "join.tsx",
@@ -3543,7 +3456,7 @@
       "id": "react_app_src_views_notes",
       "label": "Notes.tsx",
       "_origin": "ast",
-      "community": 3,
+      "community": 2,
       "community_name": "App.tsx",
       "file_type": "code",
       "norm_label": "notes.tsx",
@@ -3551,11 +3464,143 @@
       "source_location": "L1"
     },
     {
+      "id": "ref_react",
+      "label": "react",
+      "_origin": "ast",
+      "community": 2,
+      "community_name": "App.tsx",
+      "file_type": "concept",
+      "norm_label": "react",
+      "source_file": "react-app/package.json",
+      "source_location": "L14"
+    },
+    {
+      "id": "react_app_src_lib_core",
+      "label": "core.ts",
+      "_origin": "ast",
+      "community": 3,
+      "community_name": "core.ts",
+      "file_type": "code",
+      "norm_label": "core.ts",
+      "source_file": "react-app/src/lib/core.ts",
+      "source_location": "L1"
+    },
+    {
+      "id": "react_app_src_lib_core_app_version",
+      "label": "APP_VERSION",
+      "_origin": "ast",
+      "community": 3,
+      "community_name": "core.ts",
+      "file_type": "code",
+      "norm_label": "app_version",
+      "source_file": "react-app/src/lib/core.ts",
+      "source_location": "L7"
+    },
+    {
+      "id": "react_app_src_lib_core_default_prod_svg",
+      "label": "DEFAULT_PROD_SVG",
+      "_origin": "ast",
+      "community": 3,
+      "community_name": "core.ts",
+      "file_type": "code",
+      "norm_label": "default_prod_svg",
+      "source_file": "react-app/src/lib/core.ts",
+      "source_location": "L14"
+    },
+    {
+      "id": "react_app_src_lib_core_default_store_svg",
+      "label": "DEFAULT_STORE_SVG",
+      "_origin": "ast",
+      "community": 3,
+      "community_name": "core.ts",
+      "file_type": "code",
+      "norm_label": "default_store_svg",
+      "source_file": "react-app/src/lib/core.ts",
+      "source_location": "L9"
+    },
+    {
+      "id": "react_app_src_lib_core_key",
+      "label": "KEY",
+      "_origin": "ast",
+      "community": 3,
+      "community_name": "core.ts",
+      "file_type": "code",
+      "norm_label": "key",
+      "source_file": "react-app/src/lib/core.ts",
+      "source_location": "L3"
+    },
+    {
+      "id": "react_app_src_lib_core_sync_default_name",
+      "label": "SYNC_DEFAULT_NAME",
+      "_origin": "ast",
+      "community": 3,
+      "community_name": "core.ts",
+      "file_type": "code",
+      "norm_label": "sync_default_name",
+      "source_file": "react-app/src/lib/core.ts",
+      "source_location": "L19"
+    },
+    {
+      "id": "react_app_src_lib_core_user_key",
+      "label": "USER_KEY",
+      "_origin": "ast",
+      "community": 3,
+      "community_name": "core.ts",
+      "file_type": "code",
+      "norm_label": "user_key",
+      "source_file": "react-app/src/lib/core.ts",
+      "source_location": "L5"
+    },
+    {
+      "id": "react_app_src_types",
+      "label": "types.ts",
+      "_origin": "ast",
+      "community": 3,
+      "community_name": "core.ts",
+      "file_type": "code",
+      "norm_label": "types.ts",
+      "source_file": "react-app/src/types.ts",
+      "source_location": "L1"
+    },
+    {
+      "id": "react_app_src_views_dashboard",
+      "label": "Dashboard.tsx",
+      "_origin": "ast",
+      "community": 3,
+      "community_name": "core.ts",
+      "file_type": "code",
+      "norm_label": "dashboard.tsx",
+      "source_file": "react-app/src/views/Dashboard.tsx",
+      "source_location": "L1"
+    },
+    {
+      "id": "react_app_src_views_employees",
+      "label": "Employees.tsx",
+      "_origin": "ast",
+      "community": 3,
+      "community_name": "core.ts",
+      "file_type": "code",
+      "norm_label": "employees.tsx",
+      "source_file": "react-app/src/views/Employees.tsx",
+      "source_location": "L1"
+    },
+    {
+      "id": "react_app_src_views_history",
+      "label": "History.tsx",
+      "_origin": "ast",
+      "community": 3,
+      "community_name": "core.ts",
+      "file_type": "code",
+      "norm_label": "history.tsx",
+      "source_file": "react-app/src/views/History.tsx",
+      "source_location": "L1"
+    },
+    {
       "id": "react_app_src_views_profit",
       "label": "Profit.tsx",
       "_origin": "ast",
       "community": 3,
-      "community_name": "App.tsx",
+      "community_name": "core.ts",
       "file_type": "code",
       "norm_label": "profit.tsx",
       "source_file": "react-app/src/views/Profit.tsx",
@@ -3991,26 +4036,37 @@
       "source_location": "L23"
     },
     {
-      "id": "react_app_src_dropdown",
-      "label": "Dropdown.tsx",
-      "_origin": "ast",
-      "community": 6,
-      "community_name": "ui.tsx",
-      "file_type": "code",
-      "norm_label": "dropdown.tsx",
-      "source_file": "react-app/src/Dropdown.tsx",
-      "source_location": "L1"
-    },
-    {
       "id": "react_app_src_lib_core_default_product_image",
       "label": "DEFAULT_PRODUCT_IMAGE",
       "_origin": "ast",
-      "community": 6,
-      "community_name": "ui.tsx",
+      "community": 5,
+      "community_name": "Inventory.tsx",
       "file_type": "code",
       "norm_label": "default_product_image",
       "source_file": "react-app/src/lib/core.ts",
       "source_location": "L17"
+    },
+    {
+      "id": "react_app_src_views_catalog",
+      "label": "Catalog.tsx",
+      "_origin": "ast",
+      "community": 5,
+      "community_name": "Inventory.tsx",
+      "file_type": "code",
+      "norm_label": "catalog.tsx",
+      "source_file": "react-app/src/views/Catalog.tsx",
+      "source_location": "L1"
+    },
+    {
+      "id": "react_app_src_views_inventory",
+      "label": "Inventory.tsx",
+      "_origin": "ast",
+      "community": 5,
+      "community_name": "Inventory.tsx",
+      "file_type": "code",
+      "norm_label": "inventory.tsx",
+      "source_file": "react-app/src/views/Inventory.tsx",
+      "source_location": "L1"
     },
     {
       "id": "react_app_src_lib_dialog",
@@ -4068,17 +4124,6 @@
       "source_location": "L1"
     },
     {
-      "id": "react_app_src_views_catalog",
-      "label": "Catalog.tsx",
-      "_origin": "ast",
-      "community": 6,
-      "community_name": "ui.tsx",
-      "file_type": "code",
-      "norm_label": "catalog.tsx",
-      "source_file": "react-app/src/views/Catalog.tsx",
-      "source_location": "L1"
-    },
-    {
       "id": "react_app_src_views_categorymodal",
       "label": "CategoryModal.tsx",
       "_origin": "ast",
@@ -4087,17 +4132,6 @@
       "file_type": "code",
       "norm_label": "categorymodal.tsx",
       "source_file": "react-app/src/views/CategoryModal.tsx",
-      "source_location": "L1"
-    },
-    {
-      "id": "react_app_src_views_inventory",
-      "label": "Inventory.tsx",
-      "_origin": "ast",
-      "community": 6,
-      "community_name": "ui.tsx",
-      "file_type": "code",
-      "norm_label": "inventory.tsx",
-      "source_file": "react-app/src/views/Inventory.tsx",
       "source_location": "L1"
     },
     {
@@ -4121,28 +4155,6 @@
       "norm_label": "promoeditor.tsx",
       "source_file": "react-app/src/views/PromoEditor.tsx",
       "source_location": "L1"
-    },
-    {
-      "id": "react_app_src_views_saleregistration",
-      "label": "SaleRegistration.tsx",
-      "_origin": "ast",
-      "community": 6,
-      "community_name": "ui.tsx",
-      "file_type": "code",
-      "norm_label": "saleregistration.tsx",
-      "source_file": "react-app/src/views/SaleRegistration.tsx",
-      "source_location": "L1"
-    },
-    {
-      "id": "ref_react",
-      "label": "react",
-      "_origin": "ast",
-      "community": 6,
-      "community_name": "ui.tsx",
-      "file_type": "concept",
-      "norm_label": "react",
-      "source_file": "react-app/package.json",
-      "source_location": "L14"
     },
     {
       "id": "react_app_tsconfig",
@@ -6068,7 +6080,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "react-app/src/ui.tsx",
-      "source_location": "L113",
+      "source_location": "L114",
       "weight": 1.0
     },
     {
@@ -6080,7 +6092,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "react-app/src/ui.tsx",
-      "source_location": "L102",
+      "source_location": "L103",
       "weight": 1.0
     },
     {
@@ -6092,7 +6104,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "react-app/src/ui.tsx",
-      "source_location": "L95",
+      "source_location": "L96",
       "weight": 1.0
     },
     {
@@ -6104,7 +6116,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "react-app/src/ui.tsx",
-      "source_location": "L19",
+      "source_location": "L20",
       "weight": 1.0
     },
     {
@@ -6116,7 +6128,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "react-app/src/ui.tsx",
-      "source_location": "L29",
+      "source_location": "L30",
       "weight": 1.0
     },
     {
@@ -6128,7 +6140,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "react-app/src/ui.tsx",
-      "source_location": "L32",
+      "source_location": "L33",
       "weight": 1.0
     },
     {
@@ -7285,18 +7297,6 @@
     },
     {
       "source": "react_app_src_views_productform_productform",
-      "target": "react_app_src_store_usestore",
-      "relation": "calls",
-      "_origin": "ast",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "context": "call",
-      "source_file": "react-app/src/views/ProductForm.tsx",
-      "source_location": "L10",
-      "weight": 1.0
-    },
-    {
-      "source": "react_app_src_views_productform_productform",
       "target": "react_app_src_lib_core_storecats",
       "relation": "calls",
       "_origin": "ast",
@@ -7304,7 +7304,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "react-app/src/views/ProductForm.tsx",
-      "source_location": "L13",
+      "source_location": "L12",
       "weight": 1.0
     },
     {
@@ -7316,7 +7316,19 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "react-app/src/views/ProductForm.tsx",
-      "source_location": "L21",
+      "source_location": "L19",
+      "weight": 1.0
+    },
+    {
+      "source": "react_app_src_views_productform_productform",
+      "target": "react_app_src_store_usestore",
+      "relation": "calls",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "call",
+      "source_file": "react-app/src/views/ProductForm.tsx",
+      "source_location": "L9",
       "weight": 1.0
     },
     {
@@ -7328,7 +7340,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "react-app/src/views/ProductForm.tsx",
-      "source_location": "L33",
+      "source_location": "L30",
       "weight": 1.0
     },
     {
@@ -7340,7 +7352,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "react-app/src/views/ProductForm.tsx",
-      "source_location": "L45",
+      "source_location": "L42",
       "weight": 1.0
     },
     {
@@ -7352,7 +7364,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "react-app/src/views/ProductForm.tsx",
-      "source_location": "L57",
+      "source_location": "L54",
       "weight": 1.0
     },
     {
@@ -7364,7 +7376,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "react-app/src/views/ProductForm.tsx",
-      "source_location": "L63",
+      "source_location": "L60",
       "weight": 1.0
     },
     {
@@ -7376,7 +7388,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "react-app/src/views/ProductForm.tsx",
-      "source_location": "L65",
+      "source_location": "L62",
       "weight": 1.0
     },
     {
@@ -7388,7 +7400,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "react-app/src/views/ProductForm.tsx",
-      "source_location": "L71",
+      "source_location": "L68",
       "weight": 1.0
     },
     {
@@ -9944,7 +9956,7 @@
       "confidence_score": 1.0,
       "context": "import",
       "source_file": "react-app/src/ui.tsx",
-      "source_location": "L2",
+      "source_location": "L3",
       "weight": 1.0
     },
     {
@@ -9956,7 +9968,7 @@
       "confidence_score": 1.0,
       "context": "import",
       "source_file": "react-app/src/ui.tsx",
-      "source_location": "L2",
+      "source_location": "L3",
       "weight": 1.0
     },
     {
@@ -9968,7 +9980,7 @@
       "confidence_score": 1.0,
       "context": "import",
       "source_file": "react-app/src/ui.tsx",
-      "source_location": "L2",
+      "source_location": "L3",
       "weight": 1.0
     },
     {
@@ -9980,7 +9992,7 @@
       "confidence_score": 1.0,
       "context": "import",
       "source_file": "react-app/src/ui.tsx",
-      "source_location": "L2",
+      "source_location": "L3",
       "weight": 1.0
     },
     {
@@ -9992,7 +10004,7 @@
       "confidence_score": 1.0,
       "context": "import",
       "source_file": "react-app/src/ui.tsx",
-      "source_location": "L3",
+      "source_location": "L4",
       "weight": 1.0
     },
     {
@@ -10004,7 +10016,7 @@
       "confidence_score": 1.0,
       "context": "import",
       "source_file": "react-app/src/ui.tsx",
-      "source_location": "L3",
+      "source_location": "L4",
       "weight": 1.0
     },
     {
@@ -10016,7 +10028,7 @@
       "confidence_score": 1.0,
       "context": "import",
       "source_file": "react-app/src/ui.tsx",
-      "source_location": "L3",
+      "source_location": "L4",
       "weight": 1.0
     },
     {
@@ -11221,7 +11233,7 @@
     },
     {
       "source": "react_app_src_views_productform",
-      "target": "react_app_src_dropdown_dropdown",
+      "target": "react_app_src_ui_categorysuggest",
       "relation": "imports",
       "_origin": "ast",
       "confidence": "EXTRACTED",
@@ -11233,18 +11245,6 @@
     },
     {
       "source": "react_app_src_views_productform",
-      "target": "react_app_src_ui_categorysuggest",
-      "relation": "imports",
-      "_origin": "ast",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "context": "import",
-      "source_file": "react-app/src/views/ProductForm.tsx",
-      "source_location": "L6",
-      "weight": 1.0
-    },
-    {
-      "source": "react_app_src_views_productform",
       "target": "react_app_src_ui_imagepicker",
       "relation": "imports",
       "_origin": "ast",
@@ -11252,7 +11252,7 @@
       "confidence_score": 1.0,
       "context": "import",
       "source_file": "react-app/src/views/ProductForm.tsx",
-      "source_location": "L6",
+      "source_location": "L5",
       "weight": 1.0
     },
     {
@@ -11264,7 +11264,7 @@
       "confidence_score": 1.0,
       "context": "import",
       "source_file": "react-app/src/views/ProductForm.tsx",
-      "source_location": "L6",
+      "source_location": "L5",
       "weight": 1.0
     },
     {
@@ -11276,7 +11276,7 @@
       "confidence_score": 1.0,
       "context": "import",
       "source_file": "react-app/src/views/ProductForm.tsx",
-      "source_location": "L6",
+      "source_location": "L5",
       "weight": 1.0
     },
     {
@@ -11288,7 +11288,7 @@
       "confidence_score": 1.0,
       "context": "import",
       "source_file": "react-app/src/views/ProductForm.tsx",
-      "source_location": "L7",
+      "source_location": "L6",
       "weight": 1.0
     },
     {
@@ -12427,7 +12427,7 @@
     },
     {
       "source": "react_app_src_ui",
-      "target": "react_app_src_lib_dialog",
+      "target": "ref_react_dom",
       "relation": "imports_from",
       "_origin": "ast",
       "confidence": "EXTRACTED",
@@ -12439,7 +12439,7 @@
     },
     {
       "source": "react_app_src_ui",
-      "target": "react_app_src_lib_lightbox",
+      "target": "react_app_src_lib_dialog",
       "relation": "imports_from",
       "_origin": "ast",
       "confidence": "EXTRACTED",
@@ -12447,6 +12447,18 @@
       "context": "import",
       "source_file": "react-app/src/ui.tsx",
       "source_location": "L3",
+      "weight": 1.0
+    },
+    {
+      "source": "react_app_src_ui",
+      "target": "react_app_src_lib_lightbox",
+      "relation": "imports_from",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "import",
+      "source_file": "react-app/src/ui.tsx",
+      "source_location": "L4",
       "weight": 1.0
     },
     {
@@ -13026,7 +13038,7 @@
     },
     {
       "source": "react_app_src_views_productform",
-      "target": "react_app_src_dropdown",
+      "target": "react_app_src_ui",
       "relation": "imports_from",
       "_origin": "ast",
       "confidence": "EXTRACTED",
@@ -13038,18 +13050,6 @@
     },
     {
       "source": "react_app_src_views_productform",
-      "target": "react_app_src_ui",
-      "relation": "imports_from",
-      "_origin": "ast",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "context": "import",
-      "source_file": "react-app/src/views/ProductForm.tsx",
-      "source_location": "L6",
-      "weight": 1.0
-    },
-    {
-      "source": "react_app_src_views_productform",
       "target": "react_app_src_views_promoeditor",
       "relation": "imports_from",
       "_origin": "ast",
@@ -13057,7 +13057,7 @@
       "confidence_score": 1.0,
       "context": "import",
       "source_file": "react-app/src/views/ProductForm.tsx",
-      "source_location": "L7",
+      "source_location": "L6",
       "weight": 1.0
     },
     {
@@ -15366,18 +15366,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "react-app/src/ui.tsx",
-      "source_location": "L112",
-      "weight": 1.0
-    },
-    {
-      "source": "react_app_src_ui",
-      "target": "react_app_src_ui_image",
-      "relation": "contains",
-      "_origin": "ast",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "react-app/src/ui.tsx",
-      "source_location": "L12",
+      "source_location": "L113",
       "weight": 1.0
     },
     {
@@ -15388,12 +15377,23 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "react-app/src/ui.tsx",
-      "source_location": "L121",
+      "source_location": "L122",
       "weight": 1.0
     },
     {
       "source": "react_app_src_ui",
-      "target": "react_app_src_ui_gearmenu",
+      "target": "react_app_src_ui_image",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "react-app/src/ui.tsx",
+      "source_location": "L13",
+      "weight": 1.0
+    },
+    {
+      "source": "react_app_src_ui",
+      "target": "react_app_src_ui_pencilicon",
       "relation": "contains",
       "_origin": "ast",
       "confidence": "EXTRACTED",
@@ -15404,13 +15404,24 @@
     },
     {
       "source": "react_app_src_ui",
+      "target": "react_app_src_ui_gearmenu",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "react-app/src/ui.tsx",
+      "source_location": "L148",
+      "weight": 1.0
+    },
+    {
+      "source": "react_app_src_ui",
       "target": "react_app_src_ui_suggestinput",
       "relation": "contains",
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "react-app/src/ui.tsx",
-      "source_location": "L170",
+      "source_location": "L209",
       "weight": 1.0
     },
     {
@@ -15421,7 +15432,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "react-app/src/ui.tsx",
-      "source_location": "L199",
+      "source_location": "L247",
       "weight": 1.0
     },
     {
@@ -15432,7 +15443,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "react-app/src/ui.tsx",
-      "source_location": "L27",
+      "source_location": "L28",
       "weight": 1.0
     },
     {
@@ -15443,7 +15454,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "react-app/src/ui.tsx",
-      "source_location": "L48",
+      "source_location": "L49",
       "weight": 1.0
     },
     {
@@ -15454,7 +15465,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "react-app/src/ui.tsx",
-      "source_location": "L73",
+      "source_location": "L74",
       "weight": 1.0
     },
     {
@@ -15465,7 +15476,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "react-app/src/ui.tsx",
-      "source_location": "L86",
+      "source_location": "L87",
       "weight": 1.0
     },
     {
@@ -15476,7 +15487,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "react-app/src/ui.tsx",
-      "source_location": "L93",
+      "source_location": "L94",
       "weight": 1.0
     },
     {
@@ -15850,7 +15861,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "react-app/src/views/ProductForm.tsx",
-      "source_location": "L9",
+      "source_location": "L8",
       "weight": 1.0
     },
     {
@@ -15861,7 +15872,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "react-app/src/views/ProductForm.tsx",
-      "source_location": "L31",
+      "source_location": "L28",
       "weight": 1.0
     },
     {
@@ -15872,7 +15883,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "react-app/src/views/ProductForm.tsx",
-      "source_location": "L36",
+      "source_location": "L33",
       "weight": 1.0
     },
     {
@@ -16611,5 +16622,5 @@
     }
   ],
   "hyperedges": [],
-  "built_at_commit": "f3b40d12f0706f21818493e9b4b4579ffad53164"
+  "built_at_commit": "1db5da795bd85e2305f5099bc7538ef030d90c9f"
 }
