@@ -52,6 +52,13 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
   const toast = useCallback((m: string) => {
     setToastMsg(m);
+    // Cada notificación de la app también llega al centro de notificaciones
+    // del teléfono (solo cuando la app no está a la vista y hay permiso; ver
+    // showSystemNotification en lib/sound.ts). Así, si un compañero deja una
+    // nota, una tienda se cae de la nube o algo necesita atención, el aviso
+    // aparece como en cualquier app de teléfono, no solo dentro de la app.
+    const st = stateRef.current.stores.find((x) => x.id === stateRef.current.activeStoreId) || stateRef.current.stores[0];
+    showSystemNotification(st ? st.name : 'Mi Tiendita', m);
     clearTimeout(toastTimer.current);
     toastTimer.current = window.setTimeout(() => setToastMsg(''), 2200);
   }, []);
@@ -194,8 +201,9 @@ export function AppProvider({ children }: { children: ReactNode }) {
     if (notify > 0) {
       playNoteChime();
       const msg = notify === 1 ? 'Nueva nota del equipo' : notify + ' novedades en Notas';
+      // El toast ya enruta el aviso al sistema (ver toast en este archivo),
+      // así que aquí solo se suena y se muestra dentro de la app.
       toast(msg);
-      showSystemNotification('Mi Tiendita', msg);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [active]);

@@ -57,19 +57,51 @@ export async function requestNotifyPermission(): Promise<NotificationPermission 
   try { return await Notification.requestPermission(); } catch { return Notification.permission; }
 }
 
-// Aviso del sistema operativo (fuera de la pestaña/app): solo si ya se dio
-// permiso y la pestaña no esta a la vista en este momento (si esta abierta y
-// visible, el toast + el sonido de adentro de la app ya avisan, un aviso
-// del sistema encima seria redundante).
-export function showSystemNotification(title: string, body: string): void {
+// Aviso del sistema operativo (el que aparece en el centro de notificaciones
+// del telefono, "como las apps normales"). Solo si ya se dio permiso y la
+// pestaña no esta a la vista (si esta abierta y visible, el toast + el sonido
+// de adentro de la app ya avisan; un aviso del sistema encima seria
+// redundante).
+//
+// Se muestra con el SERVICE WORKER (registration.showNotification) y no con
+// new Notification() directo porque en varias plataformas (Firefox en
+// Android, algunos PWA embebidos e iOS) instanciar Notification desde la
+// pagina falla o se corta, mientras que mostrarla desde el service worker
+// llega siempre al centro de notificaciones del sistema. El service worker
+// ya esta registrado por la app (sw.js) y su manejador notificationclick
+// enfoca la app al tocar el aviso.
+export function showSystemNotification(title: string, body: string, tag = 'mi-tiendita-aviso'): void {
   if (typeof Notification === 'undefined' || Notification.permission !== 'granted') return;
   if (document.visibilityState === 'visible') return;
+  const opts: NotificationOptions = {
+    body,
+    icon: './icon-192.png',
+    badge: './icon-192.png',
+    tag,
+    data: { link: location.href },
+    vibrate: [140, 90, 140],
+  };
+  const showDirect = (): void => {
+    try {
+      const n = new Notification(title, opts);
+      n.onclick = () => { window.focus(); n.close(); };
+    } catch {
+      // Algunos navegadores no dejan instanciar Notification directo aunque
+      // el permiso este concedido; se ignora en silencio.
+    }
+  };
   try {
-    const n = new Notification(title, { body, icon: './icon-192.png', tag: 'mi-tiendita-notas' });
-    n.onclick = () => { window.focus(); n.close(); };
+    // Primero el service worker (llega al centro de notificaciones del
+    // sistema aunque la app este en otra pestaña); si no esta listo o falla,
+    // cae al Notification directo.
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.ready
+        .then((reg) => reg.showNotification(title, opts))
+        .catch(showDirect);
+    } else {
+      showDirect();
+    }
   } catch {
-    // Algunos navegadores (Firefox en Android, ciertos PWA embebidos) no
-    // dejan instanciar Notification directo aunque el permiso este
-    // concedido; se ignora en silencio, el sonido+toast ya avisaron.
+    showDirect();
   }
 }
