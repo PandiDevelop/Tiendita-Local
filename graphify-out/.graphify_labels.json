@@ -4,8 +4,8 @@
   "2": "App.tsx",
   "3": "useStore",
   "4": "package.json",
-  "5": "Inventory.tsx",
-  "6": "SaleRegistration.tsx",
+  "5": "Inventory",
+  "6": "Inventory.tsx",
   "7": "compilerOptions",
   "8": "SaleRegistration",
   "9": "vite-env.d.ts",
@@ -14,5 +14,6 @@
   "12": "store.tsx",
   "13": "Mi Tiendita",
   "14": "AGENTS.md",
-  "15": "core.ts"
+  "15": "core.ts",
+  "16": "Events.tsx"
 }
