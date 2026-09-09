@@ -3,3 +3,8 @@ node_modules/
 graphify-out/cost.json
 graphify-out/cache/
 graphify-out/[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]/
+
+# Cloudflare Worker (push-worker/): cache local y secrets de desarrollo,
+# nunca se suben.
+.wrangler/
+push-worker/.dev.vars

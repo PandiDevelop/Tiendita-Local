@@ -1,4 +1,4 @@
-const CACHE = 'mi-tiendita-1.7.0';
+const CACHE = 'mi-tiendita-1.8.0';
 self.addEventListener('install', () => self.skipWaiting());
 self.addEventListener('activate', event => event.waitUntil(Promise.all([self.clients.claim(), caches.keys().then(keys => Promise.all(keys.filter(key => key !== CACHE).map(key => caches.delete(key))))])));
 self.addEventListener('fetch', event => {
@@ -15,5 +15,40 @@ self.addEventListener('fetch', event => {
         return response;
       })
       .catch(() => caches.match(event.request))
+  );
+});
+
+// Notificaciones push reales (FCM), con la app cerrada del todo: ver
+// react-app/src/lib/push.ts y push-worker/ en la raiz del repo. Este
+// manejador es el que de verdad hace aparecer el aviso del sistema - FCM
+// solo entrega el mensaje al service worker, mostrarlo es cosa de aca (sin
+// esto, un token registrado recibiria el push pero nada se veria).
+self.addEventListener('push', event => {
+  let data = {};
+  try { data = event.data ? event.data.json() : {}; } catch (e) { data = {}; }
+  const notif = data.notification || {};
+  const title = notif.title || data.title || 'Mi Tiendita';
+  const body = notif.body || data.body || '';
+  const link = (data.fcmOptions && data.fcmOptions.link) || (data.data && data.data.link) || './index.html';
+  event.waitUntil(self.registration.showNotification(title, {
+    body,
+    icon: './icon-192.png',
+    badge: './icon-192.png',
+    tag: 'mi-tiendita-notas',
+    data: { link },
+  }));
+});
+
+// Al tocar el aviso: si ya hay una pestaña de la app abierta, la enfoca en
+// vez de abrir una nueva (evita duplicar pestañas cada vez que llega un
+// aviso).
+self.addEventListener('notificationclick', event => {
+  event.notification.close();
+  const link = (event.notification.data && event.notification.data.link) || './index.html';
+  event.waitUntil(
+    self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then(list => {
+      for (const c of list) { if ('focus' in c) return c.focus(); }
+      if (self.clients.openWindow) return self.clients.openWindow(link);
+    })
   );
 });

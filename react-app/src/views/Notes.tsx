@@ -15,6 +15,7 @@ import {
 import { customConfirm } from '../lib/dialog';
 import { exportArchiveCsv } from '../lib/notesArchive';
 import { notifyPermission, requestNotifyPermission } from '../lib/sound';
+import { enablePushForStore, notifyStorePush } from '../lib/push';
 import type { Note, NoteEditRecord, NoteReply, Store } from '../types';
 
 function fmtWhen(ts: number | undefined): string {
@@ -44,6 +45,7 @@ function Composer({ onDone }: { onDone: () => void }) {
     const t = text.trim();
     if (!t) return;
     replace((d) => { const st = d.stores.find((x) => x.id === s.id)!; addNoteMsg(st, t); });
+    if (s.syncKey) notifyStorePush(s.syncKey, syncName() + ' publicó una nota', t);
     setText('');
     taRef.current?.focus();
     onDone();
@@ -61,6 +63,7 @@ function Composer({ onDone }: { onDone: () => void }) {
     const all = pending ? [...items, pending] : items;
     if (!title.trim() && !all.length) return;
     replace((d) => { const st = d.stores.find((x) => x.id === s.id)!; addChecklistNote(st, title, all); });
+    if (s.syncKey) notifyStorePush(s.syncKey, syncName() + ' publicó una lista de objetivos', title.trim() || (all.length + ' objetivo' + (all.length === 1 ? '' : 's')));
     setTitle('');
     setItems([]);
     setDraftItem('');
@@ -181,6 +184,7 @@ function ThreadPanel({ noteId, onClose, openHistory }: { noteId: string; onClose
     const t = text.trim();
     if (!t) return;
     replace((d) => { const st = d.stores.find((x) => x.id === s.id)!; addNoteReply(st, noteId, t); });
+    if (s.syncKey) notifyStorePush(s.syncKey, myName + ' respondió en un hilo', t);
     setText('');
   }
 
@@ -345,6 +349,11 @@ export function Notes() {
   async function enableSystemNotify() {
     const p = await requestNotifyPermission();
     setNotifyState(p);
+    // Ademas del aviso local (que solo funciona con la app abierta en otra
+    // pestaña), intenta activar el push real de FCM para esta tienda. Si
+    // push.ts todavia no esta configurado (VAPID_PUBLIC_KEY/PUSH_WORKER_URL
+    // vacios - ver ese archivo) esto no hace nada, ni truena ni molesta.
+    if (s.syncKey) enablePushForStore(s.syncKey);
   }
 
   return (
@@ -353,7 +362,7 @@ export function Notes() {
         <div><h2>Notas del equipo</h2><p className="muted">Publica notas y listas de objetivos; abre un hilo para responder. Lo que no se fija desaparece a la semana.</p></div>
         <div className="notes-head-actions">
           {notifyState === 'default' && (
-            <button className="button secondary" onClick={enableSystemNotify} title="Recibe un aviso del sistema aunque tengas la app en otra pestaña"><BellIcon /> Activar aviso del sistema</button>
+            <button className="button secondary" onClick={enableSystemNotify} title="Recibe un aviso aunque tengas la app cerrada o en otra pestaña"><BellIcon /> Activar aviso del sistema</button>
           )}
           {admin && (
             <button className="button secondary" onClick={() => exportArchiveCsv(s.id, s.name)} title="Descarga el texto de las notas, incluidas las que ya desaparecieron, con quién las envió y cuándo"><DownloadIcon /> Descargar log</button>

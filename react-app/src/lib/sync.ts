@@ -97,6 +97,29 @@ export function syncReady(): boolean {
   }
 }
 
+// Le da a lib/push.ts (aviso push real, ver ese archivo) la MISMA instancia
+// de Firebase que ya usa Firestore, en vez de que cada uno inicialice la
+// suya. Llama syncReady() primero para asegurarse de que ya exista.
+export function firebaseApp(): FirebaseApp | null {
+  syncReady();
+  return app;
+}
+
+// Guarda (o reemplaza) el token de FCM de ESTE dispositivo para la tienda
+// dada, en el documento principal de Firestore (mapa por syncClientId,
+// igual que "members": si el dispositivo ya tenia un token guardado antes,
+// este simplemente lo pisa en vez de duplicar). El Worker de Cloudflare
+// (ver push-worker/ en la raiz del repo) lee este mapa para saber a quien
+// avisar cuando alguien publica una nota. No hace falta borrar el token
+// nunca a mano: si deja de ser valido, FCM lo dice al mandar y ahi se
+// podria limpiar (el Worker ya lo contempla).
+export async function savePushToken(storeKey: string, token: string): Promise<void> {
+  if (!syncReady() || !DB) return;
+  await setDoc(storeDocRef(storeKey), {
+    pushTokens: { [syncClientId()]: { token, updatedAt: Date.now(), name: syncName() } },
+  }, { merge: true });
+}
+
 // OJO (historia importante): hubo una version de esto con cada producto en
 // su propio documento (subcoleccion "products" de la tienda), pensada para
 // que el limite de ~1MB de un documento de Firestore no dependiera de

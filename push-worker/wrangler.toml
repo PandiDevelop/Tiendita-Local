@@ -1,0 +1,8 @@
+name = "mi-tiendita-push"
+main = "src/index.js"
+compatibility_date = "2026-01-01"
+
+# No es un dato secreto (ya esta visible en react-app/src/lib/sync.ts, en
+# el navegador de cualquiera): identifica el proyecto de Firebase, nada mas.
+[vars]
+FIREBASE_PROJECT_ID = "mi-tiendita-28827"
