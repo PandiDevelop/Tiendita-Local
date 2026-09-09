@@ -119,6 +119,77 @@ export interface NoteEntry {
   byName?: string;
 }
 
+// --- Notas del equipo (tablero de mensajes con hilos, tipo Slack) ---
+// Reemplaza en la UI a NoteEntry/noteLog de arriba (que se conserva solo
+// para migrar datos viejos, ver migrateNoteLog en core.ts). Un Note vive en
+// s.noteBoard; se sincroniza como mapa por id en el campo "noteBoard" del
+// documento principal (igual que noteLog antes), asi que dos dispositivos
+// nunca pisan las notas AJENAS entre si al guardar (ver lib/sync.ts). Una
+// edicion o respuesta concurrente sobre la MISMA nota desde dos
+// dispositivos offline al mismo tiempo si puede pisarse (gana el ultimo que
+// sincronice) - mismo trato que ya recibe el catalogo en esta app.
+export interface NoteEditRecord {
+  text: string;
+  at: number;
+}
+
+export interface NoteChecklistItem {
+  id: string;
+  text: string;
+  done: boolean;
+  doneBy?: string;
+  doneByName?: string;
+}
+
+export interface NoteReply {
+  id: string;
+  text: string;
+  by?: string;
+  byName?: string;
+  createdAt: number;
+  date: string;
+  time: string;
+  editedAt?: number;
+  history?: NoteEditRecord[];
+}
+
+export interface Note {
+  id: string;
+  kind: 'text' | 'checklist';
+  // Para 'checklist' es el titulo de la lista; el contenido va en items.
+  text: string;
+  items?: NoteChecklistItem[];
+  by?: string;
+  byName?: string;
+  createdAt: number;
+  date: string;
+  time: string;
+  editedAt?: number;
+  history?: NoteEditRecord[];
+  pinned?: boolean;
+  replies?: NoteReply[];
+}
+
+// Entrada del log descargable (ver lib/notesArchive.ts): se guarda SOLO en
+// este dispositivo (localStorage, no viaja por Firestore) para no inflar el
+// documento de la tienda con un historial que crece sin limite. Cada
+// dispositivo que tuvo la pestana Notas abierta en algun momento acumula lo
+// que vio pasar; el boton de descarga (solo para administradores) exporta
+// lo que ESE dispositivo alcanzo a registrar.
+export interface NoteArchiveEntry {
+  id: string;
+  parentId?: string;
+  kind: 'nota' | 'respuesta' | 'checklist';
+  text: string;
+  by?: string;
+  byName?: string;
+  date: string;
+  time: string;
+  createdAt: number;
+  editedAt?: number;
+  status: 'activa' | 'editada' | 'fijada' | 'eliminada' | 'expirada';
+}
+
 export interface Store {
   id: string;
   name: string;
@@ -130,6 +201,7 @@ export interface Store {
   inventory: Record<string, number>;
   notes: string;
   noteLog: NoteEntry[];
+  noteBoard: Note[];
   invLog: InventoryLogEntry[];
   syncKey?: string;
   syncPin?: string;

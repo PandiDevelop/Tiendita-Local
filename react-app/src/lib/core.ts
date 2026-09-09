@@ -1,4 +1,4 @@
-import type { AppState, CategoryPricing, InventoryLogEntry, NoteEntry, Product, Promo, Role, Sale, SaleDraft, SaleItem, Store, StoreEvent } from '../types';
+import type { AppState, CategoryPricing, InventoryLogEntry, Note, NoteChecklistItem, NoteEntry, NoteReply, Product, Promo, Role, Sale, SaleDraft, SaleItem, Store, StoreEvent } from '../types';
 
 export const KEY = 'mi-tiendita-v1';
 export const CLIENT_KEY = 'mi-tiendita-client';
@@ -161,6 +161,8 @@ export function normalizeStore(store: Store): Store {
   store.notes = typeof store.notes === 'string' ? store.notes : '';
   store.noteLog = Array.isArray(store.noteLog) ? store.noteLog : [];
   store.invLog = Array.isArray(store.invLog) ? store.invLog : [];
+  store.noteBoard = Array.isArray(store.noteBoard) ? store.noteBoard : [];
+  migrateNoteLogToBoard(store);
   store.events = (store.events || []).filter((e) => !!e).map((e) => ({
     id: e.id || uid(),
     name: String(e.name || '').trim(),
@@ -375,6 +377,197 @@ export function mergeNoteLog(a: NoteEntry[] | undefined, b: NoteEntry[]): NoteEn
   (b || []).forEach((e) => { if (e && e.id) map.set(e.id, JSON.parse(JSON.stringify(e))); });
   return Array.from(map.values())
     .sort((x, y) => (y.date || '').localeCompare(x.date || '') || (y.time || '').localeCompare(x.time || ''));
+}
+
+// ---------------------------------------------------------------------
+// Notas del equipo (tablero con hilos) - ver comentario junto a Note en
+// types.ts para el porque del modelo de datos y sus limites de sync.
+// ---------------------------------------------------------------------
+
+export const NOTE_TTL_MS = 7 * 24 * 60 * 60 * 1000; // "a la semana" (ver Notes.tsx)
+
+// Migra las notas del modelo viejo (noteLog, texto plano sin hilos) al
+// tablero nuevo (noteBoard) una sola vez: si el tablero esta vacio pero hay
+// notas viejas, se convierten a Note simples (sin hilo, sin fijar) para no
+// perder lo que el equipo ya habia escrito. noteLog se deja intacto (no se
+// vuelve a usar, pero no hace falta borrarlo).
+function migrateNoteLogToBoard(store: Store): void {
+  if (store.noteBoard.length || !store.noteLog.length) return;
+  store.noteBoard = store.noteLog.map((e) => ({
+    id: e.id,
+    kind: 'text' as const,
+    text: e.text,
+    by: e.by,
+    byName: e.byName,
+    date: e.date,
+    time: e.time,
+    createdAt: Date.parse(e.date + 'T' + (e.time || '00:00') + ':00') || Date.now(),
+  }));
+}
+
+export function toNoteBoardArr(src: unknown): Note[] {
+  if (Array.isArray(src)) return JSON.parse(JSON.stringify(src));
+  if (src && typeof src === 'object') {
+    return Object.keys(src as Record<string, Note>)
+      .map((k) => JSON.parse(JSON.stringify((src as Record<string, Note>)[k])));
+  }
+  return [];
+}
+
+function findNote(s: Store, noteId: string): Note | undefined {
+  return (s.noteBoard || []).find((n) => n.id === noteId);
+}
+
+// Igual que canManageTeam (dueño o admin): son quienes pueden borrar
+// cualquier mensaje del tablero y fijar/desfijar notas.
+export function canManageNotes(s: Store): boolean {
+  return canManageTeam(s);
+}
+
+export function canEditNote(n: Pick<Note, 'by'>): boolean {
+  return !!n.by && n.by === syncClientId();
+}
+
+export function canDeleteNote(s: Store, n: Pick<Note, 'by'>): boolean {
+  return canManageNotes(s) || canEditNote(n);
+}
+
+export function addNoteMsg(s: Store, text: string): Note | null {
+  const t = (text || '').trim();
+  if (!t) return null;
+  s.noteBoard ||= [];
+  const n: Note = { id: uid(), kind: 'text', text: t, date: today(), time: timeNow(), createdAt: Date.now(), by: syncClientId(), byName: syncName() };
+  s.noteBoard.push(n);
+  return n;
+}
+
+// Lista de objetivos/checklist (ver Notes.tsx: se publica como un tipo de
+// nota distinto para que cualquiera pueda marcar sus items sin necesidad de
+// editar el texto).
+export function addChecklistNote(s: Store, title: string, itemTexts: string[]): Note | null {
+  const items = (itemTexts || []).map((t) => (t || '').trim()).filter(Boolean);
+  const t = (title || '').trim();
+  if (!t && !items.length) return null;
+  s.noteBoard ||= [];
+  const n: Note = {
+    id: uid(), kind: 'checklist', text: t || 'Lista de objetivos', date: today(), time: timeNow(), createdAt: Date.now(),
+    by: syncClientId(), byName: syncName(),
+    items: items.map((it) => ({ id: uid(), text: it, done: false })),
+  };
+  s.noteBoard.push(n);
+  return n;
+}
+
+// Solo el autor puede editar el texto (o el titulo, si es checklist); guarda
+// la version anterior en "history" para el pequeño menu de "Ver historial".
+export function editNoteMsg(s: Store, noteId: string, newText: string): boolean {
+  const n = findNote(s, noteId);
+  const t = (newText || '').trim();
+  if (!n || !t || !canEditNote(n) || t === n.text) return false;
+  n.history = n.history || [];
+  n.history.push({ text: n.text, at: n.editedAt || n.createdAt || Date.now() });
+  n.text = t;
+  n.editedAt = Date.now();
+  return true;
+}
+
+// Admin/dueño puede borrar cualquier mensaje; alguien mas comun solo el
+// propio. Devuelve la nota borrada (para que Notes.tsx la archive en el log
+// local antes de que desaparezca del tablero).
+export function deleteNoteMsg(s: Store, noteId: string): Note | null {
+  const n = findNote(s, noteId);
+  if (!n || !canDeleteNote(s, n)) return null;
+  s.noteBoard = (s.noteBoard || []).filter((x) => x.id !== noteId);
+  return n;
+}
+
+// Fijar es una accion de moderacion (mantiene el mensaje mas alla de la
+// semana): solo admin/dueño, igual que borrar mensajes ajenos.
+export function toggleNotePin(s: Store, noteId: string): boolean {
+  const n = findNote(s, noteId);
+  if (!n || !canManageNotes(s)) return false;
+  n.pinned = !n.pinned;
+  return true;
+}
+
+export function addNoteReply(s: Store, noteId: string, text: string): NoteReply | null {
+  const n = findNote(s, noteId);
+  const t = (text || '').trim();
+  if (!n || !t) return null;
+  n.replies = n.replies || [];
+  const r: NoteReply = { id: uid(), text: t, date: today(), time: timeNow(), createdAt: Date.now(), by: syncClientId(), byName: syncName() };
+  n.replies.push(r);
+  return r;
+}
+
+export function editNoteReply(s: Store, noteId: string, replyId: string, newText: string): boolean {
+  const n = findNote(s, noteId);
+  const r = n && (n.replies || []).find((x) => x.id === replyId);
+  const t = (newText || '').trim();
+  if (!n || !r || !t || !canEditNote(r) || t === r.text) return false;
+  r.history = r.history || [];
+  r.history.push({ text: r.text, at: r.editedAt || r.createdAt || Date.now() });
+  r.text = t;
+  r.editedAt = Date.now();
+  return true;
+}
+
+export function deleteNoteReply(s: Store, noteId: string, replyId: string): NoteReply | null {
+  const n = findNote(s, noteId);
+  const r = n && (n.replies || []).find((x) => x.id === replyId);
+  if (!n || !r || !canDeleteNote(s, r)) return null;
+  n.replies = (n.replies || []).filter((x) => x.id !== replyId);
+  return r;
+}
+
+// Marcar/desmarcar un objetivo de la lista: es colaborativo, cualquiera del
+// equipo puede tocarlo (no solo quien creo la lista), como un todo list
+// compartido de verdad.
+export function toggleChecklistItem(s: Store, noteId: string, itemId: string): boolean {
+  const n = findNote(s, noteId);
+  const it = n && n.kind === 'checklist' && (n.items || []).find((x) => x.id === itemId);
+  if (!n || !it) return false;
+  it.done = !it.done;
+  it.doneBy = it.done ? syncClientId() : undefined;
+  it.doneByName = it.done ? syncName() : undefined;
+  return true;
+}
+
+// Agregar/quitar objetivos de una lista ya publicada: solo el autor (misma
+// regla que editar el texto de una nota normal).
+export function addChecklistItem(s: Store, noteId: string, text: string): NoteChecklistItem | null {
+  const n = findNote(s, noteId);
+  const t = (text || '').trim();
+  if (!n || n.kind !== 'checklist' || !t || !canEditNote(n)) return null;
+  n.items = n.items || [];
+  const it: NoteChecklistItem = { id: uid(), text: t, done: false };
+  n.items.push(it);
+  return it;
+}
+
+export function removeChecklistItem(s: Store, noteId: string, itemId: string): boolean {
+  const n = findNote(s, noteId);
+  if (!n || n.kind !== 'checklist' || !canEditNote(n)) return false;
+  const before = (n.items || []).length;
+  n.items = (n.items || []).filter((x) => x.id !== itemId);
+  return n.items.length !== before;
+}
+
+// Barrido semanal: se corre solo, del lado del cliente (esta app no tiene
+// servidor/cron), cada vez que alguien abre la pestaña Notas (ver
+// Notes.tsx). Lo que barre cualquier dispositivo se sincroniza para todos
+// en su siguiente push, asi que basta con que UNO la tenga abierta de vez
+// en cuando. Las fijadas nunca expiran. Devuelve lo que se quito, para que
+// Notes.tsx lo archive en el log local antes de perderlo del tablero.
+export function sweepExpiredNotes(s: Store): Note[] {
+  const now = Date.now();
+  const board = s.noteBoard || [];
+  const expired = board.filter((n) => !n.pinned && now - (n.createdAt || 0) > NOTE_TTL_MS);
+  if (expired.length) {
+    const ids = new Set(expired.map((n) => n.id));
+    s.noteBoard = board.filter((n) => !ids.has(n.id));
+  }
+  return expired;
 }
 
 // Fija el precio, costo y promociones por defecto de una categoria y los

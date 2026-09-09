@@ -40,6 +40,7 @@ function newStore(id: string): Store {
     inventory: {},
     notes: '',
     noteLog: [],
+    noteBoard: [],
     invLog: [],
     createdBy: 'owner-1',
     members: { 'owner-1': { name: 'María', role: 'owner' as const, joinedAt: Date.now() } },
@@ -220,7 +221,7 @@ describe('ganancias: costo por producto y calculo de margen', () => {
     const s = normalizeStore({
       id: 's1', name: 'T', image: '', products: [
         { id: 'p1', name: 'Pan', price: 1000, image: '', promos: [], category: '' } as Product,
-      ], sales: [], categories: [], inventory: {}, notes: '', noteLog: [], invLog: [],
+      ], sales: [], categories: [], inventory: {}, notes: '', noteLog: [], noteBoard: [], invLog: [],
     } as Store);
     expect(s.products[0].cost).toBe(0);
   });

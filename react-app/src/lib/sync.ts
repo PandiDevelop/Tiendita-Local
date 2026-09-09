@@ -1,7 +1,7 @@
 import { initializeApp, FirebaseApp } from 'firebase/app';
 import { initializeFirestore, Firestore, collection, doc, query, onSnapshot, setDoc, getDoc, getDocs, deleteDoc, deleteField } from 'firebase/firestore';
 import type { AppState, Member, Product, Role, Sale, Store } from '../types';
-import { toProductsArr, toSalesArr, toInvLogArr, toNoteLogArr, mergeItems, mergeInvLog, mergeNoteLog, syncKeyOf, syncClientId, syncName, normalizeStore, DEFAULT_STORE_IMAGE, uid } from './core';
+import { toProductsArr, toSalesArr, toInvLogArr, toNoteLogArr, toNoteBoardArr, mergeItems, mergeInvLog, mergeNoteLog, syncKeyOf, syncClientId, syncName, normalizeStore, DEFAULT_STORE_IMAGE, uid } from './core';
 import { customAlert, customConfirm } from './dialog';
 
 export { syncClientId, syncName, syncSetName, syncGenPin, syncKeyOf } from './core';
@@ -28,6 +28,19 @@ export const FIREBASE_CONFIG: FIREBASE_CONFIG = {
 
 let app: FirebaseApp | null = null;
 let DB: Firestore | null = null;
+
+// Ids de notas del tablero (ver Note en types.ts) que este cliente YA vio
+// alguna vez, sea porque las mando el (push) o porque llegaron en un
+// snapshot remoto. Sirve para dos cosas: (a) al mandar un push, saber que
+// notas se borraron localmente desde la ultima vez para avisarle a
+// Firestore con deleteField (si no, nunca se borrarian del lado de nadie
+// mas); (b) al recibir un snapshot, distinguir una nota local nueva que
+// AUN no se ha subido (no esta en remoto ni en este set: se conserva) de
+// una que alguien mas borro en otro dispositivo (estaba en este set, ya no
+// esta en remoto: se quita tambien aqui). Vive en memoria nada mas (no hace
+// falta persistirlo: si se recarga la pagina, el primer snapshot que llegue
+// vuelve a poblarlo).
+const seenNoteIds = new Map<string, Set<string>>();
 
 export function syncReady(): boolean {
   if (DB) return true;
@@ -147,6 +160,7 @@ export function createSync(
       categories: s.categories || [], categoryPricing: s.categoryPricing || {},
       notes: s.notes || '', noteLog: s.noteLog || [],
       invLog: s.invLog || [], inventory: s.inventory || {},
+      noteBoard: s.noteBoard || [],
     }));
   }
 
@@ -214,6 +228,19 @@ export function createSync(
       const invLogPatch: Record<string, unknown> = {};
       (s.invLog || []).forEach((e) => { if (e && e.id) invLogPatch[e.id] = e; });
       if (Object.keys(invLogPatch).length) main.invLog = invLogPatch;
+      // Tablero de notas: igual que noteLog/invLog, mapa por id para que el
+      // merge:true de Firestore fusione por clave sin pisar las notas de
+      // otro dispositivo. A diferencia de esos dos (que nunca se borran),
+      // aca SI hace falta avisar los borrados: cualquier id que este
+      // cliente haya visto antes (seenNoteIds) y ya no este en el tablero
+      // local se manda con deleteField() para que tambien desaparezca en
+      // Firestore y, de ahi, en el resto de dispositivos.
+      const prevSeenNotes = seenNoteIds.get(storeId) || new Set<string>();
+      const noteBoardPatch: Record<string, unknown> = {};
+      const currentNoteIds = new Set<string>();
+      (s.noteBoard || []).forEach((n) => { if (n && n.id) { noteBoardPatch[n.id] = n; currentNoteIds.add(n.id); } });
+      prevSeenNotes.forEach((id) => { if (!currentNoteIds.has(id)) noteBoardPatch[id] = deleteField(); });
+      if (Object.keys(noteBoardPatch).length) main.noteBoard = noteBoardPatch;
       main.inventory = s.inventory || {};
       if (!s.createdBy || s.createdBy === cid()) { main.name = s.name; main.image = s.image; }
 
@@ -228,6 +255,7 @@ export function createSync(
       // solo se marca como enviado cuando la nube de verdad lo confirma.
       lastPush.set(storeId, f);
       lastPushedProducts.set(storeId, nextProd);
+      seenNoteIds.set(storeId, currentNoteIds);
       failCount.delete(storeId);
     } catch (e) {
       console.warn('Push fallido:', e);
@@ -361,6 +389,7 @@ export function createSync(
     if (rt) { clearTimeout(rt); retryTimers.delete(storeId); }
     failCount.delete(storeId);
     lastPushedProducts.delete(storeId);
+    seenNoteIds.delete(storeId);
   }
 
   // Firestore no deja fusionar paths de mapa (noteLog.<id>) cuando el campo es
@@ -442,6 +471,25 @@ export function applyRemote(getState: () => AppState, mutate: (fn: (d: AppState)
     }
     st.noteLog = mergeNoteLog(st.noteLog, toNoteLogArr(remote.noteLog));
     st.invLog = mergeInvLog(st.invLog, toInvLogArr(remote.invLog));
+    // Tablero de notas: a diferencia de mergeNoteLog (union pura, nunca
+    // borra), aca se reconcilia con lo que este cliente ya vio antes
+    // (seenNoteIds) para que una nota borrada en otro dispositivo tambien
+    // desaparezca aqui en vez de quedar pegada para siempre - ver el
+    // comentario junto a seenNoteIds arriba.
+    {
+      const prevSeenNotes = seenNoteIds.get(storeId) || new Set<string>();
+      const remoteNoteBoard = remote.noteBoard && typeof remote.noteBoard === 'object' ? remote.noteBoard as Record<string, unknown> : null;
+      const remoteNoteIds = new Set(remoteNoteBoard ? Object.keys(remoteNoteBoard) : []);
+      if (remoteNoteBoard || prevSeenNotes.size) {
+        const kept = (st.noteBoard || []).filter((n) => remoteNoteIds.has(n.id) || !prevSeenNotes.has(n.id));
+        const map = new Map(kept.map((n) => [n.id, n]));
+        if (remoteNoteBoard) toNoteBoardArr(remoteNoteBoard).forEach((n) => map.set(n.id, n));
+        st.noteBoard = Array.from(map.values());
+        const nextSeen = new Set(prevSeenNotes);
+        remoteNoteIds.forEach((id) => nextSeen.add(id));
+        seenNoteIds.set(storeId, nextSeen);
+      }
+    }
     // El inventario viaja como mapa y se une por el mayor valor por producto
     // (nunca pierde existencias; igual con los contadores de venta).
     st.inventory = st.inventory || {};
@@ -531,6 +579,7 @@ export async function joinStore(pin: string, getState: () => AppState, mutate: (
       inventory: r.inventory && typeof r.inventory === 'object' ? { ...(r.inventory as Record<string, number>) } : {},
       notes: typeof r.notes === 'string' ? r.notes : '',
       noteLog: toNoteLogArr(r.noteLog),
+      noteBoard: toNoteBoardArr(r.noteBoard),
       invLog: toInvLogArr(r.invLog),
       syncKey: key,
       syncPin: pin,

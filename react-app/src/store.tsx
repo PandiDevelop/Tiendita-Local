@@ -1,7 +1,10 @@
 import { createContext, useCallback, useContext, useEffect, useRef, ReactNode, useState } from 'react';
 import type { AppState, Store, Tab } from './types';
-import { loadState, saveState } from './lib/core';
+import { loadState, saveState, syncClientId, NOTE_TTL_MS } from './lib/core';
 import { createSync, applyRemote, activateSync, joinStore, SyncHandle } from './lib/sync';
+import { archiveUpsert, archiveMarkGone, noteToArchiveEntry, replyToArchiveEntry } from './lib/notesArchive';
+import { playNoteChime, showSystemNotification } from './lib/sound';
+import type { Note } from './types';
 
 export type ModalKind = 'none' | 'sale' | 'newProduct' | 'editProduct' | 'newStore' | 'editStore' | 'join';
 
@@ -118,6 +121,74 @@ export function AppProvider({ children }: { children: ReactNode }) {
       if (tab !== 'inicio') d.editingSaleId = null;
     });
   }, [replace]);
+
+  // Notas del equipo: sonido + toast (y aviso del sistema si la app esta en
+  // segundo plano) cuando llega una nota o respuesta nueva de alguien mas, y
+  // de paso alimenta el log local descargable (ver lib/notesArchive.ts) con
+  // todo lo que este dispositivo alcanza a ver pasar por la tienda activa,
+  // incluido lo que ya se borro o expiro. Vive aca (no en Notes.tsx) para
+  // que el aviso suene aunque la persona este en otra pestaña de la app.
+  const prevNotesRef = useRef<Map<string, Note>>(new Map());
+  const prevNotesStoreRef = useRef<string | null>(null);
+  useEffect(() => {
+    const s = active;
+    if (!s) return;
+    const storeId = s.id;
+    // Primera vez que se ve esta tienda en esta sesion (o se cambio de
+    // tienda activa): solo se toma una foto de referencia, sin avisar ni
+    // archivar nada (para no disparar un sonido con todas las notas viejas
+    // apenas se abre la app).
+    const firstLook = prevNotesStoreRef.current !== storeId;
+    const prevMap = firstLook ? new Map<string, Note>() : prevNotesRef.current;
+    const nextMap = new Map<string, Note>();
+    const me = syncClientId();
+    let notify = 0;
+    (s.noteBoard || []).forEach((n) => {
+      const prev = prevMap.get(n.id);
+      if (!prev) {
+        if (!firstLook) {
+          if (n.by !== me) notify++;
+          archiveUpsert(storeId, noteToArchiveEntry(n));
+        }
+      } else if (prev.text !== n.text || prev.editedAt !== n.editedAt || !!prev.pinned !== !!n.pinned) {
+        archiveUpsert(storeId, noteToArchiveEntry(n));
+      }
+      const prevReplies = new Map((prev?.replies || []).map((r) => [r.id, r]));
+      (n.replies || []).forEach((r) => {
+        const pr = prevReplies.get(r.id);
+        if (!pr) {
+          if (!firstLook) {
+            if (r.by !== me) notify++;
+            archiveUpsert(storeId, replyToArchiveEntry(n.id, r));
+          }
+        } else if (pr.text !== r.text || pr.editedAt !== r.editedAt) {
+          archiveUpsert(storeId, replyToArchiveEntry(n.id, r));
+        }
+      });
+      if (!firstLook) {
+        prevReplies.forEach((_, rid) => {
+          if (!(n.replies || []).some((x) => x.id === rid)) archiveMarkGone(storeId, rid, 'eliminada');
+        });
+      }
+      nextMap.set(n.id, n);
+    });
+    if (!firstLook) {
+      prevMap.forEach((n, id) => {
+        if (nextMap.has(id)) return;
+        const expired = !n.pinned && Date.now() - (n.createdAt || 0) > NOTE_TTL_MS;
+        archiveMarkGone(storeId, id, expired ? 'expirada' : 'eliminada');
+      });
+    }
+    prevNotesRef.current = nextMap;
+    prevNotesStoreRef.current = storeId;
+    if (notify > 0) {
+      playNoteChime();
+      const msg = notify === 1 ? 'Nueva nota del equipo' : notify + ' novedades en Notas';
+      toast(msg);
+      showSystemNotification('Mi Tiendita', msg);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [active]);
 
   const value: Ctx = { state, store: active, replace, setTab, modal, setModal, modalArg, setModalArg, toastMsg, toast, attach, activate, join };
   return <AppCtx.Provider value={value}>{children}</AppCtx.Provider>;

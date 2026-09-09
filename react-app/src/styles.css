@@ -158,6 +158,44 @@ th,td{text-align:left;vertical-align:middle}
 .notes-head-actions{display:flex;align-items:center;gap:12px}
 .notes-ws{font-size:12px;font-weight:700;color:#3f9d5f;white-space:nowrap}
 .notes-ws.typing{color:#8a84a0}
+.notes-compose-tabs{display:flex;gap:6px}
+.notes-compose-tab{padding:8px 13px;border-radius:9px;background:#f8f6fb;color:#766e88;font-size:13px;font-weight:700}
+.notes-compose-tab.active{background:var(--lav);color:#7258a2}
+.checklist-compose{display:grid;gap:8px}
+.checklist-title-input{width:100%;padding:12px 13px;border:1px solid #ddd8e5;border-radius:10px;font:600 15px "DM Sans",sans-serif;color:var(--ink)}
+.checklist-draft-items{display:grid;gap:5px}
+.checklist-draft-item{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:7px 10px;background:#f8f6fb;border-radius:8px;font-size:13px}
+.checklist-add-row{display:flex;gap:8px}
+.checklist-add-row input{flex:1;padding:10px 12px;border:1px solid #ddd8e5;border-radius:10px;color:var(--ink)}
+.note-pin-badge{font-size:13px}
+.note-msg.pinned{border-color:#e8c98a;background:#fffaf0}
+.note-reply-btn{margin-top:8px;background:transparent;color:#8061b4;font-weight:700;font-size:13px;padding:4px 0}
+.note-edit-box{display:grid;gap:8px;margin-top:2px}
+.note-edit-box textarea{width:100%;padding:11px 12px;border:1px solid #ddd8e5;border-radius:10px;font:15px "DM Sans",sans-serif;color:var(--ink);resize:vertical}
+.note-edit-actions{display:flex;justify-content:flex-end;gap:8px}
+.note-checklist{display:grid;gap:6px}
+.note-checklist-title{font-weight:700;margin-bottom:2px}
+.note-check{display:flex;align-items:center;gap:8px;font-size:14px;padding:3px 0}
+.note-check.done span:first-of-type{text-decoration:line-through;color:var(--muted)}
+.note-check-by{font-size:11px}
+.note-check-remove{margin-left:auto;height:26px;width:26px;opacity:.55}
+.note-check-remove:hover{opacity:1}
+.note-history-list{display:grid;gap:10px;max-height:50vh;overflow-y:auto;margin:4px 0 6px}
+.note-history-item{padding:10px 12px;background:#faf7ff;border:1px solid #e6def5;border-radius:10px}
+.note-history-when{font-size:11px;margin-bottom:3px}
+.note-history-text{font-size:14px;line-height:1.4;white-space:pre-wrap;overflow-wrap:break-word}
+.note-history-current{background:#f3ffe9;border-color:#cde7bd}
+.thread-backdrop{position:fixed;inset:0;background:rgba(42,37,54,.28);z-index:3;display:flex;justify-content:flex-end}
+.thread-panel{width:min(440px,100%);height:100%;background:white;box-shadow:-14px 0 40px rgba(73,63,99,.14);display:flex;flex-direction:column}
+.thread-head{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:16px 18px;border-bottom:1px solid var(--line)}
+.thread-head b{font:700 17px Fraunces,serif}
+.thread-body{flex:1;overflow-y:auto;padding:16px 18px;display:grid;gap:12px;align-content:start}
+.thread-root{background:#f3efff}
+.thread-replies{display:grid;gap:10px;padding-left:12px;border-left:2px solid #ece6f7}
+.thread-compose{display:flex;gap:8px;padding:13px 18px;border-top:1px solid var(--line)}
+.thread-compose textarea{flex:1;padding:10px 12px;border:1px solid #ddd8e5;border-radius:10px;font:14px "DM Sans",sans-serif;color:var(--ink);resize:vertical;min-height:40px}
+@media(max-width:760px){.thread-panel{border-radius:0}.thread-body{padding:14px}}
+
 
 
 /* Lote de mejoras: tags en mayuscula, botones de quitar, arrastre centrado,
