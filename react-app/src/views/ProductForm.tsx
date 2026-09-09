@@ -18,9 +18,10 @@ export function ProductForm({ editingId, onClose }: { editingId?: string; onClos
   const [image, setImage] = useState(p?.image || '');
   const [qty, setQty] = useState('');
   const [promos, setPromos] = useState<EditablePromo[]>(toEditablePromos(p?.promos));
-  // El tag es opcional y editable. Al crear un producto nuevo se sugiere el
-  // valor por defecto global; se puede cambiar o vaciar.
-  const [tag, setTag] = useState(editingId ? (p?.tag || '') : (p?.tag || DEFAULT_PRODUCT_TAG));
+  // El tag es opcional y editable. En un producto nuevo el campo arranca
+  // vacío con "General" como texto fantasma; si se guarda vacío se agrega
+  // automáticamente el tag por defecto.
+  const [tag, setTag] = useState(editingId ? (p?.tag || '') : '');
 
   // Tags que ya usan otros productos, para sugerirlos al escribir (se puede
   // escribir uno nuevo o elegir uno existente con un clic).
@@ -53,7 +54,7 @@ export function ProductForm({ editingId, onClose }: { editingId?: string; onClos
       const catHasNoOtherProducts = !!catVal && !st.products.some((x) => (x.category || '').trim() === catVal && x.id !== editingId);
       const shouldSeedPricing = catHasNoPricing && catHasNoOtherProducts;
       if (catVal) insertCatSorted(st, catVal);
-      const tagVal = tag.trim();
+      const tagVal = tag.trim() || (!editingId ? DEFAULT_PRODUCT_TAG : '');
       if (editingId) {
         const t = st.products.find((x) => x.id === editingId);
         if (t) Object.assign(t, { name: nm, price: pr, cost: cst, image: image || DEFAULT_PRODUCT_IMAGE, promos: promoList, category: catVal, tag: tagVal || undefined });
@@ -97,8 +98,8 @@ export function ProductForm({ editingId, onClose }: { editingId?: string; onClos
         <input maxLength={80} placeholder="Ej. Caja de galletas" value={name} onChange={(e) => setName(e.target.value)} />
       </div>
       <div className="field"><label>Etiqueta / tag <span className="muted">(opcional)</span></label>
-        <SuggestInput options={existingTags} value={tag} onChange={setTag} onPick={setTag} placeholder="Ej. general" maxLength={30} newLabel="Nuevo tag" onNewPick={() => undefined} />
-        <p className="muted">Etiqueta corta para agrupar productos (opcional).</p>
+        <SuggestInput options={existingTags} value={tag} onChange={setTag} onPick={setTag} placeholder={editingId ? 'Ej. general' : 'General'} maxLength={30} newLabel="Nuevo tag" onNewPick={() => undefined} />
+        <p className="muted">Etiqueta corta para agrupar productos (si la dejas vacía se usa "General").</p>
       </div>
       <div className="field"><label>Precio del producto</label>
         <input min={0} type="number" placeholder="0" value={price} onChange={(e) => setPrice(e.target.value)} />

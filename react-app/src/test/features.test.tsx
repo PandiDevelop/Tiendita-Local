@@ -139,13 +139,14 @@ describe('Tag opcional del producto', () => {
     return { ...utils, stateRef };
   }
 
-  it('sugiere el tag por defecto al crear un producto nuevo', () => {
+  it('muestra "General" como texto fantasma en un producto nuevo (sin pre-llenar)', () => {
     const { container } = setup(makeStore());
     const tagInput = fieldControl(/Etiqueta \/ tag/, container);
-    expect(tagInput.value).toBe(DEFAULT_PRODUCT_TAG);
+    expect(tagInput.value).toBe('');
+    expect(tagInput.placeholder).toBe('General');
   });
 
-  it('el tag no es obligatorio: se puede dejar en blanco al guardar', () => {
+  it('si se deja el tag vacío, se agrega automáticamente "General"', () => {
     const { container, stateRef } = setup(makeStore());
     fireEvent.change(fieldControl('Nombre del producto', container), { target: { value: 'Agua' } });
     fireEvent.change(fieldControl('Precio del producto', container), { target: { value: '1000' } });
@@ -153,7 +154,7 @@ describe('Tag opcional del producto', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Guardar producto' }));
     const saved = stateRef.current.stores[0].products[0];
     expect(saved.name).toBe('Agua');
-    expect(saved.tag).toBeUndefined();
+    expect(saved.tag).toBe(DEFAULT_PRODUCT_TAG);
   });
 
   it('si no se toca el campo, guarda el tag sugerido por defecto', () => {
