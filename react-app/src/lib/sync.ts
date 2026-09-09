@@ -37,10 +37,44 @@ let DB: Firestore | null = null;
 // mas); (b) al recibir un snapshot, distinguir una nota local nueva que
 // AUN no se ha subido (no esta en remoto ni en este set: se conserva) de
 // una que alguien mas borro en otro dispositivo (estaba en este set, ya no
-// esta en remoto: se quita tambien aqui). Vive en memoria nada mas (no hace
-// falta persistirlo: si se recarga la pagina, el primer snapshot que llegue
-// vuelve a poblarlo).
+// esta en remoto: se quita tambien aqui).
+// OJO (bug arreglado): esto vivia solo en memoria. Si el dispositivo se
+// recargaba (o volvia de segundo plano y el listener se re-suscribia desde
+// cero) DESPUES de que otro dispositivo borrara una nota, el primer
+// snapshot que llegaba ya no traia esa nota, pero como el set "visto" tambien
+// habia quedado vacio por la recarga, el codigo no podia distinguir esa
+// nota borrada de una nota local nueva que aun no se hubiera subido: la
+// trataba como "nueva" y la conservaba para siempre, asi que nunca se
+// borraba en ese dispositivo. Ahora se guarda tambien en localStorage (por
+// tienda) para que sobreviva a una recarga.
 const seenNoteIds = new Map<string, Set<string>>();
+const SEEN_NOTES_KEY = 'mt_seen_notes_';
+
+function loadSeenNoteIds(storeId: string): Set<string> {
+  try {
+    const raw = localStorage.getItem(SEEN_NOTES_KEY + storeId);
+    const arr = raw ? JSON.parse(raw) : null;
+    return new Set(Array.isArray(arr) ? arr : []);
+  } catch {
+    return new Set();
+  }
+}
+
+function getSeenNoteIds(storeId: string): Set<string> {
+  let cur = seenNoteIds.get(storeId);
+  if (!cur) { cur = loadSeenNoteIds(storeId); seenNoteIds.set(storeId, cur); }
+  return cur;
+}
+
+function setSeenNoteIds(storeId: string, ids: Set<string>): void {
+  seenNoteIds.set(storeId, ids);
+  try { localStorage.setItem(SEEN_NOTES_KEY + storeId, JSON.stringify(Array.from(ids))); } catch { /* cuota llena: no es critico, solo se pierde la persistencia */ }
+}
+
+function clearSeenNoteIds(storeId: string): void {
+  seenNoteIds.delete(storeId);
+  try { localStorage.removeItem(SEEN_NOTES_KEY + storeId); } catch { /* ignorar */ }
+}
 
 export function syncReady(): boolean {
   if (DB) return true;
@@ -125,6 +159,16 @@ export function createSync(
   // no pisar con un JSON mas grande una edicion que otro dispositivo haya
   // hecho mientras tanto.
   const lastPushedProducts = new Map<string, Map<string, string>>();
+  // Mismo truco de diffing que lastPushedProducts, pero para las notas del
+  // tablero: antes CADA push mandaba TODAS las notas (con sus respuestas e
+  // historial de ediciones completos) sin importar si de verdad cambiaron,
+  // porque solo hacia falta tocar UNA nota (marcar un objetivo, responder un
+  // hilo) para que se reescribiera el tablero entero. Con una tienda que ya
+  // lleva varias notas/hilos eso vuelve cada push mas pesado de lo
+  // necesario, y por eso los cambios se sentian lentos en llegar a los
+  // demas dispositivos. Ahora solo se manda la nota que de verdad cambio
+  // desde el ultimo push que SI se confirmo guardado.
+  const lastPushedNotes = new Map<string, Map<string, string>>();
   // Tope maximo de espera: si el usuario sigue editando sin parar (cada
   // cambio reinicia el debounce corto de abajo), esto fuerza un push cada
   // ~1s de todas formas, para que la sincronizacion no se sienta lenta
@@ -232,13 +276,25 @@ export function createSync(
       // merge:true de Firestore fusione por clave sin pisar las notas de
       // otro dispositivo. A diferencia de esos dos (que nunca se borran),
       // aca SI hace falta avisar los borrados: cualquier id que este
-      // cliente haya visto antes (seenNoteIds) y ya no este en el tablero
-      // local se manda con deleteField() para que tambien desaparezca en
-      // Firestore y, de ahi, en el resto de dispositivos.
-      const prevSeenNotes = seenNoteIds.get(storeId) || new Set<string>();
+      // cliente haya visto antes (seenNoteIds, persistido - ver arriba) y ya
+      // no este en el tablero local se manda con deleteField() para que
+      // tambien desaparezca en Firestore y, de ahi, en el resto de
+      // dispositivos. Y al igual que con los productos (lastPushedProducts),
+      // solo se incluye en el patch la nota que de verdad cambio desde el
+      // ultimo push confirmado, no el tablero completo (ver el comentario
+      // junto a lastPushedNotes).
+      const prevSeenNotes = getSeenNoteIds(storeId);
+      const prevNotes = lastPushedNotes.get(storeId) || new Map<string, string>();
+      const nextNotes = new Map<string, string>();
       const noteBoardPatch: Record<string, unknown> = {};
       const currentNoteIds = new Set<string>();
-      (s.noteBoard || []).forEach((n) => { if (n && n.id) { noteBoardPatch[n.id] = n; currentNoteIds.add(n.id); } });
+      (s.noteBoard || []).forEach((n) => {
+        if (!n || !n.id) return;
+        currentNoteIds.add(n.id);
+        const j = JSON.stringify(n);
+        nextNotes.set(n.id, j);
+        if (prevNotes.get(n.id) !== j) noteBoardPatch[n.id] = n;
+      });
       prevSeenNotes.forEach((id) => { if (!currentNoteIds.has(id)) noteBoardPatch[id] = deleteField(); });
       if (Object.keys(noteBoardPatch).length) main.noteBoard = noteBoardPatch;
       main.inventory = s.inventory || {};
@@ -255,7 +311,8 @@ export function createSync(
       // solo se marca como enviado cuando la nube de verdad lo confirma.
       lastPush.set(storeId, f);
       lastPushedProducts.set(storeId, nextProd);
-      seenNoteIds.set(storeId, currentNoteIds);
+      lastPushedNotes.set(storeId, nextNotes);
+      setSeenNoteIds(storeId, currentNoteIds);
       failCount.delete(storeId);
     } catch (e) {
       console.warn('Push fallido:', e);
@@ -389,7 +446,12 @@ export function createSync(
     if (rt) { clearTimeout(rt); retryTimers.delete(storeId); }
     failCount.delete(storeId);
     lastPushedProducts.delete(storeId);
-    seenNoteIds.delete(storeId);
+    lastPushedNotes.delete(storeId);
+    // Se borra tambien lo persistido en localStorage: detach() solo se
+    // llama cuando la tienda de verdad se quita de este dispositivo (o se
+    // desactiva la sincronizacion), no en cada re-suscripcion normal - ver
+    // el comentario junto a getSeenNoteIds/setSeenNoteIds.
+    clearSeenNoteIds(storeId);
   }
 
   // Firestore no deja fusionar paths de mapa (noteLog.<id>) cuando el campo es
@@ -477,7 +539,7 @@ export function applyRemote(getState: () => AppState, mutate: (fn: (d: AppState)
     // desaparezca aqui en vez de quedar pegada para siempre - ver el
     // comentario junto a seenNoteIds arriba.
     {
-      const prevSeenNotes = seenNoteIds.get(storeId) || new Set<string>();
+      const prevSeenNotes = getSeenNoteIds(storeId);
       const remoteNoteBoard = remote.noteBoard && typeof remote.noteBoard === 'object' ? remote.noteBoard as Record<string, unknown> : null;
       const remoteNoteIds = new Set(remoteNoteBoard ? Object.keys(remoteNoteBoard) : []);
       if (remoteNoteBoard || prevSeenNotes.size) {
@@ -487,7 +549,7 @@ export function applyRemote(getState: () => AppState, mutate: (fn: (d: AppState)
         st.noteBoard = Array.from(map.values());
         const nextSeen = new Set(prevSeenNotes);
         remoteNoteIds.forEach((id) => nextSeen.add(id));
-        seenNoteIds.set(storeId, nextSeen);
+        setSeenNoteIds(storeId, nextSeen);
       }
     }
     // El inventario viaja como mapa y se une por el mayor valor por producto

@@ -45,6 +45,7 @@ export function TestProvider({ initialState, stateRef, children }: { initialStat
     toastMsg,
     toast,
     attach: () => {},
+    detach: () => {},
     activate: async () => {},
     join: async () => {},
   };

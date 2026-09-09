@@ -6,7 +6,7 @@ import { CloseIcon, ImagePicker, Modal } from '../ui';
 import type { Member, Role } from '../types';
 
 export function StoreModal({ editing, onClose }: { editing?: boolean; onClose: () => void }) {
-  const { state, store, replace, activate, toast, attach } = useStore();
+  const { state, store, replace, activate, toast, attach, detach } = useStore();
   const s = editing ? store : undefined;
   const me = syncClientId();
   const isEmployee = !!(s && s.syncKey && s.createdBy && s.createdBy !== me);
@@ -70,7 +70,7 @@ export function StoreModal({ editing, onClose }: { editing?: boolean; onClose: (
 
   function deactivate() {
     if (!s) return;
-    deactivateSyncFn(s.id, () => state, replace, attach);
+    deactivateSyncFn(s.id, () => state, replace, detach);
     renderAgain();
     toast('Sincronización desactivada. La tienda queda solo en este dispositivo.');
   }
@@ -90,12 +90,12 @@ export function StoreModal({ editing, onClose }: { editing?: boolean; onClose: (
 
   function leave() {
     if (!s) return;
-    leaveStoreFn(s.id, () => state, replace, attach).then((ok) => { if (ok) onClose(); });
+    leaveStoreFn(s.id, () => state, replace, detach).then((ok) => { if (ok) onClose(); });
   }
 
   function del() {
     if (!s) return;
-    deleteStoreFn(s.id, () => state, replace, attach).then((ok) => { if (ok) onClose(); });
+    deleteStoreFn(s.id, () => state, replace, detach).then((ok) => { if (ok) onClose(); });
   }
 
   function removeMember(memberId: string) {

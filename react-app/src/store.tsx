@@ -20,6 +20,7 @@ export interface Ctx {
   toastMsg: string;
   toast: (m: string) => void;
   attach: (id: string) => void;
+  detach: (id: string) => void;
   activate: (storeId: string, pin: string) => Promise<void>;
   join: (pin: string) => Promise<void>;
 }
@@ -109,6 +110,15 @@ export function AppProvider({ children }: { children: ReactNode }) {
   }, [state]);
 
   const attach = useCallback((id: string) => { sync.current!.attach(id); }, []);
+  // OJO (bug arreglado): antes StoreModal.tsx le pasaba "attach" a
+  // deactivateSyncFn/leaveStoreFn/deleteStoreFn en el lugar donde esas
+  // funciones esperan un "detach" (no habia ningun detach expuesto por el
+  // contexto). Eso hacia que "desactivar sincronizacion"/"salir de la
+  // tienda"/"borrar tienda" en realidad VOLVIERAN A SUSCRIBIR el listener
+  // de Firestore en vez de cerrarlo: la tienda seguia recibiendo cambios
+  // remotos (incluidas notas) aunque la app ya no la mostrara como
+  // sincronizada, hasta recargar la pagina a mano.
+  const detach = useCallback((id: string) => { sync.current!.detach(id); }, []);
   const activate = useCallback((storeId: string, pin: string) => activateSync(storeId, pin, () => stateRef.current, replace, attach), [replace, attach]);
   const join = useCallback((pin: string) => joinStore(pin, () => stateRef.current, replace, attach), [replace, attach]);
 
@@ -190,6 +200,6 @@ export function AppProvider({ children }: { children: ReactNode }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [active]);
 
-  const value: Ctx = { state, store: active, replace, setTab, modal, setModal, modalArg, setModalArg, toastMsg, toast, attach, activate, join };
+  const value: Ctx = { state, store: active, replace, setTab, modal, setModal, modalArg, setModalArg, toastMsg, toast, attach, detach, activate, join };
   return <AppCtx.Provider value={value}>{children}</AppCtx.Provider>;
 }
