@@ -1388,7 +1388,7 @@
       "file_type": "code",
       "norm_label": "roleof()",
       "source_file": "react-app/src/test/features.test.tsx",
-      "source_location": "L162"
+      "source_location": "L166"
     },
     {
       "id": "react_app_src_test_features_test_setup",
@@ -1400,7 +1400,7 @@
       "file_type": "code",
       "norm_label": "setup()",
       "source_file": "react-app/src/test/features.test.tsx",
-      "source_location": "L93"
+      "source_location": "L97"
     },
     {
       "id": "react_app_src_test_features_test_switcher",
@@ -1412,7 +1412,7 @@
       "file_type": "code",
       "norm_label": "switcher()",
       "source_file": "react-app/src/test/features.test.tsx",
-      "source_location": "L40"
+      "source_location": "L44"
     },
     {
       "id": "react_app_src_test_sync_test_addproduct",
@@ -1496,7 +1496,7 @@
       "file_type": "code",
       "norm_label": "fieldcontrol()",
       "source_file": "react-app/src/test/testUtils.tsx",
-      "source_location": "L97"
+      "source_location": "L100"
     },
     {
       "id": "react_app_src_test_testutils_makeproduct",
@@ -8408,7 +8408,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "react-app/src/test/features.test.tsx",
-      "source_location": "L94",
+      "source_location": "L98",
       "weight": 1.0
     },
     {
@@ -19968,7 +19968,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "react-app/src/test/features.test.tsx",
-      "source_location": "L162",
+      "source_location": "L166",
       "weight": 1.0
     },
     {
@@ -19979,7 +19979,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "react-app/src/test/features.test.tsx",
-      "source_location": "L40",
+      "source_location": "L44",
       "weight": 1.0
     },
     {
@@ -19990,7 +19990,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "react-app/src/test/features.test.tsx",
-      "source_location": "L93",
+      "source_location": "L97",
       "weight": 1.0
     },
     {
@@ -20072,6 +20072,17 @@
     },
     {
       "source": "react_app_src_test_testutils",
+      "target": "react_app_src_test_testutils_fieldcontrol",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "react-app/src/test/testUtils.tsx",
+      "source_location": "L100",
+      "weight": 1.0
+    },
+    {
+      "source": "react_app_src_test_testutils",
       "target": "react_app_src_test_testutils_testprovider",
       "relation": "contains",
       "_origin": "ast",
@@ -20112,17 +20123,6 @@
       "confidence_score": 1.0,
       "source_file": "react-app/src/test/testUtils.tsx",
       "source_location": "L80",
-      "weight": 1.0
-    },
-    {
-      "source": "react_app_src_test_testutils",
-      "target": "react_app_src_test_testutils_fieldcontrol",
-      "relation": "contains",
-      "_origin": "ast",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "react-app/src/test/testUtils.tsx",
-      "source_location": "L97",
       "weight": 1.0
     },
     {
@@ -21829,5 +21829,5 @@
     }
   ],
   "hyperedges": [],
-  "built_at_commit": "4df202784726bd6409880b01ae439545026753c3"
+  "built_at_commit": "6ceb6c6f9359b747a95ffeae002a9d59c50edd82"
 }

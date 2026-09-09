@@ -1,7 +1,7 @@
-# Graph Report - Mi Tiendita  (2026-09-09)
+# Graph Report - repo-local  (2026-09-09)
 
 ## Corpus Check
-- 42 files · ~91,953 words
+- 42 files · ~73,458 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
@@ -10,7 +10,7 @@
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `4df20278`
+- Built from commit: `6ceb6c6f`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 

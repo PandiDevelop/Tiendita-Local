@@ -6,9 +6,9 @@
     "semantic_hash": ""
   },
   "react-app/public/sw.js": {
-    "mtime": 1788977260.469724,
-    "seen": 1788977881.6873944,
-    "ast_hash": "7868fb6cf1768ec44ad33645af571ae1",
+    "mtime": 1788978448.905165,
+    "seen": 1788978483.8692682,
+    "ast_hash": "8be03f5b980dd45b39e9891273ceda46",
     "semantic_hash": ""
   },
   "react-app/src/App.tsx": {
@@ -162,9 +162,9 @@
     "semantic_hash": ""
   },
   "sw.js": {
-    "mtime": 1788977260.501245,
-    "seen": 1788977881.6873944,
-    "ast_hash": "7868fb6cf1768ec44ad33645af571ae1",
+    "mtime": 1788978448.905165,
+    "seen": 1788978483.8692682,
+    "ast_hash": "8be03f5b980dd45b39e9891273ceda46",
     "semantic_hash": ""
   },
   "AGENTS.md": {
@@ -180,9 +180,9 @@
     "semantic_hash": ""
   },
   "index.html": {
-    "mtime": 1788977260.4523864,
-    "seen": 1788977881.6873944,
-    "ast_hash": "95c836e93736c218308258aa7c6925a0",
+    "mtime": 1788978412.174678,
+    "seen": 1788978483.8692682,
+    "ast_hash": "68d1559ef543b8dca6a720870a21ca74",
     "semantic_hash": ""
   },
   "react-app/index.html": {
@@ -258,9 +258,9 @@
     "semantic_hash": ""
   },
   "react-app/src/test/features.test.tsx": {
-    "mtime": 1788977260.482243,
-    "seen": 1788977881.6873944,
-    "ast_hash": "be54f004777f95d8ad5ac61f64360259",
+    "mtime": 1788978397.0356624,
+    "seen": 1788978483.8692682,
+    "ast_hash": "a285e14b4ae80e44489ed340fc844bb0",
     "semantic_hash": ""
   },
   "react-app/src/test/setup.ts": {
@@ -270,9 +270,9 @@
     "semantic_hash": ""
   },
   "react-app/src/test/testUtils.tsx": {
-    "mtime": 1788977260.4842427,
-    "seen": 1788977881.6873944,
-    "ast_hash": "3c264510feb1f47eaf2d8fe4c496424f",
+    "mtime": 1788978391.0419312,
+    "seen": 1788978483.8692682,
+    "ast_hash": "eff8c19bcdbcbb0e30c8d893766e1e17",
     "semantic_hash": ""
   },
   "react-app/src/views/Events.tsx": {
@@ -312,9 +312,9 @@
     "semantic_hash": ""
   },
   "react-app/src/lib/sound.ts": {
-    "mtime": 1788977260.4752567,
-    "seen": 1788977881.6873944,
-    "ast_hash": "50d2ed1cd8d1cea9bdc9eafc101c760f",
+    "mtime": 1788978392.8196423,
+    "seen": 1788978483.8692682,
+    "ast_hash": "d451527a72ae4e8ee80931e9aea167c0",
     "semantic_hash": ""
   },
   "push-worker/README.md": {
