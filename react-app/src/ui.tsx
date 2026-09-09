@@ -128,31 +128,33 @@ export function GearIcon({ size = 19 }: { size?: number }) {
 }
 
 // Menú desplegable de la tuerca: Editar y Eliminar (productos y categorías).
-// Se abre hacia arriba si el botón está en la parte baja de la pantalla, para
-// que siempre se vea completo; no usa fondo bloqueante, así que la página
-// sigue haciendo scroll. Se cierra al tocar fuera o elegir una opción.
+// Siempre cae hacia abajo; si quedaría cortado por el borde de la pantalla,
+// la página se desplaza solo para mostrarlo completo. No usa fondo bloqueante,
+// así que la página sigue haciendo scroll. Se cierra al tocar fuera o elegir.
 export function GearMenu({ items }: { items: { label: string; danger?: boolean; onClick: () => void }[] }) {
   const [open, setOpen] = useState(false);
-  const [up, setUp] = useState(false);
   const wrapRef = useRef<HTMLDivElement>(null);
+  const menuRef = useRef<HTMLDivElement>(null);
   useEffect(() => {
     if (!open) return;
     const onDown = (e: MouseEvent) => { if (wrapRef.current && !wrapRef.current.contains(e.target as Node)) setOpen(false); };
     document.addEventListener('mousedown', onDown);
-    return () => document.removeEventListener('mousedown', onDown);
+    const raf = requestAnimationFrame(() => {
+      const m = menuRef.current;
+      if (m && m.getBoundingClientRect().bottom > window.innerHeight) {
+        m.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      }
+    });
+    return () => { document.removeEventListener('mousedown', onDown); cancelAnimationFrame(raf); };
   }, [open]);
   return (
     <div className="actions" ref={wrapRef}>
       <button type="button" className="icon-btn" title="Opciones"
-        onClick={(ev) => {
-          const r = ev.currentTarget.getBoundingClientRect();
-          setUp(r.bottom + 110 > window.innerHeight);
-          setOpen((o) => !o);
-        }}>
+        onClick={() => setOpen((o) => !o)}>
         <GearIcon />
       </button>
       {open && (
-        <div className={'action-menu' + (up ? ' up' : '')}>
+        <div className="action-menu" ref={menuRef}>
           {items.map((it) => (
             <button key={it.label} type="button" className={it.danger ? 'danger' : ''}
               onClick={() => { setOpen(false); it.onClick(); }}>{it.label}</button>
