@@ -219,7 +219,11 @@ export function Catalog() {
             )}
           </div>
         );
-      }) : <div className="empty"><div className="emoji">📦</div><b>Tu catálogo está vacío</b><p>Agrega el primer producto para empezar.</p></div>}
+      }) : <div className="empty"><div className="emoji">
+          <svg viewBox="0 0 24 24" width="40" height="40" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" style={{ color: '#a98dde', display: 'block', margin: '0 auto' }}>
+            <path d="M4 4h10l6 6v10h-10l-6 -6z" /><circle cx="9" cy="9" r="1.3" fill="currentColor" stroke="none" />
+          </svg>
+        </div><b>Tu catálogo está vacío</b><p>Agrega el primer producto para empezar.</p></div>}
 
       {catModal && (
         <CategoryModal
