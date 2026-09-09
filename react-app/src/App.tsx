@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useStore } from './store';
 import { APP_VERSION, DEFAULT_STORE_IMAGE, canManageTeam, esc } from './lib/core';
-import { DialogHost, Image, ImageLightboxHost, Toast } from './ui';
+import { DialogHost, GearIcon, Image, ImageLightboxHost, MenuIcon, StorefrontIcon, Toast } from './ui';
 import { Dashboard } from './views/Dashboard';
 import { Catalog } from './views/Catalog';
 import { Inventory } from './views/Inventory';
@@ -50,7 +50,7 @@ export function App() {
       <>
         <main className="content">
           <div className="empty">
-            <div className="shop-hero">📦</div>
+            <div className="shop-hero"><StorefrontIcon size={48} /></div>
             <h1>Crea tu primera tienda</h1>
             <p>Organiza productos, promociones y ventas diarias en un solo lugar.</p>
             <button className="button primary" onClick={() => setModal('newStore')}>Crear mi primera tienda</button>
@@ -85,7 +85,7 @@ export function App() {
       <div className="menu-backdrop" onClick={() => setMenuOpen(false)}></div>
       <main className="content">
         <div className="mobile-head">
-          <button className="menu-btn" onClick={() => setMenuOpen(true)} aria-label="Abrir menú">☰</button>
+          <button className="menu-btn" onClick={() => setMenuOpen(true)} aria-label="Abrir menú"><MenuIcon /></button>
           <button className="new-store" onClick={() => setModal('newStore')}>＋ Nueva tienda</button>
           <button className="sync-join" onClick={() => setModal('join')}>Unirme a una tienda</button>
         </div>
@@ -94,7 +94,7 @@ export function App() {
             <Image src={s.image} cls="store-logo" />
             <div><div className="eyebrow">Tu tienda</div><h1>{esc(s.name)}</h1></div>
           </div>
-          <button className="button secondary" onClick={() => setModal('editStore')}>⚙ Editar tienda</button>
+          <button className="button secondary" onClick={() => setModal('editStore')}><GearIcon size={15} /> Editar tienda</button>
         </div>
         <nav className="tabs">
           {([['inicio', 'Inicio'], ['ganancias', 'Ganancias'], ['eventos', 'Eventos'], ['productos', 'Catálogo'], ['inventario', 'Inventario'], ['empleados', 'Empleados'], ['notas', 'Notas']] as const)

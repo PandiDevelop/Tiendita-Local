@@ -139,6 +139,158 @@ export function PencilIcon({ size = 14 }: { size?: number }) {
   );
 }
 
+// Iconos de la seccion de Notas, mismo trazo que los demas (antes eran
+// emojis: se veian distinto en cada dispositivo/sistema operativo).
+
+// Hoja con lineas: pestaña "Nota" del compositor.
+export function NoteTextIcon({ size = 15 }: { size?: number }) {
+  return (
+    <svg viewBox="0 0 24 24" width={size} height={size} fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M6 3h8l5 5v13a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1z" />
+      <path d="M14 3v5h5" />
+      <path d="M8 12.5h8M8 16.5h5" />
+    </svg>
+  );
+}
+
+// Portapapeles con chulos: pestaña "Lista de objetivos" y notas tipo checklist.
+export function ChecklistIcon({ size = 15 }: { size?: number }) {
+  return (
+    <svg viewBox="0 0 24 24" width={size} height={size} fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <rect x="4.5" y="4.2" width="15" height="16.8" rx="2.2" />
+      <rect x="9" y="2.4" width="6" height="3" rx="1" />
+      <path d="M8 11.3l1.3 1.3L11.8 10" />
+      <path d="M8 16.3l1.3 1.3L11.8 15" />
+      <path d="M14.3 11.3h2.2M14.3 16.3h2.2" />
+    </svg>
+  );
+}
+
+// Casilla vacia: renglon de un objetivo mientras se arma la lista antes de publicar.
+export function CheckboxOutlineIcon({ size = 13 }: { size?: number }) {
+  return (
+    <svg viewBox="0 0 24 24" width={size} height={size} fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <rect x="4" y="4" width="16" height="16" rx="4" />
+    </svg>
+  );
+}
+
+// Chinche: insignia de nota fijada.
+export function PinIcon({ size = 13 }: { size?: number }) {
+  return (
+    <svg viewBox="0 0 24 24" width={size} height={size} fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M12 2.2c2.9 0 5.2 2.3 5.2 5.2 0 3.4-3.6 6.3-4.4 9.1a.85.85 0 0 1-1.6 0c-.8-2.8-4.4-5.7-4.4-9.1 0-2.9 2.3-5.2 5.2-5.2z" />
+      <circle cx="12" cy="7.4" r="1.7" />
+      <path d="M12 16.3V21.8" />
+    </svg>
+  );
+}
+
+// Campana: boton para activar el aviso del sistema operativo.
+export function BellIcon({ size = 15 }: { size?: number }) {
+  return (
+    <svg viewBox="0 0 24 24" width={size} height={size} fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M6 11a6 6 0 0 1 12 0v3.3l1.6 2.4a1 1 0 0 1-.83 1.56H5.23A1 1 0 0 1 4.4 16.7L6 14.3z" />
+      <path d="M10.1 20a1.9 1.9 0 0 0 3.8 0" />
+    </svg>
+  );
+}
+
+// Globo de dialogo: boton "Responder" / contador de respuestas del hilo.
+export function ReplyIcon({ size = 14 }: { size?: number }) {
+  return (
+    <svg viewBox="0 0 24 24" width={size} height={size} fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M4 6.3A2.3 2.3 0 0 1 6.3 4h11.4A2.3 2.3 0 0 1 20 6.3v6.9a2.3 2.3 0 0 1-2.3 2.3H10l-4.3 3.4v-3.4H6.3A2.3 2.3 0 0 1 4 13.2z" />
+    </svg>
+  );
+}
+
+// Flecha hacia una bandeja: boton "Descargar log".
+export function DownloadIcon({ size = 14 }: { size?: number }) {
+  return (
+    <svg viewBox="0 0 24 24" width={size} height={size} fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M12 3v11.5" />
+      <path d="M7.3 10.8 12 15.5l4.7-4.7" />
+      <path d="M4.5 19.5h15" />
+    </svg>
+  );
+}
+
+// Iconos generales del resto de la app (antes emojis/glifos sueltos: se
+// veian distinto segun el dispositivo/fuente). Mismo trazo que los demas.
+
+// X: cerrar/quitar. Reemplaza el caracter "✕" suelto que se usaba en varios
+// botones (cerrar modal, quitar promo/miembro/linea de venta, etc.).
+export function CloseIcon({ size = 14 }: { size?: number }) {
+  return (
+    <svg viewBox="0 0 24 24" width={size} height={size} fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M5 5l14 14M19 5L5 19" />
+    </svg>
+  );
+}
+
+// Flecha (chevron) izquierda/derecha: navegacion de mes/dia.
+export function ChevronIcon({ size = 14, dir = 'left' }: { size?: number; dir?: 'left' | 'right' }) {
+  return (
+    <svg viewBox="0 0 24 24" width={size} height={size} fill="none" stroke="currentColor" strokeWidth="2.1" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" style={dir === 'right' ? { transform: 'scaleX(-1)' } : undefined}>
+      <path d="M15 5l-7 7 7 7" />
+    </svg>
+  );
+}
+
+// Tres lineas: abrir el menu lateral en movil.
+export function MenuIcon({ size = 20 }: { size?: number }) {
+  return (
+    <svg viewBox="0 0 24 24" width={size} height={size} fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M4 6.5h16M4 12h16M4 17.5h16" />
+    </svg>
+  );
+}
+
+// Fachada de tienda: pantalla vacia antes de crear la primera tienda.
+export function StorefrontIcon({ size = 40 }: { size?: number }) {
+  return (
+    <svg viewBox="0 0 24 24" width={size} height={size} fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M4 8.3 5.2 3.4h13.6L20 8.3" />
+      <path d="M4 8.3v10.3a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1V8.3" />
+      <path d="M4 8.3h16" />
+      <path d="M9.3 19.6v-6h5.4v6" />
+    </svg>
+  );
+}
+
+// Camion: registrar un nuevo cargamento/entrada de inventario.
+export function TruckIcon({ size = 16 }: { size?: number }) {
+  return (
+    <svg viewBox="0 0 24 24" width={size} height={size} fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M2.5 6.5h11v10h-11z" />
+      <path d="M13.5 10h4l3.5 3v3.5h-7.5z" />
+      <circle cx="7" cy="18" r="1.7" />
+      <circle cx="17" cy="18" r="1.7" />
+    </svg>
+  );
+}
+
+// Factura/recibo: pantalla vacia al registrar una venta sin productos.
+export function ReceiptIcon({ size = 40 }: { size?: number }) {
+  return (
+    <svg viewBox="0 0 24 24" width={size} height={size} fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M6 2.5h12v18l-2-1.4-2 1.4-2-1.4-2 1.4-2-1.4-2 1.4z" />
+      <path d="M8.5 7h7M8.5 10.5h7M8.5 14h4.5" />
+    </svg>
+  );
+}
+
+// Flecha circular: volver al valor automatico (deshacer un precio manual).
+export function UndoIcon({ size = 14 }: { size?: number }) {
+  return (
+    <svg viewBox="0 0 24 24" width={size} height={size} fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M3.5 12a8.5 8.5 0 1 0 2.7-6.2" />
+      <path d="M3.3 4.5v5.3h5.3" />
+    </svg>
+  );
+}
+
 // Menú desplegable de la tuerca: Editar y Eliminar (productos y categorías).
 // Se renderiza en un portal pegado al body y con posición fija, así que se
 // SUPERPONE a las demás cajas (nunca lo corta una tabla o tarjeta con

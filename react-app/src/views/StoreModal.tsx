@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useStore } from '../store';
 import { DEFAULT_STORE_IMAGE, compressImage, esc, myRole, syncClientId, syncGenPin, syncName, syncSetName, uid } from '../lib/core';
 import { deactivateSyncFn, leaveStoreFn, deleteStoreFn, removeMemberFn, setMemberRoleFn } from '../lib/sync';
-import { ImagePicker, Modal } from '../ui';
+import { CloseIcon, ImagePicker, Modal } from '../ui';
 import type { Member, Role } from '../types';
 
 export function StoreModal({ editing, onClose }: { editing?: boolean; onClose: () => void }) {
@@ -149,7 +149,7 @@ export function StoreModal({ editing, onClose }: { editing?: boolean; onClose: (
                                   {isAdmin ? 'Quitar admin' : 'Hacer admin'}
                                 </button>
                               )}
-                              {(isOwner || !isAdmin) && <button className="icon-remove" title="Quitar de la tienda" onClick={() => removeMember(mi)}>✕</button>}
+                              {(isOwner || !isAdmin) && <button className="icon-remove" title="Quitar de la tienda" onClick={() => removeMember(mi)}><CloseIcon size={13} /></button>}
                             </div>
                           )}
                         </div>

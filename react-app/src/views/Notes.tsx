@@ -8,7 +8,10 @@ import {
   toggleChecklistItem, addChecklistItem, removeChecklistItem,
   sweepExpiredNotes, canEditNote, canDeleteNote, canManageNotes,
 } from '../lib/core';
-import { confirmDialog, GearMenu, Modal } from '../ui';
+import {
+  confirmDialog, GearMenu, Modal,
+  NoteTextIcon, ChecklistIcon, CheckboxOutlineIcon, PinIcon, BellIcon, ReplyIcon, DownloadIcon, CloseIcon,
+} from '../ui';
 import { customConfirm } from '../lib/dialog';
 import { exportArchiveCsv } from '../lib/notesArchive';
 import { notifyPermission, requestNotifyPermission } from '../lib/sound';
@@ -68,8 +71,8 @@ function Composer({ onDone }: { onDone: () => void }) {
   return (
     <div className="notes-compose">
       <div className="notes-compose-tabs">
-        <button type="button" className={'notes-compose-tab' + (mode === 'text' ? ' active' : '')} onClick={() => setMode('text')}>📝 Nota</button>
-        <button type="button" className={'notes-compose-tab' + (mode === 'checklist' ? ' active' : '')} onClick={() => setMode('checklist')}>☑️ Lista de objetivos</button>
+        <button type="button" className={'notes-compose-tab' + (mode === 'text' ? ' active' : '')} onClick={() => setMode('text')}><NoteTextIcon /> Nota</button>
+        <button type="button" className={'notes-compose-tab' + (mode === 'checklist' ? ' active' : '')} onClick={() => setMode('checklist')}><ChecklistIcon /> Lista de objetivos</button>
       </div>
       {mode === 'text' ? (
         <>
@@ -97,8 +100,8 @@ function Composer({ onDone }: { onDone: () => void }) {
             <div className="checklist-draft-items">
               {items.map((it, i) => (
                 <div className="checklist-draft-item" key={i}>
-                  <span>☐ {it}</span>
-                  <button type="button" className="icon-btn" title="Quitar" onClick={() => setItems((arr) => arr.filter((_, j) => j !== i))}>✕</button>
+                  <span><CheckboxOutlineIcon /> {it}</span>
+                  <button type="button" className="icon-btn" title="Quitar" onClick={() => setItems((arr) => arr.filter((_, j) => j !== i))}><CloseIcon size={13} /></button>
                 </div>
               ))}
             </div>
@@ -200,7 +203,7 @@ function ThreadPanel({ noteId, onClose, openHistory }: { noteId: string; onClose
       <div className="thread-panel">
         <div className="thread-head">
           <b>Hilo</b>
-          <button type="button" className="icon-btn" title="Cerrar" onClick={onClose}>✕</button>
+          <button type="button" className="icon-btn" title="Cerrar" onClick={onClose}><CloseIcon size={14} /></button>
         </div>
         <div className="thread-body">
           <div className="note-msg thread-root">
@@ -350,10 +353,10 @@ export function Notes() {
         <div><h2>Notas del equipo</h2><p className="muted">Publica notas y listas de objetivos; abre un hilo para responder. Lo que no se fija desaparece a la semana.</p></div>
         <div className="notes-head-actions">
           {notifyState === 'default' && (
-            <button className="button secondary" onClick={enableSystemNotify} title="Recibe un aviso del sistema aunque tengas la app en otra pestaña">🔔 Activar aviso del sistema</button>
+            <button className="button secondary" onClick={enableSystemNotify} title="Recibe un aviso del sistema aunque tengas la app en otra pestaña"><BellIcon /> Activar aviso del sistema</button>
           )}
           {admin && (
-            <button className="button secondary" onClick={() => exportArchiveCsv(s.id, s.name)} title="Descarga el texto de las notas, incluidas las que ya desaparecieron, con quién las envió y cuándo">⇩ Descargar log</button>
+            <button className="button secondary" onClick={() => exportArchiveCsv(s.id, s.name)} title="Descarga el texto de las notas, incluidas las que ya desaparecieron, con quién las envió y cuándo"><DownloadIcon /> Descargar log</button>
           )}
         </div>
       </div>
@@ -373,7 +376,7 @@ export function Notes() {
           return (
             <div key={n.id} className={'note-msg' + (mine ? ' mine' : '') + (n.pinned ? ' pinned' : '')}>
               <div className="note-meta">
-                {n.pinned && <span className="note-pin-badge" title="Fijada">📌</span>}
+                {n.pinned && <span className="note-pin-badge" title="Fijada"><PinIcon /></span>}
                 <strong>{esc(nameOf(s, n.by, n.byName, me, myName))}</strong>
                 <span className="muted">{n.date ? shortDate(n.date) : ''}{n.time ? ' · ' + esc(n.time) : ''}{n.editedAt ? ' · editado' : ''}</span>
                 {items.length > 0 && <GearMenu items={items} />}
@@ -395,7 +398,7 @@ export function Notes() {
                       <input type="checkbox" checked={it.done} onChange={() => doToggleItem(n, it.id)} />
                       <span>{esc(it.text)}</span>
                       {it.done && it.doneByName && <span className="muted note-check-by">· {esc(it.doneByName)}</span>}
-                      {canEditNote(n) && <button type="button" className="icon-btn note-check-remove" title="Quitar objetivo" onClick={() => removeItemFromChecklist(n, it.id)}>✕</button>}
+                      {canEditNote(n) && <button type="button" className="icon-btn note-check-remove" title="Quitar objetivo" onClick={() => removeItemFromChecklist(n, it.id)}><CloseIcon size={12} /></button>}
                     </label>
                   ))}
                   {canEditNote(n) && (
@@ -416,7 +419,7 @@ export function Notes() {
               )}
 
               <button type="button" className="note-reply-btn" onClick={() => setThreadId(n.id)}>
-                💬 {replyCount ? replyCount + ' respuesta' + (replyCount === 1 ? '' : 's') : 'Responder'}
+                <ReplyIcon /> {replyCount ? replyCount + ' respuesta' + (replyCount === 1 ? '' : 's') : 'Responder'}
               </button>
             </div>
           );

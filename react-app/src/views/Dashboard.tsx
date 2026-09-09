@@ -1,5 +1,6 @@
 import { useStore } from '../store';
 import { money, formatDate, today, total, priceFor, esc } from '../lib/core';
+import { ChevronIcon } from '../ui';
 import type { SaleItem } from '../types';
 
 interface Line { pid: string; name: string; qty: number; value: number; prs: string[]; }
@@ -72,7 +73,7 @@ export function Dashboard() {
       </div>
       <div className="panel">
         <div className="panel-head"><div><h2>Resumen del mes</h2><p className="muted">Lo vendido en el mes.</p></div></div>
-        <div className="day-tabs"><button className="day-nav" onClick={() => replace((x) => { x.summaryMonth = monthShift(mm, -1); }) }>←</button><b className="month-label">{monthLabel(mm)}</b><button className="day-nav" onClick={() => replace((x) => { x.summaryMonth = monthShift(mm, 1); })}>→</button></div>
+        <div className="day-tabs"><button className="day-nav" onClick={() => replace((x) => { x.summaryMonth = monthShift(mm, -1); }) }><ChevronIcon dir="left" /></button><b className="month-label">{monthLabel(mm)}</b><button className="day-nav" onClick={() => replace((x) => { x.summaryMonth = monthShift(mm, 1); })}><ChevronIcon dir="right" /></button></div>
         <div className="month-stats"><span>{mdays} día{mdays === 1 ? '' : 's'} con ventas</span><b>{munits} unidades vendidas</b><b>{money(mrev)} producido</b></div>
         {mrec.length ? (
           <table><thead><tr><th>Producto</th><th>Unidades</th><th>Producido</th></tr></thead><tbody>

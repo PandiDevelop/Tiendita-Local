@@ -3,7 +3,7 @@ import type { PointerEvent as ReactPointerEvent } from 'react';
 import { useStore } from '../store';
 import { DEFAULT_PRODUCT_IMAGE, esc, inventorySold, adoptInvLog, syncName, groupedByCategory, storeCats, reorderCategoryProducts, shortTag } from '../lib/core';
 import { customConfirm } from '../lib/dialog';
-import { GearMenu, Image, Modal } from '../ui';
+import { GearMenu, Image, Modal, PencilIcon, TruckIcon } from '../ui';
 import { CategoryModal } from './CategoryModal';
 import type { Product } from '../types';
 
@@ -219,9 +219,9 @@ export function Inventory() {
                               <td className="inv-actions">
                                 <div className="inv-stepper">
                                   <button className="qty-btn" title="Restar 1" onClick={() => bump(p, -1)}>−</button>
-                                  <button className="icon-btn" title="Editar cantidad exacta" onClick={() => openEdit(p)}>✎</button>
+                                  <button className="icon-btn" title="Editar cantidad exacta" onClick={() => openEdit(p)}><PencilIcon size={14} /></button>
                                   <button className="qty-btn" title="Sumar 1" onClick={() => bump(p, 1)}>+</button>
-                                  <button className="inv-cargo" title="Nuevo cargamento" onClick={() => openCargo(p)}>🚚</button>
+                                  <button className="inv-cargo" title="Nuevo cargamento" onClick={() => openCargo(p)}><TruckIcon size={16} /></button>
                                 </div>
                               </td>
                             </tr>

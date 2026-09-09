@@ -1,5 +1,6 @@
 import type { EditablePromo } from '../lib/core';
 import { uid } from '../lib/core';
+import { CloseIcon } from '../ui';
 
 interface Props {
   promos: EditablePromo[];
@@ -47,7 +48,7 @@ export function PromoEditor({ promos, onChange, priceHint }: Props) {
             <input className="promo-label" maxLength={70} placeholder="Nombre de la promoción" value={x.label} onChange={(e) => setAt(n, { label: e.target.value })} />
             <button type="button" className="icon-btn inv-stepper" title="Subir prioridad" onClick={() => move(n, -1)}><ChevUp /></button>
             <button type="button" className="icon-btn inv-stepper" title="Bajar prioridad" onClick={() => move(n, 1)}><ChevDown /></button>
-            <button type="button" className="icon-remove" title="Quitar promoción" onClick={() => onChange(promos.filter((_, i) => i !== n))}>✕</button>
+            <button type="button" className="icon-remove" title="Quitar promoción" onClick={() => onChange(promos.filter((_, i) => i !== n))}><CloseIcon size={13} /></button>
           </div>
           <div className="promo-row-conds">
             <select className="promo-select" value={x.type} onChange={(e) => setAt(n, { type: e.target.value as EditablePromo['type'] })}>

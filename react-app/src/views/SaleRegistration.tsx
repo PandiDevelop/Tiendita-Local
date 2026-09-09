@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { useStore } from '../store';
 import { DEFAULT_PRODUCT_IMAGE, activeEvent, catLabel, findActivePromo, money, saleCatsOf, saleUnitPrice, shortTag, sortProducts, syncName, today, uid } from '../lib/core';
 import { Dropdown } from '../Dropdown';
-import { Image, Modal } from '../ui';
+import { CloseIcon, Image, Modal, ReceiptIcon, UndoIcon } from '../ui';
 import type { Product } from '../types';
 
 interface Line { pid: string; price: number; cost: number; qty: number; manual?: boolean; }
@@ -167,7 +167,7 @@ export function SaleRegistration({ onClose }: { onClose: () => void }) {
     return (
       <Modal onClose={onClose}>
         <h2>Registrar una venta</h2>
-        <div className="empty"><div className="emoji">🧾</div><b>Aún no hay productos para vender</b><p>Agrega productos para empezar.</p></div>
+        <div className="empty"><div className="emoji"><ReceiptIcon /></div><b>Aún no hay productos para vender</b><p>Agrega productos para empezar.</p></div>
         <div className="modal-actions"><span style={{ flex: 1 }}></span><button className="button primary" onClick={onClose}>Cerrar</button></div>
       </Modal>
     );
@@ -196,14 +196,14 @@ export function SaleRegistration({ onClose }: { onClose: () => void }) {
               {p.tag ? <span className="prod-tag sale-tag">{shortTag(p.tag)}</span> : null}
             </div>
           </div>
-          <button className="sale-del" title="Quitar este producto de la venta" onClick={() => removeLine(n)}>✕</button>
+          <button className="sale-del" title="Quitar este producto de la venta" onClick={() => removeLine(n)}><CloseIcon size={13} /></button>
         </div>
         {promo && <div className="sale-promo-note">Promo aplicada: {promo.label}</div>}
         <div className="sale-builder-price">
           <input className="price-input" type="number" min={0} step="any" inputMode="decimal" value={String(l.price)} onChange={(e) => setManualPrice(n, e.target.value)} title="Puedes cambiar el precio a mano" />
           <span className="muted">c/u</span>
           {l.manual && (
-            <button type="button" className="icon-remove reset-price" title="Volver al precio automático" onClick={() => setLine(n, { manual: false }, true)}>↺</button>
+            <button type="button" className="icon-remove reset-price" title="Volver al precio automático" onClick={() => setLine(n, { manual: false }, true)}><UndoIcon size={13} /></button>
           )}
         </div>
         <div className="sale-builder-qty">
@@ -220,7 +220,7 @@ export function SaleRegistration({ onClose }: { onClose: () => void }) {
       <div className="sale-window">
         <div className="sale-modal-head">
           <h2 style={{ margin: 0 }}>Registrar una venta</h2>
-          <button type="button" className="x-close" title="Salir sin guardar" onClick={onClose}>✕</button>
+          <button type="button" className="x-close" title="Salir sin guardar" onClick={onClose}><CloseIcon size={15} /></button>
         </div>
         <p className="muted" style={{ margin: '8px 0 14px' }}>La venta en curso se mantiene aunque cierres esta ventana.</p>
         <div className="sale-scroll">

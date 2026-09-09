@@ -159,17 +159,18 @@ th,td{text-align:left;vertical-align:middle}
 .notes-ws{font-size:12px;font-weight:700;color:#3f9d5f;white-space:nowrap}
 .notes-ws.typing{color:#8a84a0}
 .notes-compose-tabs{display:flex;gap:6px}
-.notes-compose-tab{padding:8px 13px;border-radius:9px;background:#f8f6fb;color:#766e88;font-size:13px;font-weight:700}
+.notes-compose-tab{display:inline-flex;align-items:center;gap:6px;padding:8px 13px;border-radius:9px;background:#f8f6fb;color:#766e88;font-size:13px;font-weight:700}
 .notes-compose-tab.active{background:var(--lav);color:#7258a2}
 .checklist-compose{display:grid;gap:8px}
 .checklist-title-input{width:100%;padding:12px 13px;border:1px solid #ddd8e5;border-radius:10px;font:600 15px "DM Sans",sans-serif;color:var(--ink)}
 .checklist-draft-items{display:grid;gap:5px}
 .checklist-draft-item{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:7px 10px;background:#f8f6fb;border-radius:8px;font-size:13px}
+.checklist-draft-item span{display:inline-flex;align-items:center;gap:6px}
 .checklist-add-row{display:flex;gap:8px}
 .checklist-add-row input{flex:1;padding:10px 12px;border:1px solid #ddd8e5;border-radius:10px;color:var(--ink)}
-.note-pin-badge{font-size:13px}
+.note-pin-badge{display:inline-flex;align-items:center;color:#c98a3b}
 .note-msg.pinned{border-color:#e8c98a;background:#fffaf0}
-.note-reply-btn{margin-top:8px;background:transparent;color:#8061b4;font-weight:700;font-size:13px;padding:4px 0}
+.note-reply-btn{display:inline-flex;align-items:center;gap:6px;margin-top:8px;background:transparent;color:#8061b4;font-weight:700;font-size:13px;padding:4px 0}
 .note-edit-box{display:grid;gap:8px;margin-top:2px}
 .note-edit-box textarea{width:100%;padding:11px 12px;border:1px solid #ddd8e5;border-radius:10px;font:15px "DM Sans",sans-serif;color:var(--ink);resize:vertical}
 .note-edit-actions{display:flex;justify-content:flex-end;gap:8px}

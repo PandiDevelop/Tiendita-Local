@@ -1,4 +1,5 @@
 import { Fragment, ReactNode, useState } from 'react';
+import { DownloadIcon } from '../ui';
 import { useStore } from '../store';
 import { money, esc, total, shortDate, saleUnits, priceFor, formatDate, catLabel, findActivePromo } from '../lib/core';
 import type { Sale } from '../types';
@@ -70,7 +71,7 @@ export function History() {
     <div className="panel">
       <div className="panel-head">
         <div><h2>Historial de ventas</h2><p className="muted">Cada venta con su fecha, hora y quién la registró.</p></div>
-        <button className="button secondary" onClick={() => exportExcel(s.sales)}>⇩ Exportar a Excel</button>
+        <button className="button secondary" onClick={() => exportExcel(s.sales)}><DownloadIcon /> Exportar a Excel</button>
       </div>
       {!dates.length ? <div className="empty"><div className="emoji">
         <svg viewBox="0 0 24 24" width="40" height="40" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" style={{ color: '#a98dde', display: 'block', margin: '0 auto' }}>
