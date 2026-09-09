@@ -714,6 +714,30 @@ function clashName(members: Record<string, Member>): boolean {
   );
 }
 
+// True si ya existe una tienda (documento de la coleccion "stores") con el
+// mismo nombre, comparado sin mayusculas y sin espacios de mas. Se usa al
+// activar la sincronizacion para que el nombre de una tienda no se repita en
+// la base (dos docs distintos no pueden llamarse igual). excludeKey permite
+// ignorar el propio documento (al renombrar). Best-effort: si no se puede
+// leer, devuelve false para no bloquear la creacion.
+export async function storeNameTaken(name: string, excludeKey?: string): Promise<boolean> {
+  if (!syncReady() || !DB) return false;
+  const target = (name || '').trim().toLowerCase();
+  if (!target) return false;
+  try {
+    const snap = await getDocs(collection(DB, 'stores'));
+    return snap.docs.some(
+      (d) => d.exists()
+        && d.id !== excludeKey
+        && !(d.data().deleted as boolean)
+        && (((d.data().name as string) || '').trim().toLowerCase()) === target,
+    );
+  } catch (e) {
+    console.warn('No se pudo validar el nombre de la tienda:', e);
+    return false;
+  }
+}
+
 export async function joinStore(pin: string, getState: () => AppState, mutate: (fn: (d: AppState) => void) => void, attach: (id: string) => void) {
   if (!pin) { await customAlert('Escribe el código.'); return; }
   if (!syncReady()) { await customAlert('Configura Firebase primero'); return; }
@@ -794,6 +818,12 @@ export async function activateSync(storeId: string, pin: string, getState: () =>
     if (!snap.exists()) {
       const s = getState().stores.find((x) => x.id === storeId);
       if (!s) return;
+      // El nombre de una tienda no puede repetirse en la base: se valida
+      // contra los documentos existentes antes de crear el nuevo.
+      if (await storeNameTaken(s.name)) {
+        await customAlert('Ya existe una tienda con ese nombre. Usa otro nombre para esta.');
+        return;
+      }
       const sales: Record<string, Sale> = {};
       s.sales.forEach((x) => (sales[x.id] = x));
       const members: Record<string, Member> = {};
@@ -941,7 +971,24 @@ export async function deleteStoreFn(id: string, getState: () => AppState, mutate
   if (!(await customConfirm(q))) return false;
   if (DB && s.syncKey) {
     try {
-      await setDoc(doc(collection(DB, 'stores'), s.syncKey), { deleted: true }, { merge: true });
+      const key = s.syncKey;
+      // Borrado real en la nube: cada producto vive en su propio documento de
+      // la subcoleccion (ver la nota junto a productDocRef), asi que se borran
+      // todos y no quedan huerfanos.
+      await Promise.all((s.products || []).map((p) => deleteDoc(productDocRef(key, p.id))));
+      // El documento principal no se borra del todo: se deja una lápida mínima
+      // (deleted + deletedAt + nombre) para que la sn pagina en tiempo real de
+      // los demas dispositivos la detecte y la quiten de sus listas, y para
+      // que un push viejo de algun dispositivo sincronizado no pueda
+      // "resucitar" la tienda con datos viejos. Todo lo que la hace una tienda
+      // real (miembros, tokens, ventas, notas, inventario, categorias, ...)
+      // se elimina del documento: en la base ya no queda informacion de
+      // negocio, solo el aviso de que esa tienda murio.
+      const purge: Record<string, unknown> = {
+        deleted: true, deletedAt: Date.now(),
+      };
+      ['members', 'pushTokens', 'pushPrefs', 'sales', 'noteBoard', 'noteLog', 'invLog', 'notes', 'inventory', 'categories', 'categoryPricing', 'events', 'image', 'createdBy', 'updatedBy', 'products'].forEach((k) => { purge[k] = deleteField(); });
+      await setDoc(doc(collection(DB, 'stores'), key), purge, { merge: true });
     } catch (e) { console.warn(e); }
   }
   removeLocalStoreFn(id, getState, mutate, detach);

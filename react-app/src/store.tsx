@@ -5,6 +5,7 @@ import { createSync, applyRemote, activateSync, joinStore, SyncHandle } from './
 import { archiveUpsert, archiveMarkGone, noteToArchiveEntry, replyToArchiveEntry } from './lib/notesArchive';
 import { playNoteChime, showSystemNotification } from './lib/sound';
 import { notifyEnabled, notifCatEnabled } from './lib/settings';
+import { ensurePushToken } from './lib/push';
 import type { Note } from './types';
 
 export type ModalKind = 'none' | 'sale' | 'newProduct' | 'editProduct' | 'newStore' | 'editStore' | 'join' | 'settings';
@@ -96,6 +97,19 @@ export function AppProvider({ children }: { children: ReactNode }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  // Re-registra el token de FCM de las tiendas sincronizadas al arrancar (si
+  // el registro del toggle fallo en alguna sesion pasada, aqui se recupera
+  // solo - ver ensurePushToken en lib/push.ts). Best-effort y sin pedir
+  // permiso: solo actua si el navegador ya tiene el permiso concedido.
+  useEffect(() => {
+    const ensureAll = () => {
+      if (!notifyEnabled()) return;
+      stateRef.current.stores.forEach((s) => { if (s.syncKey) ensurePushToken(s.syncKey); });
+    };
+    ensureAll();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   // Los celulares suspenden la pestaña/app en segundo plano (y a veces
   // cortan la conexion en ese rato): el listener de Firestore deberia
   // reconectar solo, pero en la practica eso a veces tarda o se queda a
@@ -107,6 +121,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     function onVisible() {
       if (document.visibilityState !== 'visible') return;
       stateRef.current.stores.forEach((s) => { if (s.syncKey) sync.current!.attach(s.id); });
+      if (notifyEnabled()) stateRef.current.stores.forEach((s) => { if (s.syncKey) ensurePushToken(s.syncKey); });
     }
     document.addEventListener('visibilitychange', onVisible);
     return () => document.removeEventListener('visibilitychange', onVisible);

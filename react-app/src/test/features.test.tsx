@@ -202,6 +202,67 @@ describe('Notas: historiales separados por pestaña', () => {
     expect(screen.getByText('Metas')).toBeInTheDocument();
     expect(screen.queryByText('Comprar pan')).not.toBeInTheDocument();
   });
+
+  it('las listas de objetivos muestran cuántas quedan pendientes y "Completado" al terminar', () => {
+    const now = Date.now();
+    const store = makeStore({
+      noteBoard: [
+        { id: 'n2', kind: 'checklist', text: 'Metas', items: [
+          { id: 'i1', text: 'Abrir', done: false },
+          { id: 'i2', text: 'Cobrar', done: false },
+        ], by: 'owner-1', byName: 'Ana', createdAt: now, date: '09/09/2026', time: '11:00' },
+      ],
+    });
+    const { container } = render(<TestProvider initialState={makeState(store)}><Notes /></TestProvider>);
+    fireEvent.click(screen.getByRole('button', { name: /Objetivos/ }));
+    expect(screen.getByText('2 objetivos pendientes')).toBeInTheDocument();
+
+    const checks = Array.from(container.querySelectorAll('.note-check input')) as HTMLInputElement[];
+    fireEvent.click(checks[0]);
+    expect(screen.getByText('1 objetivo pendiente')).toBeInTheDocument();
+    fireEvent.click(checks[1]);
+    expect(screen.getByText('Completado')).toBeInTheDocument();
+    expect(screen.queryByText('2 objetivos pendientes')).not.toBeInTheDocument();
+  });
+
+  it('al editar una lista se pueden cambiar sus objetivos (editar texto y agregar)', () => {
+    localStorage.setItem(CLIENT_KEY, 'owner-1');
+    const now = Date.now();
+    const store = makeStore({
+      noteBoard: [
+        { id: 'n2', kind: 'checklist', text: 'Metas', items: [{ id: 'i1', text: 'Abrir', done: false }], by: 'owner-1', byName: 'Ana', createdAt: now, date: '09/09/2026', time: '11:00' },
+      ],
+    });
+    const state = makeState(store);
+    const stateRef = { current: state };
+    const { container } = render(<TestProvider initialState={state} stateRef={stateRef}><Notes /></TestProvider>);
+    fireEvent.click(screen.getByRole('button', { name: /Objetivos/ }));
+
+    fireEvent.click(screen.getByTitle('Opciones'));
+    fireEvent.click(screen.getByRole('button', { name: 'Editar' }));
+
+    const editBox = container.querySelector('.checklist-edit-box') as HTMLElement;
+    expect(editBox).not.toBeNull();
+    const itemInput = editBox.querySelector('.checklist-edit-item') as HTMLInputElement;
+    expect(itemInput.value).toBe('Abrir');
+    fireEvent.change(itemInput, { target: { value: 'Abrir la tienda' } });
+
+    const addInput = editBox.querySelector('.checklist-add-row input') as HTMLInputElement;
+    fireEvent.change(addInput, { target: { value: 'Cerrar bien' } });
+    fireEvent.click(editBox.querySelector('.checklist-add-row .button') as HTMLElement);
+
+    const saveBtn = Array.from(editBox.querySelectorAll('button')).find((b) => b.textContent === 'Guardar') as HTMLElement;
+    fireEvent.click(saveBtn);
+
+    const n = stateRef.current.stores[0].noteBoard[0] as { text: string; items: { id: string; text: string; done: boolean }[] };
+    expect(n.text).toBe('Metas');
+    expect(n.items).toHaveLength(2);
+    expect(n.items[0].text).toBe('Abrir la tienda');
+    expect(n.items[0].id).toBe('i1');
+    expect(n.items[0].done).toBe(false);
+    expect(n.items[1].text).toBe('Cerrar bien');
+    expect(n.items[1].done).toBe(false);
+  });
 });
 
 describe('Ganancias: íconos SVG en vez de emoji, ícono antes que texto', () => {

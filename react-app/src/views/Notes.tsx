@@ -3,7 +3,7 @@ import { createPortal } from 'react-dom';
 import { useStore } from '../store';
 import {
   esc, shortDate, syncClientId, syncName,
-  addNoteMsg, addChecklistNote, editNoteMsg, deleteNoteMsg, toggleNotePin,
+  addNoteMsg, addChecklistNote, editNoteMsg, editChecklistNote, deleteNoteMsg, toggleNotePin,
   addNoteReply, editNoteReply, deleteNoteReply,
   toggleChecklistItem, addChecklistItem, removeChecklistItem,
   sweepExpiredNotes, canEditNote, canDeleteNote, canManageNotes,
@@ -283,6 +283,8 @@ export function Notes() {
   const [feed, setFeed] = useState<'notas' | 'objetivos'>('notas');
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editingText, setEditingText] = useState('');
+  const [editItems, setEditItems] = useState<{ id?: string; text: string }[]>([]);
+  const [editDraftItem, setEditDraftItem] = useState('');
   const [threadId, setThreadId] = useState<string | null>(null);
   const [history, setHistory] = useState<{ title: string; current: string; list: NoteEditRecord[] } | null>(null);
   const [notifyState, setNotifyState] = useState(notifyPermission());
@@ -331,15 +333,30 @@ export function Notes() {
 
   function startEdit(n: Note) {
     setEditingId(n.id);
-    setEditingText(n.kind === 'checklist' ? n.text : n.text);
+    setEditingText(n.text);
+    setEditItems((n.items || []).map((it) => ({ id: it.id, text: it.text })));
+    setEditDraftItem('');
   }
 
   function saveEdit() {
     if (!editingId) return;
-    const t = editingText.trim();
-    if (!t) return;
-    replace((d) => { const st = d.stores.find((x) => x.id === s.id)!; editNoteMsg(st, editingId, t); });
+    const n = (s.noteBoard || []).find((x) => x.id === editingId);
+    if (!n) { setEditingId(null); return; }
+    if (n.kind === 'checklist') {
+      replace((d) => { const st = d.stores.find((x) => x.id === s.id)!; editChecklistNote(st, editingId, editingText, editItems); });
+    } else {
+      const t = editingText.trim();
+      if (!t) return;
+      replace((d) => { const st = d.stores.find((x) => x.id === s.id)!; editNoteMsg(st, editingId, t); });
+    }
     setEditingId(null);
+  }
+
+  function addEditItem() {
+    const t = editDraftItem.trim();
+    if (!t) return;
+    setEditItems((arr) => [...arr, { id: undefined, text: t }]);
+    setEditDraftItem('');
   }
 
   function doDelete(n: Note) {
@@ -408,27 +425,59 @@ export function Notes() {
             ...((n.history && n.history.length) ? [{ label: 'Ver historial de cambios', onClick: () => openHistory(n.kind === 'checklist' ? 'Historial de la lista' : 'Historial de la nota', n) }] : []),
             ...(canDeleteNote(s, n) ? [{ label: 'Eliminar', danger: true, onClick: () => doDelete(n) }] : []),
           ];
-          const replyCount = (n.replies || []).length;
-          return (
-            <div key={n.id} className={'note-msg' + (mine ? ' mine' : '') + (n.pinned ? ' pinned' : '')}>
-              <div className="note-meta">
-                {n.pinned && <span className="note-pin-badge" title="Fijada"><PinIcon /></span>}
-                <strong>{esc(nameOf(s, n.by, n.byName, me, myName))}</strong>
-                <span className="muted">{n.date ? shortDate(n.date) : ''}{n.time ? ' · ' + esc(n.time) : ''}{n.editedAt ? ' · editado' : ''}</span>
-                {items.length > 0 && <GearMenu items={items} />}
-              </div>
-
-              {editingId === n.id ? (
-                <div className="note-edit-box">
-                  <textarea rows={3} value={editingText} onChange={(e) => setEditingText(e.target.value)} />
-                  <div className="note-edit-actions">
-                    <button className="button secondary" onClick={() => setEditingId(null)}>Cancelar</button>
-                    <button className="button primary" onClick={saveEdit}>Guardar</button>
+const replyCount = (n.replies || []).length;
+              const pendingItems = n.kind === 'checklist' ? (n.items || []).filter((it) => !it.done) : [];
+              const badge = n.kind === 'checklist' && (n.items || []).length > 0
+                ? (pendingItems.length === 0
+                  ? <span className="note-checklist-badge all">Completado</span>
+                  : <span className="note-checklist-badge">{pendingItems.length === 1 ? '1 objetivo pendiente' : pendingItems.length + ' objetivos pendientes'}</span>)
+                : null;
+              return (
+                <div key={n.id} className={'note-msg' + (mine ? ' mine' : '') + (n.pinned ? ' pinned' : '')}>
+                  <div className="note-meta">
+                    {n.pinned && <span className="note-pin-badge" title="Fijada"><PinIcon /></span>}
+                    <strong>{esc(nameOf(s, n.by, n.byName, me, myName))}</strong>
+                    <span className="muted">{n.date ? shortDate(n.date) : ''}{n.time ? ' · ' + esc(n.time) : ''}{n.editedAt ? ' · editado' : ''}</span>
+                    {items.length > 0 && <GearMenu items={items} />}
                   </div>
-                </div>
-              ) : n.kind === 'checklist' ? (
-                <div className="note-checklist">
-                  <div className="note-checklist-title">{esc(n.text)}</div>
+
+                  {editingId === n.id && n.kind === 'checklist' ? (
+                    <div className="checklist-compose checklist-edit-box">
+                      <input className="checklist-title-input" placeholder="Título de la lista" value={editingText} maxLength={80} onChange={(e) => setEditingText(e.target.value)} />
+                      {editItems.length > 0 && (
+                        <div className="checklist-draft-items">
+                          {editItems.map((it, i) => (
+                            <div className="checklist-draft-item" key={it.id || 'nuevo-' + i}>
+                              <span><CheckboxOutlineIcon /></span>
+                              <input className="checklist-edit-item" maxLength={140} value={it.text} onChange={(e) => setEditItems((arr) => arr.map((x, j) => (j === i ? { ...x, text: e.target.value } : x)))} />
+                              <button type="button" className="icon-btn" title="Quitar objetivo" onClick={() => setEditItems((arr) => arr.filter((_, j) => j !== i))}><CloseIcon size={13} /></button>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                      <div className="checklist-add-row">
+                        <input placeholder="Agregar objetivo…" value={editDraftItem} maxLength={140} onChange={(e) => setEditDraftItem(e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); addEditItem(); } }} />
+                        <button type="button" className="button secondary" onClick={addEditItem}>＋ Agregar</button>
+                      </div>
+                      <div className="note-edit-actions">
+                        <button className="button secondary" onClick={() => setEditingId(null)}>Cancelar</button>
+                        <button className="button primary" onClick={saveEdit}>Guardar</button>
+                      </div>
+                    </div>
+                  ) : editingId === n.id ? (
+                    <div className="note-edit-box">
+                      <textarea rows={3} value={editingText} onChange={(e) => setEditingText(e.target.value)} />
+                      <div className="note-edit-actions">
+                        <button className="button secondary" onClick={() => setEditingId(null)}>Cancelar</button>
+                        <button className="button primary" onClick={saveEdit}>Guardar</button>
+                      </div>
+                    </div>
+                  ) : n.kind === 'checklist' ? (
+                    <div className="note-checklist">
+                      <div className="note-checklist-title-row">
+                        <span className="note-checklist-title">{esc(n.text)}</span>
+                        {badge}
+                      </div>
                   {(n.items || []).map((it) => (
                     <label key={it.id} className={'note-check' + (it.done ? ' done' : '')}>
                       <input type="checkbox" checked={it.done} onChange={() => doToggleItem(n, it.id)} />

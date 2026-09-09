@@ -176,6 +176,13 @@ th,td{text-align:left;vertical-align:middle}
 .note-edit-actions{display:flex;justify-content:flex-end;gap:8px}
 .note-checklist{display:grid;gap:6px}
 .note-checklist-title{font-weight:700;margin-bottom:2px}
+.note-checklist-title-row{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.note-checklist-badge{font-size:11px;font-weight:700;color:#8a84a0;background:#f2eef9;border-radius:999px;padding:2px 9px;white-space:nowrap}
+.note-checklist-badge.all{color:#4d8f5a;background:#e9f5ec}
+.checklist-edit-box{gap:8px}
+.checklist-edit-box .checklist-title-input{margin-bottom:2px}
+.checklist-edit-item{flex:1;min-width:0;border:1px solid #ddd8e5;border-radius:8px;padding:8px 10px;font:600 13px "DM Sans",sans-serif;color:var(--ink)}
+.checklist-edit-item:focus{outline:none;border-color:#a98dde}
 .note-check{display:flex;align-items:center;gap:8px;font-size:14px;padding:3px 0}
 .note-check.done span:first-of-type{text-decoration:line-through;color:var(--muted)}
 .note-check-by{font-size:11px}

@@ -7,7 +7,7 @@ export const USER_KEY = 'mi-tiendita-user';
 // Version de arranque/mostrada hasta que el service worker responde con la
 // suya (ver lib/appVersion.ts): la real es la del sw.js activo (public/sw.js),
 // que refleja lo que esta desplegado de verdad.
-export const APP_VERSION = '1.8.9';
+export const APP_VERSION = '1.8.10';
 
 const DEFAULT_STORE_SVG = encodeURIComponent(
   '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 160"><rect width="160" height="160" rx="34" fill="#f3eaff"/><path d="M29 67h102v61H29z" fill="#fffdf9" stroke="#9b7dcc" stroke-width="5"/><path d="M22 66 36 38h88l14 28z" fill="#ffc7b5" stroke="#9b7dcc" stroke-width="5"/><path d="M40 39h15v28H40zm32 0h16v28H72zm33 0h15v28h-15z" fill="#fffaf3"/><path d="M45 83h30v45H45z" fill="#b9e4d0" stroke="#9b7dcc" stroke-width="4"/><path d="M91 83h24v20H91z" fill="#fff0a9" stroke="#9b7dcc" stroke-width="4"/></svg>',
@@ -612,6 +612,41 @@ export function removeChecklistItem(s: Store, noteId: string, itemId: string): b
   const before = (n.items || []).length;
   n.items = (n.items || []).filter((x) => x.id !== itemId);
   return n.items.length !== before;
+}
+
+// Editar una lista ya publicada: cambia el titulo y recompone la lista de
+// items. Cada item puede traer su id (se conserva el existente, con su
+// estado done/doneBy) o sin id (se crea nuevo). Los ids que no vengan en la
+// lista pasada se quitan. Solo el autor puede hacerlo (misma regla que el
+// texto de una nota normal). El historial registra el titulo anterior cuando
+// este cambia.
+export function editChecklistNote(s: Store, noteId: string, title: string, items: { id?: string; text: string }[]): boolean {
+  const n = findNote(s, noteId);
+  if (!n || n.kind !== 'checklist' || !canEditNote(n)) return false;
+  const t = (title || '').trim();
+  const edited = (items || [])
+    .map((x) => ({ id: x.id, text: (x.text || '').trim() }))
+    .filter((x) => !!x.text);
+  const oldItems = n.items || [];
+  const next: NoteChecklistItem[] = edited.map((x) => {
+    const existing = x.id ? oldItems.find((o) => o.id === x.id) : undefined;
+    if (existing) return { ...existing, text: x.text };
+    return { id: uid(), text: x.text, done: false };
+  });
+  const titleChanged = t !== n.text;
+  const itemsChanged = next.length !== oldItems.length || next.some((x, i) => {
+    const o = oldItems[i];
+    return !o || o.id !== x.id || o.text !== x.text;
+  });
+  if (!titleChanged && !itemsChanged) return false;
+  if (titleChanged) {
+    n.history = n.history || [];
+    n.history.push({ text: n.text, at: n.editedAt || n.createdAt || Date.now() });
+  }
+  n.text = t || 'Lista de objetivos';
+  n.items = next;
+  n.editedAt = Date.now();
+  return true;
 }
 
 // Barrido semanal: se corre solo, del lado del cliente (esta app no tiene

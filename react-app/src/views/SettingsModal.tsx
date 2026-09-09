@@ -29,6 +29,7 @@ export function SettingsModal({ onClose }: { onClose: () => void }) {
   const [cats, setCats] = useState(notifCats());
   const [busy, setBusy] = useState(false);
   const [permDenied, setPermDenied] = useState(false);
+  const [pushState, setPushState] = useState<string | null>(null);
 
   function saveName() {
     syncSetName(name.trim());
@@ -43,6 +44,7 @@ export function SettingsModal({ onClose }: { onClose: () => void }) {
     try {
       if (!on) {
         if (store && store.syncKey) await disablePushForStore(store.syncKey);
+        setPushState(null);
         toast('Notificaciones apagadas en este dispositivo.');
         return;
       }
@@ -52,9 +54,13 @@ export function SettingsModal({ onClose }: { onClose: () => void }) {
         if (pushConfigured()) {
           const r = await enablePushForStore(store.syncKey);
           setPermDenied(r === 'denied');
+          if (r === 'ok') setPushState('Este dispositivo ya está registrado para recibir avisos con la app cerrada.');
+          else if (r === 'unsupported' || r === 'error') setPushState('El aviso de fondo no se pudo registrar en este navegador; el sonido dentro de la app sigue funcionando.');
+          else setPushState(null);
         } else {
           const p = await requestNotifyPermission();
           setPermDenied(p === 'denied');
+          setPushState(p !== 'denied' ? 'Avisos del sistema activados en este dispositivo.' : null);
         }
       }
     } finally {
@@ -95,8 +101,9 @@ export function SettingsModal({ onClose }: { onClose: () => void }) {
             </label>
             <span className="muted">{notif ? 'Activadas' : 'Apagadas'}</span>
           </div>
-          <p className="muted">Sonido y vibración al llegar algo nuevo del equipo. Al activarlas también se intentan los avisos del sistema y del push, aunque la app esté cerrada.</p>
+          <p className="muted">Algo nuevo del equipo: sonido, vibración y aviso aunque la app esté cerrada.</p>
           {permDenied && <p className="muted">El navegador bloqueó los avisos del sistema. Actívalos desde sus ajustes y vuelve aquí.</p>}
+          {pushState && !permDenied && <p className="muted">{pushState}</p>}
           <div className="settings-cats">
             <div className="settings-cats-label">Recibir avisos de:</div>
             {NOTIF_CAT_LABELS.map(({ cat, label }) => {
@@ -111,7 +118,7 @@ export function SettingsModal({ onClose }: { onClose: () => void }) {
               );
             })}
           </div>
-          <p className="muted">Esto aplica también al push: las categorías apagadas no llegan aunque la app esté cerrada.</p>
+          <p className="muted">Las categorías apagadas no llegan, ni siquiera con la app cerrada.</p>
         </div>
       </div>
 

@@ -81,6 +81,30 @@ export async function enablePushForStore(storeKey: string): Promise<'ok' | 'unsu
   }
 }
 
+// Re-registra el token de FCM de ESTE dispositivo SIN pedir permiso de nuevo
+// (solo si ya lo tiene concedido): se llama al abrir la app y al volver a
+// primer plano para que el token no quede perdido si el primer registro
+// fallo (o si el navegador lo rotó). Antes el token solo se registraba al
+// tocar el interruptor de Notificaciones en Opciones; si en ese momento la
+// red o el navegador fallaban, el dispositivo quedaba "sin push" para
+// siempre aunque tuviera el interruptor encendido.
+export async function ensurePushToken(storeKey: string): Promise<'ok' | 'unsupported' | 'denied' | 'error'> {
+  if (!pushConfigured() || !storeKey || !syncReady()) return 'unsupported';
+  if (typeof Notification === 'undefined' || !('serviceWorker' in navigator) || Notification.permission !== 'granted') return 'denied';
+  const m = await getMessagingInstance();
+  if (!m) return 'unsupported';
+  try {
+    const reg = await navigator.serviceWorker.ready;
+    const token = await getToken(m, { vapidKey: VAPID_PUBLIC_KEY, serviceWorkerRegistration: reg });
+    if (!token) return 'error';
+    await savePushToken(storeKey, token);
+    return 'ok';
+  } catch (e) {
+    console.warn('No se pudo re-registrar el aviso push:', e);
+    return 'error';
+  }
+}
+
 // Apaga el aviso push de ESTE dispositivo (interruptor "Notificaciones" en
 // Opciones): se borra el token de FCM local y se quita del mapa del documento
 // de la tienda, asi el Worker deja de rutearle avisos. Best-effort: si no hay
