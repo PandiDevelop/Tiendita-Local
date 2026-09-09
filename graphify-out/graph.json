@@ -1929,7 +1929,7 @@
       "file_type": "code",
       "norm_label": "onfile()",
       "source_file": "react-app/src/views/ProductForm.tsx",
-      "source_location": "L29"
+      "source_location": "L30"
     },
     {
       "id": "react_app_src_views_promoeditor_blank",
@@ -4437,7 +4437,7 @@
       "file_type": "code",
       "norm_label": "save()",
       "source_file": "react-app/src/views/ProductForm.tsx",
-      "source_location": "L34"
+      "source_location": "L35"
     },
     {
       "id": "react_app_src_views_saleregistration_saleregistration_register",
@@ -11113,7 +11113,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "react-app/src/views/ProductForm.tsx",
-      "source_location": "L31",
+      "source_location": "L32",
       "weight": 1.0
     },
     {
@@ -11125,7 +11125,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "react-app/src/views/ProductForm.tsx",
-      "source_location": "L43",
+      "source_location": "L44",
       "weight": 1.0
     },
     {
@@ -11137,7 +11137,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "react-app/src/views/ProductForm.tsx",
-      "source_location": "L55",
+      "source_location": "L56",
       "weight": 1.0
     },
     {
@@ -11149,7 +11149,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "react-app/src/views/ProductForm.tsx",
-      "source_location": "L61",
+      "source_location": "L62",
       "weight": 1.0
     },
     {
@@ -11161,7 +11161,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "react-app/src/views/ProductForm.tsx",
-      "source_location": "L61",
+      "source_location": "L62",
       "weight": 1.0
     },
     {
@@ -11173,7 +11173,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "react-app/src/views/ProductForm.tsx",
-      "source_location": "L63",
+      "source_location": "L64",
       "weight": 1.0
     },
     {
@@ -11185,7 +11185,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "react-app/src/views/ProductForm.tsx",
-      "source_location": "L69",
+      "source_location": "L70",
       "weight": 1.0
     },
     {
@@ -11197,7 +11197,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "react-app/src/views/ProductForm.tsx",
-      "source_location": "L74",
+      "source_location": "L75",
       "weight": 1.0
     },
     {
@@ -11209,7 +11209,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "react-app/src/views/ProductForm.tsx",
-      "source_location": "L74",
+      "source_location": "L75",
       "weight": 1.0
     },
     {
@@ -23130,7 +23130,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "react-app/src/views/ProductForm.tsx",
-      "source_location": "L29",
+      "source_location": "L30",
       "weight": 1.0
     },
     {
@@ -23141,7 +23141,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "react-app/src/views/ProductForm.tsx",
-      "source_location": "L34",
+      "source_location": "L35",
       "weight": 1.0
     },
     {
@@ -23996,5 +23996,5 @@
     }
   ],
   "hyperedges": [],
-  "built_at_commit": "17e014025bfd2b1438be768699f6dc254147e7cb"
+  "built_at_commit": "e8bbf28740dfc942dcfac51fd6ac5eaf5091857a"
 }
