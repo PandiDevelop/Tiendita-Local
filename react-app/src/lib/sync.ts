@@ -1,7 +1,7 @@
 import { initializeApp, FirebaseApp } from 'firebase/app';
 import { initializeFirestore, Firestore, collection, doc, query, onSnapshot, setDoc, getDoc, getDocs, deleteDoc, deleteField } from 'firebase/firestore';
 import type { AppState, Member, Product, Role, Sale, Store } from '../types';
-import { toProductsArr, toSalesArr, toInvLogArr, toNoteLogArr, toNoteBoardArr, mergeItems, mergeInvLog, mergeNoteLog, syncKeyOf, syncClientId, syncName, normalizeStore, DEFAULT_STORE_IMAGE, uid } from './core';
+import { toProductsArr, toSalesArr, toInvLogArr, toNoteLogArr, toNoteBoardArr, mergeItems, mergeInvLog, mergeNoteLog, syncKeyOf, syncClientId, syncName, normalizeStore, DEFAULT_STORE_IMAGE, uid, isNoteDeleted, markNoteDeleted, deletedNoteIdsOf, clearDeletedNotes } from './core';
 import { customAlert, customConfirm } from './dialog';
 
 export { syncClientId, syncName, syncSetName, syncGenPin, syncKeyOf } from './core';
@@ -117,6 +117,19 @@ export async function savePushToken(storeKey: string, token: string): Promise<vo
   if (!syncReady() || !DB) return;
   await setDoc(storeDocRef(storeKey), {
     pushTokens: { [syncClientId()]: { token, updatedAt: Date.now(), name: syncName() } },
+  }, { merge: true });
+}
+
+// Quita el token de FCM de ESTE dispositivo del documento de la tienda. Se
+// usa cuando la persona apaga "Notificaciones" en Opciones: con el token
+// fuera, el Worker de Cloudflare (ver push-worker/) deja de rutearle avisos
+// a este dispositivo, y ademas el token se borra de la instalacion local de
+// Firebase. Es best-effort: si la red falla a mitad, el peor caso es que un
+// push viejo llegue una vez mas.
+export async function removePushToken(storeKey: string): Promise<void> {
+  if (!syncReady() || !DB || !storeKey) return;
+  await setDoc(storeDocRef(storeKey), {
+    pushTokens: { [syncClientId()]: deleteField() },
   }, { merge: true });
 }
 
@@ -353,6 +366,12 @@ export function createSync(
         if (prevNotes.get(n.id) !== j) noteBoardPatch[n.id] = n;
       });
       prevSeenNotes.forEach((id) => { if (!currentNoteIds.has(id)) noteBoardPatch[id] = deleteField(); });
+      // Refuerzo del borrado por el registro local (ver markNoteDeleted en
+      // core.ts): la nota la borro (o dejo expirar) este dispositivo, aunque
+      // prevSeenNotes ya no la mencione (un push exitoso anterior reemplazo
+      // ese set). Se reenvia deleteField para que siga borrada en la nube y
+      // no la resucite otro dispositivo con un tablero viejito.
+      deletedNoteIdsOf(s).forEach((id) => { if (!currentNoteIds.has(id)) noteBoardPatch[id] = deleteField(); });
       if (Object.keys(noteBoardPatch).length) main.noteBoard = noteBoardPatch;
       main.inventory = s.inventory || {};
       if (!s.createdBy || s.createdBy === cid()) { main.name = s.name; main.image = s.image; }
@@ -516,6 +535,8 @@ export function createSync(
     // desactiva la sincronizacion), no en cada re-suscripcion normal - ver
     // el comentario junto a getSeenNoteIds/setSeenNoteIds.
     clearSeenNoteIds(storeId);
+    const s = getState().stores.find((x) => x.id === storeId);
+    if (s) clearDeletedNotes(s);
   }
 
   // Firestore no deja fusionar paths de mapa (noteLog.<id>) cuando el campo es
@@ -615,9 +636,23 @@ export function applyRemote(getState: () => AppState, mutate: (fn: (d: AppState)
       if (remoteNoteBoard) {
         const prevSeenNotes = getSeenNoteIds(storeId);
         const remoteNoteIds = new Set(Object.keys(remoteNoteBoard));
+        // Notas que este cliente ya habia visto y el remoto ya no trae fueron
+        // borradas o expiraron en otro dispositivo: marcarlas como borradas
+        // evita que la migracion de noteLog las devuelva si el tablero llega
+        // a quedar vacio (ver deletedNoteIdsOf en core.ts).
+        (st.noteBoard || []).forEach((n) => {
+          if (prevSeenNotes.has(n.id) && !remoteNoteIds.has(n.id)) markNoteDeleted(st, n.id);
+        });
         const kept = (st.noteBoard || []).filter((n) => remoteNoteIds.has(n.id) || !prevSeenNotes.has(n.id));
         const map = new Map(kept.map((n) => [n.id, n]));
-        toNoteBoardArr(remoteNoteBoard).forEach((n) => map.set(n.id, n));
+        // Una nota que este dispositivo borro (o dejo expirar) NO vuelve,
+        // aunque un snapshot viejito todavia la traiga en la nube (push de
+        // borrado que por algun motivo no llego a aplicarse, tablero stale de
+        // otro dispositivo, etc.): el borrado local gana, siempre.
+        toNoteBoardArr(remoteNoteBoard).forEach((n) => {
+          if (isNoteDeleted(st, n.id)) return;
+          map.set(n.id, n);
+        });
         st.noteBoard = Array.from(map.values());
         const nextSeen = new Set(prevSeenNotes);
         remoteNoteIds.forEach((id) => nextSeen.add(id));

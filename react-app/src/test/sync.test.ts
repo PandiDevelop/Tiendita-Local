@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import type { AppState, Product, Store } from '../types';
-import { makeDraft, normalizeStore, addNote, addNoteMsg, deleteNoteMsg, adoptInvLog, sortByOrder, uid, costFor, priceFor, total, costTotal, profitTotal, setCategoryPricing, groupedByCategory } from '../lib/core';
+import { makeDraft, normalizeStore, addNote, addNoteMsg, deleteNoteMsg, adoptInvLog, sortByOrder, uid, costFor, priceFor, total, costTotal, profitTotal, setCategoryPricing, groupedByCategory, syncClientId } from '../lib/core';
 import { applyRemote } from '../lib/sync';
 
 vi.mock('firebase/app', () => ({ initializeApp: () => ({}) }));
@@ -250,6 +250,37 @@ describe('sync del tablero de notas (noteBoard)', () => {
     expect(b.st.noteBoard.length).toBe(1);
     deleteNoteMsg(a.st, n.id);
     apply(a.st, b);
+    expect(b.st.noteBoard.length).toBe(0);
+  });
+
+  it('borrar la última nota no la resucita desde noteLog al normalizar (bug de resurrección)', () => {
+    const a = device('A');
+    // Tienda del modelo viejo: noteLog con la entrada original (la migracion
+    // la paso al tablero una vez) y el tablero con esa misma nota.
+    const entry = { id: uid(), text: 'Nota vieja del modelo anterior', date: '01/01/2026', time: '10:00', by: syncClientId(), byName: 'Ana' };
+    a.st.noteLog = [entry];
+    a.st.noteBoard = [{ id: entry.id, kind: 'text' as const, text: entry.text, by: entry.by, byName: entry.byName, date: entry.date, time: entry.time, createdAt: Date.now() }];
+
+    deleteNoteMsg(a.st, entry.id);
+    expect(a.st.noteBoard.length).toBe(0);
+    // normalizeStore corre en cada arranque y en cada snapshot remoto
+    // (applyRemote). Antes del fix, dejaba el tablero vacio y la migracion de
+    // noteLog volvia a crear la nota borrada (que luego se re-subia a la nube).
+    normalizeStore(a.st);
+    expect(a.st.noteBoard.length).toBe(0);
+  });
+
+  it('un snapshot viejito que aún trae una nota borrada en este dispositivo no la resucita', () => {
+    const a = device('A');
+    const b = device('B');
+    const n = addNoteMsg(a.st, 'Nota')!;
+    apply(a.st, b); // B la ve
+    deleteNoteMsg(b.st, n.id); // B la borra (es el autor)
+    expect(b.st.noteBoard.length).toBe(0);
+    // Un snapshot de cualquier otro dispositivo que todavia la trae (esa
+    // nota quedo en la nube por un push de borrado que no llego, etc.).
+    applyRemote(() => b.ref, (up) => up(b.ref), b.st.id, { noteBoard: { [n.id]: n }, updatedBy: 'A' });
+    normalizeStore(b.st);
     expect(b.st.noteBoard.length).toBe(0);
   });
 });

@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useStore } from './store';
+import { useStore, type ModalKind } from './store';
 import { DEFAULT_STORE_IMAGE, canManageTeam, esc } from './lib/core';
 import { useAppVersion } from './lib/appVersion';
 import { DialogHost, GearIcon, Image, ImageLightboxHost, MenuIcon, StorefrontIcon, Toast } from './ui';
@@ -32,6 +32,11 @@ export function App() {
 
   function setMenu(v: boolean) { setMenuOpen(v); }
 
+  // Cualquier ventana (Nueva tienda, Unirme, Opciones...) cierra primero el
+  // menu lateral: si no, en celulares el menu del cambio de tienda quedaba
+  // abierto por encima de la ventana recien abierta.
+  function openModal(m: ModalKind) { setMenuOpen(false); setModal(m); }
+
   function selectStore(id: string) {
     replace((d) => { d.activeStoreId = id; d.tab = 'inicio'; });
     setMenu(false);
@@ -57,8 +62,8 @@ export function App() {
             <div className="shop-hero"><StorefrontIcon size={48} /></div>
             <h1>Crea tu primera tienda</h1>
             <p>Organiza productos, promociones y ventas diarias en un solo lugar.</p>
-            <button className="button primary" onClick={() => setModal('newStore')}>Crear mi primera tienda</button>
-            <button className="button secondary" style={{ marginTop: 12 }} onClick={() => setModal('join')}>Unirme a una tienda</button>
+            <button className="button primary" onClick={() => openModal('newStore')}>Crear mi primera tienda</button>
+            <button className="button secondary" style={{ marginTop: 12 }} onClick={() => openModal('join')}>Unirme a una tienda</button>
           </div>
         </main>
         {modals}
@@ -82,17 +87,17 @@ export function App() {
             </button>
           ))}
         </div>
-        <button className="new-store" onClick={() => setModal('newStore')}>＋ Nueva tienda</button>
-        <button className="sync-join" onClick={() => setModal('join')}>Unirme a una tienda</button>
-        <button className="app-settings" onClick={() => setModal('settings')} title="Ajustes de notificaciones, nombre, sonido y versión"><GearIcon size={15} /> Opciones de la app</button>
+        <button className="new-store" onClick={() => openModal('newStore')}>＋ Nueva tienda</button>
+        <button className="sync-join" onClick={() => openModal('join')}>Unirme a una tienda</button>
+        <button className="app-settings" onClick={() => openModal('settings')} title="Nombre, notificaciones, sonido y versión"><GearIcon size={15} /> Opciones</button>
         <div className="side-footer">Tus datos se guardan de forma local<br />en este dispositivo. v{version}</div>
       </div>
       <div className="menu-backdrop" onClick={() => setMenuOpen(false)}></div>
       <main className="content">
         <div className="mobile-head">
           <button className="menu-btn" onClick={() => setMenuOpen(true)} aria-label="Abrir menú"><MenuIcon /></button>
-          <button className="new-store" onClick={() => setModal('newStore')}>＋ Nueva tienda</button>
-          <button className="sync-join" onClick={() => setModal('join')}>Unirme a una tienda</button>
+          <button className="new-store" onClick={() => openModal('newStore')}>＋ Nueva tienda</button>
+          <button className="sync-join" onClick={() => openModal('join')}>Unirme a una tienda</button>
         </div>
         <div className="topline">
           <div className="store-title">

@@ -4,7 +4,7 @@ import { loadState, saveState, syncClientId, NOTE_TTL_MS } from './lib/core';
 import { createSync, applyRemote, activateSync, joinStore, SyncHandle } from './lib/sync';
 import { archiveUpsert, archiveMarkGone, noteToArchiveEntry, replyToArchiveEntry } from './lib/notesArchive';
 import { playNoteChime, showSystemNotification } from './lib/sound';
-import { soundEnabled } from './lib/settings';
+import { notifyEnabled } from './lib/settings';
 import type { Note } from './types';
 
 export type ModalKind = 'none' | 'sale' | 'newProduct' | 'editProduct' | 'newStore' | 'editStore' | 'join' | 'settings';
@@ -200,9 +200,11 @@ export function AppProvider({ children }: { children: ReactNode }) {
     prevNotesRef.current = nextMap;
     prevNotesStoreRef.current = storeId;
     if (notify > 0) {
-      // El sonido es una preferencia de cada dispositivo (ver Opciones); el
-      // aviso visual (toast) y el del sistema se muestran siempre.
-      if (soundEnabled()) playNoteChime();
+      // Las notificaciones son una preferencia de cada dispositivo (el
+      // interruptor "Notificaciones" en Opciones): si se apagan, este
+      // dispositivo deja de sonar y vibrar (playNoteChime hace ambas cosas
+      // - ver sound.ts); el aviso visual (toast) se muestra igual.
+      if (notifyEnabled()) playNoteChime();
       const msg = notify === 1 ? 'Nueva nota del equipo' : notify + ' novedades en Notas';
       // El toast ya enruta el aviso al sistema (ver toast en este archivo),
       // así que aquí solo se suena y se muestra dentro de la app.

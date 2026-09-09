@@ -36,14 +36,26 @@ function tone(ac: AudioContext, freq: number, start: number, dur: number, gain: 
 
 // Campanita de dos notas ascendentes (do -> sol agudo, tipo "ding-ding"
 // suave) con un dejo de armonico arriba para que no suene seco ni a beep de
-// microondas.
+// microondas. Tambien hace una vibracion corta y suave (cuando el telefono la
+// soporta) para que la nota se sienta aunque este en silencio.
 export function playNoteChime(): void {
+  softVibrate();
   const ac = ctx();
   if (!ac) return;
   tone(ac, 783.99, 0, 0.34, 0.09, 'sine');
   tone(ac, 1567.98, 0, 0.34, 0.025, 'sine');
   tone(ac, 1046.5, 0.09, 0.42, 0.1, 'sine');
   tone(ac, 2093, 0.09, 0.42, 0.028, 'sine');
+}
+
+// Vibracion "pulso corto": dos toques muy suaves de ~40ms separados, que en
+// la mano se sienten como un aviso delicado (no como el buzz fuerte de una
+// llamada). navigator.vibrate simplemente no hace nada en los navegadores
+// que no la soportan (iOS), asi que no hay que buscar mas.
+function softVibrate(): void {
+  try {
+    if ('vibrate' in navigator) navigator.vibrate([30, 50, 30]);
+  } catch { /* ignorar */ }
 }
 
 export function notifyPermission(): NotificationPermission | 'unsupported' {

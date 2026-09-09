@@ -1,4 +1,4 @@
-import type { AppState, CategoryPricing, InventoryLogEntry, Note, NoteChecklistItem, NoteEntry, NoteReply, Product, Promo, Role, Sale, SaleDraft, SaleItem, Store, StoreEvent } from '../types';
+import type { AppState, CategoryPricing, InventoryLogEntry, Note, NoteChecklistItem, NoteEntry, NoteReply, Product, Promo, Role, Sale, SaleItem, Store, StoreEvent } from '../types';
 
 export const KEY = 'mi-tiendita-v1';
 export const CLIENT_KEY = 'mi-tiendita-client';
@@ -7,7 +7,7 @@ export const USER_KEY = 'mi-tiendita-user';
 // Version de arranque/mostrada hasta que el service worker responde con la
 // suya (ver lib/appVersion.ts): la real es la del sw.js activo (public/sw.js),
 // que refleja lo que esta desplegado de verdad.
-export const APP_VERSION = '1.8.5';
+export const APP_VERSION = '1.8.6';
 
 const DEFAULT_STORE_SVG = encodeURIComponent(
   '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 160"><rect width="160" height="160" rx="34" fill="#f3eaff"/><path d="M29 67h102v61H29z" fill="#fffdf9" stroke="#9b7dcc" stroke-width="5"/><path d="M22 66 36 38h88l14 28z" fill="#ffc7b5" stroke="#9b7dcc" stroke-width="5"/><path d="M40 39h15v28H40zm32 0h16v28H72zm33 0h15v28h-15z" fill="#fffaf3"/><path d="M45 83h30v45H45z" fill="#b9e4d0" stroke="#9b7dcc" stroke-width="4"/><path d="M91 83h24v20H91z" fill="#fff0a9" stroke="#9b7dcc" stroke-width="4"/></svg>',
@@ -311,18 +311,6 @@ export function itemLabel(i: SaleItem, s: Store): string {
   return p ? p.name : 'Producto eliminado';
 }
 
-// Adds a row for every product and promo (qty 0) so the "Ventas del día" panel
-// shows all items and any device can bump them (sync-safe).
-export function syncSale(sale: Sale, s: Store): Sale {
-  s.products.forEach((p) => {
-    if (!sale.items.some((i) => i.productId === p.id && !i.promotionId)) sale.items.push({ productId: p.id, promotionId: null, qty: 0 });
-    p.promos.forEach((pr) => {
-      if (!sale.items.some((i) => i.productId === p.id && i.promotionId === pr.id)) sale.items.push({ productId: p.id, promotionId: pr.id, qty: 0 });
-    });
-  });
-  return sale;
-}
-
 export function inventorySold(s: Store): Record<string, number> {
   const t: Record<string, number> = {};
   s.sales.forEach((x) => x.items.forEach((i) => { if (i.qty) t[i.productId] = (t[i.productId] || 0) + i.qty; }));
@@ -399,14 +387,67 @@ export function mergeNoteLog(a: NoteEntry[] | undefined, b: NoteEntry[]): NoteEn
 
 export const NOTE_TTL_MS = 7 * 24 * 60 * 60 * 1000; // "a la semana" (ver Notes.tsx)
 
+// Registro de notas borradas o expiradas, por tienda, persistido en
+// localStorage. Sin esto, borrar la ultima nota (o todas) dejaba el tablero
+// vacio y migrateNoteLogToBoard - que corre dentro de normalizeStore en cada
+// snapshot y en cada arranque - volvia a crear esas notas desde noteLog
+// apenas se recargaba la app o llegaba el siguiente snapshot remoto, y de
+// ahi se re-subian a la nube: por eso las notas "resucitaban". Cualquier id
+// anotado aqui nunca vuelve al tablero, ni local ni remotamente.
+const DELETED_NOTES_KEY = 'mt_deleted_notes_';
+const deletedNoteIds = new Map<string, Set<string>>();
+
+function deletedNotesKey(store: Store): string {
+  return store.syncKey || store.id;
+}
+
+function getDeletedNoteIds(store: Store): Set<string> {
+  const k = deletedNotesKey(store);
+  let cur = deletedNoteIds.get(k);
+  if (!cur) {
+    cur = new Set<string>();
+    try {
+      const raw = localStorage.getItem(DELETED_NOTES_KEY + k);
+      const arr = raw ? JSON.parse(raw) : null;
+      if (Array.isArray(arr)) arr.forEach((id) => cur!.add(String(id)));
+    } catch { /* errores de storage no son criticos */ }
+    deletedNoteIds.set(k, cur);
+  }
+  return cur;
+}
+
+export function markNoteDeleted(store: Store, noteId: string): void {
+  if (!noteId) return;
+  const ids = getDeletedNoteIds(store);
+  ids.add(noteId);
+  try { localStorage.setItem(DELETED_NOTES_KEY + deletedNotesKey(store), JSON.stringify(Array.from(ids))); } catch { /* ignorar */ }
+}
+
+export function isNoteDeleted(store: Store, noteId: string): boolean {
+  return getDeletedNoteIds(store).has(noteId);
+}
+
+export function deletedNoteIdsOf(store: Store): string[] {
+  return Array.from(getDeletedNoteIds(store));
+}
+
+export function clearDeletedNotes(store: Store): void {
+  const k = deletedNotesKey(store);
+  deletedNoteIds.delete(k);
+  try { localStorage.removeItem(DELETED_NOTES_KEY + k); } catch { /* ignorar */ }
+}
+
 // Migra las notas del modelo viejo (noteLog, texto plano sin hilos) al
 // tablero nuevo (noteBoard) una sola vez: si el tablero esta vacio pero hay
 // notas viejas, se convierten a Note simples (sin hilo, sin fijar) para no
-// perder lo que el equipo ya habia escrito. noteLog se deja intacto (no se
-// vuelve a usar, pero no hace falta borrarlo).
+// perder lo que el equipo ya habia escrito. NoteLog se deja intacto (no se
+// vuelve a usar, pero no hace falta borrarlo). Las notas borradas o
+// expiradas (ver deletedNoteIds arriba) se excluyen: al fin y al cabo, si
+// alguien las borro es porque ya cumplieron su vida util.
 function migrateNoteLogToBoard(store: Store): void {
-  if (store.noteBoard.length || !store.noteLog.length) return;
-  store.noteBoard = store.noteLog.map((e) => ({
+  const pending = (store.noteLog || []).filter((e) => !!e && !!e.id && !isNoteDeleted(store, e.id));
+  if (store.noteBoard.length || !pending.length) return;
+  store.noteBoard = pending.map((e) => ({
     id: e.id,
     kind: 'text' as const,
     text: e.text,
@@ -491,6 +532,10 @@ export function deleteNoteMsg(s: Store, noteId: string): Note | null {
   const n = findNote(s, noteId);
   if (!n || !canDeleteNote(s, n)) return null;
   s.noteBoard = (s.noteBoard || []).filter((x) => x.id !== noteId);
+  // Queda registrado como borrado (persistido): aunque noteLog todavia tenga
+  // la entrada original, ni migrateNoteLogToBoard ni un snapshot viejito van
+  // a resucitar esta nota en otro arranque. Ver deletedNoteIdsOf arriba.
+  markNoteDeleted(s, noteId);
   return n;
 }
 
@@ -579,6 +624,9 @@ export function sweepExpiredNotes(s: Store): Note[] {
   if (expired.length) {
     const ids = new Set(expired.map((n) => n.id));
     s.noteBoard = board.filter((n) => !ids.has(n.id));
+    // Igual que con un borrado a mano: lo expirado queda registrado para que
+    // la migracion de noteLog no lo devuelva si el tablero queda vacio.
+    expired.forEach((n) => markNoteDeleted(s, n.id));
   }
   return expired;
 }
@@ -802,10 +850,6 @@ export function myRole(s: Store): Role {
 export function canManageTeam(s: Store): boolean {
   const r = myRole(s);
   return r === 'owner' || r === 'admin';
-}
-
-export function saleDraftOf(state: AppState, s: Store): SaleDraft | null {
-  return state.saleDraft && state.saleDraft.storeId === s.id ? state.saleDraft : null;
 }
 
 // Evento actualmente activo (pestana Eventos): activado, con pct > 0 y dentro

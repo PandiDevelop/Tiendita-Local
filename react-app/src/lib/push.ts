@@ -15,9 +15,9 @@
 // (sonido + toast + notificacion del sistema con la pestaña en segundo
 // plano) sigue funcionando exactamente igual que antes, sin depender de
 // esto.
-import { getToken, getMessaging, isSupported, type Messaging } from 'firebase/messaging';
+import { getToken, deleteToken, getMessaging, isSupported, type Messaging } from 'firebase/messaging';
 import { syncClientId } from './core';
-import { firebaseApp, savePushToken, syncReady } from './sync';
+import { firebaseApp, savePushToken, removePushToken, syncReady } from './sync';
 
 // Clave publica VAPID de este proyecto de Firebase. Se genera UNA sola vez
 // en Firebase Console > Configuracion del proyecto > Cloud Messaging >
@@ -78,6 +78,19 @@ export async function enablePushForStore(storeKey: string): Promise<'ok' | 'unsu
     console.warn('No se pudo activar el aviso push:', e);
     return 'error';
   }
+}
+
+// Apaga el aviso push de ESTE dispositivo (interruptor "Notificaciones" en
+// Opciones): se borra el token de FCM local y se quita del mapa del documento
+// de la tienda, asi el Worker deja de rutearle avisos. Best-effort: si no hay
+// conexion o Firebase no esta inicializado, simplemente no pasa nada.
+export async function disablePushForStore(storeKey: string): Promise<void> {
+  if (!storeKey) return;
+  try {
+    const m = await getMessagingInstance();
+    if (m) { try { await deleteToken(m); } catch { /* token local irrelevante */ } }
+  } catch { /* no se pudo ni mirar messaging */ }
+  try { await removePushToken(storeKey); } catch { /* si la red falla, el peor caso es un push de mas */ }
 }
 
 // Le pide al Worker que avise (via FCM) a los demas dispositivos de la
