@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useStore } from '../store';
-import { DEFAULT_PRODUCT_IMAGE, DEFAULT_PRODUCT_TAG, compressImage, storeCats, adoptInvLog, setCategoryPricing, insertCatSorted, toEditablePromos, fromEditablePromos, uid } from '../lib/core';
+import { DEFAULT_PRODUCT_IMAGE, DEFAULT_PRODUCT_TAG, compressImage, storeCats, adoptInvLog, setCategoryPricing, insertCatSorted, toEditablePromos, fromEditablePromos, uid, syncClientId, syncName } from '../lib/core';
+import { notifyStorePush } from '../lib/push';
 import type { EditablePromo } from '../lib/core';
 import { ImagePicker, Modal, CategorySuggest, SuggestInput } from '../ui';
 import { PromoEditor } from './PromoEditor';
@@ -57,7 +58,7 @@ export function ProductForm({ editingId, onClose }: { editingId?: string; onClos
         const t = st.products.find((x) => x.id === editingId);
         if (t) Object.assign(t, { name: nm, price: pr, cost: cst, image: image || DEFAULT_PRODUCT_IMAGE, promos: promoList, category: catVal, tag: tagVal || undefined });
       } else {
-        st.products.push({ id: uid(), name: nm, price: pr, cost: cst, image: image || DEFAULT_PRODUCT_IMAGE, promos: promoList, category: catVal, tag: tagVal || undefined });
+        st.products.push({ id: uid(), by: syncClientId(), name: nm, price: pr, cost: cst, image: image || DEFAULT_PRODUCT_IMAGE, promos: promoList, category: catVal, tag: tagVal || undefined });
       }
       if (shouldSeedPricing) setCategoryPricing(st, catVal, pr, cst, promoList);
       if (!editingId && qty.trim() !== '') {
@@ -69,6 +70,9 @@ export function ProductForm({ editingId, onClose }: { editingId?: string; onClos
         }
       }
     });
+    if (!editingId && s.syncKey) {
+      notifyStorePush(s.syncKey, syncName() + ' creó el producto "' + nm + '"', catVal ? 'Categoría: ' + catVal : 'Nuevo producto en el catálogo', 'producto');
+    }
     onClose();
     toast('Producto guardado.');
   }

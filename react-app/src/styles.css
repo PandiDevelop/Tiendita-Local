@@ -186,8 +186,10 @@ th,td{text-align:left;vertical-align:middle}
 .note-history-when{font-size:11px;margin-bottom:3px}
 .note-history-text{font-size:14px;line-height:1.4;white-space:pre-wrap;overflow-wrap:break-word}
 .note-history-current{background:#f3ffe9;border-color:#cde7bd}
-.thread-backdrop{position:fixed;inset:0;background:rgba(42,37,54,.28);z-index:3;display:flex;justify-content:flex-end}
-.thread-panel{width:min(440px,100%);height:100%;background:white;box-shadow:-14px 0 40px rgba(73,63,99,.14);display:flex;flex-direction:column}
+.thread-backdrop{position:fixed;inset:0;background:rgba(42,37,54,.45);z-index:5;display:grid;place-items:center;padding:18px;animation:thread-fade .18s ease}
+.thread-panel{width:min(560px,100%);max-height:min(640px,88vh);min-height:240px;background:white;border-radius:20px;box-shadow:var(--shadow);display:flex;flex-direction:column;overflow:hidden;animation:thread-pop .18s ease}
+@keyframes thread-fade{from{opacity:0}to{opacity:1}}
+@keyframes thread-pop{from{transform:scale(.97);opacity:0}to{transform:scale(1);opacity:1}}
 .thread-head{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:16px 18px;border-bottom:1px solid var(--line)}
 .thread-head b{font:700 17px Fraunces,serif}
 .thread-body{flex:1;overflow-y:auto;padding:16px 18px;display:grid;gap:12px;align-content:start}
@@ -195,7 +197,7 @@ th,td{text-align:left;vertical-align:middle}
 .thread-replies{display:grid;gap:10px;padding-left:12px;border-left:2px solid #ece6f7}
 .thread-compose{display:flex;gap:8px;padding:13px 18px;border-top:1px solid var(--line)}
 .thread-compose textarea{flex:1;padding:10px 12px;border:1px solid #ddd8e5;border-radius:10px;font:14px "DM Sans",sans-serif;color:var(--ink);resize:vertical;min-height:40px}
-@media(max-width:760px){.thread-panel{border-radius:0}.thread-body{padding:14px}}
+@media(max-width:760px){.thread-panel{border-radius:18px}.thread-body{padding:14px}}
 
 
 
@@ -366,3 +368,8 @@ td.cat-bar .product-name .prod-tag{margin-left:auto;flex:0 0 auto}
 .settings-row{display:flex;align-items:center;gap:10px}
 .settings-row input{flex:1;padding:11px 12px;border:1px solid #ddd8e5;border-radius:10px;color:var(--ink)}
 .settings-version{margin:0 0 6px}
+.settings-cats{margin-top:14px;display:grid;gap:8px}
+.settings-cats-label{font-size:12px;font-weight:700;color:#8a84a0;margin-bottom:2px}
+.settings-cat{display:flex;align-items:center;justify-content:space-between;gap:10px;background:#faf8fd;border:1px solid #efeaf7;border-radius:12px;padding:8px 12px;font-size:14px;color:var(--ink);transition:opacity .15s}
+.settings-cat.off{opacity:.55}
+.switch input:disabled+span{opacity:.45}

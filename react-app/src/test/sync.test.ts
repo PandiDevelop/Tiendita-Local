@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import type { AppState, Product, Store } from '../types';
-import { makeDraft, normalizeStore, addNote, addNoteMsg, deleteNoteMsg, adoptInvLog, sortByOrder, uid, costFor, priceFor, total, costTotal, profitTotal, setCategoryPricing, groupedByCategory, syncClientId } from '../lib/core';
+import { makeDraft, normalizeStore, addNote, addNoteMsg, deleteNoteMsg, adoptInvLog, sortByOrder, uid, costFor, priceFor, total, costTotal, profitTotal, setCategoryPricing, groupedByCategory, syncClientId, toggleNotePin } from '../lib/core';
 import { applyRemote } from '../lib/sync';
 
 vi.mock('firebase/app', () => ({ initializeApp: () => ({}) }));
@@ -528,5 +528,21 @@ describe('createSync push() incremental y con reintento', () => {
     expect(mainCall).toBeDefined();
     // El documento principal NO tiene products embebidos
     expect(mainCall!.data.products).toBeUndefined();
+  });
+});
+
+describe('fijar una nota guarda cuando se fijo (pinnedAt)', () => {
+  it('al fijar queda arriba (pinnedAt) y al desfijar se suelta', () => {
+    const dev = device('A');
+    const note = addNoteMsg(dev.st, 'Nota a fijar');
+    expect(note).not.toBeNull();
+    if (!note) return;
+    expect(note.pinned ?? false).toBe(false);
+    expect(toggleNotePin(dev.st, note.id)).toBe(true);
+    expect(note.pinned).toBe(true);
+    expect(typeof note.pinnedAt).toBe('number');
+    toggleNotePin(dev.st, note.id);
+    expect(note.pinned).toBe(false);
+    expect(note.pinnedAt).toBe(undefined);
   });
 });

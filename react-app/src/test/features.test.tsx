@@ -19,6 +19,39 @@ afterEach(() => {
   cleanup();
 });
 
+// Va primero a propósito: este test depende de que nadie haya cacheado el id
+// de cliente todavía. syncClientId() (lib/core.ts) cachea en una variable de
+// módulo la primera vez que se llama, y los tests de abajo (p.ej. guardar un
+// producto nuevo en ProductForm, que ahora firma el producto con "by") ya lo
+// cachean; si este test corriera después, "tú" no se marcaría.
+describe('Empleados: lista del equipo con su rol', () => {
+  it('muestra cada miembro con su rol correspondiente y marca "tú"', () => {
+    localStorage.setItem(CLIENT_KEY, 'owner-1');
+    const store = makeStore({
+      createdBy: 'owner-1',
+      members: {
+        'owner-1': { name: 'Ana', role: 'owner', joinedAt: Date.now() },
+        'admin-1': { name: 'Luis', role: 'admin', joinedAt: Date.now() },
+        'worker-1': { name: 'Sofía', role: 'worker', joinedAt: Date.now() },
+      },
+    });
+    const { container } = render(<TestProvider initialState={makeState(store)}><Employees /></TestProvider>);
+
+    function roleOf(name: string): string | null | undefined {
+      const row = Array.from(container.querySelectorAll('.team-row')).find((r) => r.querySelector('.team-name')?.textContent?.startsWith(name));
+      expect(row).toBeTruthy();
+      return row?.querySelector('.role-pill')?.textContent;
+    }
+
+    expect(roleOf('Ana')).toBe('Dueño');
+    expect(roleOf('Luis')).toBe('Administrador');
+    expect(roleOf('Sofía')).toBe('Trabajador');
+
+    const anaRow = Array.from(container.querySelectorAll('.team-row')).find((r) => r.querySelector('.team-name')?.textContent?.startsWith('Ana'));
+    expect(anaRow?.querySelector('.team-me')?.textContent).toBe('tú');
+  });
+});
+
 describe('Icono de configuración de categoría (tuerca, no moneda)', () => {
   const headerGear = (container: HTMLElement) =>
     container.querySelector('.cat-head .actions button[title="Opciones"]') as HTMLButtonElement | null;
@@ -148,34 +181,6 @@ describe('Tag opcional del producto', () => {
     const { container } = setup(store, bare.id);
     const tagInput = fieldControl(/Etiqueta \/ tag/, container);
     expect(tagInput.value).toBe('');
-  });
-});
-
-describe('Empleados: lista del equipo con su rol', () => {
-  it('muestra cada miembro con su rol correspondiente y marca "tú"', () => {
-    localStorage.setItem(CLIENT_KEY, 'owner-1');
-    const store = makeStore({
-      createdBy: 'owner-1',
-      members: {
-        'owner-1': { name: 'Ana', role: 'owner', joinedAt: Date.now() },
-        'admin-1': { name: 'Luis', role: 'admin', joinedAt: Date.now() },
-        'worker-1': { name: 'Sofía', role: 'worker', joinedAt: Date.now() },
-      },
-    });
-    const { container } = render(<TestProvider initialState={makeState(store)}><Employees /></TestProvider>);
-
-    function roleOf(name: string): string | null | undefined {
-      const row = Array.from(container.querySelectorAll('.team-row')).find((r) => r.querySelector('.team-name')?.textContent?.startsWith(name));
-      expect(row).toBeTruthy();
-      return row?.querySelector('.role-pill')?.textContent;
-    }
-
-    expect(roleOf('Ana')).toBe('Dueño');
-    expect(roleOf('Luis')).toBe('Administrador');
-    expect(roleOf('Sofía')).toBe('Trabajador');
-
-    const anaRow = Array.from(container.querySelectorAll('.team-row')).find((r) => r.querySelector('.team-name')?.textContent?.startsWith('Ana'));
-    expect(anaRow?.querySelector('.team-me')?.textContent).toBe('tú');
   });
 });
 

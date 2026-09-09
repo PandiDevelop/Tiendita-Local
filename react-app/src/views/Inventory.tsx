@@ -4,6 +4,7 @@ import { useStore } from '../store';
 import { DEFAULT_PRODUCT_IMAGE, esc, inventorySold, adoptInvLog, syncName, groupedByCategory, storeCats, reorderCategoryProducts, shortTag } from '../lib/core';
 import { customConfirm } from '../lib/dialog';
 import { GearMenu, Image, Modal, PencilIcon, TruckIcon } from '../ui';
+import { notifyStorePush } from '../lib/push';
 import { CategoryModal } from './CategoryModal';
 import type { Product } from '../types';
 
@@ -147,6 +148,7 @@ export function Inventory() {
       const st = x.stores.find((y) => y.id === s.id)!;
       adoptInvLog(st, cargo.p.id, q, cargoSupplier, cargo.who);
     });
+    if (s.syncKey) notifyStorePush(s.syncKey, syncName() + ' recibió un cargamento', (cargo.p.name || 'Producto') + ' · ' + q + (q === 1 ? ' unidad' : ' unidades'), 'cargamento');
     toast('Cargamento registrado.');
     setCargo(null);
     setCargoSupplier('');

@@ -43,6 +43,11 @@ export interface Product {
   // Etiqueta opcional (tag). Se sugiere un valor por defecto global ('general')
   // al crear el producto, pero se puede cambiar o dejar vacio. No es obligatorio.
   tag?: string;
+  // Quien lo creo (syncClientId). Solo sirve para silenciar en este mismo
+  // dispositivo el aviso de "producto nuevo" cuando lo agrega uno mismo; sin
+  // esto, cada producto que uno crea le sonaria/le llegararia el aviso a si
+  // mismo al volver de la nube.
+  by?: string;
   // Posicion dentro de su categoria (menor = mas arriba). Se asigna al
   // arrastrar en el Catalogo; viaja como un campo mas del producto para que
   // el orden SI se sincronice entre dispositivos (a diferencia de la
@@ -167,8 +172,19 @@ export interface Note {
   editedAt?: number;
   history?: NoteEditRecord[];
   pinned?: boolean;
+  // Instante (Date.now) en que se fijo: las fijadas van primero en el feed,
+  // la mas recientemente fijada arriba. Sin esto el orden de las fijadas
+  // seria el de creacion, no el de fijacion.
+  pinnedAt?: number;
   replies?: NoteReply[];
 }
+
+// Categoria de aviso para el aviso del sistema/push y la campanita: cada
+// dispositivo decide en Opciones cuales quiere mantener activas. El Worker de
+// Cloudflare (push-worker/) lee la preferencia de cada destinatario antes de
+// mandarle un aviso FCM, para que apagar una categoria de verdad lo silencie
+// en ese dispositivo (incluso con la app cerrada).
+export type NotifCat = 'nota' | 'venta' | 'producto' | 'cargamento';
 
 // Entrada del log descargable (ver lib/notesArchive.ts): se guarda SOLO en
 // este dispositivo (localStorage, no viaja por Firestore) para no inflar el

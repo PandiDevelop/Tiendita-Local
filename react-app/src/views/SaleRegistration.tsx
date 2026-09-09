@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { useStore } from '../store';
-import { DEFAULT_PRODUCT_IMAGE, activeEvent, catLabel, findActivePromo, money, saleCatsOf, saleUnitPrice, shortTag, sortProducts, syncName, today, uid } from '../lib/core';
+import { DEFAULT_PRODUCT_IMAGE, activeEvent, catLabel, findActivePromo, money, saleCatsOf, saleUnitPrice, shortTag, sortProducts, syncClientId, syncName, today, uid } from '../lib/core';
+import { notifyStorePush } from '../lib/push';
 import { Dropdown } from '../Dropdown';
 import { CloseIcon, Image, Modal, ReceiptIcon, UndoIcon } from '../ui';
 import type { Product } from '../types';
@@ -156,9 +157,10 @@ export function SaleRegistration({ onClose }: { onClose: () => void }) {
     const now = new Date();
     replace((x) => {
       const st = x.stores.find((y) => y.id === s.id)!;
-      st.sales.push({ id: uid(), date: today(), time: now.toTimeString().slice(0, 5), employee: emp, items: JSON.parse(JSON.stringify(items)), closed: false, event: ev ? ev.name : undefined });
+      st.sales.push({ id: uid(), by: syncClientId(), date: today(), time: now.toTimeString().slice(0, 5), employee: emp, items: JSON.parse(JSON.stringify(items)), closed: false, event: ev ? ev.name : undefined });
       x.saleDraft = null;
     });
+    if (s.syncKey) notifyStorePush(s.syncKey, syncName() + ' registró una venta', items.length + (items.length === 1 ? ' producto' : ' productos') + ' · ' + money(total), 'venta');
     onClose();
     toast('Venta registrada.');
   }

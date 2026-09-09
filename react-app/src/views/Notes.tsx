@@ -56,7 +56,7 @@ function Composer({ mode, onDone }: { mode: 'text' | 'checklist'; onDone: () => 
     const t = text.trim();
     if (!t) return;
     replace((d) => { const st = d.stores.find((x) => x.id === s.id)!; addNoteMsg(st, t); });
-    if (s.syncKey) notifyStorePush(s.syncKey, syncName() + ' publicó una nota', t);
+    if (s.syncKey) notifyStorePush(s.syncKey, syncName() + ' publicó una nota', t, 'nota');
     setText('');
     taRef.current?.focus();
     onDone();
@@ -74,7 +74,7 @@ function Composer({ mode, onDone }: { mode: 'text' | 'checklist'; onDone: () => 
     const all = pending ? [...items, pending] : items;
     if (!title.trim() && !all.length) return;
     replace((d) => { const st = d.stores.find((x) => x.id === s.id)!; addChecklistNote(st, title, all); });
-    if (s.syncKey) notifyStorePush(s.syncKey, syncName() + ' publicó una lista de objetivos', title.trim() || (all.length + ' objetivo' + (all.length === 1 ? '' : 's')));
+    if (s.syncKey) notifyStorePush(s.syncKey, syncName() + ' publicó una lista de objetivos', title.trim() || (all.length + ' objetivo' + (all.length === 1 ? '' : 's')), 'nota');
     setTitle('');
     setItems([]);
     setDraftItem('');
@@ -190,7 +190,7 @@ function ThreadPanel({ noteId, onClose, openHistory }: { noteId: string; onClose
     const t = text.trim();
     if (!t) return;
     replace((d) => { const st = d.stores.find((x) => x.id === s.id)!; addNoteReply(st, noteId, t); });
-    if (s.syncKey) notifyStorePush(s.syncKey, myName + ' respondió en un hilo', t);
+    if (s.syncKey) notifyStorePush(s.syncKey, myName + ' respondió en un hilo', t, 'nota');
     setText('');
   }
 
@@ -288,13 +288,18 @@ export function Notes() {
   const [notifyState, setNotifyState] = useState(notifyPermission());
   const [checklistDraft, setChecklistDraft] = useState<Record<string, string>>({});
 
-  // Orden mas reciente arriba. El desempate por id deja el orden EXACTO e
-  // igual en todos los dispositivos aunque dos notas compartan createdAt
-  // (notas migradas de noteLog, o creadas en el mismo instante): asi el
-  // orden no depende de la posicion local de cada arreglo al fusionar.
-  const notes: Note[] = (s.noteBoard || [])
-    .slice()
-    .sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0) || b.id.localeCompare(a.id));
+  // Orden del feed: las FIJADAS van primero, y entre ellas la mas
+  // recientemente fijada arriba (pinnedAt). Despues las demas como siempre:
+  // mas reciente arriba, con desempate por id para dejar el orden EXACTO e
+  // igual en todos los dispositivos aunque dos notas compartan createdAt.
+  function pinOrder(a: Note, b: Note): number {
+    let pa = -1;
+    let pb = -1;
+    if (a.pinned) pa = a.pinnedAt || a.createdAt || 0;
+    if (b.pinned) pb = b.pinnedAt || b.createdAt || 0;
+    return (pb - pa) || (b.createdAt || 0) - (a.createdAt || 0) || b.id.localeCompare(a.id);
+  }
+  const notes: Note[] = (s.noteBoard || []).slice().sort(pinOrder);
   const visible = notes.filter((n) => (feed === 'notas' ? n.kind !== 'checklist' : n.kind === 'checklist'));
 
   // Barrido de notas vencidas (no fijadas, con mas de una semana): se hace

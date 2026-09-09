@@ -18,6 +18,7 @@
 import { getToken, deleteToken, getMessaging, isSupported, type Messaging } from 'firebase/messaging';
 import { syncClientId } from './core';
 import { firebaseApp, savePushToken, removePushToken, syncReady } from './sync';
+import type { NotifCat } from '../types';
 
 // Clave publica VAPID de este proyecto de Firebase. Se genera UNA sola vez
 // en Firebase Console > Configuracion del proyecto > Cloud Messaging >
@@ -99,14 +100,17 @@ export async function disablePushForStore(storeKey: string): Promise<void> {
 // esta desplegado, lo que sea). Un push que no llega no debe interrumpir a
 // quien esta publicando la nota; el sonido/toast local de este mismo
 // dispositivo y el resto de la sincronizacion ya funcionaron indepen-
-// dientemente de esto.
-export function notifyStorePush(storeKey: string, title: string, body: string): void {
+// dientemente de esto. "cat" (categoria) viaja en el payload para que el
+// Worker respete las preferencias de cada destinatario (que tipos de aviso
+// quiere, ver NotifCat en types.ts y pushPrefs en sync.ts): si el otro
+// dispositivo apago esa categoria en Opciones, el Worker le saltea el aviso.
+export function notifyStorePush(storeKey: string, title: string, body: string, cat: NotifCat = 'nota'): void {
   if (!pushConfigured() || !storeKey) return;
   try {
     fetch(PUSH_WORKER_URL + '/notify', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ storeKey, title, body, excludeClientId: syncClientId(), link: location.href }),
+      body: JSON.stringify({ storeKey, title, body, cat, excludeClientId: syncClientId(), link: location.href }),
       keepalive: true,
     }).catch(() => { /* sin conexion o Worker caido: se ignora, no es critico */ });
   } catch {

@@ -7,7 +7,7 @@ export const USER_KEY = 'mi-tiendita-user';
 // Version de arranque/mostrada hasta que el service worker responde con la
 // suya (ver lib/appVersion.ts): la real es la del sw.js activo (public/sw.js),
 // que refleja lo que esta desplegado de verdad.
-export const APP_VERSION = '1.8.6';
+export const APP_VERSION = '1.8.7';
 
 const DEFAULT_STORE_SVG = encodeURIComponent(
   '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 160"><rect width="160" height="160" rx="34" fill="#f3eaff"/><path d="M29 67h102v61H29z" fill="#fffdf9" stroke="#9b7dcc" stroke-width="5"/><path d="M22 66 36 38h88l14 28z" fill="#ffc7b5" stroke="#9b7dcc" stroke-width="5"/><path d="M40 39h15v28H40zm32 0h16v28H72zm33 0h15v28h-15z" fill="#fffaf3"/><path d="M45 83h30v45H45z" fill="#b9e4d0" stroke="#9b7dcc" stroke-width="4"/><path d="M91 83h24v20H91z" fill="#fff0a9" stroke="#9b7dcc" stroke-width="4"/></svg>',
@@ -545,6 +545,9 @@ export function toggleNotePin(s: Store, noteId: string): boolean {
   const n = findNote(s, noteId);
   if (!n || !canManageNotes(s)) return false;
   n.pinned = !n.pinned;
+  // Al fijar se guarda el instante para que las fijadas vayan arriba en
+  // orden de fijacion (la ultima fijada encima); al desfijar se suelta.
+  n.pinnedAt = n.pinned ? Date.now() : undefined;
   return true;
 }
 

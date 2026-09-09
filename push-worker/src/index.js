@@ -114,22 +114,51 @@ async function getAccessToken(env) {
 
 // Lee stores/{storeKey} por la API REST de Firestore (GET simple, sin
 // autenticacion - las reglas de este proyecto ya dejan leer sin login,
-// igual que hace el resto de la app) y devuelve {clientId: token, ...}.
-async function readPushTokens(projectId, storeKey) {
+// igual que hace el resto de la app) y devuelve:
+//   tokens: {clientId: token, ...}
+//   prefs:  {clientId: {cat: bool, ...}, ...} - que TIPOS de aviso quiere
+//           cada dispositivo (ver pushPrefs en react-app/src/lib/sync.ts y
+//           NotifCat en types.ts). Si un dispositivo no tiene prefs o no
+//           menciona una categoria, se asume que la quiere ACTIVA.
+async function readStorePushData(projectId, storeKey) {
   const url = 'https://firestore.googleapis.com/v1/projects/' + projectId + '/databases/(default)/documents/stores/' + encodeURIComponent(storeKey);
   const resp = await fetch(url);
-  if (!resp.ok) return {};
+  if (!resp.ok) return { tokens: {}, prefs: {} };
   const doc = await resp.json();
   const fields = doc.fields || {};
   const pt = fields.pushTokens && fields.pushTokens.mapValue && fields.pushTokens.mapValue.fields;
-  if (!pt) return {};
-  const out = {};
-  for (const clientId of Object.keys(pt)) {
-    const entryFields = pt[clientId] && pt[clientId].mapValue && pt[clientId].mapValue.fields;
-    const token = entryFields && entryFields.token && entryFields.token.stringValue;
-    if (token) out[clientId] = token;
+  const tokens = {};
+  if (pt) {
+    for (const clientId of Object.keys(pt)) {
+      const entryFields = pt[clientId] && pt[clientId].mapValue && pt[clientId].mapValue.fields;
+      const token = entryFields && entryFields.token && entryFields.token.stringValue;
+      if (token) tokens[clientId] = token;
+    }
   }
-  return out;
+  const pf = fields.pushPrefs && fields.pushPrefs.mapValue && fields.pushPrefs.mapValue.fields;
+  const prefs = {};
+  if (pf) {
+    for (const clientId of Object.keys(pf)) {
+      const entryFields = pf[clientId] && pf[clientId].mapValue && pf[clientId].mapValue.fields;
+      const catPrefs = {};
+      if (entryFields) {
+        for (const c of Object.keys(entryFields)) {
+          const bv = entryFields[c] && entryFields[c].booleanValue;
+          if (typeof bv === 'boolean') catPrefs[c] = bv;
+        }
+      }
+      prefs[clientId] = catPrefs;
+    }
+  }
+  return { tokens, prefs };
+}
+
+// El destinatario quiere esta categoria? Una preferencia ausente equivale a
+// "si": solo saltea el aviso cuando el dispositivo apago explicitamente esa
+// categoria en Opciones (pushPrefs en sync.ts).
+function wantsCat(prefs, clientId, cat) {
+  const p = prefs && prefs[clientId];
+  return !p || p[cat] !== false;
 }
 
 async function sendToToken(accessToken, projectId, token, title, body, link) {
@@ -168,6 +197,7 @@ export default {
     const msgBody = (body && body.body) || '';
     const excludeClientId = body && body.excludeClientId;
     const link = body && body.link;
+    const cat = (body && body.cat) || 'nota';
     if (!storeKey || !title) return jsonResponse({ ok: false, error: 'falta storeKey o title' }, 400);
 
     if (!env.FIREBASE_SERVICE_ACCOUNT) {
@@ -175,8 +205,12 @@ export default {
     }
 
     try {
-      const tokensByClient = await readPushTokens(env.FIREBASE_PROJECT_ID, storeKey);
-      const targets = Object.entries(tokensByClient).filter(function (e) { return e[0] !== excludeClientId; });
+      const storeData = await readStorePushData(env.FIREBASE_PROJECT_ID, storeKey);
+      const tokensByClient = storeData.tokens;
+      const targets = Object.entries(tokensByClient).filter(function (e) {
+        const clientId = e[0];
+        return clientId !== excludeClientId && wantsCat(storeData.prefs, clientId, cat);
+      });
       if (!targets.length) return jsonResponse({ ok: true, sent: 0, failed: 0, total: 0 });
 
       const accessToken = await getAccessToken(env);

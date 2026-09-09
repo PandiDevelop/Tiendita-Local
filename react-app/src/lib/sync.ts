@@ -1,6 +1,6 @@
 import { initializeApp, FirebaseApp } from 'firebase/app';
 import { initializeFirestore, Firestore, collection, doc, query, onSnapshot, setDoc, getDoc, getDocs, deleteDoc, deleteField } from 'firebase/firestore';
-import type { AppState, Member, Product, Role, Sale, Store } from '../types';
+import type { AppState, Member, NotifCat, Product, Role, Sale, Store } from '../types';
 import { toProductsArr, toSalesArr, toInvLogArr, toNoteLogArr, toNoteBoardArr, mergeItems, mergeInvLog, mergeNoteLog, syncKeyOf, syncClientId, syncName, normalizeStore, DEFAULT_STORE_IMAGE, uid, isNoteDeleted, markNoteDeleted, deletedNoteIdsOf, clearDeletedNotes } from './core';
 import { customAlert, customConfirm } from './dialog';
 
@@ -130,6 +130,21 @@ export async function removePushToken(storeKey: string): Promise<void> {
   if (!syncReady() || !DB || !storeKey) return;
   await setDoc(storeDocRef(storeKey), {
     pushTokens: { [syncClientId()]: deleteField() },
+    pushPrefs: { [syncClientId()]: deleteField() },
+  }, { merge: true });
+}
+
+// Guarda en el documento de la tienda que TIPOS de aviso quiere este
+// dispositivo (mapa por syncClientId, igual que pushTokens/members). El
+// Worker de Cloudflare (push-worker/) lo lee antes de mandarle un aviso FCM:
+// apagar una categoria en Opciones hace que el Worker le saltee ese aviso,
+// de modo que el silencio aplica incluso con la app cerrada - no solo al
+// sonido local de adentro. Best-effort: si la red falla, el peor caso es que
+// un aviso de una categoria apagada llegue una vez de mas.
+export async function setPushPrefs(storeKey: string, prefs: Partial<Record<NotifCat, boolean>>): Promise<void> {
+  if (!syncReady() || !DB || !storeKey) return;
+  await setDoc(storeDocRef(storeKey), {
+    pushPrefs: { [syncClientId()]: prefs },
   }, { merge: true });
 }
 

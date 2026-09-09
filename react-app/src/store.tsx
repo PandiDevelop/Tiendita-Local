@@ -1,10 +1,10 @@
 import { createContext, useCallback, useContext, useEffect, useRef, ReactNode, useState } from 'react';
-import type { AppState, Store, Tab } from './types';
+import type { AppState, InventoryLogEntry, Product, Sale, Store, Tab } from './types';
 import { loadState, saveState, syncClientId, NOTE_TTL_MS } from './lib/core';
 import { createSync, applyRemote, activateSync, joinStore, SyncHandle } from './lib/sync';
 import { archiveUpsert, archiveMarkGone, noteToArchiveEntry, replyToArchiveEntry } from './lib/notesArchive';
 import { playNoteChime, showSystemNotification } from './lib/sound';
-import { notifyEnabled } from './lib/settings';
+import { notifyEnabled, notifCatEnabled } from './lib/settings';
 import type { Note } from './types';
 
 export type ModalKind = 'none' | 'sale' | 'newProduct' | 'editProduct' | 'newStore' | 'editStore' | 'join' | 'settings';
@@ -201,15 +201,71 @@ export function AppProvider({ children }: { children: ReactNode }) {
     prevNotesStoreRef.current = storeId;
     if (notify > 0) {
       // Las notificaciones son una preferencia de cada dispositivo (el
-      // interruptor "Notificaciones" en Opciones): si se apagan, este
-      // dispositivo deja de sonar y vibrar (playNoteChime hace ambas cosas
-      // - ver sound.ts); el aviso visual (toast) se muestra igual.
-      if (notifyEnabled()) playNoteChime();
+      // interruptor "Notificaciones" en Opciones, y ademas por categoria):
+      // si se apagan, este dispositivo deja de sonar y vibrar (playNoteChime
+      // hace ambas cosas - ver sound.ts); el aviso visual (toast) se muestra
+      // igual.
+      if (notifyEnabled() && notifCatEnabled('nota')) playNoteChime();
       const msg = notify === 1 ? 'Nueva nota del equipo' : notify + ' novedades en Notas';
       // El toast ya enruta el aviso al sistema (ver toast en este archivo),
       // así que aquí solo se suena y se muestra dentro de la app.
       toast(msg);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [active]);
+
+  // Venta, producto nuevo o cargamento de OTRO dispositivo (la tienda
+  // activa): campanita + toast cuando uno tiene la app abierta, en cualquier
+  // pestana - igual que las notas de arriba. El push real (Worker + FCM,
+  // ver push.ts) cubre los demas dispositivos con la app cerrada; esto solo
+  // avisa en la pantalla de quienes estan viendo la app ahora.
+  const prevSalesRef = useRef<Map<string, Sale>>(new Map());
+  const prevProductsRef = useRef<Map<string, Product>>(new Map());
+  const prevInvRef = useRef<Map<string, InventoryLogEntry>>(new Map());
+  const prevBizStoreRef = useRef<string | null>(null);
+  useEffect(() => {
+    const s = active;
+    if (!s) return;
+    const storeId = s.id;
+    const firstLook = prevBizStoreRef.current !== storeId;
+    const prevSales = prevSalesRef.current;
+    const prevProducts = prevProductsRef.current;
+    const prevInv = prevInvRef.current;
+    const nextSales = new Map<string, Sale>();
+    const nextProducts = new Map<string, Product>();
+    const nextInv = new Map<string, InventoryLogEntry>();
+    let rawVentas = 0;
+    let rawProductos = 0;
+    let rawCargamentos = 0;
+    (s.sales || []).forEach((x) => { if (!prevSales.has(x.id)) rawVentas++; nextSales.set(x.id, x); });
+    (s.products || []).forEach((p) => { if (!prevProducts.has(p.id)) rawProductos++; nextProducts.set(p.id, p); });
+    (s.invLog || []).forEach((e) => { if (!prevInv.has(e.id)) rawCargamentos++; nextInv.set(e.id, e); });
+    prevSalesRef.current = nextSales;
+    prevProductsRef.current = nextProducts;
+    prevInvRef.current = nextInv;
+    prevBizStoreRef.current = storeId;
+    if (firstLook || (!rawVentas && !rawProductos && !rawCargamentos)) return;
+    // Recien aca se lee el id de este dispositivo: es algo que solo importa
+    // cuando de verdad aparecio algo nuevo, y keeps syncClientId() fuera de
+    // este efecto en los montajes tranquilos de cada tienda.
+    const me = syncClientId();
+    let ventas = 0;
+    let productos = 0;
+    let cargamentos = 0;
+    (s.sales || []).forEach((x) => { if (!prevSales.has(x.id) && x.by && x.by !== me) ventas++; });
+    (s.products || []).forEach((p) => { if (!prevProducts.has(p.id) && p.by && p.by !== me) productos++; });
+    (s.invLog || []).forEach((e) => { if (!prevInv.has(e.id) && e.by && e.by !== me && e.qty > 0) cargamentos++; });
+    if (!ventas && !productos && !cargamentos) return;
+    const parts: string[] = [];
+    if (ventas && notifCatEnabled('venta')) parts.push(ventas === 1 ? 'Venta nueva' : ventas + ' ventas nuevas');
+    if (productos && notifCatEnabled('producto')) parts.push(productos === 1 ? 'Producto nuevo' : productos + ' productos nuevos');
+    if (cargamentos && notifCatEnabled('cargamento')) parts.push(cargamentos === 1 ? 'Cargamento recibido' : cargamentos + ' cargamentos recibidos');
+    if (!parts.length) return;
+    // parts ya solo contiene las categorías que este dispositivo tiene
+    // activas (notifCatEnabled), así que aquí solo decide el interruptor
+    // general de notificaciones.
+    if (notifyEnabled()) playNoteChime();
+    toast(parts.join(' · '));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [active]);
 
