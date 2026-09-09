@@ -69,7 +69,7 @@ export function History() {
   return (
     <div className="panel">
       <div className="panel-head">
-        <div><h2>Historial de ventas</h2><p className="muted">Cada venta se guarda con fecha, hora y el empleado que la registró.</p></div>
+        <div><h2>Historial de ventas</h2><p className="muted">Cada venta con su fecha, hora y quién la registró.</p></div>
         <button className="button secondary" onClick={() => exportExcel(s.sales)}>⇩ Exportar a Excel</button>
       </div>
       {!dates.length ? <div className="empty"><div className="emoji">

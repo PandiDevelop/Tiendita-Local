@@ -32,7 +32,7 @@ export function JoinModal({ onClose }: { onClose: () => void }) {
       <div className="field"><label>¿Tienes el código de tu tienda?</label>
         <input id="sync-pin" maxLength={30} placeholder="Código compartido" value={pin} onChange={(e) => setPin(e.target.value)} />
       </div>
-      <p className="muted">Pega el código que te dio quien creó la tienda. Sus productos y ventas aparecerán aquí.</p>
+      <p className="muted">Pega el código que te dieron y verás la tienda aquí.</p>
       <div className="modal-actions">
         <button className="button secondary" onClick={onClose}>Cancelar</button>
         <button className="button primary" onClick={submit} disabled={busy}>{busy ? 'Vinculando…' : 'Vincular'}</button>

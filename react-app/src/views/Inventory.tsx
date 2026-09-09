@@ -2,7 +2,8 @@ import { useState } from 'react';
 import type { PointerEvent as ReactPointerEvent } from 'react';
 import { useStore } from '../store';
 import { DEFAULT_PRODUCT_IMAGE, esc, inventorySold, adoptInvLog, syncName, groupedByCategory, storeCats, reorderCategoryProducts, shortTag } from '../lib/core';
-import { GearIcon, Image, Modal } from '../ui';
+import { customConfirm } from '../lib/dialog';
+import { GearMenu, Image, Modal } from '../ui';
 import { CategoryModal } from './CategoryModal';
 import type { Product } from '../types';
 
@@ -53,6 +54,19 @@ export function Inventory() {
 
   function cur(p: Product): number {
     return Math.round(base[p.id] || 0);
+  }
+
+  // Eliminar categoria desde su menú de tuerca: los productos pasan a
+  // "Sin categoría" (no se borran) para no perderlos.
+  async function removeCategory(cat: string) {
+    if (!(await customConfirm(`¿Eliminar la categoría "${cat}"? Sus productos pasarán a "Sin categoría".`))) return;
+    replace((d) => {
+      const st = d.stores.find((x) => x.id === s.id)!;
+      st.categories = (st.categories || []).filter((c) => c !== cat);
+      st.products.forEach((t) => { if ((t.category || '').trim() === cat) t.category = ''; });
+      if (st.categoryPricing) delete st.categoryPricing[cat];
+    });
+    toast('Categoría eliminada.');
   }
 
   // Arrastrar para reordenar produtos dentro de una categoria (mismo orden
@@ -145,7 +159,7 @@ export function Inventory() {
   return (
     <div className="panel">
       <div className="panel-head">
-        <div><h2>Inventario</h2><p className="muted">Repón y ajusta existencias aquí. Las ventas las descuentan solas.</p></div>
+        <div><h2>Inventario</h2><p className="muted">Controla lo que hay en bodega. Las ventas descuentan solas.</p></div>
         <div className="inv-modes">
           <button type="button" className={'inv-mode' + (mode === 'stock' ? ' on' : '')} onClick={() => setMode('stock')}>Existencias</button>
           <button type="button" className={'inv-mode' + (mode === 'log' ? ' on' : '')} onClick={() => setMode('log')}>Historial de cambios</button>
@@ -180,7 +194,10 @@ export function Inventory() {
                     <span className="muted">· {g.list.length} producto{g.list.length === 1 ? '' : 's'}</span>
                   </button>
                   {editable && (
-                    <button className="icon-btn" title="Configurar la categoría (precio, costo y promociones por defecto)" onClick={() => setCatModal(g.name)}><GearIcon /></button>
+                    <GearMenu items={[
+                      { label: 'Editar categoría', onClick: () => setCatModal(g.name) },
+                      { label: 'Eliminar categoría', danger: true, onClick: () => void removeCategory(g.name) },
+                    ]} />
                   )}
                 </div>
                 {open && (
@@ -240,7 +257,7 @@ export function Inventory() {
               <input className="qty-input" type="number" min={0} step={1} inputMode="numeric" value={edit.qty} onChange={(e) => setEdit({ ...edit, qty: e.target.value })} />
               <button type="button" className="qty-btn" onClick={() => setEdit({ ...edit, qty: String(parseQty(edit.qty) + 1) })}>+</button>
             </div>
-            <p className="muted">Escribe el total de unidades adquiridas (no lo que queda tras las ventas).</p>
+            <p className="muted">El total que compraste o produjiste.</p>
           </div>
           <div className="field"><label>Quién hace el ajuste</label>
             <input maxLength={40} placeholder="Tu nombre" value={edit.who} onChange={(e) => setEdit({ ...edit, who: e.target.value })} />
@@ -264,7 +281,7 @@ export function Inventory() {
               <input className="qty-input" type="number" min={0} step={1} inputMode="numeric" value={cargo.qty} onChange={(e) => setCargo({ ...cargo, qty: e.target.value })} />
               <button type="button" className="qty-btn" onClick={() => setCargo({ ...cargo, qty: String(parseQty(cargo.qty) + 1) })}>+</button>
             </div>
-            <p className="muted">Cantidad que llega ahora; se suma a las existencias.</p>
+            <p className="muted">Llega ahora y se suma a las existencias.</p>
           </div>
           <div className="field"><label>Distribuidor / proveedor</label>
             <input maxLength={60} placeholder="Ej. Distribuidora del Sur" value={cargoSupplier} onChange={(e) => setCargoSupplier(e.target.value)} />

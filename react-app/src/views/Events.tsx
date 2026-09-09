@@ -69,12 +69,12 @@ export function Events() {
       <div className="panel-head">
         <div>
           <h2>Eventos</h2>
-          <p className="muted">Un evento aplica su descuento a todas las ventas mientras esté activo. Las ventas hechas durante un evento quedan marcadas con su nombre en Ganancias.</p>
+          <p className="muted">Aplica un descuento a todas las ventas mientras esté activo.</p>
         </div>
         {!adding && <button className="button primary" onClick={openAdding}>＋ Nuevo evento</button>}
       </div>
 
-      {events.length === 0 && !adding && <div className="notice">No hay eventos todavía. Crea uno para promocionar todo durante una fecha especial.</div>}
+      {events.length === 0 && !adding && <div className="notice">No hay eventos. Crea uno para promocionar todo.</div>}
       {adding && (
         <div className="ev-card">
           <div className="ev-top">
@@ -114,7 +114,10 @@ export function Events() {
       {events.map((e) => {
         const on = (e.active && (!e.start || today() >= e.start) && (!e.end || today() <= e.end)) || false;
         const fin = (!!e.end && e.end < today()) || (!e.active && !!e.end);
-        const badge = e.id === (act && act.id) ? 'Aplicándose ahora' : on ? 'Aplica ahora' : fin ? 'Finalizado' : !e.active ? 'Pausado' : 'No aplica hoy';
+        // Finalizado: ya no se edita ni aparece su configuración; solo queda
+        // en el historial de eventos.
+        if (fin) return null;
+        const badge = e.id === (act && act.id) ? 'Aplicándose ahora' : on ? 'Aplica ahora' : !e.active ? 'Pausado' : 'No aplica hoy';
         return (
           <div key={e.id} className={'ev-card' + (e.id === (act && act.id) ? ' active' : '')}>
             <div className="ev-top">

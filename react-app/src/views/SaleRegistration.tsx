@@ -109,7 +109,13 @@ export function SaleRegistration({ onClose }: { onClose: () => void }) {
   }
 
   function addLine(p: Product) {
-    const next = recomputeAutos([...lines, { pid: p.id, price: p.price, cost: p.cost ?? 0, qty: 1 }]);
+    // Si el mismo producto ya está en la venta, se suma una unidad más a esa
+    // línea en vez de agregar otra instancia; los precios automáticos se
+    // recalculan (las promos dependen del total de la categoría).
+    const i = lines.findIndex((l) => l.pid === p.id);
+    const next = i >= 0
+      ? recomputeAutos(lines.map((l, n) => n === i ? { ...l, qty: l.qty + 1 } : l))
+      : recomputeAutos([...lines, { pid: p.id, price: p.price, cost: p.cost ?? 0, qty: 1 }]);
     setLines(next);
     persist({ lines: next }, false);
   }
@@ -161,7 +167,7 @@ export function SaleRegistration({ onClose }: { onClose: () => void }) {
     return (
       <Modal onClose={onClose}>
         <h2>Registrar una venta</h2>
-        <div className="empty"><div className="emoji">🧾</div><b>Aún no hay productos para vender</b><p>Agrega productos al catálogo para poder registrarlos.</p></div>
+        <div className="empty"><div className="emoji">🧾</div><b>Aún no hay productos para vender</b><p>Agrega productos para empezar.</p></div>
         <div className="modal-actions"><span style={{ flex: 1 }}></span><button className="button primary" onClick={onClose}>Cerrar</button></div>
       </Modal>
     );
@@ -238,7 +244,7 @@ export function SaleRegistration({ onClose }: { onClose: () => void }) {
               <input type="search" inputMode="search" placeholder="Buscar producto…" value={query} onChange={(e) => setQuery(e.target.value)} />
             </div>
             {!filtered.length ? (
-              <div className="notice">{q ? 'Sin productos que coincidan con la búsqueda en las categorías elegidas.' : 'Sin productos todavía.'}</div>
+              <div className="notice">{q ? 'Sin resultados.' : 'Sin productos todavía.'}</div>
             ) : (
               <div className="sale-products">
                 <div className="sale-products-scroll" ref={pagerRef} onScroll={onPagerScroll}>

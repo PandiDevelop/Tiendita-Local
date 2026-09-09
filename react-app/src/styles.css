@@ -211,6 +211,9 @@ td.cat-bar .product-name .prod-tag{margin-left:auto;flex:0 0 auto}
 .action-menu button{display:block;width:100%;text-align:left;padding:8px 12px;border-radius:8px;background:none;border:none;cursor:pointer;font-weight:600;font-size:13px;color:#4b4358}
 .action-menu button:hover{background:#f6f1fd}
 .action-menu button.danger{color:#c15555}
+/* Si el boton esta en la parte baja de la pantalla, el menu se abre hacia
+   arriba para que las dos opciones se vean completas. */
+.action-menu.up{top:auto;bottom:calc(100% + 5px)}
 /* Fondo invisible del menu de la tuerca (clase propia para NO pisar el
    menu-backdrop del menu movil del sidebar). */
 .gear-backdrop{position:fixed;inset:0;z-index:39}
@@ -231,6 +234,20 @@ td.cat-bar .product-name .prod-tag{margin-left:auto;flex:0 0 auto}
 /* Caja de la categoria encima del nombre en las tarjetas de producto de
    Registrar venta (punto 8). */
 .prod-cat{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:#8f73bf;background:#f1ebff;border-radius:999px;padding:2px 9px;align-self:flex-start;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+
+/* Campo de categoria con sugerencias de las ya registradas: se eligen con un
+   clic o se escribe un nombre nuevo. */
+.cat-suggest{position:relative}
+.cat-suggest .cat-suggest-list{position:absolute;z-index:50;left:0;right:0;top:calc(100% + 4px);background:#fff;border:1px solid #ddd8e5;border-radius:11px;box-shadow:0 6px 18px rgba(24,20,32,.14);padding:5px;display:grid;gap:2px;max-height:220px;overflow-y:auto}
+.cat-suggest .cat-suggest-list button{display:block;width:100%;text-align:left;padding:8px 12px;border-radius:8px;background:none;border:none;cursor:pointer;font-weight:600;font-size:13px;color:#4b4358}
+.cat-suggest .cat-suggest-list button:hover{background:#f6f1fd}
+
+/* Ventanas de edicion: que quepan en la pantalla sin desbordes ni scroll
+   largo; el contenido sobrante si acaso usa el scroll interno del modal. */
+.modal{max-height:calc(100dvh - 26px);overflow-y:auto}
+.modal > h2{margin:0 0 14px}
+.modal .field{margin:12px 0}
+.modal .modal-actions{margin-top:16px}
 
 /* Categorias seleccionadas en Registrar venta: chips con una X para quitarlas
    y un desplegable para anadir mas (punto 3). */

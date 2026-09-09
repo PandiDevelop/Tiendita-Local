@@ -3,7 +3,7 @@ import { useStore } from '../store';
 import { DEFAULT_PRODUCT_IMAGE, DEFAULT_PRODUCT_TAG, compressImage, storeCats, adoptInvLog, setCategoryPricing, insertCatSorted, toEditablePromos, fromEditablePromos, uid } from '../lib/core';
 import type { EditablePromo } from '../lib/core';
 import { Dropdown } from '../Dropdown';
-import { ImagePicker, Modal } from '../ui';
+import { ImagePicker, Modal, SuggestInput, CategorySuggest } from '../ui';
 import { PromoEditor } from './PromoEditor';
 
 export function ProductForm({ editingId, onClose }: { editingId?: string; onClose: () => void }) {
@@ -24,6 +24,9 @@ export function ProductForm({ editingId, onClose }: { editingId?: string; onClos
   const [tag, setTag] = useState(editingId ? (p?.tag || '') : (p?.tag || DEFAULT_PRODUCT_TAG));
 
   const showCatNew = cat === '__new__';
+  // Tags que ya usan otros productos, para sugerirlos al escribir (se puede
+  // escribir uno nuevo o elegir uno existente con un clic).
+  const existingTags = [...new Set(s.products.map((x) => (x.tag || '').trim()).filter(Boolean))];
 
   function onFile(f: File | undefined) {
     if (!f) return;
@@ -87,21 +90,23 @@ export function ProductForm({ editingId, onClose }: { editingId?: string; onClos
             setPromos(toEditablePromos(cp.promos));
           }
         }} />
-        {showCatNew && <div className="field" style={{ marginTop: 8 }}><input maxLength={30} placeholder="Nombre de la nueva categoría" value={catNew} onChange={(e) => setCatNew(e.target.value)} /></div>}
+        {showCatNew && <div className="field" style={{ marginTop: 8 }}>
+          <CategorySuggest cats={storeCats(s)} value={catNew} placeholder="Nombre de la nueva categoría" onChange={setCatNew} onPick={(c) => { setCat(c); setCatNew(''); }} />
+        </div>}
       </div>
       <div className="field"><label>Nombre del producto</label>
         <input maxLength={80} placeholder="Ej. Caja de galletas" value={name} onChange={(e) => setName(e.target.value)} />
       </div>
       <div className="field"><label>Etiqueta / tag <span className="muted">(opcional)</span></label>
-        <input maxLength={30} placeholder="Ej. general" value={tag} onChange={(e) => setTag(e.target.value)} />
-        <p className="muted">Una etiqueta corta para agrupar productos. No es obligatoria; se sugiere <code>general</code> al crear, pero puedes cambiarla o dejarla vacía.</p>
+        <SuggestInput options={existingTags} value={tag} onChange={setTag} onPick={setTag} placeholder="Ej. general" maxLength={30} />
+        <p className="muted">Etiqueta corta para agrupar productos (opcional).</p>
       </div>
       <div className="field"><label>Precio del producto</label>
         <input min={0} type="number" placeholder="0" value={price} onChange={(e) => setPrice(e.target.value)} />
       </div>
       <div className="field"><label>Costo del producto <span className="muted">(opcional)</span></label>
         <input min={0} type="number" placeholder="0" value={cost} onChange={(e) => setCost(e.target.value)} />
-        <p className="muted">Lo que te cuesta producirlo o comprarlo. Se usa para calcular la ganancia en la sección de Ganancias.</p>
+        <p className="muted">Lo que te cuesta. Se usa para la ganancia.</p>
       </div>
       <div className="field"><label>Imagen del producto</label>
         <ImagePicker id="product-image" src={image || DEFAULT_PRODUCT_IMAGE} cls="image-preview product-preview" hint="Foto o logo opcional del producto." onFile={onFile} />
@@ -109,10 +114,10 @@ export function ProductForm({ editingId, onClose }: { editingId?: string; onClos
       {!editingId && (
         <div className="field"><label>Cantidad en inventario</label>
           <input min={0} step={1} type="number" inputMode="numeric" placeholder="0" value={qty} onChange={(e) => setQty(e.target.value)} />
-          <p className="muted">Se guarda como existencias del producto y se descuenta solo con cada venta. Despues podras ajustarla desde Catalogo o Inventario.</p>
+          <p className="muted">Existencias iniciales. Se descuentan con cada venta.</p>
         </div>
       )}
-      <div className="field"><label>Promociones <span className="muted">(se aplican solas en la venta según su condición)</span></label>
+      <div className="field"><label>Promociones <span className="muted">(se aplican solas al vender)</span></label>
         <PromoEditor promos={promos} onChange={setPromos} priceHint={price} />
       </div>
       <div className="modal-actions">

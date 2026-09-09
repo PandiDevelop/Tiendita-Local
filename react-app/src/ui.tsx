@@ -1,4 +1,4 @@
-import { ReactNode, useEffect, useState } from 'react';
+import { ReactNode, useEffect, useRef, useState } from 'react';
 import { DialogRequest, customConfirm, resolveDialog, subscribeDialog } from './lib/dialog';
 import { closeLightbox, openLightbox, subscribeLightbox } from './lib/lightbox';
 
@@ -125,4 +125,77 @@ export function GearIcon({ size = 19 }: { size?: number }) {
       <path d="M19.4 15a1.7 1.7 0 0 0 .34 1.87l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.7 1.7 0 0 0-1.87-.34 1.7 1.7 0 0 0-1.03 1.56V21a2 2 0 1 1-4 0v-.09a1.7 1.7 0 0 0-1.1-1.56 1.7 1.7 0 0 0-1.87.34l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.7 1.7 0 0 0 .34-1.87 1.7 1.7 0 0 0-1.55-1.03H3a2 2 0 1 1 0-4h.09a1.7 1.7 0 0 0 1.55-1.1 1.7 1.7 0 0 0-.34-1.87l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.7 1.7 0 0 0 1.87.34h.01a1.7 1.7 0 0 0 1.03-1.55V3a2 2 0 1 1 4 0v.09a1.7 1.7 0 0 0 1.03 1.55 1.7 1.7 0 0 0 1.87-.34l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.7 1.7 0 0 0-.34 1.87v.01a1.7 1.7 0 0 0 1.55 1.03H21a2 2 0 1 1 0 4h-.09a1.7 1.7 0 0 0-1.55 1.03z" />
     </svg>
   );
+}
+
+// Menú desplegable de la tuerca: Editar y Eliminar (productos y categorías).
+// Se abre hacia arriba si el botón está en la parte baja de la pantalla, para
+// que siempre se vea completo; no usa fondo bloqueante, así que la página
+// sigue haciendo scroll. Se cierra al tocar fuera o elegir una opción.
+export function GearMenu({ items }: { items: { label: string; danger?: boolean; onClick: () => void }[] }) {
+  const [open, setOpen] = useState(false);
+  const [up, setUp] = useState(false);
+  const wrapRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (!open) return;
+    const onDown = (e: MouseEvent) => { if (wrapRef.current && !wrapRef.current.contains(e.target as Node)) setOpen(false); };
+    document.addEventListener('mousedown', onDown);
+    return () => document.removeEventListener('mousedown', onDown);
+  }, [open]);
+  return (
+    <div className="actions" ref={wrapRef}>
+      <button type="button" className="icon-btn" title="Opciones"
+        onClick={(ev) => {
+          const r = ev.currentTarget.getBoundingClientRect();
+          setUp(r.bottom + 110 > window.innerHeight);
+          setOpen((o) => !o);
+        }}>
+        <GearIcon />
+      </button>
+      {open && (
+        <div className={'action-menu' + (up ? ' up' : '')}>
+          {items.map((it) => (
+            <button key={it.label} type="button" className={it.danger ? 'danger' : ''}
+              onClick={() => { setOpen(false); it.onClick(); }}>{it.label}</button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// Campo de texto con sugerencias de valores ya registrados (categorías, tags…):
+// se tocan para elegirlos con un clic, o se puede escribir un valor nuevo.
+export function SuggestInput({ options, value, onChange, onPick, placeholder, maxLength = 30 }: {
+  options: string[]; value: string; onChange: (v: string) => void; onPick: (v: string) => void; placeholder?: string; maxLength?: number;
+}) {
+  const [open, setOpen] = useState(false);
+  const wrapRef = useRef<HTMLDivElement>(null);
+  const q = ((value || '').trim()).toLowerCase();
+  const shown = options.filter((c) => c.trim().toLowerCase() !== q && c.trim().toLowerCase().includes(q)).slice(0, 6);
+  useEffect(() => {
+    if (!open) return;
+    const onDown = (e: MouseEvent) => { if (wrapRef.current && !wrapRef.current.contains(e.target as Node)) setOpen(false); };
+    document.addEventListener('mousedown', onDown);
+    return () => document.removeEventListener('mousedown', onDown);
+  }, [open]);
+  return (
+    <div className="cat-suggest" ref={wrapRef}>
+      <input maxLength={maxLength} placeholder={placeholder} value={value}
+        onChange={(e) => { onChange(e.target.value); setOpen(true); }}
+        onFocus={() => setOpen(true)} />
+      {open && shown.length > 0 && (
+        <div className="cat-suggest-list">
+          {shown.map((c) => (
+            <button type="button" key={c} onMouseDown={(e) => { e.preventDefault(); setOpen(false); onPick(c); }}>{c}</button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+export function CategorySuggest({ cats, value, onChange, onPick, placeholder, maxLength = 30 }: {
+  cats: string[]; value: string; onChange: (v: string) => void; onPick: (v: string) => void; placeholder?: string; maxLength?: number;
+}) {
+  return <SuggestInput options={cats} value={value} onChange={onChange} onPick={onPick} placeholder={placeholder} maxLength={maxLength} />;
 }

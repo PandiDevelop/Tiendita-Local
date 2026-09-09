@@ -77,7 +77,7 @@ export function Employees() {
 
   return (
     <div className="panel">
-      <div className="panel-head"><div><h2>Registro de empleados</h2><p className="muted">El equipo vinculado a esta tienda y el producido de cada empleado según el nombre con el que registró sus ventas.</p></div></div>
+      <div className="panel-head"><div><h2>Registro de empleados</h2><p className="muted">Equipo y cuánto vendió cada quien.</p></div></div>
 
       {teamRows.length ? (
         <div className="team-list">

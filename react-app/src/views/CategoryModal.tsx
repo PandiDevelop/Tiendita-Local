@@ -97,13 +97,13 @@ export function CategoryModal({ mode, catName, onClose, onSaved }: Props) {
       </div>
       <div className="field"><label>Precio {mode === 'new' ? '(opcional)' : ''}</label>
         <input min={0} type="number" placeholder="0" value={price} onChange={(e) => setPrice(e.target.value)} />
-        <p className="muted">Se aplica a todos los productos de esta categoría. Cada producto se puede editar después para tener un precio distinto.</p>
+        <p className="muted">Precio por defecto de esta categoría.</p>
       </div>
       <div className="field"><label>Costo <span className="muted">(opcional)</span></label>
         <input min={0} type="number" placeholder="0" value={cost} onChange={(e) => setCost(e.target.value)} />
-        <p className="muted">También se copia a todos los productos de la categoría; cada uno se puede editar después para tener un costo distinto.</p>
+        <p className="muted">Costo por defecto de esta categoría.</p>
       </div>
-      <div className="field"><label>Promociones <span className="muted">(se aplican solas en la venta según su condición)</span></label>
+      <div className="field"><label>Promociones <span className="muted">(se aplican solas al vender)</span></label>
         <PromoEditor promos={promos} onChange={setPromos} priceHint={price} />
       </div>
       <div className="modal-actions">

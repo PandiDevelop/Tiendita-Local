@@ -129,7 +129,7 @@ export function StoreModal({ editing, onClose }: { editing?: boolean; onClose: (
               </div>
               <div><div className="label" style={{ margin: '0 0 6px' }}>Código de sincronización</div>
                 <div className="pin-box"><strong style={{ letterSpacing: '1.5px' }}>{esc(s.syncPin || s.syncKey)}</strong></div>
-                <p className="muted">Comparte este código con tu equipo. Los cambios se ven en tiempo real.</p>
+                <p className="muted">Los que tengan este código ven la tienda.</p>
               </div>
               {canManage && <>
                 <div className="label" style={{ margin: '2px 0 6px' }}>Trabajadores vinculados</div>
@@ -157,7 +157,7 @@ export function StoreModal({ editing, onClose }: { editing?: boolean; onClose: (
                     })}
                   </div>
                 ) : <p className="muted">Aún no hay trabajadores vinculados.</p>}
-                {!isOwner && <p className="muted">Como administrador puedes ver el equipo y quitar trabajadores. Solo el dueño puede dar o quitar el permiso de administrador.</p>}
+                {!isOwner && <p className="muted">Como administrador ves el equipo; solo el dueño cambia roles.</p>}
               </>}
             </div>
           </div>
@@ -175,7 +175,7 @@ export function StoreModal({ editing, onClose }: { editing?: boolean; onClose: (
               <div><div className="label" style={{ margin: '0 0 6px' }}>Código de vinculación</div>
                 <input id="sync-pin" maxLength={30} placeholder="Código de vinculación" value={pin} onChange={(e) => setPin(e.target.value)} />
               </div>
-              <p className="muted" style={{ marginTop: 4 }}>Quienes tengan el mismo código verán y editarán esta tienda en tiempo real.</p>
+              <p className="muted" style={{ marginTop: 4 }}>Los del mismo código ven y editan la tienda.</p>
             </div>
           </div>
           {s && isOwner && <button className="button secondary" style={{ width: '100%', marginTop: 10 }} onClick={activateSyncNow}>Activar sincronización</button>}
@@ -184,7 +184,7 @@ export function StoreModal({ editing, onClose }: { editing?: boolean; onClose: (
       {s && isOwner ? (
         <div className="field danger-field">
           <div className="danger-zone">
-            <span><b className="danger-t">Borrar tienda</b><br /><span className="muted">Elimina esta tienda del dispositivo{s.syncKey ? ' y de todos los que tienen el código' : ''}. No se puede deshacer.</span></span>
+            <span><b className="danger-t">Borrar tienda</b><br /><span className="muted">Se borra y no se puede deshacer.</span></span>
             <button className="button danger" onClick={del}>Borrar</button>
           </div>
         </div>

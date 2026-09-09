@@ -41,7 +41,7 @@ export function Notes() {
   return (
     <div className="panel">
       <div className="panel-head">
-        <div><h2>Notas del equipo</h2><p className="muted">Escribe una nota abajo y quedará en el tablero para todos los vinculados a la tienda.</p></div>
+        <div><h2>Notas del equipo</h2><p className="muted">Notas para todos los del equipo.</p></div>
       </div>
       <div className="notes-compose">
         <textarea

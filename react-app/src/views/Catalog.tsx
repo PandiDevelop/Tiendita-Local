@@ -3,7 +3,7 @@ import type { PointerEvent as ReactPointerEvent } from 'react';
 import { useStore } from '../store';
 import { money, esc, inventorySold, reorderCategoryProducts, groupedByCategory, storeCats, shortTag, promoText, DEFAULT_PRODUCT_IMAGE } from '../lib/core';
 import { customConfirm } from '../lib/dialog';
-import { GearIcon, Image } from '../ui';
+import { GearMenu, Image } from '../ui';
 import { CategoryModal } from './CategoryModal';
 import type { Product } from '../types';
 
@@ -14,8 +14,6 @@ export function Catalog() {
   const inv = s.inventory || {};
   // Categoria cuya configuracion se abre con la tuerca del encabezado.
   const [catModal, setCatModal] = useState<{ mode: 'new' | 'edit'; name: string } | null>(null);
-  // Menú que abre la tuerca de cada producto: Editar o Eliminar.
-  const [menuPid, setMenuPid] = useState<string | null>(null);
 
   // Orden de categorias/productos mientras se arrastran (solo visual hasta
   // soltar); se limpia al terminar el arrastre, momento en el que se guarda
@@ -62,13 +60,26 @@ export function Catalog() {
   // Eliminar producto desde el menú de la tuerca: sale del catálogo y del
   // inventario (sus ventas viejas se siguen viendo como "Producto eliminado").
   async function removeProduct(p: Product) {
-    if (!(await customConfirm(`¿Eliminar el producto "${p.name}" de la tienda?`))) return;
+    if (!(await customConfirm(`¿Eliminar el producto "${p.name}"?`))) return;
     replace((d) => {
       const st = d.stores.find((x) => x.id === s.id)!;
       st.products = st.products.filter((x) => x.id !== p.id);
       if (st.inventory) delete st.inventory[p.id];
     });
     toast('Producto eliminado.');
+  }
+
+  // Eliminar categoria desde su menú de tuerca: los productos pasan a
+  // "Sin categoría" (no se borran) para no perderlos.
+  async function removeCategory(cat: string) {
+    if (!(await customConfirm(`¿Eliminar la categoría "${cat}"? Sus productos pasarán a "Sin categoría".`))) return;
+    replace((d) => {
+      const st = d.stores.find((x) => x.id === s.id)!;
+      st.categories = (st.categories || []).filter((c) => c !== cat);
+      st.products.forEach((t) => { if ((t.category || '').trim() === cat) t.category = ''; });
+      if (st.categoryPricing) delete st.categoryPricing[cat];
+    });
+    toast('Categoría eliminada.');
   }
 
   // Arrastrar para reordenar categorias (agarrando el ⠿ del encabezado).
@@ -151,7 +162,7 @@ export function Catalog() {
 
   return (
     <div className="panel">
-      <div className="panel-head"><div><h2>Catálogo de productos</h2><p className="muted">Precios, existencias y promociones de {esc(s.name)}, organizados por categoría. Usa ⠿ para arrastrar y cambiar el orden.</p></div></div>
+      <div className="panel-head"><div><h2>Catálogo de productos</h2><p className="muted">Productos por categoría con su precio y existencias. Arrastra ⠿ para ordenar.</p></div></div>
       <div className="cat-actions">
         <button className="button primary" onClick={addCategory}>＋ Añadir categoría</button>
         <div className="cat-divider"></div>
@@ -174,7 +185,10 @@ export function Catalog() {
                 <span className="muted">· {g.list.length} producto{g.list.length === 1 ? '' : 's'}</span>
               </button>
               {editable && (
-                <button className="icon-btn" title="Configurar la categoría (precio, costo y promociones por defecto)" onClick={() => editCategoryPrice(g.name)}><GearIcon /></button>
+                <GearMenu items={[
+                  { label: 'Editar categoría', onClick: () => editCategoryPrice(g.name) },
+                  { label: 'Eliminar categoría', danger: true, onClick: () => void removeCategory(g.name) },
+                ]} />
               )}
             </div>
             {open && (
@@ -191,16 +205,10 @@ export function Catalog() {
                           <td>{money(p.price)}</td><td>{avail}</td>
                           <td>{p.promos.length ? <div className="promo-stack">{p.promos.map((x) => <span className="promotion" key={x.id}>{promoText(x)}</span>)}</div> : <span className="muted">—</span>}</td>
                           <td><div className="actions">
-                          <button className="icon-btn" title="Menú del producto" onClick={() => setMenuPid(menuPid === p.id ? null : p.id)}><GearIcon /></button>
-                          {menuPid === p.id && (
-                            <>
-                              <div className="gear-backdrop" onClick={() => setMenuPid(null)} />
-                              <div className="action-menu">
-                                <button type="button" onClick={() => { setMenuPid(null); setModalArg(p.id); setModal('editProduct'); }}>Editar producto</button>
-                                <button type="button" className="danger" onClick={() => { setMenuPid(null); void removeProduct(p); }}>Eliminar producto</button>
-                              </div>
-                            </>
-                          )}
+                          <GearMenu items={[
+                            { label: 'Editar producto', onClick: () => { setModalArg(p.id); setModal('editProduct'); } },
+                            { label: 'Eliminar producto', danger: true, onClick: () => void removeProduct(p) },
+                          ]} />
                         </div></td>
                         </tr>
                       );

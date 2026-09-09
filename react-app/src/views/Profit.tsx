@@ -61,7 +61,7 @@ export function Profit() {
     <>
       <div className="panel">
         <div className="panel-head">
-          <div><h2>Ganancias</h2><p className="muted">Ingresos, costo y ganancia de tus ventas.</p></div>
+          <div><h2>Ganancias</h2><p className="muted">Ingresos, costo y ganancia.</p></div>
           <div className="inv-modes">
             <button type="button" className={'inv-mode' + (view === 'resumen' ? ' on' : '')} onClick={() => setView('resumen')}>Resumen</button>
             <button type="button" className={'inv-mode' + (view === 'historial' ? ' on' : '')} onClick={() => setView('historial')}>Historial de ventas</button>
@@ -115,7 +115,7 @@ export function Profit() {
             </div>
           </div>
           <div className="panel">
-            <div className="panel-head"><div><h2>Ganancia por producto</h2><p className="muted">Ordenado de mayor a menor ganancia.</p></div></div>
+            <div className="panel-head"><div><h2>Ganancia por producto</h2><p className="muted">De mayor a menor ganancia.</p></div></div>
             {lines.length ? (
               <table><thead><tr><th>Producto</th><th>Unidades</th><th>Ingresos</th><th>Costo</th><th>Ganancia</th></tr></thead><tbody>
                 {lines.map((x) => {

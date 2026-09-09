@@ -52,7 +52,7 @@ export function Dashboard() {
         <div className="card stat accent"><div className="muted">Total producido</div><div className="value">{money(revenue)}</div><div className="small">{formatDate(selected)}</div></div>
       </div>
       <div className="panel">
-        <div className="panel-head"><div><h2>Resumen por día</h2><p className="muted">Consulta hasta cinco días por página.</p></div></div>
+        <div className="panel-head"><div><h2>Resumen por día</h2><p className="muted">Lo vendido por día.</p></div></div>
         {dates.length ? (
           <>
             <div className="day-tabs">
@@ -71,7 +71,7 @@ export function Dashboard() {
         ) : <div className="notice">Cuando registres ventas, aquí verás el detalle diario.</div>}
       </div>
       <div className="panel">
-        <div className="panel-head"><div><h2>Resumen del mes</h2><p className="muted">Suma de todas las ventas del mes.</p></div></div>
+        <div className="panel-head"><div><h2>Resumen del mes</h2><p className="muted">Lo vendido en el mes.</p></div></div>
         <div className="day-tabs"><button className="day-nav" onClick={() => replace((x) => { x.summaryMonth = monthShift(mm, -1); }) }>←</button><b className="month-label">{monthLabel(mm)}</b><button className="day-nav" onClick={() => replace((x) => { x.summaryMonth = monthShift(mm, 1); })}>→</button></div>
         <div className="month-stats"><span>{mdays} día{mdays === 1 ? '' : 's'} con ventas</span><b>{munits} unidades vendidas</b><b>{money(mrev)} producido</b></div>
         {mrec.length ? (
