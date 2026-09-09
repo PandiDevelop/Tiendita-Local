@@ -78,9 +78,9 @@
     "semantic_hash": ""
   },
   "react-app/src/views/Catalog.tsx": {
-    "mtime": 1788911697.692824,
-    "seen": 1788911767.833982,
-    "ast_hash": "a5d19d7cf6b64a91f426a2d7a65dd35b",
+    "mtime": 1788914490.7174416,
+    "seen": 1788914579.1258073,
+    "ast_hash": "c5c3e535ca0832292bc267473d6fd404",
     "semantic_hash": ""
   },
   "react-app/src/views/Dashboard.tsx": {
@@ -96,9 +96,9 @@
     "semantic_hash": ""
   },
   "react-app/src/views/History.tsx": {
-    "mtime": 1788911655.6035817,
-    "seen": 1788911767.833982,
-    "ast_hash": "55f8d738ee4c6c1f3a003c74f76fb148",
+    "mtime": 1788914535.7539327,
+    "seen": 1788914579.1258073,
+    "ast_hash": "a91d3ecc4bcca1f682e382ec69c8b541",
     "semantic_hash": ""
   },
   "react-app/src/views/Inventory.tsx": {
@@ -180,9 +180,9 @@
     "semantic_hash": ""
   },
   "index.html": {
-    "mtime": 1788911745.8501801,
-    "seen": 1788911767.833982,
-    "ast_hash": "f32a9d8944a7ca85427028d5f3beeab0",
+    "mtime": 1788914551.7725837,
+    "seen": 1788914579.1258073,
+    "ast_hash": "27bd695e041780924334fc461fd84e1a",
     "semantic_hash": ""
   },
   "react-app/index.html": {
@@ -276,9 +276,9 @@
     "semantic_hash": ""
   },
   "react-app/src/views/Events.tsx": {
-    "mtime": 1788911703.3258357,
-    "seen": 1788911767.833982,
-    "ast_hash": "9edb46018b5850566328f494fe195840",
+    "mtime": 1788914523.6892467,
+    "seen": 1788914579.1258073,
+    "ast_hash": "05b991a4318d92f8100d42ebdef11163",
     "semantic_hash": ""
   },
   "react-app/src/views/PromoEditor.tsx": {

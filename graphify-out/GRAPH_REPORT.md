@@ -1,16 +1,16 @@
 # Graph Report - Mi Tiendita  (2026-09-08)
 
 ## Corpus Check
-- 36 files · ~74,812 words
+- 36 files · ~74,943 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
-- 363 nodes · 1025 edges · 16 communities (11 shown, 2 thin omitted)
+- 363 nodes · 1028 edges · 16 communities (11 shown, 2 thin omitted)
 - Extraction: 99% EXTRACTED · 1% INFERRED · 0% AMBIGUOUS · INFERRED: 10 edges (avg confidence: 0.85)
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `a6057b85`
+- Built from commit: `12df02a1`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
@@ -67,8 +67,8 @@ Cohesion: 0.12
 Nodes (24): customConfirm(), DialogKind, DialogRequest, emit(), Listener, listeners, open(), resolveDialog() (+16 more)
 
 ### Community 3 - "App.tsx"
-Cohesion: 0.10
-Nodes (38): App(), selectStore(), setMenu(), APP_VERSION, canManageTeam(), costFor(), costTotal(), esc() (+30 more)
+Cohesion: 0.11
+Nodes (33): App(), selectStore(), setMenu(), APP_VERSION, canManageTeam(), catLabel(), costFor(), costTotal() (+25 more)
 
 ### Community 4 - "package.json"
 Cohesion: 0.05
@@ -87,8 +87,8 @@ Cohesion: 0.11
 Nodes (17): compilerOptions, allowImportingTsExtensions, isolatedModules, jsx, lib, module, moduleResolution, noEmit (+9 more)
 
 ### Community 8 - "SaleRegistration"
-Cohesion: 0.20
-Nodes (12): catLabel(), findActivePromo(), SaleRegistration(), addLine(), catUnits(), persist(), recomputeAutos(), register() (+4 more)
+Cohesion: 0.21
+Nodes (11): findActivePromo(), SaleRegistration(), addLine(), catUnits(), persist(), recomputeAutos(), register(), removeLine() (+3 more)
 
 ### Community 12 - "store.tsx"
 Cohesion: 0.10
@@ -99,8 +99,8 @@ Cohesion: 0.17
 Nodes (11): Configurar Firebase (una sola vez, 5 minutos), Cómo se usa, Cómo usarla, Decisiones tomadas, Generar un APK, Incluye, Inventario (opcional), Mi Tiendita (+3 more)
 
 ### Community 15 - "core.ts"
-Cohesion: 0.10
-Nodes (27): activeEvent(), DEFAULT_PROD_SVG, DEFAULT_STORE_SVG, fixedPackageTotal(), InvLogRow, KEY, numText(), promoPrice() (+19 more)
+Cohesion: 0.09
+Nodes (33): activeEvent(), DEFAULT_PROD_SVG, DEFAULT_STORE_SVG, fixedPackageTotal(), formatDate(), InvLogRow, itemLabel(), KEY (+25 more)
 
 ## Knowledge Gaps
 - **77 isolated node(s):** `name`, `private`, `version`, `type`, `dev` (+72 more)
@@ -121,6 +121,6 @@ _Questions this graph is uniquely positioned to answer:_
 - **Should `ui.tsx` be split into smaller, more focused modules?**
   _Cohesion score 0.11965811965811966 - nodes in this community are weakly interconnected._
 - **Should `App.tsx` be split into smaller, more focused modules?**
-  _Cohesion score 0.09528214616096208 - nodes in this community are weakly interconnected._
+  _Cohesion score 0.1073170731707317 - nodes in this community are weakly interconnected._
 - **Should `package.json` be split into smaller, more focused modules?**
   _Cohesion score 0.052564102564102565 - nodes in this community are weakly interconnected._
