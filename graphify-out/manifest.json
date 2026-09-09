@@ -96,9 +96,9 @@
     "semantic_hash": ""
   },
   "react-app/src/views/History.tsx": {
-    "mtime": 1788914535.7539327,
-    "seen": 1788914579.1258073,
-    "ast_hash": "a91d3ecc4bcca1f682e382ec69c8b541",
+    "mtime": 1788915190.3248897,
+    "seen": 1788915230.495866,
+    "ast_hash": "0bfa1e47f8150635a8e16939f1efa792",
     "semantic_hash": ""
   },
   "react-app/src/views/Inventory.tsx": {
@@ -180,15 +180,15 @@
     "semantic_hash": ""
   },
   "index.html": {
-    "mtime": 1788914551.7725837,
-    "seen": 1788914579.1258073,
-    "ast_hash": "27bd695e041780924334fc461fd84e1a",
+    "mtime": 1788915200.405399,
+    "seen": 1788915230.495866,
+    "ast_hash": "4b6fa8167d9cf92161563129177bd832",
     "semantic_hash": ""
   },
   "react-app/index.html": {
-    "mtime": 1788804445.3559225,
-    "seen": 1788885357.3132837,
-    "ast_hash": "ac992ececb8c86917679ca69b6988371",
+    "mtime": 1788915167.939273,
+    "seen": 1788915230.495866,
+    "ast_hash": "9d9b7b68b9f8cd11e78ec257a604e629",
     "semantic_hash": ""
   },
   "icon-180.png": {
