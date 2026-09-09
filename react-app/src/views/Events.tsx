@@ -52,12 +52,15 @@ export function Events() {
     toast('Evento creado.');
   }
 
-  async function remove(id: string) {
+  function finalize(id: string) {
     const e = events.find((x) => x.id === id);
-    if (!(await customConfirm(`¿Eliminar el evento ${e && e.name ? `"${e.name}"` : 'sin nombre'}?`))) return;
-    replace((d) => {
-      const st = d.stores.find((x) => x.id === s.id)!;
-      if (st.events) st.events = st.events.filter((x) => x.id !== id);
+    void customConfirm(
+      (e && e.name ? `¿Finalizar el evento "${e.name}"?` : '¿Finalizar este evento?') +
+        ' Se fijará su fecha de fin en hoy y dejará de aplicarse (no se borra; quedará en el historial).'
+    ).then((ok) => {
+      if (!ok) return;
+      patch(id, { end: today(), active: false });
+      toast('Evento finalizado.');
     });
   }
 
@@ -110,6 +113,8 @@ export function Events() {
 
       {events.map((e) => {
         const on = (e.active && (!e.start || today() >= e.start) && (!e.end || today() <= e.end)) || false;
+        const fin = (!!e.end && e.end < today()) || (!e.active && !!e.end);
+        const badge = e.id === (act && act.id) ? 'Aplicándose ahora' : on ? 'Aplica ahora' : fin ? 'Finalizado' : !e.active ? 'Pausado' : 'No aplica hoy';
         return (
           <div key={e.id} className={'ev-card' + (e.id === (act && act.id) ? ' active' : '')}>
             <div className="ev-top">
@@ -147,9 +152,9 @@ export function Events() {
               </label>
             </div>
             <div className="ev-foot">
-              <span className={'ev-badge' + (on ? ' on' : ' off')}>{e.id === (act && act.id) ? 'Aplicándose ahora' : on ? 'Aplica ahora' : 'No aplica hoy'}</span>
+              <span className={'ev-badge' + (on || e.id === (act && act.id) ? ' on' : ' off')}>{badge}</span>
               {e.pct > 0 && <span className="muted">Todo a {esc(String(e.pct))}% menos</span>}
-              <button className="ev-quit" onClick={() => remove(e.id)}>Quitar</button>
+              <button className="ev-quit" title="Finalizar el evento hoy (queda en el historial)" onClick={() => finalize(e.id)}>Finalizar</button>
             </div>
           </div>
         );
