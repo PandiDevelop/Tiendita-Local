@@ -180,9 +180,9 @@
     "semantic_hash": ""
   },
   "index.html": {
-    "mtime": 1788915931.723576,
-    "seen": 1788915953.9010537,
-    "ast_hash": "70fb30a73c35c3b8fb27cb3253841414",
+    "mtime": 1788916158.438088,
+    "seen": 1788916185.6978762,
+    "ast_hash": "a796226011d149b4bde78c320abf6b92",
     "semantic_hash": ""
   },
   "react-app/index.html": {
@@ -276,9 +276,9 @@
     "semantic_hash": ""
   },
   "react-app/src/views/Events.tsx": {
-    "mtime": 1788914523.6892467,
-    "seen": 1788914579.1258073,
-    "ast_hash": "05b991a4318d92f8100d42ebdef11163",
+    "mtime": 1788916143.1353562,
+    "seen": 1788916185.6978762,
+    "ast_hash": "3fe8f3c87fb9be9fd7efb9868c91f604",
     "semantic_hash": ""
   },
   "react-app/src/views/PromoEditor.tsx": {

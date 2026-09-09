@@ -1779,7 +1779,7 @@
       "file_type": "code",
       "norm_label": "create()",
       "source_file": "react-app/src/views/Events.tsx",
-      "source_location": "L42"
+      "source_location": "L44"
     },
     {
       "id": "react_app_src_views_events_events_openadding",
@@ -1791,7 +1791,7 @@
       "file_type": "code",
       "norm_label": "openadding()",
       "source_file": "react-app/src/views/Events.tsx",
-      "source_location": "L35"
+      "source_location": "L37"
     },
     {
       "id": "react_app_src_views_events_events_patch",
@@ -1803,7 +1803,7 @@
       "file_type": "code",
       "norm_label": "patch()",
       "source_file": "react-app/src/views/Events.tsx",
-      "source_location": "L28"
+      "source_location": "L30"
     },
     {
       "id": "react_app_src_views_events_events_remove",
@@ -1815,7 +1815,7 @@
       "file_type": "code",
       "norm_label": "remove()",
       "source_file": "react-app/src/views/Events.tsx",
-      "source_location": "L53"
+      "source_location": "L55"
     },
     {
       "id": "react_app_src_views_events_today",
@@ -1827,7 +1827,7 @@
       "file_type": "code",
       "norm_label": "today()",
       "source_file": "react-app/src/views/Events.tsx",
-      "source_location": "L178"
+      "source_location": "L180"
     },
     {
       "id": "react_app_src_views_join_joinmodal",
@@ -6517,6 +6517,18 @@
     },
     {
       "source": "react_app_src_views_events_events",
+      "target": "react_app_src_views_events_today",
+      "relation": "calls",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "call",
+      "source_file": "react-app/src/views/Events.tsx",
+      "source_location": "L112",
+      "weight": 1.0
+    },
+    {
+      "source": "react_app_src_views_events_events",
       "target": "react_app_src_lib_core_esc",
       "relation": "calls",
       "_origin": "ast",
@@ -6524,7 +6536,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "react-app/src/views/Events.tsx",
-      "source_location": "L149",
+      "source_location": "L151",
       "weight": 1.0
     },
     {
@@ -6536,7 +6548,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "react-app/src/views/Events.tsx",
-      "source_location": "L165",
+      "source_location": "L167",
       "weight": 1.0
     },
     {
@@ -6576,18 +6588,6 @@
       "weight": 1.0
     },
     {
-      "source": "react_app_src_views_events_events",
-      "target": "react_app_src_views_events_today",
-      "relation": "calls",
-      "_origin": "ast",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "context": "call",
-      "source_file": "react-app/src/views/Events.tsx",
-      "source_location": "L26",
-      "weight": 1.0
-    },
-    {
       "source": "react_app_src_views_events_events_openadding",
       "target": "react_app_src_views_events_blankevent",
       "relation": "calls",
@@ -6596,7 +6596,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "react-app/src/views/Events.tsx",
-      "source_location": "L36",
+      "source_location": "L38",
       "weight": 1.0
     },
     {
@@ -6608,7 +6608,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "react-app/src/views/Events.tsx",
-      "source_location": "L55",
+      "source_location": "L57",
       "weight": 1.0
     },
     {
@@ -8024,7 +8024,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "react-app/src/views/Events.tsx",
-      "source_location": "L28",
+      "source_location": "L30",
       "weight": 1.0
     },
     {
@@ -8036,7 +8036,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "react-app/src/views/Events.tsx",
-      "source_location": "L53",
+      "source_location": "L55",
       "weight": 1.0
     },
     {
@@ -15403,7 +15403,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "react-app/src/views/Events.tsx",
-      "source_location": "L178",
+      "source_location": "L180",
       "weight": 1.0
     },
     {
@@ -15425,7 +15425,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "react-app/src/views/Events.tsx",
-      "source_location": "L35",
+      "source_location": "L37",
       "weight": 1.0
     },
     {
@@ -15436,7 +15436,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "react-app/src/views/Events.tsx",
-      "source_location": "L42",
+      "source_location": "L44",
       "weight": 1.0
     },
     {
@@ -16351,5 +16351,5 @@
     }
   ],
   "hyperedges": [],
-  "built_at_commit": "210d4ec6c1d79b45b7af4ffdc3aaf8095e61b8de"
+  "built_at_commit": "3050a606be509d5fd17cb643f6c310b67fa74223"
 }
