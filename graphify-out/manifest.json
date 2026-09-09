@@ -96,9 +96,9 @@
     "semantic_hash": ""
   },
   "react-app/src/views/History.tsx": {
-    "mtime": 1788915190.3248897,
-    "seen": 1788915230.495866,
-    "ast_hash": "0bfa1e47f8150635a8e16939f1efa792",
+    "mtime": 1788915884.9759614,
+    "seen": 1788915953.9010537,
+    "ast_hash": "e19c7d9df2fcac69c19c6524eec54f28",
     "semantic_hash": ""
   },
   "react-app/src/views/Inventory.tsx": {
@@ -180,9 +180,9 @@
     "semantic_hash": ""
   },
   "index.html": {
-    "mtime": 1788915200.405399,
-    "seen": 1788915230.495866,
-    "ast_hash": "4b6fa8167d9cf92161563129177bd832",
+    "mtime": 1788915931.723576,
+    "seen": 1788915953.9010537,
+    "ast_hash": "70fb30a73c35c3b8fb27cb3253841414",
     "semantic_hash": ""
   },
   "react-app/index.html": {
