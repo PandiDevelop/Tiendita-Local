@@ -194,7 +194,7 @@ export function Catalog() {
                           <button className="icon-btn" title="Menú del producto" onClick={() => setMenuPid(menuPid === p.id ? null : p.id)}><GearIcon /></button>
                           {menuPid === p.id && (
                             <>
-                              <div className="menu-backdrop" onClick={() => setMenuPid(null)} />
+                              <div className="gear-backdrop" onClick={() => setMenuPid(null)} />
                               <div className="action-menu">
                                 <button type="button" onClick={() => { setMenuPid(null); setModalArg(p.id); setModal('editProduct'); }}>Editar producto</button>
                                 <button type="button" className="danger" onClick={() => { setMenuPid(null); void removeProduct(p); }}>Eliminar producto</button>

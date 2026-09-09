@@ -213,11 +213,20 @@ td.cat-bar .product-name .prod-tag{margin-left:auto;flex:0 0 auto}
 .action-menu button{display:block;width:100%;text-align:left;padding:8px 12px;border-radius:8px;background:none;border:none;cursor:pointer;font-weight:600;font-size:13px;color:#4b4358}
 .action-menu button:hover{background:#f6f1fd}
 .action-menu button.danger{color:#c15555}
-.menu-backdrop{position:fixed;inset:0;z-index:39}
+/* Fondo invisible del menu de la tuerca (clase propia para NO pisar el
+   menu-backdrop del menu movil del sidebar). */
+.gear-backdrop{position:fixed;inset:0;z-index:39}
 /* Boton eliminar dentro de los formularios de tuerca (categoria). */
 .btn-delete{background:#fff7f7;color:#c15555;border:1px solid #e8b3b3;border-radius:10px;padding:11px 13px;font-weight:700;font-size:13px;cursor:pointer}
 .btn-delete:hover{background:#ffecec}
 .inv-actions .inv-stepper{justify-content:center;margin:0 auto}
+/* Historial de ventas: la categoria del producto visible junto a su nombre. */
+.sale-detail-line .sale-detail-name .detail-prod{display:inline-flex;align-items:baseline;gap:7px;flex:1;min-width:0}
+.sale-detail-line .sale-detail-name .detail-prod .prod-cat{margin:0;flex:0 0 auto}
+.sale-detail-line .sale-detail-name .detail-prod .prod-sub{margin:0}
+/* Historial de eventos: lista con nombre, duracion y promociones. */
+.ev-history{margin-top:18px}
+.ev-history-title{font-size:12px;text-transform:uppercase;letter-spacing:1px;font-weight:700;color:#8a84a0;margin:0 0 8px}
 
 /* Caja de la categoria encima del nombre en las tarjetas de producto de
    Registrar venta (punto 8). */

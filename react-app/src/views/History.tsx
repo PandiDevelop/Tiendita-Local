@@ -9,13 +9,13 @@ export function History() {
   const [open, setOpen] = useState<Record<string, boolean>>({});
 
   function exportExcel(sales: Sale[]) {
-    const rows: (string | number)[][] = [['Tienda', 'Fecha', 'Hora', 'Producto', 'Ítem', 'Precio', 'Cantidad vendida', 'Total', 'Empleado']];
+    const rows: (string | number)[][] = [['Tienda', 'Fecha', 'Hora', 'Producto', 'Categoría', 'Ítem', 'Precio', 'Cantidad vendida', 'Total', 'Empleado']];
     sales.forEach((x) => x.items.forEach((i) => {
       const p = s.products.find((pp) => pp.id === i.productId);
       const pr = p && p.promos.find((z) => z.id === i.promotionId);
       const name = pr ? pr.label : (p ? p.name : 'Producto eliminado');
       const parent = pr ? p!.name : 'Producto';
-      rows.push([s.name, x.date, x.time || '', parent, name, priceFor(i, s), i.qty, priceFor(i, s) * i.qty, x.employee || '']);
+      rows.push([s.name, x.date, x.time || '', parent, p ? catLabel(p) : 'Sin categoría', name, priceFor(i, s), i.qty, priceFor(i, s) * i.qty, x.employee || '']);
     }));
     const csv = '\ufeff' + rows.map((r) => r.map((v) => '"' + String(v == null ? '' : v).replace(/"/g, '""') + '"').join(';')).join('\r\n');
     const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
@@ -71,9 +71,10 @@ export function History() {
         counted.set(z.id, c);
       });
       const pr2 = p && p.promos.find((z) => z.id === i.promotionId);
+      const pcat = esc(p ? catLabel(p) : 'Sin categoría');
       out.push(
         <div className="sale-detail-line" key={i.productId + ':' + (i.promotionId || '')}>
-          <div className="sale-detail-name"><span>{esc(p ? p.name : 'Producto eliminado')}{pr2 ? <span className="prod-sub">{esc(pr2.label)}</span> : null}</span><b>× {i.qty}</b></div>
+          <div className="sale-detail-name"><span className="detail-prod"><span className="prod-cat">{pcat}</span><span>{esc(p ? p.name : 'Producto eliminado')}</span>{pr2 ? <span className="prod-sub">{esc(pr2.label)}</span> : null}</span><b>× {i.qty}</b></div>
           <span className="sale-detail-packs">{Array.from(counted.values()).map((c, j) => <span className="prod-tag pkg-tag" key={c.label + ':' + j}>Paquete: {esc(c.label)}{c.n > 1 ? ' ×' + c.n : ''}</span>)}</span>
           <b className="sale-detail-cost">{money(priceFor(i, s) * i.qty)}</b>
         </div>

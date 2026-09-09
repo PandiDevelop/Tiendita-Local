@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useStore } from '../store';
-import { activeEvent, esc, uid } from '../lib/core';
+import { activeEvent, esc, formatDate, uid } from '../lib/core';
 import { customConfirm } from '../lib/dialog';
 import type { StoreEvent } from '../types';
 
@@ -22,6 +22,8 @@ export function Events() {
   const [draft, setDraft] = useState<StoreEvent>(blankEvent());
 
   const act = activeEvent(s);
+  // Historial: eventos que ya terminaron (con fecha de fin anterior a hoy).
+  const ended = events.filter((e) => e.end && e.end < today());
 
   function patch(id: string, p: Partial<StoreEvent>) {
     replace((d) => {
@@ -150,6 +152,25 @@ export function Events() {
           </div>
         );
       })}
+
+      {ended.length > 0 && (
+        <div className="ev-history">
+          <div className="ev-history-title">Historial de eventos</div>
+          <table><thead><tr><th>Evento</th><th>Duración</th><th>Promociones</th></tr></thead><tbody>
+            {ended.map((e) => (
+              <tr key={e.id}>
+                <td className="product-name"><b>{esc(e.name || 'Sin nombre')}</b></td>
+                <td className="muted">
+                  {e.start || e.end
+                    ? (e.start ? formatDate(e.start) : '…') + ' → ' + (e.end ? formatDate(e.end) : 'sin fin')
+                    : '—'}
+                </td>
+                <td>{e.pct > 0 ? <span className="ev-badge on">{e.pct}% de descuento</span> : <span className="muted">Sin promoción</span>}</td>
+              </tr>
+            ))}
+          </tbody></table>
+        </div>
+      )}
     </div>
   );
 }
