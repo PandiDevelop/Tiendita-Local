@@ -1,7 +1,7 @@
 import { Fragment, ReactNode, useState } from 'react';
 import { useStore } from '../store';
-import { money, esc, total, shortDate, saleUnits, priceFor, formatDate, catLabel } from '../lib/core';
-import type { Product, Promo, Sale } from '../types';
+import { money, esc, total, shortDate, saleUnits, priceFor, formatDate, catLabel, findActivePromo } from '../lib/core';
+import type { Sale } from '../types';
 
 export function History() {
   const { store } = useStore();
@@ -32,50 +32,27 @@ export function History() {
   const dates = Object.keys(groups).sort((a, b) => b.localeCompare(a));
 
   function details(x: Sale): ReactNode[] {
-    // Descompone la cantidad de una categoria en paquetes de promocion (cada
-    // bloque de cantidad fija que se cobro), para poder mostrar TODOS los
-    // paquetes aplicados y no solo uno.
-    function packDecomp(p: Promo[], qty: number): Promo[] {
-      const flats = p.filter((z) => z.cond === 'qtyeq' && z.min >= 1).sort((a, b) => a.min - b.min);
-      if (!flats.length) return [];
-      const applicable = flats.filter((z) => z.min <= qty);
-      if (!applicable.length) return [];
-      const k = applicable[applicable.length - 1];
-      const list: Promo[] = [];
-      const blocks = Math.floor(qty / k.min);
-      for (let i = 0; i < blocks; i++) list.push(k);
-      const rem = qty % k.min;
-      if (rem) {
-        const exact = flats.find((z) => z.min === rem);
-        if (exact) list.push(exact);
-      }
-      return list;
-    }
-    const cats = new Map<string, { name: string; p: Product | null; qty: number; packs: Promo[] }>();
+    // Unidades vendidas por categoría (misma lógica que en Registrar venta),
+    // para saber qué paquete aplica según la condición estipulada en la promo.
+    const catQty = new Map<string, number>();
     x.items.filter((i) => i.qty > 0).forEach((i) => {
-      const pp = s.products.find((pr) => pr.id === i.productId) || null;
-      const name = pp ? catLabel(pp) : 'Sin categoría';
-      const g = cats.get(name) || { name, p: pp, qty: 0, packs: [] };
-      g.qty += i.qty;
-      cats.set(name, g);
+      const p = s.products.find((pr) => pr.id === i.productId);
+      const name = p ? catLabel(p) : 'Sin categoría';
+      catQty.set(name, (catQty.get(name) || 0) + i.qty);
     });
-    cats.forEach((g) => { if (g.p) g.packs = packDecomp(g.p.promos || [], g.qty); });
     const out: ReactNode[] = [];
     x.items.filter((i) => i.qty > 0).forEach((i) => {
       const p = s.products.find((pr) => pr.id === i.productId);
-      const packs = p ? (cats.get(catLabel(p)) || { packs: [] }).packs : [];
-      const counted = new Map<string, { label: string; n: number }>();
-      packs.forEach((z) => {
-        const c = counted.get(z.id) || { label: z.label, n: 0 };
-        c.n += 1;
-        counted.set(z.id, c);
-      });
-      const pr2 = p && p.promos.find((z) => z.id === i.promotionId);
       const pcat = esc(p ? catLabel(p) : 'Sin categoría');
+      // Solo el paquete que aplica (un solo tag), no la descomposición en
+      // todos los bloques de promoción de la condición.
+      const pr = p ? findActivePromo(p, catQty.get(catLabel(p)) || 0) : undefined;
+      const pack = pr && pr.cond === 'qtyeq' ? pr : undefined;
+      const pr2 = p && p.promos.find((z) => z.id === i.promotionId);
       out.push(
         <div className="sale-detail-line" key={i.productId + ':' + (i.promotionId || '')}>
           <div className="sale-detail-name"><span className="detail-prod"><span className="prod-cat">{pcat}</span><span>{esc(p ? p.name : 'Producto eliminado')}</span>{pr2 ? <span className="prod-sub">{esc(pr2.label)}</span> : null}</span><b>× {i.qty}</b></div>
-          <span className="sale-detail-packs">{Array.from(counted.values()).map((c, j) => <span className="prod-tag pkg-tag" key={c.label + ':' + j}>Paquete: {esc(c.label)}{c.n > 1 ? ' ×' + c.n : ''}</span>)}</span>
+          {pack && <span className="sale-detail-packs"><span className="prod-tag pkg-tag">Paquete: {esc(pack.label)}</span></span>}
           <b className="sale-detail-cost">{money(priceFor(i, s) * i.qty)}</b>
         </div>
       );
