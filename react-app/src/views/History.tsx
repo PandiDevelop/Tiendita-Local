@@ -51,8 +51,14 @@ export function History() {
       const pr2 = p && p.promos.find((z) => z.id === i.promotionId);
       out.push(
         <div className="sale-detail-line" key={i.productId + ':' + (i.promotionId || '')}>
-          <div className="sale-detail-name"><span className="detail-prod"><span className="prod-cat">{pcat}</span><span>{esc(p ? p.name : 'Producto eliminado')}</span>{pr2 ? <span className="prod-sub">{esc(pr2.label)}</span> : null}</span><b>× {i.qty}</b></div>
-          {pack && <span className="sale-detail-packs"><span className="prod-tag pkg-tag">Paquete: {esc(pack.label)}</span></span>}
+          <div className="sale-detail-name">
+            <span className="detail-prod">
+              <span className="prod-cat">{pcat}</span><span>{esc(p ? p.name : 'Producto eliminado')}</span>
+              {pr2 ? <span className="prod-sub">{esc(pr2.label)}</span> : null}
+            </span>
+            {pack && <span className="prod-tag pkg-tag">Paquete: {esc(pack.label)}</span>}
+            <b>× {i.qty}</b>
+          </div>
           <b className="sale-detail-cost">{money(priceFor(i, s) * i.qty)}</b>
         </div>
       );

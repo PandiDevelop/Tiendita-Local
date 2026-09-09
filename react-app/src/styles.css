@@ -194,10 +194,8 @@ th,td{text-align:left;vertical-align:middle}
 /* Eventos: boton Quitar abajo a la derecha, morado. */
 .ev-foot .ev-quit{margin-left:auto;background:#7258a2;color:#fff;border:1px solid #7258a2;border-radius:999px;padding:8px 16px;font-weight:700;font-size:13px;cursor:pointer}
 .ev-foot .ev-quit:hover{background:#5f4791}
-/* Detalles de venta: cada paquete de promocion aplicado se ve como etiqueta a
-   la derecha del producto vendido (no solo uno). */
-.sale-detail-packs{display:flex;flex:0 0 auto;gap:4px;flex-wrap:wrap;justify-content:flex-end;min-width:0}
-.sale-detail-packs .prod-tag{margin-left:0;background:#f1ebff;color:#8061b4}
+/* Detalles de venta: el paquete y la cantidad quedan justo después del nombre
+   del producto vendido, y el total al final de la línea. */
 /* Linea de producto en Registrar venta: categoria encima del nombre y tag a
    la derecha. */
 .sale-builder-name .prod-cat{margin-bottom:4px}
@@ -221,9 +219,10 @@ td.cat-bar .product-name .prod-tag{margin-left:auto;flex:0 0 auto}
 .btn-delete:hover{background:#ffecec}
 .inv-actions .inv-stepper{justify-content:center;margin:0 auto}
 /* Historial de ventas: la categoria del producto visible junto a su nombre. */
-.sale-detail-line .sale-detail-name .detail-prod{display:inline-flex;align-items:baseline;gap:7px;flex:1;min-width:0}
+.sale-detail-line .sale-detail-name .detail-prod{display:inline-flex;align-items:baseline;gap:7px;flex:0 0 auto;max-width:100%;min-width:0}
 .sale-detail-line .sale-detail-name .detail-prod .prod-cat{margin:0;flex:0 0 auto}
 .sale-detail-line .sale-detail-name .detail-prod .prod-sub{margin:0}
+.sale-detail-line .sale-detail-name .pkg-tag{margin-left:0}
 /* Historial de eventos: lista con nombre, duracion y promociones. */
 .ev-history{margin-top:18px}
 .ev-history-title{font-size:12px;text-transform:uppercase;letter-spacing:1px;font-weight:700;color:#8a84a0;margin:0 0 8px}
