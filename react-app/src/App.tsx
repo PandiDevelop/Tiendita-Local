@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useStore } from './store';
-import { APP_VERSION, DEFAULT_STORE_IMAGE, canManageTeam, esc } from './lib/core';
+import { DEFAULT_STORE_IMAGE, canManageTeam, esc } from './lib/core';
+import { useAppVersion } from './lib/appVersion';
 import { DialogHost, GearIcon, Image, ImageLightboxHost, MenuIcon, StorefrontIcon, Toast } from './ui';
 import { Dashboard } from './views/Dashboard';
 import { Catalog } from './views/Catalog';
@@ -11,12 +12,14 @@ import { Employees } from './views/Employees';
 import { Events } from './views/Events';
 import { StoreModal } from './views/StoreModal';
 import { JoinModal } from './views/Join';
+import { SettingsModal } from './views/SettingsModal';
 import { ProductForm } from './views/ProductForm';
 import { SaleRegistration } from './views/SaleRegistration';
 
 export function App() {
   const { state, store, setTab, replace, modal, modalArg, setModal, toastMsg } = useStore();
   const s = store;
+  const version = useAppVersion();
   const [menuOpen, setMenuOpen] = useState(false);
   // Dueño real o admin (permiso que el dueño le dio a un trabajador): ambos
   // ven la pestaña de Empleados.
@@ -39,6 +42,7 @@ export function App() {
       {modal === 'newStore' && <StoreModal onClose={() => setModal('none')} />}
       {modal === 'editStore' && <StoreModal editing onClose={() => setModal('none')} />}
       {modal === 'join' && <JoinModal onClose={() => setModal('none')} />}
+      {modal === 'settings' && <SettingsModal onClose={() => setModal('none')} />}
       {modal === 'newProduct' && <ProductForm onClose={() => setModal('none')} />}
       {modal === 'editProduct' && <ProductForm editingId={modalArg} onClose={() => setModal('none')} />}
       {modal === 'sale' && <SaleRegistration onClose={() => setModal('none')} />}
@@ -80,7 +84,8 @@ export function App() {
         </div>
         <button className="new-store" onClick={() => setModal('newStore')}>＋ Nueva tienda</button>
         <button className="sync-join" onClick={() => setModal('join')}>Unirme a una tienda</button>
-        <div className="side-footer">Tus datos se guardan de forma local<br />en este dispositivo. v{APP_VERSION}</div>
+        <button className="app-settings" onClick={() => setModal('settings')} title="Ajustes de notificaciones, nombre, sonido y versión"><GearIcon size={15} /> Opciones de la app</button>
+        <div className="side-footer">Tus datos se guardan de forma local<br />en este dispositivo. v{version}</div>
       </div>
       <div className="menu-backdrop" onClick={() => setMenuOpen(false)}></div>
       <main className="content">

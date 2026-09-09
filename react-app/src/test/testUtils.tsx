@@ -65,7 +65,7 @@ export function makeStore(overrides: Partial<Store> = {}): Store {
     inventory: overrides.inventory || {},
     notes: '',
     noteLog: [],
-    noteBoard: [],
+    noteBoard: overrides.noteBoard || [],
     invLog: [],
     createdBy: overrides.createdBy ?? 'owner-1',
     members: overrides.members,

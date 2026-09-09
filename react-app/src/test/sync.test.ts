@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import type { AppState, Product, Store } from '../types';
-import { makeDraft, normalizeStore, addNote, adoptInvLog, sortByOrder, uid, costFor, priceFor, total, costTotal, profitTotal, setCategoryPricing, groupedByCategory } from '../lib/core';
+import { makeDraft, normalizeStore, addNote, addNoteMsg, deleteNoteMsg, adoptInvLog, sortByOrder, uid, costFor, priceFor, total, costTotal, profitTotal, setCategoryPricing, groupedByCategory } from '../lib/core';
 import { applyRemote } from '../lib/sync';
 
 vi.mock('firebase/app', () => ({ initializeApp: () => ({}) }));
@@ -75,6 +75,10 @@ function makePayload(st: Store) {
   st.products.forEach((p) => (products[p.id] = p));
   const noteLog: Record<string, unknown> = {};
   (st.noteLog || []).forEach((e) => { if (e.id) noteLog[e.id] = e; });
+  // El tablero de notas viaja igual que noteLog: mapa por id en el campo
+  // "noteBoard" del documento principal (ver Note en types.ts).
+  const noteBoard: Record<string, unknown> = {};
+  (st.noteBoard || []).forEach((n) => { if (n && n.id) noteBoard[n.id] = n; });
   const invLog: Record<string, unknown> = {};
   (st.invLog || []).forEach((e) => { if (e.id) invLog[e.id] = e; });
   return {
@@ -83,6 +87,7 @@ function makePayload(st: Store) {
     inventory: st.inventory,
     invLog,
     noteLog,
+    noteBoard,
     notes: st.notes || '',
     products,
     categories: st.categories || [],
@@ -219,6 +224,33 @@ describe('sync de inventario y notas entre dos dispositivos', () => {
 
     const ordered = sortByOrder(b.st.products).map((p) => p.id);
     expect(ordered).toEqual([p2, p1]);
+  });
+});
+
+describe('sync del tablero de notas (noteBoard)', () => {
+  it('un snapshot de productos (sin noteBoard) no vacía el tablero de notas ya visto en B', () => {
+    const a = device('A');
+    const b = device('B');
+    const n = addNoteMsg(a.st, 'Nota importante')!;
+    apply(a.st, b); // B ve la nota: queda en su set "seen" local
+    expect(b.st.noteBoard.map((x) => x.id)).toEqual([n.id]);
+    // Ahora llega un snapshot de la subcoleccion de productos, que viaja SIN
+    // noteBoard ni updatedBy. Bug arreglado: antes esta reconciliacion con
+    // remoto vacio borraba del tablero local todas las notas ya vistas
+    // (aparecian/desaparecian y se barajaba el orden).
+    applyRemote(() => b.ref, (up) => up(b.ref), b.st.id, { products: {} });
+    expect(b.st.noteBoard.map((x) => x.id)).toEqual([n.id]);
+  });
+
+  it('una nota borrada por el autor en A desaparece también en B', () => {
+    const a = device('A');
+    const b = device('B');
+    const n = addNoteMsg(a.st, 'Nota a borrar')!;
+    apply(a.st, b);
+    expect(b.st.noteBoard.length).toBe(1);
+    deleteNoteMsg(a.st, n.id);
+    apply(a.st, b);
+    expect(b.st.noteBoard.length).toBe(0);
   });
 });
 

@@ -28,18 +28,29 @@ function nameOf(s: Store, by: string | undefined, byName: string | undefined, me
   return byName || (m && m.name) || (by === me ? myName : 'Miembro');
 }
 
-// Composición: alterna entre nota normal y checklist (objetivos con
-// checkbox). Se separa del feed principal para no cargar el componente de
-// Notes con estado de edicion de listas.
-function Composer({ onDone }: { onDone: () => void }) {
+// Composicion: nota normal o checklist (objetivos con checkbox). El modo lo
+// decide la pestaña de la vista (Notas / Objetivos): cada historial se
+// compone y se ve por separado. Se separa del feed principal para no cargar
+// el componente de Notes con estado de edicion de listas.
+function Composer({ mode, onDone }: { mode: 'text' | 'checklist'; onDone: () => void }) {
   const { store, replace } = useStore();
   const s = store!;
-  const [mode, setMode] = useState<'text' | 'checklist'>('text');
   const [text, setText] = useState('');
   const [title, setTitle] = useState('');
   const [items, setItems] = useState<string[]>([]);
   const [draftItem, setDraftItem] = useState('');
   const taRef = useRef<HTMLTextAreaElement | null>(null);
+
+  // Al cambiar de pestana se limpia el borrador del modo anterior y se
+  // enfoca el cuadro del modo nuevo.
+  useEffect(() => {
+    setText('');
+    setTitle('');
+    setItems([]);
+    setDraftItem('');
+    const t = window.setTimeout(() => (mode === 'text' ? taRef.current?.focus() : undefined), 0);
+    return () => window.clearTimeout(t);
+  }, [mode]);
 
   function sendText() {
     const t = text.trim();
@@ -67,16 +78,11 @@ function Composer({ onDone }: { onDone: () => void }) {
     setTitle('');
     setItems([]);
     setDraftItem('');
-    setMode('text');
     onDone();
   }
 
   return (
     <div className="notes-compose">
-      <div className="notes-compose-tabs">
-        <button type="button" className={'notes-compose-tab' + (mode === 'text' ? ' active' : '')} onClick={() => setMode('text')}><NoteTextIcon /> Nota</button>
-        <button type="button" className={'notes-compose-tab' + (mode === 'checklist' ? ' active' : '')} onClick={() => setMode('checklist')}><ChecklistIcon /> Lista de objetivos</button>
-      </div>
       {mode === 'text' ? (
         <>
           <textarea
@@ -272,6 +278,9 @@ export function Notes() {
   const myName = syncName();
   const admin = canManageNotes(s);
 
+  // Dos historiales separados por pestana: las notas (kind text) y las
+  // listas de objetivos (kind checklist) ya no conviven en el mismo feed.
+  const [feed, setFeed] = useState<'notas' | 'objetivos'>('notas');
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editingText, setEditingText] = useState('');
   const [threadId, setThreadId] = useState<string | null>(null);
@@ -279,7 +288,14 @@ export function Notes() {
   const [notifyState, setNotifyState] = useState(notifyPermission());
   const [checklistDraft, setChecklistDraft] = useState<Record<string, string>>({});
 
-  const notes: Note[] = (s.noteBoard || []).slice().sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
+  // Orden mas reciente arriba. El desempate por id deja el orden EXACTO e
+  // igual en todos los dispositivos aunque dos notas compartan createdAt
+  // (notas migradas de noteLog, o creadas en el mismo instante): asi el
+  // orden no depende de la posicion local de cada arreglo al fusionar.
+  const notes: Note[] = (s.noteBoard || [])
+    .slice()
+    .sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0) || b.id.localeCompare(a.id));
+  const visible = notes.filter((n) => (feed === 'notas' ? n.kind !== 'checklist' : n.kind === 'checklist'));
 
   // Barrido de notas vencidas (no fijadas, con mas de una semana): se hace
   // una vez al abrir la pestaña y de ahi en adelante cada pocos minutos
@@ -297,11 +313,12 @@ export function Notes() {
   }, [s.id]);
 
   // Igual que antes: mas reciente arriba, asi que el scroll se manda al
-  // INICIO del panel (no al final) cuando cambia el numero de notas.
+  // INICIO del panel (no al final) cuando cambia el numero de notas o de
+  // pestana.
   useEffect(() => {
     const box = document.querySelector<HTMLElement>('.notes-scroll');
     if (box) box.scrollTop = 0;
-  }, [notes.length, s.id]);
+  }, [visible.length, feed, s.id]);
 
   function openHistory(title: string, n: { text: string; history?: NoteEditRecord[] }) {
     setHistory({ title, current: n.text, list: n.history || [] });
@@ -359,7 +376,7 @@ export function Notes() {
   return (
     <div className="panel">
       <div className="panel-head">
-        <div><h2>Notas del equipo</h2><p className="muted">Publica notas y listas de objetivos; abre un hilo para responder. Lo que no se fija desaparece a la semana.</p></div>
+        <div><h2>Notas del equipo</h2><p className="muted">Notas y listas de objetivos van en historiales separados; abre un hilo para responder. Lo que no se fija desaparece a la semana.</p></div>
         <div className="notes-head-actions">
           {notifyState === 'default' && (
             <button className="button secondary" onClick={enableSystemNotify} title="Recibe un aviso aunque tengas la app cerrada o en otra pestaña"><BellIcon /> Activar aviso del sistema</button>
@@ -370,10 +387,15 @@ export function Notes() {
         </div>
       </div>
 
-      <Composer onDone={() => {}} />
+      <div className="notes-feed-tabs">
+        <button type="button" className={'notes-feed-tab' + (feed === 'notas' ? ' active' : '')} onClick={() => setFeed('notas')}><NoteTextIcon /> Notas</button>
+        <button type="button" className={'notes-feed-tab' + (feed === 'objetivos' ? ' active' : '')} onClick={() => setFeed('objetivos')}><ChecklistIcon /> Objetivos</button>
+      </div>
+
+      <Composer mode={feed === 'notas' ? 'text' : 'checklist'} onDone={() => {}} />
 
       <div className="notes-scroll">
-        {notes.length ? notes.map((n) => {
+        {visible.length ? visible.map((n) => {
           const mine = n.by === me;
           const items = [
             ...(admin ? [{ label: n.pinned ? 'Desfijar' : 'Fijar', onClick: () => doTogglePin(n) }] : []),
@@ -432,7 +454,7 @@ export function Notes() {
               </button>
             </div>
           );
-        }) : <div className="notice">No hay notas todavía. Publica la primera.</div>}
+        }) : <div className="notice">{feed === 'notas' ? 'No hay notas todavía. Publica la primera.' : 'No hay listas de objetivos todavía. Publica la primera.'}</div>}
       </div>
 
       {threadId && <ThreadPanel noteId={threadId} onClose={() => setThreadId(null)} openHistory={openHistory} />}

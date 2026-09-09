@@ -6,6 +6,7 @@ import { Inventory } from '../views/Inventory';
 import { ProductForm } from '../views/ProductForm';
 import { Employees } from '../views/Employees';
 import { Profit } from '../views/Profit';
+import { Notes } from '../views/Notes';
 import { CLIENT_KEY, DEFAULT_PRODUCT_TAG } from '../lib/core';
 import { TestProvider, fieldControl, makeProduct, makeState, makeStore } from './testUtils';
 import type { AppState, Store } from '../types';
@@ -175,6 +176,25 @@ describe('Empleados: lista del equipo con su rol', () => {
 
     const anaRow = Array.from(container.querySelectorAll('.team-row')).find((r) => r.querySelector('.team-name')?.textContent?.startsWith('Ana'));
     expect(anaRow?.querySelector('.team-me')?.textContent).toBe('tú');
+  });
+});
+
+describe('Notas: historiales separados por pestaña', () => {
+  it('las notas solo se ven en la pestaña Notas y los objetivos en Objetivos', () => {
+    const now = Date.now();
+    const store = makeStore({
+      noteBoard: [
+        { id: 'n1', kind: 'text', text: 'Comprar pan', by: 'owner-1', byName: 'Ana', createdAt: now, date: '09/09/2026', time: '10:00' },
+        { id: 'n2', kind: 'checklist', text: 'Metas', items: [{ id: 'i1', text: 'Abrir', done: false }], by: 'owner-1', byName: 'Ana', createdAt: now + 1, date: '09/09/2026', time: '11:00' },
+      ],
+    });
+    render(<TestProvider initialState={makeState(store)}><Notes /></TestProvider>);
+    expect(screen.getByText('Comprar pan')).toBeInTheDocument();
+    expect(screen.queryByText('Metas')).not.toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('button', { name: /Objetivos/ }));
+    expect(screen.getByText('Metas')).toBeInTheDocument();
+    expect(screen.queryByText('Comprar pan')).not.toBeInTheDocument();
   });
 });
 

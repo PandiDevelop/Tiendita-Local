@@ -353,3 +353,16 @@ td.cat-bar .product-name .prod-tag{margin-left:auto;flex:0 0 auto}
 /* Opcion "Nueva categoria / Nuevo tag" con su lapicito en las sugerencias. */
 .cat-suggest .cat-suggest-list .cat-suggest-new{display:flex;align-items:center;gap:7px;color:#8061b4;font-weight:700;border-top:1px solid var(--line);margin-top:2px;border-radius:8px}
 .cat-suggest .cat-suggest-list .cat-suggest-new svg{flex:0 0 auto}
+/* Tuerca de "Opciones de la app" en el menu lateral (historiales de notas). */
+.app-settings{margin:0 7px 6px;padding:10px;display:inline-flex;align-items:center;justify-content:center;gap:7px;color:#866abd;background:transparent;border:1px solid var(--line);border-radius:10px;font-weight:600}
+.app-settings:hover{background:#f7f1ff}
+/* Historales separados de Notas y Objetivos. */
+.notes-feed-tabs{display:flex;gap:6px;margin:0 0 10px}
+.notes-feed-tab{display:inline-flex;align-items:center;gap:6px;padding:8px 14px;border-radius:9px;background:#f8f6fb;color:#766e88;font-size:13px;font-weight:700;border:1px solid transparent}
+.notes-feed-tab.active{background:var(--lav);color:#7258a2}
+/* Ventana de Opciones. */
+.settings-block{margin:2px 0 14px}
+.settings-block .label{margin-bottom:8px}
+.settings-row{display:flex;align-items:center;gap:10px}
+.settings-row input{flex:1;padding:11px 12px;border:1px solid #ddd8e5;border-radius:10px;color:var(--ink)}
+.settings-version{margin:0 0 6px}

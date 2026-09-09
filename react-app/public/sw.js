@@ -1,6 +1,15 @@
-const CACHE = 'mi-tiendita-1.8.4';
+const CACHE = 'mi-tiendita-1.8.5';
+// Version que se muestra en la app (el pie del menu y Opciones): sale de la
+// MISMA cadena de cache, asi el numero que ve el usuario es literalmente el
+// que identifica el despliegue activo (ver react-app/src/lib/appVersion.ts).
+const APP_VERSION = CACHE.replace('mi-tiendita-', '');
 self.addEventListener('install', () => self.skipWaiting());
 self.addEventListener('activate', event => event.waitUntil(Promise.all([self.clients.claim(), caches.keys().then(keys => Promise.all(keys.filter(key => key !== CACHE).map(key => caches.delete(key))))])));
+self.addEventListener('message', event => {
+  if (event.data && event.data.type === 'MT_VERSION' && event.ports && event.ports[0]) {
+    event.ports[0].postMessage(APP_VERSION);
+  }
+});
 self.addEventListener('fetch', event => {
   if (event.request.method !== 'GET') return;
   event.respondWith(

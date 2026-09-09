@@ -602,14 +602,22 @@ export function applyRemote(getState: () => AppState, mutate: (fn: (d: AppState)
     // (seenNoteIds) para que una nota borrada en otro dispositivo tambien
     // desaparezca aqui en vez de quedar pegada para siempre - ver el
     // comentario junto a seenNoteIds arriba.
+    // OJO (bug arreglado): la condicion antes era "remoteNoteBoard ||
+    // prevSeenNotes.size". Un snapshot de la subcoleccion de PRODUCTOS
+    // (que llega sin noteBoard ni updatedBy) hacia que esta reconciliacion
+    // corriera con remoto vacio y BORRARA del tablero local todas las notas
+    // ya vistas (hasta que el siguiente snapshot principal las restauraba):
+    // por eso las notas aparecian/desaparecian a cada rato y el orden se
+    // barajaba. Ahora solo se reconcilia cuando el snapshot de verdad trae
+    // el tablero; los snapshots de productos dejan las notas intactas.
     {
-      const prevSeenNotes = getSeenNoteIds(storeId);
       const remoteNoteBoard = remote.noteBoard && typeof remote.noteBoard === 'object' ? remote.noteBoard as Record<string, unknown> : null;
-      const remoteNoteIds = new Set(remoteNoteBoard ? Object.keys(remoteNoteBoard) : []);
-      if (remoteNoteBoard || prevSeenNotes.size) {
+      if (remoteNoteBoard) {
+        const prevSeenNotes = getSeenNoteIds(storeId);
+        const remoteNoteIds = new Set(Object.keys(remoteNoteBoard));
         const kept = (st.noteBoard || []).filter((n) => remoteNoteIds.has(n.id) || !prevSeenNotes.has(n.id));
         const map = new Map(kept.map((n) => [n.id, n]));
-        if (remoteNoteBoard) toNoteBoardArr(remoteNoteBoard).forEach((n) => map.set(n.id, n));
+        toNoteBoardArr(remoteNoteBoard).forEach((n) => map.set(n.id, n));
         st.noteBoard = Array.from(map.values());
         const nextSeen = new Set(prevSeenNotes);
         remoteNoteIds.forEach((id) => nextSeen.add(id));

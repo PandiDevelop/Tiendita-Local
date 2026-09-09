@@ -4,7 +4,10 @@ export const KEY = 'mi-tiendita-v1';
 export const CLIENT_KEY = 'mi-tiendita-client';
 export const USER_KEY = 'mi-tiendita-user';
 
-export const APP_VERSION = '1.1.0';
+// Version de arranque/mostrada hasta que el service worker responde con la
+// suya (ver lib/appVersion.ts): la real es la del sw.js activo (public/sw.js),
+// que refleja lo que esta desplegado de verdad.
+export const APP_VERSION = '1.8.5';
 
 const DEFAULT_STORE_SVG = encodeURIComponent(
   '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 160"><rect width="160" height="160" rx="34" fill="#f3eaff"/><path d="M29 67h102v61H29z" fill="#fffdf9" stroke="#9b7dcc" stroke-width="5"/><path d="M22 66 36 38h88l14 28z" fill="#ffc7b5" stroke="#9b7dcc" stroke-width="5"/><path d="M40 39h15v28H40zm32 0h16v28H72zm33 0h15v28h-15z" fill="#fffaf3"/><path d="M45 83h30v45H45z" fill="#b9e4d0" stroke="#9b7dcc" stroke-width="4"/><path d="M91 83h24v20H91z" fill="#fff0a9" stroke="#9b7dcc" stroke-width="4"/></svg>',
@@ -162,6 +165,16 @@ export function normalizeStore(store: Store): Store {
   store.noteLog = Array.isArray(store.noteLog) ? store.noteLog : [];
   store.invLog = Array.isArray(store.invLog) ? store.invLog : [];
   store.noteBoard = Array.isArray(store.noteBoard) ? store.noteBoard : [];
+  // Las notas del tablero siempre deben tener kind y createdAt bien puestos:
+  // con eso el orden que muestra la vista (por createdAt, ver Notes.tsx) es
+  // determinista y el mismo en todos los dispositivos, sin importar en que
+  // orden llegue cada nota en los snapshots. Notas viejas sin createdAt se
+  // derivan de su fecha/hora (misma regla que usa la migracion de noteLog).
+  store.noteBoard = store.noteBoard.filter((n) => !!n && !!n.id).map((n) => {
+    if (n.kind !== 'text' && n.kind !== 'checklist') n.kind = 'text';
+    if (!n.createdAt) n.createdAt = Date.parse((n.date || '') + 'T' + (n.time || '00:00') + ':00') || 0;
+    return n;
+  });
   migrateNoteLogToBoard(store);
   store.events = (store.events || []).filter((e) => !!e).map((e) => ({
     id: e.id || uid(),
