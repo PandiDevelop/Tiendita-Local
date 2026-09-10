@@ -196,16 +196,12 @@ export function Inventory() {
           </tbody></table>
         ) : <div className="notice">Aún no hay cambios registrados en el inventario.</div>
       ) : <>
-        {(s.products.length || storeCats(s).length) && (
-          <>
-            <div className="panel-search">
-              <input type="search" inputMode="search" placeholder="Buscar producto…" value={query} onChange={(e) => setQuery(e.target.value)} />
-              {searching && <button type="button" className="panel-search-clear" title="Limpiar búsqueda" onClick={() => setQuery('')}>×</button>}
-            </div>
-            {searching && <p className="muted panel-search-info">{foundCount} resultado{foundCount === 1 ? '' : 's'} para «{esc(query.trim())}».</p>}
-          </>
-        )}
-        {s.products.length || storeCats(s).length ? (
+          <div className="panel-search">
+            <input type="search" inputMode="search" placeholder="Buscar producto…" value={query} onChange={(e) => setQuery(e.target.value)} />
+            {searching && <button type="button" className="panel-search-clear" title="Limpiar búsqueda" onClick={() => setQuery('')}>×</button>}
+          </div>
+          {searching && <p className="muted panel-search-info">{foundCount} resultado{foundCount === 1 ? '' : 's'} para «{esc(query.trim())}».</p>}
+          {s.products.length || storeCats(s).length ? (
           searching && !visibleGroups.length ? (
             <div className="notice">No se encontraron productos para «{esc(query.trim())}».</div>
           ) : (

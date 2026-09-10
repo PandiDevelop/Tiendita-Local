@@ -185,7 +185,7 @@ export function Catalog() {
         <button className="button primary" onClick={addCategory}>＋ Añadir categoría</button>
         <div className="cat-divider"></div>
         <button className="button primary" onClick={() => setModal('newProduct')}>＋ Añadir producto</button>
-        <button className="button" disabled={!s.products.length} onClick={() => setBookOpen(true)}><StorefrontIcon size={16} /> Ver catálogo virtual</button>
+        <button className="button outline" disabled={!s.products.length} onClick={() => setBookOpen(true)}><StorefrontIcon size={16} /> Ver catálogo virtual</button>
       </div>
       <div className="panel-search">
         <input type="search" inputMode="search" placeholder="Buscar producto…" value={query} onChange={(e) => setQuery(e.target.value)} />

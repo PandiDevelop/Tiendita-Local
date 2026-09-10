@@ -125,7 +125,10 @@ export function App() {
             <Image src={s.image} cls="store-logo" />
             <div><div className="eyebrow">Tu tienda</div><h1>{esc(s.name)}</h1></div>
           </div>
-          <button className="button secondary" onClick={() => setModal('editStore')}><GearIcon size={15} /> Editar tienda</button>
+          <div className="topline-actions">
+            <button className="button secondary" onClick={() => setModal('editStore')}><GearIcon size={15} /> Editar tienda</button>
+            <button className="gear-btn" onClick={() => openModal('settings')} title="Opciones: nombre, notificaciones, sonido y descargas de registros. También sirve para restaurar una tienda borrada"><GearIcon size={18} /></button>
+          </div>
         </div>
         <nav className="tabs">
           {([['inicio', 'Inicio'], ['ganancias', 'Ganancias'], ['eventos', 'Eventos'], ['productos', 'Catálogo'], ['inventario', 'Inventario'], ['empleados', 'Empleados'], ['notas', 'Notas']] as const)

@@ -59,6 +59,32 @@ export function Profit() {
 
   return (
     <>
+      {view === 'resumen' && (
+        <div className="grid profit-grid">
+          <div className="card stat stat-h">
+            <div className="stat-icon">
+              <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M12 2v20" /><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" /></svg>
+            </div>
+            <div className="captioned-stat"><div>Ingresos</div><div className="value">{money(revenue)}</div></div>
+            <div className="small">{filtered.length} venta{filtered.length === 1 ? '' : 's'}</div>
+          </div>
+          <div className="card stat stat-h">
+            <div className="stat-icon">
+              <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><rect x="3" y="7" width="18" height="13" rx="2" /><path d="M3 7l9 6 9-6" /><path d="M9 20h6" /></svg>
+            </div>
+            <div className="captioned-stat"><div>Costo</div><div className="value">{money(cost)}</div></div>
+            <div className="small">Costo de lo vendido</div>
+          </div>
+          <div className="card stat accent stat-h">
+            <div className="stat-icon">
+              <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18" /><polyline points="17 6 23 6 23 12" /></svg>
+            </div>
+            <div className="captioned-stat"><div>Ganancia</div><div className="value">{money(profit)}</div></div>
+            <div className="small">{revenue > 0 ? margin.toFixed(1) + '% de margen' : 'Sin ventas en este periodo'}</div>
+          </div>
+        </div>
+      )}
+
       <div className="panel">
         <div className="panel-head">
           <div><h2>Ganancias</h2><p className="muted">Ingresos, costo y ganancia.</p></div>
@@ -90,52 +116,27 @@ export function Profit() {
       </div>
 
       {view === 'historial' ? <History /> : (
-        <>
-          <div className="grid profit-grid">
-            <div className="card stat stat-h">
-              <div className="stat-icon">
-                <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M12 2v20" /><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" /></svg>
-              </div>
-              <div className="captioned-stat"><div>Ingresos</div><div className="value">{money(revenue)}</div></div>
-              <div className="small">{filtered.length} venta{filtered.length === 1 ? '' : 's'}</div>
-            </div>
-            <div className="card stat stat-h">
-              <div className="stat-icon">
-                <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><rect x="3" y="7" width="18" height="13" rx="2" /><path d="M3 7l9 6 9-6" /><path d="M9 20h6" /></svg>
-              </div>
-              <div className="captioned-stat"><div>Costo</div><div className="value">{money(cost)}</div></div>
-              <div className="small">Costo de lo vendido</div>
-            </div>
-            <div className="card stat accent stat-h">
-              <div className="stat-icon">
-                <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18" /><polyline points="17 6 23 6 23 12" /></svg>
-              </div>
-              <div className="captioned-stat"><div>Ganancia</div><div className="value">{money(profit)}</div></div>
-              <div className="small">{revenue > 0 ? margin.toFixed(1) + '% de margen' : 'Sin ventas en este periodo'}</div>
-            </div>
-          </div>
-          <div className="panel">
-            <div className="panel-head"><div><h2>Ganancia por producto</h2><p className="muted">De mayor a menor ganancia.</p></div></div>
-            {lines.length ? (
-              <table><thead><tr><th>Producto</th><th>Unidades</th><th>Ingresos</th><th>Costo</th><th>Ganancia</th></tr></thead><tbody>
-                {lines.map((x) => {
-                  const pct = topProfit > 0 ? Math.max(0, x.profit / topProfit) * 100 : 0;
-                  return (
-                    <tr key={x.pid}>
-                      <td className="cat-bar"><div className="product-cell"><Image src={x.image || DEFAULT_PRODUCT_IMAGE} cls="product-image-cell" /><div className="product-name">{esc(x.name)}</div></div></td>
-                      <td>{x.qty}</td>
-                      <td>{money(x.revenue)}</td>
-                      <td>{money(x.cost)}</td>
-                      <td>
-                        <div className="profit-cell"><b>{money(x.profit)}</b><div className="profit-bar"><span style={{ width: pct + '%' }}></span></div></div>
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody></table>
-            ) : <div className="notice">No hay ventas registradas en este periodo.</div>}
-          </div>
-        </>
+        <div className="panel">
+          <div className="panel-head"><div><h2>Ganancia por producto</h2><p className="muted">De mayor a menor ganancia.</p></div></div>
+          {lines.length ? (
+            <table><thead><tr><th>Producto</th><th>Unidades</th><th>Ingresos</th><th>Costo</th><th>Ganancia</th></tr></thead><tbody>
+              {lines.map((x) => {
+                const pct = topProfit > 0 ? Math.max(0, x.profit / topProfit) * 100 : 0;
+                return (
+                  <tr key={x.pid}>
+                    <td className="cat-bar"><div className="product-cell"><Image src={x.image || DEFAULT_PRODUCT_IMAGE} cls="product-image-cell" /><div className="product-name">{esc(x.name)}</div></div></td>
+                    <td>{x.qty}</td>
+                    <td>{money(x.revenue)}</td>
+                    <td>{money(x.cost)}</td>
+                    <td>
+                      <div className="profit-cell"><b>{money(x.profit)}</b><div className="profit-bar"><span style={{ width: pct + '%' }}></span></div></div>
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody></table>
+          ) : <div className="notice">No hay ventas registradas en este periodo.</div>}
+        </div>
       )}
     </>
   );

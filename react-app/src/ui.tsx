@@ -133,11 +133,11 @@ export function GearIcon({ size = 19 }: { size?: number }) {
   );
 }
 
-// Logotipo de la app: rectangulo redondeado con degradado lila y un toldo
-// crema con lacuetes y una puerta (misma pieza de arte que public/logo.svg,
-// usado como favicon e icono de la PWA). Se usa en la portada de inicio y en
-// la barra lateral, para que en pantalla, en la pestana del navegador y en la
-// app instalada se vea siempre el mismo logo.
+// Logotipo de la app: libreta de notas con su espiral y una lista con casilla
+// marcada (misma pieza de arte que public/logo.svg, usado como favicon e
+// icono de la PWA). Se usa en la portada de inicio y en la barra lateral,
+// para que en pantalla, en la pestana del navegador y en la app instalada se
+// vea siempre el mismo logo.
 export function Logo({ size = 40, className = '' }: { size?: number; className?: string }) {
   return (
     <svg className={className} viewBox="0 0 160 160" width={size} height={size} role="img" aria-label="Logo de Mi Tiendita" aria-hidden="true">
@@ -148,13 +148,16 @@ export function Logo({ size = 40, className = '' }: { size?: number; className?:
         </linearGradient>
       </defs>
       <rect width="160" height="160" rx="36" fill="url(#mt-bg)" />
-      <rect x="30" y="46" width="100" height="18" rx="9" fill="#fffdf9" />
-      <path d="M39 64a9 9 0 0 0 18 0z" fill="#fffdf9" />
-      <path d="M63 64a9 9 0 0 0 18 0z" fill="#fffdf9" />
-      <path d="M87 64a9 9 0 0 0 18 0z" fill="#fffdf9" />
-      <path d="M111 64a9 9 0 0 0 18 0z" fill="#fffdf9" />
-      <rect x="64" y="86" width="32" height="52" rx="15" fill="#fffdf9" />
-      <circle cx="88" cy="112" r="3.5" fill="#8f73bf" />
+      <rect x="30" y="40" width="100" height="102" rx="14" fill="#fffdf9" />
+      <circle cx="52" cy="40" r="7.5" fill="#8f73bf" stroke="#fffdf9" strokeWidth="3" />
+      <circle cx="80" cy="40" r="7.5" fill="#8f73bf" stroke="#fffdf9" strokeWidth="3" />
+      <circle cx="108" cy="40" r="7.5" fill="#8f73bf" stroke="#fffdf9" strokeWidth="3" />
+      <rect x="44" y="58" width="72" height="18" rx="9" fill="#ffe3d0" />
+      <rect x="46" y="90" width="16" height="16" rx="4" fill="#ffffff" stroke="#bca8e9" strokeWidth="4" />
+      <path d="M48.5 99.5l4.2 4.2 8-8" fill="none" stroke="#8f73bf" strokeWidth="4.5" strokeLinecap="round" strokeLinejoin="round" />
+      <rect x="70" y="91" width="44" height="9" rx="4.5" fill="#eadff7" />
+      <rect x="46" y="116" width="68" height="9" rx="4.5" fill="#eadff7" />
+      <rect x="46" y="130" width="52" height="9" rx="4.5" fill="#eadff7" />
     </svg>
   );
 }

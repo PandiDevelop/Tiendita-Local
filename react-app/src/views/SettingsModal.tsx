@@ -157,8 +157,8 @@ export function SettingsModal({ onClose }: { onClose: () => void }) {
           {store && canManageNotes(store) ? (
             <>
               <div className="settings-row" style={{ flexWrap: 'wrap' }}>
-                <button className="button secondary" onClick={() => exportNotesArchiveCsv(store.id, store.name)} title="Descarga lo que este dispositivo registró de notas y respuestas de hilos, incluidas las que ya desaparecieron"><DownloadIcon /> Descargar registros de notas</button>
-                <button className="button secondary" onClick={() => exportObjectivesArchiveCsv(store.id, store.name)} title="Descarga lo que este dispositivo registró de listas de objetivos"><DownloadIcon /> Descargar registros de objetivos</button>
+                <button className="button outline" onClick={() => exportNotesArchiveCsv(store.id, store.name)} title="Descarga lo que este dispositivo registró de notas y respuestas de hilos, incluidas las que ya desaparecieron"><DownloadIcon /> Descargar registros de notas</button>
+                <button className="button outline" onClick={() => exportObjectivesArchiveCsv(store.id, store.name)} title="Descarga lo que este dispositivo registró de listas de objetivos"><DownloadIcon /> Descargar registros de objetivos</button>
               </div>
               <p className="muted">Solo llegan los registros que este dispositivo alcanzó a ver; cada equipo descarga los suyos.</p>
             </>
