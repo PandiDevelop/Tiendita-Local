@@ -186,10 +186,10 @@ export function Catalog() {
         <div className="cat-divider"></div>
         <button className="button primary" onClick={() => setModal('newProduct')}>＋ Añadir producto</button>
         <button className="button outline" disabled={!s.products.length} onClick={() => setBookOpen(true)}><StorefrontIcon size={16} /> Ver catálogo virtual</button>
-      </div>
-      <div className="panel-search">
-        <input type="search" inputMode="search" placeholder="Buscar producto…" value={query} onChange={(e) => setQuery(e.target.value)} />
-        {searching && <button type="button" className="panel-search-clear" title="Limpiar búsqueda" onClick={() => setQuery('')}>×</button>}
+        <div className="panel-search">
+          <input type="search" inputMode="search" placeholder="Buscar producto…" value={query} onChange={(e) => setQuery(e.target.value)} />
+          {searching && <button type="button" className="panel-search-clear" title="Limpiar búsqueda" onClick={() => setQuery('')}>×</button>}
+        </div>
       </div>
       {searching && <p className="muted panel-search-info">{foundCount} resultado{foundCount === 1 ? '' : 's'} para «{esc(query.trim())}».</p>}
       {s.products.length || storeCats(s).length ? (searching && !visibleGroups.length ? (

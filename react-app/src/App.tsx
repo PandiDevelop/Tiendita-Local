@@ -1,10 +1,10 @@
 import { useEffect, useState } from 'react';
 import { useStore, type ModalKind } from './store';
-import { DEFAULT_STORE_IMAGE, canManageTeam, esc } from './lib/core';
+import { canManageTeam, esc } from './lib/core';
 import { useAppVersion } from './lib/appVersion';
 import { initDeepLink, readDeepTab } from './lib/deepLink';
 import { pushOverlay } from './lib/backStack';
-import { DialogHost, GearIcon, Image, ImageLightboxHost, Logo, MenuIcon, Toast } from './ui';
+import { DialogHost, GearIcon, ImageLightboxHost, Logo, MenuIcon, StoreImage, Toast } from './ui';
 import { Dashboard } from './views/Dashboard';
 import { Catalog } from './views/Catalog';
 import { Inventory } from './views/Inventory';
@@ -71,6 +71,7 @@ export function App() {
     return (
       <>
         <main className="content landing-wrap">
+          <button className="gear-btn landing-gear" onClick={() => openModal('settings')} title="Opciones: nombre, notificaciones, sonido y descargas de registros. También sirve para restaurar una tienda borrada"><GearIcon size={18} /></button>
           <div className="landing">
             <Logo size={88} />
             <h1 className="landing-title">mi<span>tiendita</span></h1>
@@ -103,7 +104,7 @@ export function App() {
         <div className="store-list">
           {state.stores.map((x) => (
             <button key={x.id} className={'store-pill ' + (x.id === state.activeStoreId ? 'active' : '')} onClick={() => selectStore(x.id)}>
-              <Image src={x.image || DEFAULT_STORE_IMAGE} cls="store-thumb" enlarge={false} />
+              <StoreImage src={x.image} cls="store-thumb" alt={'Logo de ' + esc(x.name)} enlarge={false} />
               <span>{esc(x.name)}</span>
             </button>
           ))}
@@ -122,13 +123,10 @@ export function App() {
         </div>
         <div className="topline">
           <div className="store-title">
-            <Image src={s.image} cls="store-logo" />
+            <StoreImage src={s.image} cls="store-logo" alt={'Logo de ' + esc(s.name)} />
             <div><div className="eyebrow">Tu tienda</div><h1>{esc(s.name)}</h1></div>
           </div>
-          <div className="topline-actions">
-            <button className="button secondary" onClick={() => setModal('editStore')}><GearIcon size={15} /> Editar tienda</button>
-            <button className="gear-btn" onClick={() => openModal('settings')} title="Opciones: nombre, notificaciones, sonido y descargas de registros. También sirve para restaurar una tienda borrada"><GearIcon size={18} /></button>
-          </div>
+          <button className="button secondary" onClick={() => setModal('editStore')}><GearIcon size={15} /> Editar tienda</button>
         </div>
         <nav className="tabs">
           {([['inicio', 'Inicio'], ['ganancias', 'Ganancias'], ['eventos', 'Eventos'], ['productos', 'Catálogo'], ['inventario', 'Inventario'], ['empleados', 'Empleados'], ['notas', 'Notas']] as const)

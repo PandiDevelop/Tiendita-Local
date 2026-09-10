@@ -3,6 +3,7 @@ import { createPortal } from 'react-dom';
 import { DialogRequest, customConfirm, resolveDialog, subscribeDialog } from './lib/dialog';
 import { closeLightbox, openLightbox, subscribeLightbox } from './lib/lightbox';
 import { pushOverlay } from './lib/backStack';
+import { DEFAULT_STORE_IMAGE } from './lib/core';
 
 // Antes no habia forma de ver una foto (de producto, tienda, etc.) mas
 // grande que la miniatura de la lista: tocarla no hacia nada, o en algunos
@@ -21,6 +22,25 @@ export function Image({ src, cls, alt = '', enlarge = true }: { src?: string; cl
       onClick={canEnlarge ? (e) => { e.stopPropagation(); openLightbox(src!); } : undefined}
       style={canEnlarge ? { cursor: 'zoom-in' } : undefined}
     />
+  );
+}
+
+// Logo de tienda con el color del tema: cuando la tienda aun no tiene foto,
+// en vez del icono gris fijo (DEFAULT_STORE_IMAGE) se dibuja el mismo local
+// pero en los colores del tema activo, para que cambie al cambiar el tema.
+export function StoreImage({ src, cls, alt = '', enlarge = true }: { src?: string; cls?: string; alt?: string; enlarge?: boolean }) {
+  if (src && src !== DEFAULT_STORE_IMAGE) return <Image src={src} cls={cls} alt={alt} enlarge={enlarge} />;
+  return (
+    <span className={cls + ' themed-store'} role="img" aria-label={alt || 'Tienda sin logo'}>
+      <svg viewBox="0 0 160 160" aria-hidden="true">
+        <path d="M22 66 36 38h88l14 28z" fill="var(--brand-2)" stroke="currentColor" strokeWidth="5" strokeLinejoin="round" />
+        <path d="M40 39h15v28H40zm32 0h16v28H72zm33 0h15v28h-15z" fill="var(--cream)" />
+        <path d="M29 67h102v61H29z" fill="var(--surface)" stroke="currentColor" strokeWidth="5" />
+        <path d="M45 83h30v45H45z" fill="var(--mint)" stroke="currentColor" strokeWidth="4" />
+        <path d="M91 83h24v20H91z" fill="var(--peach)" stroke="currentColor" strokeWidth="4" />
+        <path d="M62 93c0 3-2 5-5 5s-5-2-5-5 2-5 5-5 5 2 5 5z" fill="#ffffff" opacity="0.85" />
+      </svg>
+    </span>
   );
 }
 
@@ -60,7 +80,7 @@ export function ImagePicker({ id, src, cls, hint, onFile, disabled }: { id: stri
   return (
     <div className="image-picker-wrap">
       <div className="image-picker">
-        <Image src={src} cls={cls} />
+        <StoreImage src={src} cls={cls} alt="Logo de la tienda" />
         <div className="image-picker-actions">
           <input id={id} type="file" accept="image/*" onChange={(e) => onFile(e.target.files?.[0])} disabled={disabled} style={{ display: 'none' }} />
           <button type="button" className="button secondary" disabled={disabled} onClick={() => document.getElementById(id)?.click()}>Elegir archivo</button>
@@ -148,16 +168,16 @@ export function Logo({ size = 40, className = '' }: { size?: number; className?:
         </linearGradient>
       </defs>
       <rect width="160" height="160" rx="36" fill="url(#mt-bg)" />
-      <rect x="30" y="40" width="100" height="102" rx="14" fill="#fffdf9" />
-      <circle cx="52" cy="40" r="7.5" fill="#8f73bf" stroke="#fffdf9" strokeWidth="3" />
-      <circle cx="80" cy="40" r="7.5" fill="#8f73bf" stroke="#fffdf9" strokeWidth="3" />
-      <circle cx="108" cy="40" r="7.5" fill="#8f73bf" stroke="#fffdf9" strokeWidth="3" />
-      <rect x="44" y="58" width="72" height="18" rx="9" fill="#ffe3d0" />
-      <rect x="46" y="90" width="16" height="16" rx="4" fill="#ffffff" stroke="#bca8e9" strokeWidth="4" />
-      <path d="M48.5 99.5l4.2 4.2 8-8" fill="none" stroke="#8f73bf" strokeWidth="4.5" strokeLinecap="round" strokeLinejoin="round" />
-      <rect x="70" y="91" width="44" height="9" rx="4.5" fill="#eadff7" />
-      <rect x="46" y="116" width="68" height="9" rx="4.5" fill="#eadff7" />
-      <rect x="46" y="130" width="52" height="9" rx="4.5" fill="#eadff7" />
+      <rect x="30" y="29" width="100" height="102" rx="14" fill="#fffdf9" />
+      <circle cx="52" cy="29" r="7.5" fill="#8f73bf" stroke="#fffdf9" strokeWidth="3" />
+      <circle cx="80" cy="29" r="7.5" fill="#8f73bf" stroke="#fffdf9" strokeWidth="3" />
+      <circle cx="108" cy="29" r="7.5" fill="#8f73bf" stroke="#fffdf9" strokeWidth="3" />
+      <rect x="44" y="47" width="72" height="18" rx="9" fill="#ffe3d0" />
+      <rect x="46" y="79" width="16" height="16" rx="4" fill="#ffffff" stroke="#bca8e9" strokeWidth="4" />
+      <path d="M48.5 88.5l4.2 4.2 8-8" fill="none" stroke="#8f73bf" strokeWidth="4.5" strokeLinecap="round" strokeLinejoin="round" />
+      <rect x="70" y="80" width="44" height="9" rx="4.5" fill="#eadff7" />
+      <rect x="46" y="105" width="68" height="9" rx="4.5" fill="#eadff7" />
+      <rect x="46" y="119" width="52" height="9" rx="4.5" fill="#eadff7" />
     </svg>
   );
 }
