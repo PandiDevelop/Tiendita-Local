@@ -373,11 +373,11 @@ td.cat-bar .product-name .prod-tag{margin-left:auto;flex:0 0 auto}
 /* Tuerca de "Opciones de la app" en el menu lateral (historiales de notas). */
 .app-settings{margin:0 7px 6px;padding:10px;display:inline-flex;align-items:center;justify-content:center;gap:7px;color:var(--brand-deep);background:transparent;border:1px solid var(--line);border-radius:10px;font-weight:600}
 .app-settings:hover{background:var(--lav)}
-/* Historales separados de Notas y Objetivos: una sola caja y una barrita entre pestañas. */
-.notes-feed-tabs{display:flex;gap:0;margin:0 0 12px;background:var(--surface);border:1px solid var(--line);border-radius:14px;overflow:hidden}
-.notes-feed-tab{flex:1;display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:11px 8px;background:transparent;color:var(--muted);font-size:13px;font-weight:700;border:0}
-.notes-feed-tab.active{background:var(--lav);color:var(--brand-deep)}
-.notes-feed-tab + .notes-feed-tab{position:relative}.notes-feed-tab + .notes-feed-tab::before{content:'';position:absolute;left:-1px;top:50%;transform:translateY(-50%);width:2px;height:16px;border-radius:2px;background:var(--brand-line);z-index:1}
+/* Notas y Objetivos con el mismo diseño segmentado que Existencias/Historial,
+   de borde a borde y adaptable a la pantalla. */
+.notes-feed-tabs{display:flex;gap:4px;width:100%;max-width:100%;padding:3px;margin:0 0 12px;background:var(--lav);border-radius:12px}
+.notes-feed-tab{flex:1;display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:8px 14px;border-radius:9px;background:transparent;border:0;color:var(--brand-deep);font-weight:700;font-size:14px;white-space:nowrap;min-width:0}
+.notes-feed-tab.active{background:var(--surface);box-shadow:0 2px 8px var(--brand-line);color:var(--ink)}
 /* Selector de tema en Opciones: de a parejas (Clásico/Oscuro, Rosa/Menta) y
    Automático junto al tema oculto activo, si lo hay. */
 .theme-chip-row{display:grid;grid-template-columns:repeat(2,1fr);gap:6px}
@@ -501,8 +501,8 @@ td.cat-bar .product-name .prod-tag{margin-left:auto;flex:0 0 auto}
   --brand:#46a583;--brand-deep:#2f7e62;--brand-2:#71b79a;--brand-line:#a9d3bd;--surface:#e3f7ed;--shadow:0 12px 35px rgba(47,126,98,.10)
 }
 :root[data-theme="owen"]{
-	--ink:#33201c;--muted:#a07a70;--line:#f4d9d2;--cream:#fff4ef;--lav:#ffe5dc;--lilac:#eda08c;--peach:#ffd7c4;--mint:#fdf0e0;--pink:#fbdcd6;--red:#d94f38;
-	--brand:#e2593f;--brand-deep:#b23a28;--brand-2:#f2915f;--brand-line:#f2ab91;--surface:#fffaf7;--shadow:0 12px 35px rgba(178,58,40,.10)
+	--ink:#3a1d18;--muted:#a5746a;--line:#f7d4ce;--cream:#fff3ef;--lav:#ffe0d8;--lilac:#e88274;--peach:#ffcfc3;--mint:#fdece0;--pink:#fbd2cc;--red:#c9332a;
+	--brand:#cf3b2e;--brand-deep:#a2251b;--brand-2:#e8695c;--brand-line:#f0a394;--surface:#fff9f6;--shadow:0 12px 35px rgba(162,37,27,.12)
 }
 :root[data-theme="owen"] body{background-color:var(--cream);background-image:url("./pattern-owen.jpg");background-size:360px 540px}
 :root[data-theme="crisdeku"]{
@@ -517,7 +517,6 @@ td.cat-bar .product-name .prod-tag{margin-left:auto;flex:0 0 auto}
 :root[data-theme="pandi"] body{background-color:#0a1730;background-attachment:fixed;background-image:radial-gradient(1.6px 1.6px at 18% 22%,#ffffffcc,transparent 100%),radial-gradient(1px 1px at 38% 68%,#a5e4ff99,transparent 100%),radial-gradient(2px 2px at 58% 28%,#ffffffb3,transparent 100%),radial-gradient(1px 1px at 72% 52%,#ffffff99,transparent 100%),radial-gradient(1.4px 1.4px at 88% 30%,#a5e4ffb3,transparent 100%),radial-gradient(1px 1px at 92% 78%,#ffffff80,transparent 100%),radial-gradient(1.6px 1.6px at 8% 82%,#ffffff99,transparent 100%),radial-gradient(1px 1px at 46% 12%,#ffffffb3,transparent 100%),radial-gradient(1.4px 1.4px at 64% 84%,#a5e4ff99,transparent 100%),radial-gradient(2px 2px at 26% 92%,#ffffff99,transparent 100%);background-size:230px 230px}
 :root[data-theme="pandi"] .button.secondary{background:#0f2240;color:var(--ink);border-color:var(--line)}
 :root[data-theme="pandi"] .cat-head{background:var(--surface)}
-:root[data-theme="pandi"] .dd-btn,.sale-search input,.panel-search input,.cat-actions input,.promo-row-conds input,.promo-row-conds select,.notes-box,.checklist-title-input,.checklist-add-row input,.note-edit-box textarea,.thread-compose textarea,.checklist-edit-item{background:#33638f;border-color:var(--brand-line);color:var(--ink)}
 :root[data-theme="pandi"] .sync-join{background:#1a3a66;color:#ddf6ff;border-color:var(--brand-line)}
 :root[data-theme="pandi"] .inv-mode.on{background:#0f2240;color:var(--ink)}
 :root[data-theme="pandi"] .day-tab{background:#0f2240;color:#bcd7ec}
@@ -542,9 +541,9 @@ td.cat-bar .product-name .prod-tag{margin-left:auto;flex:0 0 auto}
 :root[data-theme="dark"] .new-store{background:#302848;color:var(--brand-deep)}:root[data-theme="dark"] .sync-join{background:#453d6b;color:#efe7ff;border-color:var(--brand-line)}
 :root[data-theme="dark"] .vc-head{background:var(--cream)}
 :root[data-theme="dark"] .vc-body{background:var(--cream)}
-:root[data-theme="dark"] .dd-btn,.sale-search input,.panel-search input,.cat-actions input,.promo-row-conds input,.promo-row-conds select{background:#615694;border-color:var(--brand-line);color:var(--ink)}
-:root[data-theme="dark"] .notes-box,.checklist-title-input,.checklist-add-row input,.note-edit-box textarea,.thread-compose textarea,.checklist-edit-item{background:#615694;border-color:var(--brand-line);color:var(--ink)}
-:root[data-theme="dark"] .qty-input,.checklist-edit-item,.settings-row input{border-color:var(--line)}
+:root[data-theme="dark"] .dd-btn,.sale-search input,.panel-search input,.cat-actions input,.promo-row-conds input,.promo-row-conds select,.notes-box,.checklist-title-input,.checklist-add-row input,.note-edit-box textarea,.thread-compose textarea,.checklist-edit-item,.settings-row input,.modal input[type="text"],.modal input[type="password"],.modal input[type="number"],.modal input[type="search"],.modal textarea{background:var(--lilac);border-color:var(--brand);color:var(--surface)}
+:root[data-theme="dark"] ::placeholder{color:#5a4f85}
+:root[data-theme="dark"] .qty-input{border-color:var(--line)}
 :root[data-theme="dark"] .inv-mode.on{background:#211d33;color:var(--ink)}
 :root[data-theme="dark"] .ev-card .ev-name{background:#211d33;color:var(--ink);border-color:var(--line)}
 :root[data-theme="dark"] .image-picker-wrap{background:#2a2540}
@@ -552,9 +551,8 @@ td.cat-bar .product-name .prod-tag{margin-left:auto;flex:0 0 auto}
 :root[data-theme="dark"] .emp-detail-row>td{background:var(--surface)}
 :root[data-theme="dark"] .tag-chip button{background:#56467e;color:#efe4ff}
 :root[data-theme="dark"] .lightbox-img{background:#17131f}
-:root[data-theme="dark"] .cat-actions input{background:#615694;color:var(--ink)}
-:root[data-theme="dark"] .settings-row input,.modal input[type="text"],.modal input[type="password"],.modal input[type="number"],.modal input[type="search"],.modal textarea{background:#615694;border-color:var(--brand-line);color:var(--ink)}
-:root[data-theme="pandi"] .settings-row input,.modal input[type="text"],.modal input[type="password"],.modal input[type="number"],.modal input[type="search"],.modal textarea{background:#33638f;border-color:var(--brand-line);color:var(--ink)}
+:root[data-theme="pandi"] .dd-btn,.sale-search input,.panel-search input,.cat-actions input,.promo-row-conds input,.promo-row-conds select,.notes-box,.checklist-title-input,.checklist-add-row input,.note-edit-box textarea,.thread-compose textarea,.checklist-edit-item,.settings-row input,.modal input[type="text"],.modal input[type="password"],.modal input[type="number"],.modal input[type="search"],.modal textarea{background:var(--lilac);border-color:var(--brand);color:var(--cream)}
+:root[data-theme="pandi"] ::placeholder{color:#0d2c50}
 
 .button.outline{background:var(--surface);color:var(--brand-deep);border:2px solid var(--brand-line)}
 .button.outline:hover{background:var(--lav)}
