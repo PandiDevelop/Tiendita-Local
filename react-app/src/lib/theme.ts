@@ -2,16 +2,17 @@
 // de los ajustes (ver lib/settings.ts): no viaja por Firestore. "Automático"
 // (por defecto) sigue el modo claro/oscuro del teléfono (prefers-color-scheme)
 // en vivo: si el teléfono cambia de claro a oscuro, la app cambia sola.
-export type ThemePref = 'auto' | 'light' | 'dark' | 'rosa' | 'menta';
+export type ThemePref = 'light' | 'dark' | 'rosa' | 'menta' | 'azul' | 'auto';
 
 const THEME_KEY = 'mt_theme';
 
 const THEMES: { value: ThemePref; label: string }[] = [
-  { value: 'auto', label: 'Automático (sigue al teléfono)' },
   { value: 'light', label: 'Clásico' },
   { value: 'dark', label: 'Oscuro' },
   { value: 'rosa', label: 'Rosa pastel' },
   { value: 'menta', label: 'Menta pastel' },
+  { value: 'azul', label: 'Azul pastel' },
+  { value: 'auto', label: 'Automático (sigue al teléfono)' },
 ];
 
 export function themeOptions(): { value: ThemePref; label: string }[] {
@@ -21,7 +22,7 @@ export function themeOptions(): { value: ThemePref; label: string }[] {
 export function themePref(): ThemePref {
   try {
     const v = localStorage.getItem(THEME_KEY);
-    if (v === 'light' || v === 'dark' || v === 'rosa' || v === 'menta' || v === 'auto') return v;
+    if (v === 'light' || v === 'dark' || v === 'rosa' || v === 'menta' || v === 'azul' || v === 'auto') return v;
   } catch { /* ignorar */ }
   return 'auto';
 }
@@ -36,8 +37,9 @@ function systemDark(): boolean {
 }
 
 // El tema que de verdad se aplica al <html data-theme="..."> (los bloques
-// CSS: claro clásico, rosa, menta y oscuro). "Automático" se resuelve acá.
-export function resolvedTheme(): 'light' | 'dark' | 'rosa' | 'menta' {
+// CSS: claro clásico, rosa, menta, azul y oscuro). "Automático" se resuelve
+// a claro u oscuro según el teléfono.
+export function resolvedTheme(): 'light' | 'dark' | 'rosa' | 'menta' | 'azul' {
   const p = themePref();
   if (p === 'auto') return systemDark() ? 'dark' : 'light';
   return p;
