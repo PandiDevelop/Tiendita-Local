@@ -94,15 +94,16 @@ export function archiveMarkGone(storeId: string, id: string, status: 'eliminada'
   saveArchive(storeId, list);
 }
 
-// CSV con BOM y separador ; (mismo formato que el resto de exportaciones de
-// la app, ver exportExcel en views/History.tsx) para que Excel en español
-// lo abra bien de una.
-function buildCsv(rows: (string | number)[][], filenameBase: string): void {
-  const csv = '\ufeff' + rows.map((r) => r.map((v) => '"' + String(v == null ? '' : v).replace(/"/g, '""') + '"').join(';')).join('\r\n');
-  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+// Texto plano legible (igual que el export de ventas, ver views/History.tsx):
+// se prefiere un .txt antes que Excel para revisar registros.
+function buildTxt(rows: (string | number)[][], filenameBase: string): void {
+  const headers = rows[0] || [];
+  const lines = rows.slice(1).map((r) => headers.map((hd, i) => hd + ': ' + String(r[i] == null ? '' : r[i])).join('  '));
+  const txt = '\ufeff' + lines.join('\n') + '\n';
+  const blob = new Blob([txt], { type: 'text/plain;charset=utf-8;' });
   const a = document.createElement('a');
   a.href = URL.createObjectURL(blob);
-  a.download = filenameBase + '.csv';
+  a.download = filenameBase + '.txt';
   a.click();
   URL.revokeObjectURL(a.href);
 }
@@ -122,12 +123,12 @@ function slugName(storeName: string): string {
 
 // "Descargar registros de notas" (Opciones > Registros): notas y respuestas
 // de hilos (los objetivos van por separado, ver abajo).
-export function exportNotesArchiveCsv(storeId: string, storeName: string): void {
-  buildCsv(archiveRows(storeId, ['nota', 'respuesta']), 'notas-log-' + slugName(storeName));
+export function exportNotesArchiveTxt(storeId: string, storeName: string): void {
+  buildTxt(archiveRows(storeId, ['nota', 'respuesta']), 'notas-log-' + slugName(storeName));
 }
 
 // "Descargar registros de objetivos" (Opciones > Registros): solo las listas
 // de objetivos/checklist.
-export function exportObjectivesArchiveCsv(storeId: string, storeName: string): void {
-  buildCsv(archiveRows(storeId, ['checklist']), 'objetivos-log-' + slugName(storeName));
+export function exportObjectivesArchiveTxt(storeId: string, storeName: string): void {
+  buildTxt(archiveRows(storeId, ['checklist']), 'objetivos-log-' + slugName(storeName));
 }

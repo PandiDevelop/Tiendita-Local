@@ -9,7 +9,7 @@ import { enablePushForStore, disablePushForStore, pushConfigured } from '../lib/
 import { setPushPrefs, restoreStoreFn } from '../lib/sync';
 import { themePref, setThemePref, themeOptions } from '../lib/theme';
 import type { ThemePref } from '../lib/theme';
-import { exportNotesArchiveCsv, exportObjectivesArchiveCsv } from '../lib/notesArchive';
+import { exportNotesArchiveTxt, exportObjectivesArchiveTxt } from '../lib/notesArchive';
 import { DownloadIcon, Modal } from '../ui';
 import type { NotifCat } from '../types';
 
@@ -157,8 +157,8 @@ export function SettingsModal({ onClose }: { onClose: () => void }) {
           {store && canManageNotes(store) ? (
             <>
               <div className="settings-row" style={{ flexWrap: 'wrap' }}>
-                <button className="button outline" onClick={() => exportNotesArchiveCsv(store.id, store.name)} title="Descarga lo que este dispositivo registró de notas y respuestas de hilos, incluidas las que ya desaparecieron"><DownloadIcon /> Descargar registros de notas</button>
-                <button className="button outline" onClick={() => exportObjectivesArchiveCsv(store.id, store.name)} title="Descarga lo que este dispositivo registró de listas de objetivos"><DownloadIcon /> Descargar registros de objetivos</button>
+                <button className="button outline" onClick={() => exportNotesArchiveTxt(store.id, store.name)} title="Descarga lo que este dispositivo registró de notas y respuestas de hilos, incluidas las que ya desaparecieron"><DownloadIcon /> Descargar registros de notas</button>
+                <button className="button outline" onClick={() => exportObjectivesArchiveTxt(store.id, store.name)} title="Descarga lo que este dispositivo registró de listas de objetivos"><DownloadIcon /> Descargar registros de objetivos</button>
               </div>
               <p className="muted">Solo llegan los registros que este dispositivo alcanzó a ver; cada equipo descarga los suyos.</p>
             </>
