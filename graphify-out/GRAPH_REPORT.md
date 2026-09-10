@@ -1,7 +1,7 @@
 # Graph Report - repo-local  (2026-09-10)
 
 ## Corpus Check
-- 51 files · ~92,326 words
+- 51 files · ~92,333 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
@@ -10,7 +10,7 @@
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `0fadc65e`
+- Built from commit: `0bde253c`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
@@ -98,7 +98,7 @@ Nodes (53): addChecklistItem(), addChecklistNote(), addNote(), addNoteMsg(), add
 
 ### Community 12 - "SettingsModal.tsx"
 Cohesion: 0.09
-Nodes (40): DeletedStoreRecord, archiveMarkGone(), archiveRows(), archiveUpsert(), buildCsv(), exportNotesArchiveCsv(), exportObjectivesArchiveCsv(), loadArchive() (+32 more)
+Nodes (40): DeletedStoreRecord, archiveMarkGone(), archiveRows(), archiveUpsert(), buildTxt(), exportNotesArchiveTxt(), exportObjectivesArchiveTxt(), loadArchive() (+32 more)
 
 ### Community 13 - "Mi Tiendita"
 Cohesion: 0.17

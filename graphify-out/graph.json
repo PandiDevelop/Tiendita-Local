@@ -1607,7 +1607,7 @@
       "file_type": "code",
       "norm_label": "archiverows()",
       "source_file": "react-app/src/lib/notesArchive.ts",
-      "source_location": "L110"
+      "source_location": "L111"
     },
     {
       "id": "react_app_src_lib_notesarchive_archiveupsert",
@@ -1622,40 +1622,40 @@
       "source_location": "L42"
     },
     {
-      "id": "react_app_src_lib_notesarchive_buildcsv",
-      "label": "buildCsv()",
+      "id": "react_app_src_lib_notesarchive_buildtxt",
+      "label": "buildTxt()",
       "_callable": true,
       "_origin": "ast",
       "community": 12,
       "community_name": "SettingsModal.tsx",
       "file_type": "code",
-      "norm_label": "buildcsv()",
+      "norm_label": "buildtxt()",
       "source_file": "react-app/src/lib/notesArchive.ts",
-      "source_location": "L100"
+      "source_location": "L99"
     },
     {
-      "id": "react_app_src_lib_notesarchive_exportnotesarchivecsv",
-      "label": "exportNotesArchiveCsv()",
+      "id": "react_app_src_lib_notesarchive_exportnotesarchivetxt",
+      "label": "exportNotesArchiveTxt()",
       "_callable": true,
       "_origin": "ast",
       "community": 12,
       "community_name": "SettingsModal.tsx",
       "file_type": "code",
-      "norm_label": "exportnotesarchivecsv()",
+      "norm_label": "exportnotesarchivetxt()",
       "source_file": "react-app/src/lib/notesArchive.ts",
-      "source_location": "L125"
+      "source_location": "L126"
     },
     {
-      "id": "react_app_src_lib_notesarchive_exportobjectivesarchivecsv",
-      "label": "exportObjectivesArchiveCsv()",
+      "id": "react_app_src_lib_notesarchive_exportobjectivesarchivetxt",
+      "label": "exportObjectivesArchiveTxt()",
       "_callable": true,
       "_origin": "ast",
       "community": 12,
       "community_name": "SettingsModal.tsx",
       "file_type": "code",
-      "norm_label": "exportobjectivesarchivecsv()",
+      "norm_label": "exportobjectivesarchivetxt()",
       "source_file": "react-app/src/lib/notesArchive.ts",
-      "source_location": "L131"
+      "source_location": "L132"
     },
     {
       "id": "react_app_src_lib_notesarchive_loadarchive",
@@ -1727,7 +1727,7 @@
       "file_type": "code",
       "norm_label": "slugname()",
       "source_file": "react-app/src/lib/notesArchive.ts",
-      "source_location": "L119"
+      "source_location": "L120"
     },
     {
       "id": "react_app_src_lib_notesarchive_storagekey",
@@ -8368,7 +8368,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "react-app/src/lib/notesArchive.ts",
-      "source_location": "L111",
+      "source_location": "L112",
       "weight": 1.0
     },
     {
@@ -8396,7 +8396,7 @@
       "weight": 1.0
     },
     {
-      "source": "react_app_src_lib_notesarchive_exportnotesarchivecsv",
+      "source": "react_app_src_lib_notesarchive_exportnotesarchivetxt",
       "target": "react_app_src_lib_notesarchive_archiverows",
       "relation": "calls",
       "_origin": "ast",
@@ -8404,23 +8404,23 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "react-app/src/lib/notesArchive.ts",
-      "source_location": "L126",
+      "source_location": "L127",
       "weight": 1.0
     },
     {
-      "source": "react_app_src_lib_notesarchive_exportnotesarchivecsv",
-      "target": "react_app_src_lib_notesarchive_buildcsv",
+      "source": "react_app_src_lib_notesarchive_exportnotesarchivetxt",
+      "target": "react_app_src_lib_notesarchive_buildtxt",
       "relation": "calls",
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "react-app/src/lib/notesArchive.ts",
-      "source_location": "L126",
+      "source_location": "L127",
       "weight": 1.0
     },
     {
-      "source": "react_app_src_lib_notesarchive_exportnotesarchivecsv",
+      "source": "react_app_src_lib_notesarchive_exportnotesarchivetxt",
       "target": "react_app_src_lib_notesarchive_slugname",
       "relation": "calls",
       "_origin": "ast",
@@ -8428,11 +8428,11 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "react-app/src/lib/notesArchive.ts",
-      "source_location": "L126",
+      "source_location": "L127",
       "weight": 1.0
     },
     {
-      "source": "react_app_src_lib_notesarchive_exportobjectivesarchivecsv",
+      "source": "react_app_src_lib_notesarchive_exportobjectivesarchivetxt",
       "target": "react_app_src_lib_notesarchive_archiverows",
       "relation": "calls",
       "_origin": "ast",
@@ -8440,23 +8440,23 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "react-app/src/lib/notesArchive.ts",
-      "source_location": "L132",
+      "source_location": "L133",
       "weight": 1.0
     },
     {
-      "source": "react_app_src_lib_notesarchive_exportobjectivesarchivecsv",
-      "target": "react_app_src_lib_notesarchive_buildcsv",
+      "source": "react_app_src_lib_notesarchive_exportobjectivesarchivetxt",
+      "target": "react_app_src_lib_notesarchive_buildtxt",
       "relation": "calls",
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "react-app/src/lib/notesArchive.ts",
-      "source_location": "L132",
+      "source_location": "L133",
       "weight": 1.0
     },
     {
-      "source": "react_app_src_lib_notesarchive_exportobjectivesarchivecsv",
+      "source": "react_app_src_lib_notesarchive_exportobjectivesarchivetxt",
       "target": "react_app_src_lib_notesarchive_slugname",
       "relation": "calls",
       "_origin": "ast",
@@ -8464,7 +8464,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "react-app/src/lib/notesArchive.ts",
-      "source_location": "L132",
+      "source_location": "L133",
       "weight": 1.0
     },
     {
@@ -13353,7 +13353,7 @@
     },
     {
       "source": "react_app_src_views_settingsmodal_settingsmodal",
-      "target": "react_app_src_lib_notesarchive_exportnotesarchivecsv",
+      "target": "react_app_src_lib_notesarchive_exportnotesarchivetxt",
       "relation": "calls",
       "_origin": "ast",
       "confidence": "EXTRACTED",
@@ -13365,7 +13365,7 @@
     },
     {
       "source": "react_app_src_views_settingsmodal_settingsmodal",
-      "target": "react_app_src_lib_notesarchive_exportobjectivesarchivecsv",
+      "target": "react_app_src_lib_notesarchive_exportobjectivesarchivetxt",
       "relation": "calls",
       "_origin": "ast",
       "confidence": "EXTRACTED",
@@ -19270,7 +19270,7 @@
     },
     {
       "source": "react_app_src_views_settingsmodal",
-      "target": "react_app_src_lib_notesarchive_exportnotesarchivecsv",
+      "target": "react_app_src_lib_notesarchive_exportnotesarchivetxt",
       "relation": "imports",
       "_origin": "ast",
       "confidence": "EXTRACTED",
@@ -19282,7 +19282,7 @@
     },
     {
       "source": "react_app_src_views_settingsmodal",
-      "target": "react_app_src_lib_notesarchive_exportobjectivesarchivecsv",
+      "target": "react_app_src_lib_notesarchive_exportobjectivesarchivetxt",
       "relation": "imports",
       "_origin": "ast",
       "confidence": "EXTRACTED",
@@ -24243,24 +24243,13 @@
     },
     {
       "source": "react_app_src_lib_notesarchive",
-      "target": "react_app_src_lib_notesarchive_buildcsv",
-      "relation": "contains",
-      "_origin": "ast",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "react-app/src/lib/notesArchive.ts",
-      "source_location": "L100",
-      "weight": 1.0
-    },
-    {
-      "source": "react_app_src_lib_notesarchive",
       "target": "react_app_src_lib_notesarchive_archiverows",
       "relation": "contains",
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "react-app/src/lib/notesArchive.ts",
-      "source_location": "L110",
+      "source_location": "L111",
       "weight": 1.0
     },
     {
@@ -24271,29 +24260,29 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "react-app/src/lib/notesArchive.ts",
-      "source_location": "L119",
+      "source_location": "L120",
       "weight": 1.0
     },
     {
       "source": "react_app_src_lib_notesarchive",
-      "target": "react_app_src_lib_notesarchive_exportnotesarchivecsv",
+      "target": "react_app_src_lib_notesarchive_exportnotesarchivetxt",
       "relation": "contains",
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "react-app/src/lib/notesArchive.ts",
-      "source_location": "L125",
+      "source_location": "L126",
       "weight": 1.0
     },
     {
       "source": "react_app_src_lib_notesarchive",
-      "target": "react_app_src_lib_notesarchive_exportobjectivesarchivecsv",
+      "target": "react_app_src_lib_notesarchive_exportobjectivesarchivetxt",
       "relation": "contains",
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "react-app/src/lib/notesArchive.ts",
-      "source_location": "L131",
+      "source_location": "L132",
       "weight": 1.0
     },
     {
@@ -24382,6 +24371,17 @@
       "confidence_score": 1.0,
       "source_file": "react-app/src/lib/notesArchive.ts",
       "source_location": "L89",
+      "weight": 1.0
+    },
+    {
+      "source": "react_app_src_lib_notesarchive",
+      "target": "react_app_src_lib_notesarchive_buildtxt",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "react-app/src/lib/notesArchive.ts",
+      "source_location": "L99",
       "weight": 1.0
     },
     {
@@ -27317,5 +27317,5 @@
     }
   ],
   "hyperedges": [],
-  "built_at_commit": "0fadc65e1fae7e024093bde5dd0f895e06468f13"
+  "built_at_commit": "0bde253c1c60c32b6c16406f284bd3cfb31d1c88"
 }
