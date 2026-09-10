@@ -40,7 +40,7 @@
       "file_type": "code",
       "norm_label": "themepref",
       "source_file": "react-app/src/lib/theme.ts",
-      "source_location": "L21"
+      "source_location": "L22"
     },
     {
       "id": "react_app_src_types_note",
@@ -1583,7 +1583,7 @@
       "file_type": "code",
       "norm_label": "applytheme()",
       "source_file": "react-app/src/lib/theme.ts",
-      "source_location": "L55"
+      "source_location": "L57"
     },
     {
       "id": "react_app_src_lib_theme_ensuresystemlistener",
@@ -1595,7 +1595,7 @@
       "file_type": "code",
       "norm_label": "ensuresystemlistener()",
       "source_file": "react-app/src/lib/theme.ts",
-      "source_location": "L47"
+      "source_location": "L49"
     },
     {
       "id": "react_app_src_lib_theme_resolvedtheme",
@@ -1607,7 +1607,7 @@
       "file_type": "code",
       "norm_label": "resolvedtheme()",
       "source_file": "react-app/src/lib/theme.ts",
-      "source_location": "L40"
+      "source_location": "L42"
     },
     {
       "id": "react_app_src_lib_theme_setthemepref",
@@ -1619,7 +1619,7 @@
       "file_type": "code",
       "norm_label": "setthemepref()",
       "source_file": "react-app/src/lib/theme.ts",
-      "source_location": "L29"
+      "source_location": "L30"
     },
     {
       "id": "react_app_src_lib_theme_systemdark",
@@ -1631,7 +1631,7 @@
       "file_type": "code",
       "norm_label": "systemdark()",
       "source_file": "react-app/src/lib/theme.ts",
-      "source_location": "L34"
+      "source_location": "L35"
     },
     {
       "id": "react_app_src_lib_theme_themeoptions",
@@ -1643,7 +1643,7 @@
       "file_type": "code",
       "norm_label": "themeoptions()",
       "source_file": "react-app/src/lib/theme.ts",
-      "source_location": "L17"
+      "source_location": "L18"
     },
     {
       "id": "react_app_src_store_appprovider",
@@ -10086,7 +10086,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "react-app/src/lib/theme.ts",
-      "source_location": "L56",
+      "source_location": "L58",
       "weight": 1.0
     },
     {
@@ -10098,7 +10098,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "react-app/src/lib/theme.ts",
-      "source_location": "L57",
+      "source_location": "L59",
       "weight": 1.0
     },
     {
@@ -10110,7 +10110,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "react-app/src/lib/theme.ts",
-      "source_location": "L42",
+      "source_location": "L44",
       "weight": 1.0
     },
     {
@@ -10122,7 +10122,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "react-app/src/lib/theme.ts",
-      "source_location": "L31",
+      "source_location": "L32",
       "weight": 1.0
     },
     {
@@ -24529,7 +24529,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "react-app/src/lib/theme.ts",
-      "source_location": "L17",
+      "source_location": "L18",
       "weight": 1.0
     },
     {
@@ -24540,7 +24540,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "react-app/src/lib/theme.ts",
-      "source_location": "L21",
+      "source_location": "L22",
       "weight": 1.0
     },
     {
@@ -24551,7 +24551,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "react-app/src/lib/theme.ts",
-      "source_location": "L29",
+      "source_location": "L30",
       "weight": 1.0
     },
     {
@@ -24562,7 +24562,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "react-app/src/lib/theme.ts",
-      "source_location": "L34",
+      "source_location": "L35",
       "weight": 1.0
     },
     {
@@ -24573,7 +24573,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "react-app/src/lib/theme.ts",
-      "source_location": "L40",
+      "source_location": "L42",
       "weight": 1.0
     },
     {
@@ -24584,7 +24584,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "react-app/src/lib/theme.ts",
-      "source_location": "L47",
+      "source_location": "L49",
       "weight": 1.0
     },
     {
@@ -24595,7 +24595,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "react-app/src/lib/theme.ts",
-      "source_location": "L55",
+      "source_location": "L57",
       "weight": 1.0
     },
     {
@@ -26728,5 +26728,5 @@
     }
   ],
   "hyperedges": [],
-  "built_at_commit": "b2df83551952600610901e47c12b2beb70a1268c"
+  "built_at_commit": "9a1a34d51b5f651cd968665fdd15bc9c5fcc1d79"
 }
