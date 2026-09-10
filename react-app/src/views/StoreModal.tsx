@@ -184,7 +184,7 @@ export function StoreModal({ editing, onClose }: { editing?: boolean; onClose: (
       {s && isOwner ? (
         <div className="field danger-field">
           <div className="danger-zone">
-            <span><b className="danger-t">Borrar tienda</b><br /><span className="muted">Se borra y no se puede deshacer.</span></span>
+            <span><b className="danger-t">Borrar tienda</b><br /><span className="muted">{s.syncKey ? 'Se oculta en todos los dispositivos; queda una copia 14 días por si la restauras desde Opciones.' : 'Se borra y no se puede deshacer.'}</span></span>
             <button className="button danger" onClick={del}>Borrar</button>
           </div>
         </div>

@@ -1,7 +1,8 @@
 import { initializeApp, FirebaseApp } from 'firebase/app';
 import { initializeFirestore, Firestore, collection, doc, query, onSnapshot, setDoc, getDoc, getDocs, deleteDoc, deleteField } from 'firebase/firestore';
 import type { AppState, Member, NotifCat, Product, Role, Sale, Store } from '../types';
-import { toProductsArr, toSalesArr, toInvLogArr, toNoteLogArr, toNoteBoardArr, mergeItems, mergeInvLog, mergeNoteLog, syncKeyOf, syncClientId, syncName, normalizeStore, DEFAULT_STORE_IMAGE, uid, isNoteDeleted, markNoteDeleted, deletedNoteIdsOf, clearDeletedNotes } from './core';
+import { toProductsArr, toSalesArr, toInvLogArr, toNoteLogArr, toNoteBoardArr, mergeItems, mergeInvLog, mergeNoteLog, syncKeyOf, syncClientId, syncName, normalizeStore, DEFAULT_STORE_IMAGE, uid, isNoteDeleted, markNoteDeleted, deletedNoteIdsOf, clearDeletedNotes, rememberDeletedStore, deletedStores, forgetDeletedStore } from './core';
+import type { DeletedStoreRecord } from './core';
 import { customAlert, customConfirm } from './dialog';
 
 export { syncClientId, syncName, syncSetName, syncGenPin, syncKeyOf } from './core';
@@ -468,6 +469,12 @@ export function createSync(
       const d = snap.data();
       if (!d) return;
       if ((d.deleted as boolean)) {
+        // Borrado suave (ver deleteStoreFn): se quita de todos los dispositivos
+        // al instante, y si ya pasó el tiempo de gracia se borra de verdad de
+        // la nube (este mismo dispositivo alcanza a purgarlo la primera vez
+        // que lo ve pasada la fecha).
+        const deletedAt = typeof d.deletedAt === 'number' ? d.deletedAt : Date.now();
+        if (Date.now() - deletedAt > DELETE_GRACE_MS) purgeDeletedStore(s.syncKey!);
         removeStore(storeId, 'Esta tienda fue borrada por otro dispositivo.');
         return;
       }
@@ -960,35 +967,135 @@ export async function leaveStoreFn(id: string, getState: () => AppState, mutate:
   return true;
 }
 
+// Tiempo de gracia del borrado con sincronización: la tienda se oculta de
+// todos los dispositivos al instante, pero su información se conserva en la
+// nube estos 14 días por si el dueño la restaura desde Opciones. Pasada la
+// fecha, el primer dispositivo que la ve (o el dueño al intentar restaurarla)
+// la purga de verdad: ya no queda forma de recuperarla.
+export const DELETE_GRACE_MS = 14 * 24 * 60 * 60 * 1000;
+
+// Borrado real en la nube de una tienda ya vencida: se eliminan los
+// documentos de sus productos y se deja solo la lápida mínima (deleted +
+// deletedAt + nombre), para que el push viejo de algún dispositivo no pueda
+// "resucitar" la tienda con datos viejos.
+async function purgeDeletedStore(key: string): Promise<void> {
+  if (!DB) return;
+  try {
+    const products = await loadProducts(key);
+    await Promise.all(products.map((p) => deleteDoc(productDocRef(key, p.id))));
+    const purge: Record<string, unknown> = { deleted: true, deletedAt: Date.now() };
+    ['members', 'pushTokens', 'pushPrefs', 'sales', 'noteBoard', 'noteLog', 'invLog', 'notes', 'inventory', 'categories', 'categoryPricing', 'events', 'image', 'createdBy', 'updatedBy', 'products'].forEach((k) => { purge[k] = deleteField(); });
+    await setDoc(storeDocRef(key), purge, { merge: true });
+  } catch (e) { console.warn('Purga de tienda vencida fallida:', e); }
+}
+
+// Reconstruye una tienda como Store local a partir del documento remoto (el
+// mismo armado que usa joinStore). "code" es el código de sincronización.
+function buildStoreFromRemote(r: Record<string, unknown>, key: string, code: string): Store {
+  const membersLocal: Record<string, Member> = {};
+  membersLocal[syncClientId()] = { name: syncName(), role: 'owner', joinedAt: Date.now(), eid: uid() };
+  const s: Store = {
+    id: uid(),
+    name: `${r.name || 'Tienda restaurada'}`,
+    image: `${r.image || DEFAULT_STORE_IMAGE}`,
+    products: toProductsArr(r.products),
+    sales: toSalesArr(r.sales),
+    categories: JSON.parse(JSON.stringify((r.categories || []))),
+    categoryPricing: r.categoryPricing && typeof r.categoryPricing === 'object' ? JSON.parse(JSON.stringify(r.categoryPricing)) : {},
+    events: Array.isArray(r.events) ? JSON.parse(JSON.stringify(r.events)) : [],
+    inventory: r.inventory && typeof r.inventory === 'object' ? { ...(r.inventory as Record<string, number>) } : {},
+    notes: typeof r.notes === 'string' ? r.notes : '',
+    noteLog: toNoteLogArr(r.noteLog),
+    noteBoard: toNoteBoardArr(r.noteBoard),
+    invLog: toInvLogArr(r.invLog),
+    syncKey: key,
+    syncPin: code,
+    createdBy: `${r.createdBy || syncClientId()}`,
+    members: Object.assign({}, JSON.parse(JSON.stringify((r.members || {}))), membersLocal),
+    localRole: r.createdBy === syncClientId() ? 'owner' : 'worker',
+  };
+  normalizeStore(s);
+  return s;
+}
+
+export async function restoreStoreFn(key: string, _getState: () => AppState, mutate: (fn: (d: AppState) => void) => void, attach: (id: string) => void, toast: (m: string) => void): Promise<boolean> {
+  if (!syncReady() || !DB) { toast('No hay conexión con la nube.'); return false; }
+  try {
+    const ref = storeDocRef(key);
+    const snap = await getDoc(ref);
+    if (!snap.exists()) { toast('Esa tienda ya no está en la nube y no se puede restaurar.'); return false; }
+    const r = snap.data();
+    if (!r.deleted) { toast('Esa tienda sigue activa: no hace falta restaurarla.'); return false; }
+    const deletedAt = typeof r.deletedAt === 'number' ? r.deletedAt : Date.now();
+    if (Date.now() - deletedAt > DELETE_GRACE_MS) {
+      await purgeDeletedStore(key);
+      toast('Pasó el tiempo de gracia (14 días): la tienda se borró por completo y ya no se puede restaurar.');
+      return false;
+    }
+    const rec = deletedStores().find((x) => x.key === key);
+    const sub = await loadProducts(key);
+    const s = buildStoreFromRemote(r, key, (rec && rec.code) || '');
+    const merged = new Map<string, Product>();
+    s.products.forEach((p) => merged.set(p.id, p));
+    sub.forEach((p) => merged.set(p.id, p));
+    s.products = Array.from(merged.values());
+    await setDoc(ref, { deleted: deleteField(), deletedAt: deleteField(), updatedBy: syncClientId() }, { merge: true });
+    forgetDeletedStore(key);
+    mutate((d) => {
+      if (d.stores.some((x) => x.syncKey === key)) return;
+      d.stores.push(s);
+      d.activeStoreId = s.id;
+      d.tab = 'inicio';
+    });
+    attach(s.id);
+    toast('Tienda restaurada. Volviste a ser dueño y ya queda sincronizada.');
+    return true;
+  } catch (e) {
+    console.warn(e);
+    toast('No se pudo restaurar la tienda. Revisa tu conexión.');
+    return false;
+  }
+}
+
+// Barrido al abrir la app: cualquier tienda borrada cuyo tiempo de gracia ya
+// venció se purga de la nube (y se olvida el registro local), best-effort.
+export async function pruneDeletedStores(records: DeletedStoreRecord[]): Promise<void> {
+  for (const rec of records) {
+    if (!syncReady() || !DB) return;
+    try {
+      const snap = await getDoc(storeDocRef(rec.key));
+      if (!snap.exists()) { forgetDeletedStore(rec.key); continue; }
+      const r = snap.data();
+      if (!r.deleted) { forgetDeletedStore(rec.key); continue; }
+      const deletedAt = typeof r.deletedAt === 'number' ? r.deletedAt : rec.deletedAt;
+      if (Date.now() - deletedAt > DELETE_GRACE_MS) {
+        await purgeDeletedStore(rec.key);
+        forgetDeletedStore(rec.key);
+      }
+    } catch { /* sin conexión: se reintenta la próxima vez */ }
+  }
+}
+
 // Igual que leaveStoreFn: true si se borro, false si el usuario cancelo.
 export async function deleteStoreFn(id: string, getState: () => AppState, mutate: (fn: (d: AppState) => void) => void, detach: (storeId: string) => void): Promise<boolean> {
   const s = getState().stores.find((x) => x.id === id);
   if (!s) return false;
   const shared = !!(s.syncKey && s.syncPin);
   const q = shared
-    ? '¿Borrar la tienda "' + s.name + '"? Se borrará también en todos los dispositivos vinculados. No se puede deshacer.'
+    ? '¿Borrar la tienda "' + s.name + '"? Desaparecerá de todos los dispositivos al instante y quedará una copia en la nube por 14 días, por si quieres restaurarla desde Opciones.'
     : '¿Borrar la tienda "' + s.name + '"? Esta acción no se puede deshacer.';
   if (!(await customConfirm(q))) return false;
   if (DB && s.syncKey) {
     try {
       const key = s.syncKey;
-      // Borrado real en la nube: cada producto vive en su propio documento de
-      // la subcoleccion (ver la nota junto a productDocRef), asi que se borran
-      // todos y no quedan huerfanos.
-      await Promise.all((s.products || []).map((p) => deleteDoc(productDocRef(key, p.id))));
-      // El documento principal no se borra del todo: se deja una lápida mínima
-      // (deleted + deletedAt + nombre) para que la sn pagina en tiempo real de
-      // los demas dispositivos la detecte y la quiten de sus listas, y para
-      // que un push viejo de algun dispositivo sincronizado no pueda
-      // "resucitar" la tienda con datos viejos. Todo lo que la hace una tienda
-      // real (miembros, tokens, ventas, notas, inventario, categorias, ...)
-      // se elimina del documento: en la base ya no queda informacion de
-      // negocio, solo el aviso de que esa tienda murio.
-      const purge: Record<string, unknown> = {
-        deleted: true, deletedAt: Date.now(),
-      };
-      ['members', 'pushTokens', 'pushPrefs', 'sales', 'noteBoard', 'noteLog', 'invLog', 'notes', 'inventory', 'categories', 'categoryPricing', 'events', 'image', 'createdBy', 'updatedBy', 'products'].forEach((k) => { purge[k] = deleteField(); });
-      await setDoc(doc(collection(DB, 'stores'), key), purge, { merge: true });
+      // Borrado SUAVE (tiempo de gracia): se marca la lápida deleted:true para
+      // que cualquier dispositivo la quite de sus listas (y los avisos de la
+      // tienda dejen de llegarle en cuanto la purga corra), pero la
+      // información se conserva 14 días: solo el que la borró (el dueño)
+      // guarda el registro local para poder restaurarla desde Opciones dentro
+      // de esa ventana (ver restoreStoreFn).
+      rememberDeletedStore({ key, name: s.name, code: s.syncPin || '', deletedAt: Date.now() });
+      await setDoc(doc(collection(DB, 'stores'), key), { deleted: true, deletedAt: Date.now() }, { merge: true });
     } catch (e) { console.warn(e); }
   }
   removeLocalStoreFn(id, getState, mutate, detach);

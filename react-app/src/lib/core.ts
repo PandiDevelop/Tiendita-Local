@@ -7,7 +7,7 @@ export const USER_KEY = 'mi-tiendita-user';
 // Version de arranque/mostrada hasta que el service worker responde con la
 // suya (ver lib/appVersion.ts): la real es la del sw.js activo (public/sw.js),
 // que refleja lo que esta desplegado de verdad.
-export const APP_VERSION = '1.8.12';
+export const APP_VERSION = '1.8.13';
 
 const DEFAULT_STORE_SVG = encodeURIComponent(
   '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 160"><rect width="160" height="160" rx="34" fill="#f3eaff"/><path d="M29 67h102v61H29z" fill="#fffdf9" stroke="#9b7dcc" stroke-width="5"/><path d="M22 66 36 38h88l14 28z" fill="#ffc7b5" stroke="#9b7dcc" stroke-width="5"/><path d="M40 39h15v28H40zm32 0h16v28H72zm33 0h15v28h-15z" fill="#fffaf3"/><path d="M45 83h30v45H45z" fill="#b9e4d0" stroke="#9b7dcc" stroke-width="4"/><path d="M91 83h24v20H91z" fill="#fff0a9" stroke="#9b7dcc" stroke-width="4"/></svg>',
@@ -446,6 +446,46 @@ export function clearDeletedNotes(store: Store): void {
   const k = deletedNotesKey(store);
   deletedNoteIds.delete(k);
   try { localStorage.removeItem(DELETED_NOTES_KEY + k); } catch { /* ignorar */ }
+}
+
+// Registro de tiendas borradas CON sincronización: el borrado ahora es "suave"
+// (ver deleteStoreFn en lib/sync.ts): se oculta de todos los dispositivos al
+// instante pero la información queda en la nube por un tiempo de gracia, por
+// si el dueño quiere restaurarla desde Opciones. Este registro guarda lo
+// mínimo local que hace falta para volver a engancharla: su clave, su nombre
+// y el código, más cuándo se borró.
+export interface DeletedStoreRecord {
+  key: string;
+  name: string;
+  code: string;
+  deletedAt: number;
+}
+
+const DELETED_STORES_KEY = 'mt_deleted_stores';
+
+export function deletedStores(): DeletedStoreRecord[] {
+  try {
+    const raw = localStorage.getItem(DELETED_STORES_KEY);
+    const arr = raw ? JSON.parse(raw) : null;
+    if (!Array.isArray(arr)) return [];
+    return arr.filter((r) => r && typeof r.key === 'string') as DeletedStoreRecord[];
+  } catch {
+    return [];
+  }
+}
+
+export function rememberDeletedStore(rec: DeletedStoreRecord): void {
+  try {
+    const list = deletedStores().filter((r) => r.key !== rec.key);
+    list.push(rec);
+    localStorage.setItem(DELETED_STORES_KEY, JSON.stringify(list));
+  } catch { /* ignorar */ }
+}
+
+export function forgetDeletedStore(key: string): void {
+  try {
+    localStorage.setItem(DELETED_STORES_KEY, JSON.stringify(deletedStores().filter((r) => r.key !== key)));
+  } catch { /* ignorar */ }
 }
 
 // Migra las notas del modelo viejo (noteLog, texto plano sin hilos) al

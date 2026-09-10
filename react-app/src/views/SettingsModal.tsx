@@ -1,11 +1,14 @@
 import { useState } from 'react';
 import { useStore } from '../store';
-import { syncName, syncSetName } from '../lib/core';
+import { syncName, syncSetName, deletedStores } from '../lib/core';
+import type { DeletedStoreRecord } from '../lib/core';
 import { useAppVersion } from '../lib/appVersion';
 import { notifyEnabled, setNotifyEnabled, notifCats, setNotifCat } from '../lib/settings';
 import { requestNotifyPermission } from '../lib/sound';
 import { enablePushForStore, disablePushForStore, pushConfigured } from '../lib/push';
-import { setPushPrefs } from '../lib/sync';
+import { setPushPrefs, restoreStoreFn } from '../lib/sync';
+import { themePref, setThemePref, themeOptions } from '../lib/theme';
+import type { ThemePref } from '../lib/theme';
 import { Modal } from '../ui';
 import type { NotifCat } from '../types';
 
@@ -22,7 +25,7 @@ const NOTIF_CAT_LABELS: { cat: NotifCat; label: string }[] = [
 // manejan con UN solo interruptor: sonido + vibracion de adentro de la app
 // y, en segundo plano, el aviso del sistema y el push real de la tienda.
 export function SettingsModal({ onClose }: { onClose: () => void }) {
-  const { store, toast } = useStore();
+  const { state, store, toast, replace, attach } = useStore();
   const version = useAppVersion();
   const [name, setName] = useState(syncName() === 'Trabajador' ? '' : syncName());
   const [notif, setNotif] = useState(notifyEnabled());
@@ -30,6 +33,19 @@ export function SettingsModal({ onClose }: { onClose: () => void }) {
   const [busy, setBusy] = useState(false);
   const [permDenied, setPermDenied] = useState(false);
   const [pushState, setPushState] = useState<string | null>(null);
+  const [theme, setTheme] = useState<ThemePref>(themePref());
+  const [deleted, setDeleted] = useState(deletedStores());
+
+  async function restoreOne(rec: DeletedStoreRecord) {
+    if (busy) return;
+    setBusy(true);
+    try {
+      const ok = await restoreStoreFn(rec.key, () => state, replace, attach, toast);
+      if (ok) setDeleted(deletedStores());
+    } finally {
+      setBusy(false);
+    }
+  }
 
   function saveName() {
     syncSetName(name.trim());
@@ -93,6 +109,18 @@ export function SettingsModal({ onClose }: { onClose: () => void }) {
       </div>
 
       <div className="settings-block">
+        <div className="label">Apariencia</div>
+        <div className="field">
+          <div className="settings-row">
+            <select id="settings-theme" value={theme} onChange={(e) => { const v = e.target.value as ThemePref; setTheme(v); setThemePref(v); }} style={{ flex: 1, padding: '10px 12px', borderRadius: 10, border: '1px solid #ddd8e5', background: '#fff', color: 'var(--ink)' }}>
+              {themeOptions().map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
+            </select>
+          </div>
+          <p className="muted">El tema se aplica en este dispositivo. "Automático" usa el modo claro u oscuro que tenga el teléfono.</p>
+        </div>
+      </div>
+
+      <div className="settings-block">
         <div className="label">Notificaciones</div>
         <div className="field">
           <div className="settings-row">
@@ -120,6 +148,26 @@ export function SettingsModal({ onClose }: { onClose: () => void }) {
           </div>
           <p className="muted">Las categorías apagadas no llegan, ni siquiera con la app cerrada.</p>
         </div>
+      </div>
+
+      <div className="settings-block">
+        <div className="label">Restaurar tienda borrada</div>
+        {deleted.length ? (
+          <div className="team-list" style={{ margin: 0 }}>
+            {deleted.map((rec) => (
+              <div key={rec.key} className="team-row" style={{ flexWrap: 'wrap' }}>
+                <div style={{ minWidth: 0, overflowWrap: 'break-word', flex: 1 }}>
+                  <div className="team-name">{rec.name}</div>
+                  <div className="muted" style={{ fontSize: 12 }}>Se puede restaurar hasta el {new Date(rec.deletedAt + 14 * 24 * 60 * 60 * 1000).toLocaleDateString('es-CO')}</div>
+                </div>
+                <button className="button secondary" disabled={busy} onClick={() => restoreOne(rec)}>Restaurar</button>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <p className="muted">No hay tiendas borradas recientemente para restaurar.</p>
+        )}
+        <p className="muted">Borrar una tienda la oculta de todos los dispositivos al instante, pero queda una copia en la nube por 14 días por si necesitas recuperarla.</p>
       </div>
 
       <p className="muted settings-version">Versión {version}</p>

@@ -118,6 +118,18 @@ export async function disablePushForStore(storeKey: string): Promise<void> {
   try { await removePushToken(storeKey); } catch { /* si la red falla, el peor caso es un push de mas */ }
 }
 
+// URL a la que la notificación debe llevar a quien la toca (ver notificationclick
+// en sw.js). Para las notas/objetivos se manda un deep link a la pestaña Notas
+// y, si se conoce, al hilo exacto: al tocar el aviso la app abre esa pestaña y
+// ese hilo (ver lib/deepLink.ts).
+export function pushLinkFor(tab: string, noteId?: string): string {
+  const base = location.href.split('?')[0] || location.href;
+  const q = new URLSearchParams();
+  q.set('tab', tab);
+  if (noteId) q.set('n', noteId);
+  return base + '?' + q.toString();
+}
+
 // Le pide al Worker que avise (via FCM) a los demas dispositivos de la
 // tienda - menos este - que hay algo nuevo. Se dispara "en el aire": no se
 // espera la respuesta ni se avisa si falla (sin conexion, el Worker aun no
@@ -128,13 +140,15 @@ export async function disablePushForStore(storeKey: string): Promise<void> {
 // Worker respete las preferencias de cada destinatario (que tipos de aviso
 // quiere, ver NotifCat en types.ts y pushPrefs en sync.ts): si el otro
 // dispositivo apago esa categoria en Opciones, el Worker le saltea el aviso.
-export function notifyStorePush(storeKey: string, title: string, body: string, cat: NotifCat = 'nota'): void {
+// "link" (opcional) es el destino que se abre al tocar el aviso (ver
+// pushLinkFor); si no se pasa, se abre la app tal como está.
+export function notifyStorePush(storeKey: string, title: string, body: string, cat: NotifCat = 'nota', link?: string): void {
   if (!pushConfigured() || !storeKey) return;
   try {
     fetch(PUSH_WORKER_URL + '/notify', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ storeKey, title, body, cat, excludeClientId: syncClientId(), link: location.href }),
+      body: JSON.stringify({ storeKey, title, body, cat, excludeClientId: syncClientId(), link: link || location.href }),
       keepalive: true,
     }).catch(() => { /* sin conexion o Worker caido: se ignora, no es critico */ });
   } catch {

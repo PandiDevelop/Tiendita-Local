@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { cleanup, fireEvent, render, screen, within } from '@testing-library/react';
 import { Catalog } from '../views/Catalog';
 import { Inventory } from '../views/Inventory';
@@ -369,8 +369,10 @@ describe('Libro de catálogo virtual', () => {
         makeProduct({ id: 'p2', name: 'Papas', price: 2000, category: 'Snacks' }),
       ],
     });
-    const { container } = render(<TestProvider initialState={makeState(store)}><VirtualCatalog onClose={() => {}} /></TestProvider>);
-    const body = container.querySelector('.vc-body') as HTMLElement;
+    render(<TestProvider initialState={makeState(store)}><VirtualCatalog onClose={() => {}} /></TestProvider>);
+    // El catálogo se monta con un portal directo a <body> (para que el
+    // impreso no quede dentro de .content, que se oculta al imprimir).
+    const body = document.body.querySelector('.vc-body') as HTMLElement;
     expect(within(body).getByText('Bebidas')).toBeInTheDocument();
     expect(within(body).getByText('Snacks')).toBeInTheDocument();
     expect(within(body).getByText('Agua')).toBeInTheDocument();
@@ -389,18 +391,30 @@ describe('Libro de catálogo virtual', () => {
     expect(screen.getAllByText('Agua').length).toBeGreaterThan(0);
   });
 
-  it('prepara el impreso: botón Imprimir, portada de categoría y 4 productos por página', () => {
+  it('prepara el impreso: botón Imprimir, portada de categoría, nombre de la tienda y 4 productos por página', () => {
     const products = Array.from({ length: 5 }, (_, i) => makeProduct({ id: 'p' + i, name: 'Producto ' + i, price: 1000, category: 'Bebidas' }));
     const store = makeStore({ categories: ['Bebidas'], products });
-    const { container } = render(<TestProvider initialState={makeState(store)}><VirtualCatalog onClose={() => {}} /></TestProvider>);
+    render(<TestProvider initialState={makeState(store)}><VirtualCatalog onClose={() => {}} /></TestProvider>);
     expect(screen.getByRole('button', { name: /Imprimir/ })).toBeInTheDocument();
     // 5 productos → 1 portada de la categoría + 2 hojas (4 y 1).
-    expect(container.querySelectorAll('.print-catalog .pc-page').length).toBe(3);
-    expect(container.querySelectorAll('.print-catalog .pc-cover').length).toBe(1);
-    expect(container.querySelectorAll('.print-catalog .pc-grid').length).toBe(2);
-    expect(container.querySelectorAll('.print-catalog .pc-card').length).toBe(5);
-    const cover = container.querySelector('.print-catalog .pc-cover h2') as HTMLElement;
+    expect(document.body.querySelectorAll('.print-catalog .pc-page').length).toBe(3);
+    expect(document.body.querySelectorAll('.print-catalog .pc-cover').length).toBe(1);
+    expect(document.body.querySelectorAll('.print-catalog .pc-grid').length).toBe(2);
+    expect(document.body.querySelectorAll('.print-catalog .pc-card').length).toBe(5);
+    const cover = document.body.querySelector('.print-catalog .pc-cover h2') as HTMLElement;
     expect(cover.textContent).toBe('Bebidas');
+    // El impreso se llama "Catálogo" y muestra el nombre de la tienda.
+    expect((document.body.querySelector('.print-catalog .pc-brand') as HTMLElement).textContent).toContain('Catálogo');
+    expect((document.body.querySelector('.print-catalog .pc-brand') as HTMLElement).textContent).toContain('Tienda de prueba');
+    expect((document.body.querySelector('.print-catalog') as HTMLElement).getAttribute('data-store')).toBe('Tienda de prueba');
+  });
+
+  it('el botón atrás del celular cierra el catálogo virtual en vez de salir', () => {
+    const onClose = vi.fn();
+    const store = makeStore({ products: [makeProduct({ id: 'p1', name: 'Agua', price: 1000, category: 'Bebidas' })] });
+    render(<TestProvider initialState={makeState(store)}><VirtualCatalog onClose={onClose} /></TestProvider>);
+    window.dispatchEvent(new PopStateEvent('popstate'));
+    expect(onClose).toHaveBeenCalledTimes(1);
   });
 
   it('omite del impreso las categorías sin productos y deshabilita Imprimir sin productos', () => {
@@ -408,16 +422,16 @@ describe('Libro de catálogo virtual', () => {
       categories: ['Bebidas', 'Vacía'],
       products: [makeProduct({ id: 'p1', name: 'Agua', price: 1000, category: 'Bebidas' })],
     });
-    const { container } = render(<TestProvider initialState={makeState(store)}><VirtualCatalog onClose={() => {}} /></TestProvider>);
-    const covers = container.querySelectorAll('.print-catalog .pc-cover h2');
+    render(<TestProvider initialState={makeState(store)}><VirtualCatalog onClose={() => {}} /></TestProvider>);
+    const covers = document.body.querySelectorAll('.print-catalog .pc-cover h2');
     expect(covers.length).toBe(1);
     expect(covers[0].textContent).toBe('Bebidas');
-    expect(container.querySelector('.print-catalog')).toBeTruthy();
+    expect(document.body.querySelector('.print-catalog')).toBeTruthy();
 
     cleanup();
     const empty = makeStore({ products: [] });
-    const { container: emptyContainer } = render(<TestProvider initialState={makeState(empty)}><VirtualCatalog onClose={() => {}} /></TestProvider>);
+    render(<TestProvider initialState={makeState(empty)}><VirtualCatalog onClose={() => {}} /></TestProvider>);
     expect(screen.getByRole('button', { name: /Imprimir/ })).toBeDisabled();
-    expect(emptyContainer.querySelector('.print-catalog')).toBeNull();
+    expect(document.body.querySelector('.print-catalog')).toBeNull();
   });
 });

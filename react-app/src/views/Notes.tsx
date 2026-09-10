@@ -15,7 +15,8 @@ import {
 import { customConfirm } from '../lib/dialog';
 import { exportArchiveCsv } from '../lib/notesArchive';
 import { notifyPermission, requestNotifyPermission } from '../lib/sound';
-import { enablePushForStore, notifyStorePush } from '../lib/push';
+import { enablePushForStore, notifyStorePush, pushLinkFor } from '../lib/push';
+import { consumeDeepNote } from '../lib/deepLink';
 import type { Note, NoteEditRecord, NoteReply, Store } from '../types';
 
 function fmtWhen(ts: number | undefined): string {
@@ -56,7 +57,7 @@ function Composer({ mode, onDone }: { mode: 'text' | 'checklist'; onDone: () => 
     const t = text.trim();
     if (!t) return;
     replace((d) => { const st = d.stores.find((x) => x.id === s.id)!; addNoteMsg(st, t); });
-    if (s.syncKey) notifyStorePush(s.syncKey, syncName() + ' publicó una nota', t, 'nota');
+    if (s.syncKey) notifyStorePush(s.syncKey, syncName() + ' publicó una nota', t, 'nota', pushLinkFor('notas'));
     setText('');
     taRef.current?.focus();
     onDone();
@@ -74,7 +75,7 @@ function Composer({ mode, onDone }: { mode: 'text' | 'checklist'; onDone: () => 
     const all = pending ? [...items, pending] : items;
     if (!title.trim() && !all.length) return;
     replace((d) => { const st = d.stores.find((x) => x.id === s.id)!; addChecklistNote(st, title, all); });
-    if (s.syncKey) notifyStorePush(s.syncKey, syncName() + ' publicó una lista de objetivos', title.trim() || (all.length + ' objetivo' + (all.length === 1 ? '' : 's')), 'nota');
+    if (s.syncKey) notifyStorePush(s.syncKey, syncName() + ' publicó una lista de objetivos', title.trim() || (all.length + ' objetivo' + (all.length === 1 ? '' : 's')), 'nota', pushLinkFor('notas'));
     setTitle('');
     setItems([]);
     setDraftItem('');
@@ -190,7 +191,7 @@ function ThreadPanel({ noteId, onClose, openHistory }: { noteId: string; onClose
     const t = text.trim();
     if (!t) return;
     replace((d) => { const st = d.stores.find((x) => x.id === s.id)!; addNoteReply(st, noteId, t); });
-    if (s.syncKey) notifyStorePush(s.syncKey, myName + ' respondió en un hilo', t, 'nota');
+    if (s.syncKey) notifyStorePush(s.syncKey, myName + ' respondió en un hilo', t, 'nota', pushLinkFor('notas', noteId));
     setText('');
   }
 
@@ -289,6 +290,23 @@ export function Notes() {
   const [history, setHistory] = useState<{ title: string; current: string; list: NoteEditRecord[] } | null>(null);
   const [notifyState, setNotifyState] = useState(notifyPermission());
   const [checklistDraft, setChecklistDraft] = useState<Record<string, string>>({});
+
+  // Deep link de una notificación push (?tab=notas&n=<id>, ver lib/deepLink.ts):
+  // abre el hilo de esa nota apenas llegue a este dispositivo (puede tardar uno
+  // o dos snapshots si la nota vino del remoto y todavía no se cargó).
+  const [deepNoteId, setDeepNoteId] = useState<string | null>(() => consumeDeepNote());
+  useEffect(() => {
+    if (!deepNoteId) return;
+    const n = (s.noteBoard || []).find((x) => x.id === deepNoteId);
+    if (n) {
+      setFeed(n.kind === 'checklist' ? 'objetivos' : 'notas');
+      setThreadId(deepNoteId);
+      setDeepNoteId(null);
+      return;
+    }
+    const t = window.setTimeout(() => setDeepNoteId(null), 6000);
+    return () => window.clearTimeout(t);
+  }, [deepNoteId, s.noteBoard, feed]);
 
   // Orden del feed: las FIJADAS van primero, y entre ellas la mas
   // recientemente fijada arriba (pinnedAt). Despues las demas como siempre:

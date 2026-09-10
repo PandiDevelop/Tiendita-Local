@@ -1,6 +1,8 @@
 import { useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { useStore } from '../store';
 import { DEFAULT_PRODUCT_IMAGE, esc, groupedByCategory, money, shortTag, productTags } from '../lib/core';
+import { pushOverlay } from '../lib/backStack';
 import { Image, PrintIcon } from '../ui';
 import type { Product } from '../types';
 
@@ -32,7 +34,10 @@ export function VirtualCatalog({ onClose }: { onClose: () => void }) {
     return () => document.removeEventListener('keydown', onKey);
   }, [onClose]);
 
-  return (
+  // El botón atrás del celular cierra el catálogo virtual antes de salir.
+  useEffect(() => pushOverlay(onClose), [onClose]);
+
+  return createPortal(
     <>
       <div className="modal-backdrop vc-backdrop" onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}>
         <div className="modal">
@@ -62,13 +67,13 @@ export function VirtualCatalog({ onClose }: { onClose: () => void }) {
         </div>
       </div>
       {printedGroups.length > 0 && (
-        <div className="print-catalog" aria-hidden="true">
-          <header className="pc-brand">Mi Tiendita<span> · Catálogo</span></header>
+        <div className="print-catalog" aria-hidden="true" data-store={s.name}>
+          <header className="pc-brand">{esc(s.name)}<span> · Catálogo</span></header>
           {printedGroups.map((g) => (
             <section className="pc-section" key={g.name}>
               <div className="pc-page pc-cover">
                 <div className="pc-cover-tile">
-                  <p className="pc-kicker">Mi Tiendita · catálogo virtual</p>
+                  <p className="pc-kicker">{esc(s.name)} · catálogo virtual</p>
                   <h2>{esc(g.name)}</h2>
                   <p>{g.list.length === 1 ? '1 producto' : g.list.length + ' productos'}</p>
                 </div>
@@ -91,6 +96,7 @@ export function VirtualCatalog({ onClose }: { onClose: () => void }) {
           ))}
         </div>
       )}
-    </>
+    </>,
+    document.body,
   );
 }

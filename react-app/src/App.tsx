@@ -2,6 +2,8 @@ import { useEffect, useState } from 'react';
 import { useStore, type ModalKind } from './store';
 import { DEFAULT_STORE_IMAGE, canManageTeam, esc } from './lib/core';
 import { useAppVersion } from './lib/appVersion';
+import { initDeepLink, readDeepTab } from './lib/deepLink';
+import { pushOverlay } from './lib/backStack';
 import { DialogHost, GearIcon, Image, ImageLightboxHost, Logo, MenuIcon, Toast } from './ui';
 import { Dashboard } from './views/Dashboard';
 import { Catalog } from './views/Catalog';
@@ -29,6 +31,17 @@ export function App() {
     document.body.classList.toggle('menu-open', menuOpen);
     return () => { document.body.classList.remove('menu-open'); };
   }, [menuOpen]);
+  // El botón atrás del celular cierra el menú lateral antes de salir.
+  useEffect(() => (menuOpen ? pushOverlay(() => setMenuOpen(false)) : undefined), [menuOpen]);
+
+  // Deep link de una notificación push (?tab=notas&n=<id>): lee la pestaña
+  // pedida, limpia la URL y deja la nota pendiente para que Notes la abra.
+  useEffect(() => {
+    initDeepLink();
+    const t = readDeepTab();
+    if (t) replace((d) => { d.tab = t; });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   function setMenu(v: boolean) { setMenuOpen(v); }
 

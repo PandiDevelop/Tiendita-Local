@@ -1,4 +1,4 @@
-const CACHE = 'mi-tiendita-1.8.12';
+const CACHE = 'mi-tiendita-1.8.13';
 // Version que se muestra en la app (el pie del menu y Opciones): sale de la
 // MISMA cadena de cache, asi el numero que ve el usuario es literalmente el
 // que identifica el despliegue activo (ver react-app/src/lib/appVersion.ts).
@@ -58,13 +58,22 @@ self.addEventListener('push', event => {
 
 // Al tocar el aviso: si ya hay una pestaña de la app abierta, la enfoca en
 // vez de abrir una nueva (evita duplicar pestañas cada vez que llega un
-// aviso).
+// aviso); y cuando el aviso llegó con un destino propio (p.ej. una nota,
+// ?tab=notas&n=<id>), la pestaña abierta navega hacia esa URL para que la
+// app abra la nota de ese hilo (ver lib/deepLink.ts).
 self.addEventListener('notificationclick', event => {
   event.notification.close();
   const link = (event.notification.data && event.notification.data.link) || './index.html';
   event.waitUntil(
     self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then(list => {
-      for (const c of list) { if ('focus' in c) return c.focus(); }
+      for (const c of list) {
+        if ('focus' in c) {
+          if (link && link !== './index.html' && c.url !== link) {
+            return c.navigate(link).then(() => c.focus()).catch(() => c.focus());
+          }
+          return c.focus();
+        }
+      }
       if (self.clients.openWindow) return self.clients.openWindow(link);
     })
   );

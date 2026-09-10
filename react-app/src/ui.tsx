@@ -2,6 +2,7 @@ import { ReactNode, useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { DialogRequest, customConfirm, resolveDialog, subscribeDialog } from './lib/dialog';
 import { closeLightbox, openLightbox, subscribeLightbox } from './lib/lightbox';
+import { pushOverlay } from './lib/backStack';
 
 // Antes no habia forma de ver una foto (de producto, tienda, etc.) mas
 // grande que la miniatura de la lista: tocarla no hacia nada, o en algunos
@@ -34,6 +35,7 @@ export function ImageLightboxHost() {
     document.addEventListener('keydown', onKey);
     return () => document.removeEventListener('keydown', onKey);
   }, [src]);
+  useEffect(() => (src ? pushOverlay(closeLightbox) : undefined), [src]);
   if (!src) return null;
   return (
     <div className="modal-backdrop lightbox-backdrop" onClick={closeLightbox}>
@@ -77,6 +79,8 @@ export function Modal({ onClose, children }: { onClose: () => void; children: Re
     document.addEventListener('keydown', onKey);
     return () => document.removeEventListener('keydown', onKey);
   }, [onClose]);
+  // El botón atrás del celular cierra este modal antes de salir de la app.
+  useEffect(() => pushOverlay(onClose), [onClose]);
   return (
     <div className="modal-backdrop" onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}>
       <div className="modal">{children}</div>
@@ -94,6 +98,7 @@ export function Toast({ message }: { message: string }) {
 export function DialogHost() {
   const [req, setReq] = useState<DialogRequest | null>(null);
   useEffect(() => subscribeDialog(setReq), []);
+  useEffect(() => (req ? pushOverlay(() => resolveDialog(false)) : undefined), [req]);
   if (!req) return null;
   return (
     <div className="modal-backdrop dialog-backdrop">

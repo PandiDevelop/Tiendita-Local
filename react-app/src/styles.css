@@ -437,7 +437,7 @@ td.cat-bar .product-name .prod-tag{margin-left:auto;flex:0 0 auto}
    sidebar, pestanas...) para que la copia salga limpia. */
 .print-catalog{display:none}
 @media print{
-  .modal-backdrop,.sidebar,.mobile-head,.menu-backdrop,.topline,.tabs,.toast,.content{display:none!important}
+  .modal-backdrop,.sidebar,.mobile-head,.menu-backdrop,.topline,.tabs,.toast,#toast,.thread-backdrop,.content{display:none!important}
   .print-catalog{display:block!important;position:absolute;inset:0;width:100%;background:#fff;color:#201b2b;font:14px "DM Sans",sans-serif}
   .print-catalog .pc-brand{font:700 20px Fraunces,serif;color:#7a5bb0;padding:18px 24px;border-bottom:3px solid #efe7fb}
   .print-catalog .pc-brand span{color:#c0a8e6}
@@ -454,5 +454,47 @@ td.cat-bar .product-name .prod-tag{margin-left:auto;flex:0 0 auto}
   .print-catalog .pc-img{width:100%;height:120px;object-fit:contain;display:block}
   .print-catalog .pc-card-name{font-weight:700;font-size:14px;margin-top:10px;overflow-wrap:break-word}
   .print-catalog .pc-card-price{color:#7a5bb0;font-weight:700;margin-top:2px}
-  .print-catalog .pc-page::after{content:"Mi Tiendita · página " counter(page);display:block;text-align:center;color:#a49cb8;font-size:11px;margin-top:16px}
+  .print-catalog .pc-page::after{content:attr(data-store) " · página " counter(page);display:block;text-align:center;color:#a49cb8;font-size:11px;margin-top:16px}
 }
+
+/* ------------------------------------------------------------------ */
+/* Capas por encima de todo (al final para ganarle a la regla base de
+   .modal-backdrop que se define antes, inline al inicio del archivo):
+   el lightbox y los diálogos deben tapar al catálogo virtual (z-index 6),
+   no quedar debajo de él. */
+.lightbox-backdrop{z-index:60}
+.dialog-backdrop{z-index:70}
+
+/* ------------------------------------------------------------------ */
+/* Temas de la app (Opciones > Apariencia). El tema por defecto (clásico,
+   claro) vive en la regla :root de arriba; estos bloques solo cambian las
+   variables para Rosa pastel, Menta pastel y Oscuro, más un puñado de
+   superficies que usaban colores fijos en vez de variables. "Automático"
+   aplica claro/oscuro según el teléfono (lib/theme.ts). */
+:root[data-theme="rosa"]{--ink:#403445;--muted:#8f7488;--line:#f1e3ed;--cream:#fff7fb;--lav:#f6dff0;--lilac:#d3a7d0;--peach:#ffe9ee;--mint:#edf7ee;--pink:#ffe4ed;--red:#c5617f;--shadow:0 12px 35px rgba(150,110,160,.12)}
+:root[data-theme="menta"]{--ink:#2f3f3a;--muted:#6d827b;--line:#e0eee8;--cream:#f5fcfa;--lav:#d3ebde;--lilac:#8db8a6;--peach:#efe9d6;--mint:#d6f0e2;--pink:#f4e9e9;--red:#bf6a75;--shadow:0 12px 35px rgba(80,130,115,.12)}
+:root[data-theme="dark"]{
+  --ink:#e9e4f5;--muted:#a9a1c0;--line:#38324e;--cream:#211d31;--lav:#3a3157;--lilac:#9d84d0;--peach:#4a3831;--mint:#223a30;--pink:#402838;--red:#d98ba6;--shadow:0 12px 35px rgba(0,0,0,.4);background:#17131f;color:var(--ink)
+}
+:root[data-theme="dark"] body{background:#17131f}
+:root[data-theme="dark"] .sidebar{background:var(--cream);border-color:var(--line)}
+:root[data-theme="dark"] .store-pill{color:var(--ink)}
+:root[data-theme="dark"] .button.secondary{background:#2a2540;color:var(--ink);border-color:var(--line)}
+:root[data-theme="dark"] .image-picker-wrap{background:#2a2540}
+:root[data-theme="dark"] .cat-head{background:#2a2540}
+:root[data-theme="dark"] .team-row{background:#2a2540}
+:root[data-theme="dark"] .emp-detail-row>td{background:#2a2540}
+:root[data-theme="dark"] .day-tab{background:#241f33;color:#c9c3dc}
+:root[data-theme="dark"] .dd-opt{background:#241f33;border-color:var(--line);color:var(--ink)}
+:root[data-theme="dark"] .dd-opt.on{background:var(--lav);border-color:var(--lilac)}
+:root[data-theme="dark"] .settings-cat{background:#241f33;border-color:var(--line);color:var(--ink)}
+:root[data-theme="dark"] .new-store,.sync-join{background:#302848;color:#cbb7f0}
+:root[data-theme="dark"] .vc-head{background:var(--cream)}
+:root[data-theme="dark"] .vc-body{background:var(--cream)}
+:root[data-theme="dark"] .mobile-head .menu-btn{background:#302848;color:#cbb7f0}
+:root[data-theme="dark"] .dd-btn,.sale-search input,.panel-search input,.cat-actions input,.promo-row-conds input,.promo-row-conds select{background:#201b2e;border-color:var(--line);color:var(--ink)}
+:root[data-theme="dark"] .notes-box,.checklist-title-input,.checklist-add-row input,.note-edit-box textarea,.thread-compose textarea,.checklist-edit-item{background:#201b2e;border-color:var(--line);color:var(--ink)}
+:root[data-theme="dark"] .qty-input,.checklist-edit-item,.settings-row input{border-color:var(--line)}
+:root[data-theme="dark"] .inv-mode.on{background:#211d31;color:var(--ink)}
+:root[data-theme="dark"] .ev-card .ev-name{background:#211d31;color:var(--ink);border-color:var(--line)}
+:root[data-theme="dark"] .cat-actions input{background:#201b2e;color:var(--ink)}

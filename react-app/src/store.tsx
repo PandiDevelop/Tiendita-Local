@@ -1,7 +1,7 @@
 import { createContext, useCallback, useContext, useEffect, useRef, ReactNode, useState } from 'react';
 import type { AppState, InventoryLogEntry, Product, Sale, Store, Tab } from './types';
-import { loadState, saveState, syncClientId, NOTE_TTL_MS } from './lib/core';
-import { createSync, applyRemote, activateSync, joinStore, SyncHandle } from './lib/sync';
+import { loadState, saveState, syncClientId, NOTE_TTL_MS, deletedStores } from './lib/core';
+import { createSync, applyRemote, activateSync, joinStore, SyncHandle, pruneDeletedStores } from './lib/sync';
 import { archiveUpsert, archiveMarkGone, noteToArchiveEntry, replyToArchiveEntry } from './lib/notesArchive';
 import { playNoteChime, showSystemNotification } from './lib/sound';
 import { notifyEnabled, notifCatEnabled } from './lib/settings';
@@ -94,6 +94,14 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     state.stores.forEach((s) => { if (s.syncKey) sync.current!.attach(s.id); });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  useEffect(() => {
+    // Barrido al abrir la app: tiendas borradas con el tiempo de gracia ya
+    // vencido (14 días, ver deleteStoreFn/restoreStoreFn en sync.ts) se purgan
+    // de la nube. Best-effort y en paralelo, no bloquea el arranque.
+    pruneDeletedStores(deletedStores());
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
