@@ -38,6 +38,7 @@ function MenuClock() {
   return (
     <>
       <span className="clock-date">{now.toLocaleDateString('es', { weekday: 'long', day: 'numeric', month: 'long' })}</span>
+      <span className="clock-sep" aria-hidden="true" />
       <span className="clock-time">{now.toLocaleTimeString('es', { hour: '2-digit', minute: '2-digit' })}</span>
     </>
   );
@@ -175,7 +176,7 @@ export function App() {
             <div style={{ minWidth: 0 }}><div className="eyebrow">Tu tienda</div><h1>{esc(s.name)}</h1></div>
             <div className="store-actions">
               <button className="button secondary" onClick={() => setModal('editStore')}><GearIcon size={15} /> Editar tienda</button>
-              {devTheme && <span className="store-quote"><img className="store-quote-logo" src={DEV_LOGO[t]} alt="" />Mereces lo que sueñas</span>}
+              {devTheme && <><span className="store-quote">Mereces lo que sueñas</span><img className="store-quote-logo" src={DEV_LOGO[t]} alt="" /></>}
             </div>
           </div>
         </div>
