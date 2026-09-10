@@ -2,7 +2,9 @@
 // de los ajustes (ver lib/settings.ts): no viaja por Firestore. "Automático"
 // (por defecto) sigue el modo claro/oscuro del teléfono (prefers-color-scheme)
 // en vivo: si el teléfono cambia de claro a oscuro, la app cambia sola.
-export type ThemePref = 'light' | 'dark' | 'rosa' | 'menta' | 'azul' | 'auto';
+// Los temas "owen", "crisdeku" y "pandi" son ocultos: no aparecen en Opciones;
+// solo se pueden poner desde la ventana oculta DevThemes (10 toques en el logo).
+export type ThemePref = 'light' | 'dark' | 'rosa' | 'menta' | 'auto' | 'owen' | 'crisdeku' | 'pandi';
 
 const THEME_KEY = 'mt_theme';
 
@@ -11,7 +13,6 @@ const THEMES: { value: ThemePref; label: string }[] = [
   { value: 'dark', label: 'Oscuro' },
   { value: 'rosa', label: 'Rosa pastel' },
   { value: 'menta', label: 'Menta pastel' },
-  { value: 'azul', label: 'Azul pastel' },
   { value: 'auto', label: 'Automático (sigue al teléfono)' },
 ];
 
@@ -22,7 +23,9 @@ export function themeOptions(): { value: ThemePref; label: string }[] {
 export function themePref(): ThemePref {
   try {
     const v = localStorage.getItem(THEME_KEY);
-    if (v === 'light' || v === 'dark' || v === 'rosa' || v === 'menta' || v === 'azul' || v === 'auto') return v;
+    // 'azul' ya no se ofrece; quien lo tenía pasa al clásico.
+    if (v === 'azul') return 'light';
+    if (v === 'light' || v === 'dark' || v === 'rosa' || v === 'menta' || v === 'auto' || v === 'owen' || v === 'crisdeku' || v === 'pandi') return v;
   } catch { /* ignorar */ }
   return 'auto';
 }
@@ -37,9 +40,9 @@ function systemDark(): boolean {
 }
 
 // El tema que de verdad se aplica al <html data-theme="..."> (los bloques
-// CSS: claro clásico, rosa, menta, azul y oscuro). "Automático" se resuelve
-// a claro u oscuro según el teléfono.
-export function resolvedTheme(): 'light' | 'dark' | 'rosa' | 'menta' | 'azul' {
+// CSS: claro clásico, rosa, menta, oscuro y los ocultos). "Automático" se
+// resuelve a claro u oscuro según el teléfono.
+export function resolvedTheme(): 'light' | 'dark' | 'rosa' | 'menta' | 'owen' | 'crisdeku' | 'pandi' {
   const p = themePref();
   if (p === 'auto') return systemDark() ? 'dark' : 'light';
   return p;

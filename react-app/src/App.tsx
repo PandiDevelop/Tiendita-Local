@@ -1,10 +1,11 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useStore, type ModalKind } from './store';
 import { canManageTeam, esc } from './lib/core';
 import { useAppVersion } from './lib/appVersion';
 import { initDeepLink, readDeepTab } from './lib/deepLink';
 import { pushOverlay } from './lib/backStack';
 import { DialogHost, GearIcon, ImageLightboxHost, Logo, MenuIcon, StoreImage, Toast } from './ui';
+import { DevThemesModal } from './views/DevThemes';
 import { Dashboard } from './views/Dashboard';
 import { Catalog } from './views/Catalog';
 import { Inventory } from './views/Inventory';
@@ -23,6 +24,21 @@ export function App() {
   const s = store;
   const version = useAppVersion();
   const [menuOpen, setMenuOpen] = useState(false);
+  const [devOpen, setDevOpen] = useState(false);
+  // Menú oculto de desarrollo: 10 toques seguidos en el logo de la app.
+  const logoTaps = useRef(0);
+  const logoTimer = useRef<number | undefined>(undefined);
+
+  function tapLogo() {
+    logoTaps.current += 1;
+    if (logoTimer.current) window.clearTimeout(logoTimer.current);
+    logoTimer.current = window.setTimeout(() => { logoTaps.current = 0; }, 1600);
+    if (logoTaps.current >= 10) {
+      logoTaps.current = 0;
+      setMenuOpen(false);
+      setDevOpen(true);
+    }
+  }
   // Dueño real o admin (permiso que el dueño le dio a un trabajador): ambos
   // ven la pestaña de Empleados.
   const owner = !s || canManageTeam(s);
@@ -64,6 +80,7 @@ export function App() {
       {modal === 'newProduct' && <ProductForm onClose={() => setModal('none')} />}
       {modal === 'editProduct' && <ProductForm editingId={modalArg} onClose={() => setModal('none')} />}
       {modal === 'sale' && <SaleRegistration onClose={() => setModal('none')} />}
+      {devOpen && <DevThemesModal onClose={() => setDevOpen(false)} />}
     </>
   );
 
@@ -73,7 +90,8 @@ export function App() {
         <main className="content landing-wrap">
           <button className="gear-btn landing-gear" onClick={() => openModal('settings')} title="Opciones: nombre, notificaciones, sonido y descargas de registros. También sirve para restaurar una tienda borrada"><GearIcon size={18} /></button>
           <div className="landing">
-            <Logo size={88} />
+            <button className="brand-logo-btn" onClick={tapLogo} title=""><Logo size={88} /></button>
+            <div className="landing-phrase"><span className="phrase-logo" aria-hidden="true" />Mereces lo que sueñas</div>
             <h1 className="landing-title">mi<span>tiendita</span></h1>
             <p className="landing-tag">Organiza productos, promociones y ventas diarias en un solo lugar.</p>
             <div className="landing-feats">
@@ -99,7 +117,8 @@ export function App() {
   return (
     <>
       <div className="sidebar">
-        <div className="brand"><Logo size={36} /><span className="brand-text">mi<span className="brand-accent">tiendita</span></span></div>
+        <div className="brand"><button className="brand-logo-btn" onClick={tapLogo} title=""><Logo size={36} /></button><span className="brand-text">mi<span className="brand-accent">tiendita</span></span></div>
+        <div className="side-phrase"><span className="phrase-logo" aria-hidden="true" />Mereces lo que sueñas</div>
         <div className="label">Mis tiendas</div>
         <div className="store-list">
           {state.stores.map((x) => (
