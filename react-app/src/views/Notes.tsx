@@ -10,10 +10,9 @@ import {
 } from '../lib/core';
 import {
   confirmDialog, GearMenu, Modal,
-  NoteTextIcon, ChecklistIcon, CheckboxOutlineIcon, PinIcon, BellIcon, ReplyIcon, DownloadIcon, CloseIcon,
+  NoteTextIcon, ChecklistIcon, CheckboxOutlineIcon, PinIcon, BellIcon, ReplyIcon, CloseIcon,
 } from '../ui';
 import { customConfirm } from '../lib/dialog';
-import { exportArchiveCsv } from '../lib/notesArchive';
 import { notifyPermission, requestNotifyPermission } from '../lib/sound';
 import { enablePushForStore, notifyStorePush, pushLinkFor } from '../lib/push';
 import { consumeDeepNote } from '../lib/deepLink';
@@ -420,9 +419,6 @@ export function Notes() {
         <div className="notes-head-actions">
           {notifyState === 'default' && (
             <button className="button secondary" onClick={enableSystemNotify} title="Recibe un aviso aunque tengas la app cerrada o en otra pestaña"><BellIcon /> Activar aviso del sistema</button>
-          )}
-          {admin && (
-            <button className="button secondary" onClick={() => exportArchiveCsv(s.id, s.name)} title="Descarga el texto de las notas, incluidas las que ya desaparecieron, con quién las envió y cuándo"><DownloadIcon /> Descargar log</button>
           )}
         </div>
       </div>

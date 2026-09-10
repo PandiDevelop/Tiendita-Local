@@ -1,10 +1,10 @@
-// Log descargable de Notas: SOLO vive en este dispositivo (localStorage), no
-// viaja por Firestore. Ver el comentario junto a NoteArchiveEntry en
-// types.ts para el porque (evitar que el documento de la tienda crezca sin
-// limite con un historial que no hace falta sincronizar en tiempo real).
-// Cada dispositivo que tuvo la pestaña Notas abierta va acumulando lo que
-// vio pasar; el boton de descarga (solo administradores, ver Notes.tsx)
-// exporta lo que ESE dispositivo alcanzo a registrar.
+// Log descargable de Notas y Objetivos: SOLO vive en este dispositivo
+// (localStorage), no viaja por Firestore. Ver el comentario junto a
+// NoteArchiveEntry en types.ts para el porque (evitar que el documento de la
+// tienda crezca sin limite con un historial que no hace falta sincronizar en
+// tiempo real). Cada dispositivo que tuvo la pestaña Notas abierta va
+// acumulando lo que vio pasar; las exportaciones de Opciones > Registros
+// descargan lo que ESE dispositivo alcanzó a registrar.
 import type { Note, NoteArchiveEntry, NoteReply } from '../types';
 
 const KEY_PREFIX = 'mi-tiendita-note-archive:';
@@ -97,17 +97,37 @@ export function archiveMarkGone(storeId: string, id: string, status: 'eliminada'
 // CSV con BOM y separador ; (mismo formato que el resto de exportaciones de
 // la app, ver exportExcel en views/History.tsx) para que Excel en español
 // lo abra bien de una.
-export function exportArchiveCsv(storeId: string, storeName: string): void {
-  const list = loadArchive(storeId).slice().sort((a, b) => a.createdAt - b.createdAt);
-  const rows: (string | number)[][] = [['Fecha', 'Hora', 'Tipo', 'Autor', 'Estado', 'Editado', 'Texto']];
-  list.forEach((e) => {
-    rows.push([e.date, e.time, e.kind, e.byName || '', e.status, e.editedAt ? 'sí' : 'no', e.text]);
-  });
+function buildCsv(rows: (string | number)[][], filenameBase: string): void {
   const csv = '\ufeff' + rows.map((r) => r.map((v) => '"' + String(v == null ? '' : v).replace(/"/g, '""') + '"').join(';')).join('\r\n');
   const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
   const a = document.createElement('a');
   a.href = URL.createObjectURL(blob);
-  a.download = 'notas-log-' + storeName.toLowerCase().replace(/[^a-z0-9]+/gi, '-') + '.csv';
+  a.download = filenameBase + '.csv';
   a.click();
   URL.revokeObjectURL(a.href);
+}
+
+function archiveRows(storeId: string, kinds: ('nota' | 'respuesta' | 'checklist')[]): (string | number)[][] {
+  const list = loadArchive(storeId).slice().sort((a, b) => a.createdAt - b.createdAt);
+  const rows: (string | number)[][] = [['Fecha', 'Hora', 'Tipo', 'Autor', 'Estado', 'Editado', 'Texto']];
+  list.filter((e) => kinds.includes(e.kind)).forEach((e) => {
+    rows.push([e.date, e.time, e.kind, e.byName || '', e.status, e.editedAt ? 'sí' : 'no', e.text]);
+  });
+  return rows;
+}
+
+function slugName(storeName: string): string {
+  return storeName.toLowerCase().replace(/[^a-z0-9]+/gi, '-');
+}
+
+// "Descargar registros de notas" (Opciones > Registros): notas y respuestas
+// de hilos (los objetivos van por separado, ver abajo).
+export function exportNotesArchiveCsv(storeId: string, storeName: string): void {
+  buildCsv(archiveRows(storeId, ['nota', 'respuesta']), 'notas-log-' + slugName(storeName));
+}
+
+// "Descargar registros de objetivos" (Opciones > Registros): solo las listas
+// de objetivos/checklist.
+export function exportObjectivesArchiveCsv(storeId: string, storeName: string): void {
+  buildCsv(archiveRows(storeId, ['checklist']), 'objetivos-log-' + slugName(storeName));
 }

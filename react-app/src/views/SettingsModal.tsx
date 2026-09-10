@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useStore } from '../store';
-import { syncName, syncSetName, deletedStores } from '../lib/core';
+import { syncName, syncSetName, deletedStores, canManageNotes } from '../lib/core';
 import type { DeletedStoreRecord } from '../lib/core';
 import { useAppVersion } from '../lib/appVersion';
 import { notifyEnabled, setNotifyEnabled, notifCats, setNotifCat } from '../lib/settings';
@@ -9,7 +9,8 @@ import { enablePushForStore, disablePushForStore, pushConfigured } from '../lib/
 import { setPushPrefs, restoreStoreFn } from '../lib/sync';
 import { themePref, setThemePref, themeOptions } from '../lib/theme';
 import type { ThemePref } from '../lib/theme';
-import { Modal } from '../ui';
+import { exportNotesArchiveCsv, exportObjectivesArchiveCsv } from '../lib/notesArchive';
+import { DownloadIcon, Modal } from '../ui';
 import type { NotifCat } from '../types';
 
 const NOTIF_CAT_LABELS: { cat: NotifCat; label: string }[] = [
@@ -112,7 +113,7 @@ export function SettingsModal({ onClose }: { onClose: () => void }) {
         <div className="label">Apariencia</div>
         <div className="field">
           <div className="settings-row">
-            <select id="settings-theme" value={theme} onChange={(e) => { const v = e.target.value as ThemePref; setTheme(v); setThemePref(v); }} style={{ flex: 1, padding: '10px 12px', borderRadius: 10, border: '1px solid #ddd8e5', background: '#fff', color: 'var(--ink)' }}>
+            <select id="settings-theme" value={theme} onChange={(e) => { const v = e.target.value as ThemePref; setTheme(v); setThemePref(v); }} style={{ flex: 1, padding: '10px 12px', borderRadius: 10, border: '1px solid var(--line)', background: 'var(--surface)', color: 'var(--ink)' }}>
               {themeOptions().map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
             </select>
           </div>
@@ -151,6 +152,23 @@ export function SettingsModal({ onClose }: { onClose: () => void }) {
       </div>
 
       <div className="settings-block">
+        <div className="label">Registros</div>
+        <div className="field">
+          {store && canManageNotes(store) ? (
+            <>
+              <div className="settings-row" style={{ flexWrap: 'wrap' }}>
+                <button className="button secondary" onClick={() => exportNotesArchiveCsv(store.id, store.name)} title="Descarga lo que este dispositivo registró de notas y respuestas de hilos, incluidas las que ya desaparecieron"><DownloadIcon /> Descargar registros de notas</button>
+                <button className="button secondary" onClick={() => exportObjectivesArchiveCsv(store.id, store.name)} title="Descarga lo que este dispositivo registró de listas de objetivos"><DownloadIcon /> Descargar registros de objetivos</button>
+              </div>
+              <p className="muted">Solo llegan los registros que este dispositivo alcanzó a ver; cada equipo descarga los suyos.</p>
+            </>
+          ) : (
+            <p className="muted">Los registros de notas y objetivos están disponibles para el dueño y los administradores.</p>
+          )}
+        </div>
+      </div>
+
+      <div className="settings-block">
         <div className="label">Restaurar tienda borrada</div>
         {deleted.length ? (
           <div className="team-list" style={{ margin: 0 }}>
@@ -158,16 +176,15 @@ export function SettingsModal({ onClose }: { onClose: () => void }) {
               <div key={rec.key} className="team-row" style={{ flexWrap: 'wrap' }}>
                 <div style={{ minWidth: 0, overflowWrap: 'break-word', flex: 1 }}>
                   <div className="team-name">{rec.name}</div>
-                  <div className="muted" style={{ fontSize: 12 }}>Se puede restaurar hasta el {new Date(rec.deletedAt + 14 * 24 * 60 * 60 * 1000).toLocaleDateString('es-CO')}</div>
                 </div>
                 <button className="button secondary" disabled={busy} onClick={() => restoreOne(rec)}>Restaurar</button>
               </div>
             ))}
           </div>
         ) : (
-          <p className="muted">No hay tiendas borradas recientemente para restaurar.</p>
+          <p className="muted">No hay tiendas borradas para restaurar.</p>
         )}
-        <p className="muted">Borrar una tienda la oculta de todos los dispositivos al instante, pero queda una copia en la nube por 14 días por si necesitas recuperarla.</p>
+        <p className="muted">Las tiendas borradas aparecerán aquí durante 14 días.</p>
       </div>
 
       <p className="muted settings-version">Versión {version}</p>
