@@ -2123,7 +2123,7 @@
       "file_type": "code",
       "norm_label": "downloadicon()",
       "source_file": "react-app/src/ui.tsx",
-      "source_location": "L251"
+      "source_location": "L254"
     },
     {
       "id": "react_app_src_views_notes_notes_enablesystemnotify",
@@ -2675,7 +2675,7 @@
       "file_type": "code",
       "norm_label": "chevronicon()",
       "source_file": "react-app/src/ui.tsx",
-      "source_location": "L275"
+      "source_location": "L278"
     },
     {
       "id": "react_app_src_views_dashboard_dashboard",
@@ -3563,7 +3563,7 @@
       "file_type": "code",
       "norm_label": "bellicon()",
       "source_file": "react-app/src/ui.tsx",
-      "source_location": "L232"
+      "source_location": "L235"
     },
     {
       "id": "react_app_src_ui_categorysuggest",
@@ -3575,7 +3575,7 @@
       "file_type": "code",
       "norm_label": "categorysuggest()",
       "source_file": "react-app/src/ui.tsx",
-      "source_location": "L476"
+      "source_location": "L479"
     },
     {
       "id": "react_app_src_ui_checkboxoutlineicon",
@@ -3587,7 +3587,7 @@
       "file_type": "code",
       "norm_label": "checkboxoutlineicon()",
       "source_file": "react-app/src/ui.tsx",
-      "source_location": "L212"
+      "source_location": "L215"
     },
     {
       "id": "react_app_src_ui_checklisticon",
@@ -3599,7 +3599,7 @@
       "file_type": "code",
       "norm_label": "checklisticon()",
       "source_file": "react-app/src/ui.tsx",
-      "source_location": "L199"
+      "source_location": "L202"
     },
     {
       "id": "react_app_src_ui_closeicon",
@@ -3611,7 +3611,7 @@
       "file_type": "code",
       "norm_label": "closeicon()",
       "source_file": "react-app/src/ui.tsx",
-      "source_location": "L266"
+      "source_location": "L269"
     },
     {
       "id": "react_app_src_ui_gearicon",
@@ -3635,7 +3635,7 @@
       "file_type": "code",
       "norm_label": "gearmenu()",
       "source_file": "react-app/src/ui.tsx",
-      "source_location": "L349"
+      "source_location": "L352"
     },
     {
       "id": "react_app_src_ui_gearmenu_openmenu",
@@ -3647,7 +3647,7 @@
       "file_type": "code",
       "norm_label": "openmenu()",
       "source_file": "react-app/src/ui.tsx",
-      "source_location": "L376"
+      "source_location": "L379"
     },
     {
       "id": "react_app_src_ui_image",
@@ -3695,7 +3695,7 @@
       "file_type": "code",
       "norm_label": "menuicon()",
       "source_file": "react-app/src/ui.tsx",
-      "source_location": "L284"
+      "source_location": "L287"
     },
     {
       "id": "react_app_src_ui_modal",
@@ -3719,7 +3719,7 @@
       "file_type": "code",
       "norm_label": "notetexticon()",
       "source_file": "react-app/src/ui.tsx",
-      "source_location": "L188"
+      "source_location": "L191"
     },
     {
       "id": "react_app_src_ui_pencilicon",
@@ -3731,7 +3731,7 @@
       "file_type": "code",
       "norm_label": "pencilicon()",
       "source_file": "react-app/src/ui.tsx",
-      "source_location": "L176"
+      "source_location": "L179"
     },
     {
       "id": "react_app_src_ui_pinicon",
@@ -3743,7 +3743,7 @@
       "file_type": "code",
       "norm_label": "pinicon()",
       "source_file": "react-app/src/ui.tsx",
-      "source_location": "L221"
+      "source_location": "L224"
     },
     {
       "id": "react_app_src_ui_printicon",
@@ -3755,7 +3755,7 @@
       "file_type": "code",
       "norm_label": "printicon()",
       "source_file": "react-app/src/ui.tsx",
-      "source_location": "L163"
+      "source_location": "L166"
     },
     {
       "id": "react_app_src_ui_receipticon",
@@ -3767,7 +3767,7 @@
       "file_type": "code",
       "norm_label": "receipticon()",
       "source_file": "react-app/src/ui.tsx",
-      "source_location": "L317"
+      "source_location": "L320"
     },
     {
       "id": "react_app_src_ui_replyicon",
@@ -3779,7 +3779,7 @@
       "file_type": "code",
       "norm_label": "replyicon()",
       "source_file": "react-app/src/ui.tsx",
-      "source_location": "L242"
+      "source_location": "L245"
     },
     {
       "id": "react_app_src_ui_storefronticon",
@@ -3791,7 +3791,7 @@
       "file_type": "code",
       "norm_label": "storefronticon()",
       "source_file": "react-app/src/ui.tsx",
-      "source_location": "L293"
+      "source_location": "L296"
     },
     {
       "id": "react_app_src_ui_suggestinput",
@@ -3803,7 +3803,7 @@
       "file_type": "code",
       "norm_label": "suggestinput()",
       "source_file": "react-app/src/ui.tsx",
-      "source_location": "L438"
+      "source_location": "L441"
     },
     {
       "id": "react_app_src_ui_toast",
@@ -3827,7 +3827,7 @@
       "file_type": "code",
       "norm_label": "truckicon()",
       "source_file": "react-app/src/ui.tsx",
-      "source_location": "L305"
+      "source_location": "L308"
     },
     {
       "id": "react_app_src_ui_undoicon",
@@ -3839,7 +3839,7 @@
       "file_type": "code",
       "norm_label": "undoicon()",
       "source_file": "react-app/src/ui.tsx",
-      "source_location": "L327"
+      "source_location": "L330"
     },
     {
       "id": "react_app_src_views_catalog_catalog",
@@ -11526,7 +11526,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "react-app/src/views/Inventory.tsx",
-      "source_location": "L199",
+      "source_location": "L204",
       "weight": 1.0
     },
     {
@@ -11550,7 +11550,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "react-app/src/views/Inventory.tsx",
-      "source_location": "L241",
+      "source_location": "L237",
       "weight": 1.0
     },
     {
@@ -11562,7 +11562,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "react-app/src/views/Inventory.tsx",
-      "source_location": "L283",
+      "source_location": "L279",
       "weight": 1.0
     },
     {
@@ -12714,7 +12714,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "react-app/src/views/Profit.tsx",
-      "source_location": "L125",
+      "source_location": "L127",
       "weight": 1.0
     },
     {
@@ -12786,7 +12786,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "react-app/src/views/Profit.tsx",
-      "source_location": "L99",
+      "source_location": "L68",
       "weight": 1.0
     },
     {
@@ -13854,7 +13854,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "react-app/src/ui.tsx",
-      "source_location": "L376",
+      "source_location": "L379",
       "weight": 1.0
     },
     {
@@ -25324,7 +25324,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "react-app/src/ui.tsx",
-      "source_location": "L163",
+      "source_location": "L166",
       "weight": 1.0
     },
     {
@@ -25335,7 +25335,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "react-app/src/ui.tsx",
-      "source_location": "L176",
+      "source_location": "L179",
       "weight": 1.0
     },
     {
@@ -25346,7 +25346,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "react-app/src/ui.tsx",
-      "source_location": "L188",
+      "source_location": "L191",
       "weight": 1.0
     },
     {
@@ -25357,7 +25357,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "react-app/src/ui.tsx",
-      "source_location": "L199",
+      "source_location": "L202",
       "weight": 1.0
     },
     {
@@ -25368,7 +25368,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "react-app/src/ui.tsx",
-      "source_location": "L212",
+      "source_location": "L215",
       "weight": 1.0
     },
     {
@@ -25379,7 +25379,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "react-app/src/ui.tsx",
-      "source_location": "L221",
+      "source_location": "L224",
       "weight": 1.0
     },
     {
@@ -25390,7 +25390,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "react-app/src/ui.tsx",
-      "source_location": "L232",
+      "source_location": "L235",
       "weight": 1.0
     },
     {
@@ -25401,7 +25401,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "react-app/src/ui.tsx",
-      "source_location": "L242",
+      "source_location": "L245",
       "weight": 1.0
     },
     {
@@ -25412,7 +25412,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "react-app/src/ui.tsx",
-      "source_location": "L251",
+      "source_location": "L254",
       "weight": 1.0
     },
     {
@@ -25423,7 +25423,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "react-app/src/ui.tsx",
-      "source_location": "L266",
+      "source_location": "L269",
       "weight": 1.0
     },
     {
@@ -25434,7 +25434,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "react-app/src/ui.tsx",
-      "source_location": "L275",
+      "source_location": "L278",
       "weight": 1.0
     },
     {
@@ -25445,7 +25445,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "react-app/src/ui.tsx",
-      "source_location": "L284",
+      "source_location": "L287",
       "weight": 1.0
     },
     {
@@ -25467,7 +25467,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "react-app/src/ui.tsx",
-      "source_location": "L293",
+      "source_location": "L296",
       "weight": 1.0
     },
     {
@@ -25478,7 +25478,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "react-app/src/ui.tsx",
-      "source_location": "L305",
+      "source_location": "L308",
       "weight": 1.0
     },
     {
@@ -25489,7 +25489,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "react-app/src/ui.tsx",
-      "source_location": "L317",
+      "source_location": "L320",
       "weight": 1.0
     },
     {
@@ -25500,7 +25500,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "react-app/src/ui.tsx",
-      "source_location": "L327",
+      "source_location": "L330",
       "weight": 1.0
     },
     {
@@ -25511,7 +25511,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "react-app/src/ui.tsx",
-      "source_location": "L349",
+      "source_location": "L352",
       "weight": 1.0
     },
     {
@@ -25522,7 +25522,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "react-app/src/ui.tsx",
-      "source_location": "L438",
+      "source_location": "L441",
       "weight": 1.0
     },
     {
@@ -25533,7 +25533,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "react-app/src/ui.tsx",
-      "source_location": "L476",
+      "source_location": "L479",
       "weight": 1.0
     },
     {
@@ -26940,5 +26940,5 @@
     }
   ],
   "hyperedges": [],
-  "built_at_commit": "2d453877ddd1b9ef5bd13048bcd113d6fda05688"
+  "built_at_commit": "f346511cb81f671823ff466184950bcdcc0de0f4"
 }
