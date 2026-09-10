@@ -1,10 +1,11 @@
 {
-  "0": "sync.ts",
+  "0": "core.ts",
   "1": "setup.ts",
-  "2": "StoreModal.tsx",
-  "3": "core.ts",
+  "2": "SaleRegistration",
+  "3": "customConfirm",
   "4": "react-app/package.json",
-  "5": "useStore",
+  "5": "ui.tsx",
+  "6": "App",
   "7": "compilerOptions",
   "8": "Notes.tsx",
   "9": "vite-env.d.ts",
@@ -17,5 +18,5 @@
   "17": "push-worker/package.json",
   "18": "Avisos push reales para Mi Tiendita (con la app cerrada del todo)",
   "19": "sync.test.ts",
-  "21": "ui.tsx"
+  "21": "dialog.ts"
 }
