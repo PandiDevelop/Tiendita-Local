@@ -1,8 +1,8 @@
 {
   "0": "sync.ts",
   "1": "setup.ts",
-  "2": "features.test.tsx",
-  "3": "StoreModal.tsx",
+  "2": "store.tsx",
+  "3": "App",
   "4": "react-app/package.json",
   "5": "ui.tsx",
   "6": "core.ts",
@@ -14,14 +14,9 @@
   "12": "SettingsModal.tsx",
   "13": "Mi Tiendita",
   "14": "AGENTS.md",
-  "15": "dialog.ts",
   "16": "index.js",
   "17": "push-worker/package.json",
   "18": "Avisos push reales para Mi Tiendita (con la app cerrada del todo)",
   "19": "SaleRegistration",
-  "20": "StoreModal",
-  "21": "App",
-  "22": "store.tsx",
-  "23": "sync.test.ts",
-  "24": "types.ts"
+  "21": "dialog.ts"
 }
