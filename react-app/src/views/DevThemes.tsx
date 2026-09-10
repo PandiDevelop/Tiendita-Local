@@ -25,7 +25,7 @@ const DEV_THEMES: { value: ThemePref; label: string; icon: string; quote: string
   { value: 'pandi', label: 'Pandi', icon: './logo-pandi.png', quote: 'Puedes con todo, pero no estás solo.' },
 ];
 
-type Stage = 'password' | 'box' | 'icons' | 'menu';
+type Stage = 'password' | 'icons' | 'menu';
 
 // Cada logo del totem con su animacion de fade-in. Si por lo que sea una
 // imagen falla (sin red, cache rara...), se muestra la inicial del tema en su
@@ -41,16 +41,14 @@ export function DevThemesModal({ onClose }: { onClose: () => void }) {
   const [pass, setPass] = useState('');
   const [err, setErr] = useState(false);
   const [active, setActive] = useState<ThemePref>(themePref());
-  const [stage, setStage] = useState<Stage>(unlocked ? 'box' : 'password');
+  const [stage, setStage] = useState<Stage>(unlocked ? 'icons' : 'password');
 
-  // Secuencia (algo mas reposada): primero la box sola, luego los logos uno
-  // a uno en forma de totem (Owen arriba, Crisdeku al medio, Pandi abajo) y
-  // por ultimo la caja se expande y se muestra el menu.
+  // Secuencia: primero el totem con los logos uno a uno (Owen arriba,
+  // Crisdeku al medio, Pandi abajo) y luego la caja se expande con el menu.
   useEffect(() => {
     if (!unlocked) return;
-    const t1 = window.setTimeout(() => setStage('icons'), 550);
-    const t2 = window.setTimeout(() => setStage('menu'), 550 + 2000);
-    return () => { window.clearTimeout(t1); window.clearTimeout(t2); };
+    const t = window.setTimeout(() => setStage('menu'), 2000);
+    return () => window.clearTimeout(t);
   }, [unlocked]);
 
   function tryPass() {
@@ -75,10 +73,7 @@ export function DevThemesModal({ onClose }: { onClose: () => void }) {
           </div>
         </>
       ) : (
-        <div className={'dev-stage ' + (stage === 'menu' ? 'menu' : stage === 'icons' ? 'icons' : 'box')} role="status">
-          {stage === 'box' && (
-            <div className="dev-dots" aria-hidden="true"><i /><i /><i /></div>
-          )}
+        <div className={'dev-stage ' + (stage === 'menu' ? 'menu' : 'icons')} role="status">
           {stage === 'icons' && (
             <div className="dev-icons">
               {DEV_THEMES.map((t, i) => (

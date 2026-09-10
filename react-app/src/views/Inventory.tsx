@@ -182,18 +182,20 @@ export function Inventory() {
 
       {mode === 'log' ? (
         log.length ? (
-          <table><thead><tr><th>Fecha</th><th>Hora</th><th>Producto</th><th>Cantidad</th><th>Quién</th><th>Proveedor</th></tr></thead><tbody>
-            {log.map((e) => (
-              <tr key={e.id}>
-                <td className="muted">{esc(e.date || '—')}</td>
-                <td className="muted">{esc(e.time || '—')}</td>
-                <td className="product-name">{esc(nameOf(e.productId))}</td>
-                <td className={'inv-qty ' + (e.qty >= 0 ? 'add' : 'sub')}>{e.qty >= 0 ? '+' + e.qty : e.qty}</td>
-                <td className="muted">{esc(e.byName || 'Alguien')}</td>
-                <td className="muted">{e.supplier ? esc(e.supplier) : '—'}</td>
-              </tr>
-            ))}
-          </tbody></table>
+          <div className="notes-list inv-list">
+            <table><thead><tr><th>Fecha</th><th>Hora</th><th>Producto</th><th>Cantidad</th><th>Quién</th><th>Proveedor</th></tr></thead><tbody>
+              {log.map((e) => (
+                <tr key={e.id}>
+                  <td className="muted">{esc(e.date || '—')}</td>
+                  <td className="muted">{esc(e.time || '—')}</td>
+                  <td className="product-name">{esc(nameOf(e.productId))}</td>
+                  <td className={'inv-qty ' + (e.qty >= 0 ? 'add' : 'sub')}>{e.qty >= 0 ? '+' + e.qty : e.qty}</td>
+                  <td className="muted">{esc(e.byName || 'Alguien')}</td>
+                  <td className="muted">{e.supplier ? esc(e.supplier) : '—'}</td>
+                </tr>
+              ))}
+            </tbody></table>
+          </div>
         ) : <div className="notice">Aún no hay cambios registrados en el inventario.</div>
       ) : <>
           <div className="panel-search">

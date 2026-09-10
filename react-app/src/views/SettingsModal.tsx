@@ -124,13 +124,13 @@ export function SettingsModal({ onClose }: { onClose: () => void }) {
             {themeOptions().map((o) => (
               <button key={o.value} type="button" className={'theme-chip' + (theme === o.value ? ' active' : '')} onClick={() => { setTheme(o.value); setThemePref(o.value); }}>{o.label}</button>
             ))}
+            {DEV_THEME_META[theme] && (
+              <div className="theme-dev-box">
+                <img className="theme-dev-logo" src={DEV_THEME_META[theme].logo} alt="" />
+                <span>Tema oculto activo: <b>{DEV_THEME_META[theme].name}</b></span>
+              </div>
+            )}
           </div>
-          {DEV_THEME_META[theme] && (
-            <div className="theme-dev-box">
-              <img className="theme-dev-logo" src={DEV_THEME_META[theme].logo} alt="" />
-              <span>Tema oculto activo: <b>{DEV_THEME_META[theme].name}</b></span>
-            </div>
-          )}
           <p className="muted">El tema se aplica en este dispositivo. "Automático" usa el modo claro u oscuro que tenga el teléfono.</p>
         </div>
       </div>

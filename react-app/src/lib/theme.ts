@@ -13,7 +13,7 @@ const THEMES: { value: ThemePref; label: string }[] = [
   { value: 'dark', label: 'Oscuro' },
   { value: 'rosa', label: 'Rosa pastel' },
   { value: 'menta', label: 'Menta pastel' },
-  { value: 'auto', label: 'Automático (sigue al teléfono)' },
+  { value: 'auto', label: 'Automático' },
 ];
 
 export function themeOptions(): { value: ThemePref; label: string }[] {
