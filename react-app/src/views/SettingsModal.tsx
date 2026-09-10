@@ -20,6 +20,14 @@ const NOTIF_CAT_LABELS: { cat: NotifCat; label: string }[] = [
   { cat: 'cargamento', label: 'Cargamentos' },
 ];
 
+// Los temas ocultos (owen/crisdeku/pandi) no se ofrecen, pero si uno está
+// activo se muestra con su logo junto a los temas normales.
+const DEV_THEME_META: Record<string, { name: string; logo: string }> = {
+  owen: { name: 'Owen-chan', logo: './logo-owen.png' },
+  crisdeku: { name: 'Crisdeku', logo: './logo-crisdeku.png' },
+  pandi: { name: 'Pandi', logo: './logo-pandi.png' },
+};
+
 // Ventana de ajustes de la app, que se abre desde la tuerca del menu lateral
 // (el que sirve tambien para cambiar de tienda). Todo es por dispositivo y
 // se guarda localmente, no viaja por Firestore. Las notificaciones se
@@ -112,11 +120,17 @@ export function SettingsModal({ onClose }: { onClose: () => void }) {
       <div className="settings-block">
         <div className="label">Apariencia</div>
         <div className="field">
-          <div className="settings-row">
-            <select id="settings-theme" value={theme} onChange={(e) => { const v = e.target.value as ThemePref; setTheme(v); setThemePref(v); }} style={{ flex: 1, padding: '10px 12px', borderRadius: 10, border: '1px solid var(--line)', background: 'var(--surface)', color: 'var(--ink)' }}>
-              {themeOptions().map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
-            </select>
+          <div className="theme-chip-row">
+            {themeOptions().map((o) => (
+              <button key={o.value} type="button" className={'theme-chip' + (theme === o.value ? ' active' : '')} onClick={() => { setTheme(o.value); setThemePref(o.value); }}>{o.label}</button>
+            ))}
           </div>
+          {DEV_THEME_META[theme] && (
+            <div className="theme-dev-box">
+              <img className="theme-dev-logo" src={DEV_THEME_META[theme].logo} alt="" />
+              <span>Tema oculto activo: <b>{DEV_THEME_META[theme].name}</b></span>
+            </div>
+          )}
           <p className="muted">El tema se aplica en este dispositivo. "Automático" usa el modo claro u oscuro que tenga el teléfono.</p>
         </div>
       </div>

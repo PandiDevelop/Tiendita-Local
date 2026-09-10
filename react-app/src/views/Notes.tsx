@@ -5,7 +5,7 @@ import {
   esc, shortDate, syncClientId, syncName,
   addNoteMsg, addChecklistNote, editNoteMsg, editChecklistNote, deleteNoteMsg, toggleNotePin,
   addNoteReply, editNoteReply, deleteNoteReply,
-  toggleChecklistItem, addChecklistItem, removeChecklistItem,
+  toggleChecklistItem, removeChecklistItem,
   sweepExpiredNotes, canEditNote, canDeleteNote, canManageNotes,
 } from '../lib/core';
 import {
@@ -39,17 +39,14 @@ function Composer({ mode, onDone }: { mode: 'text' | 'checklist'; onDone: () => 
   const [title, setTitle] = useState('');
   const [items, setItems] = useState<string[]>([]);
   const [draftItem, setDraftItem] = useState('');
-  const taRef = useRef<HTMLTextAreaElement | null>(null);
 
-  // Al cambiar de pestana se limpia el borrador del modo anterior y se
-  // enfoca el cuadro del modo nuevo.
+  // Al cambiar de pestana se limpia el borrador del modo anterior (sin
+  // enfocar: el teclado no debe saltar solo).
   useEffect(() => {
     setText('');
     setTitle('');
     setItems([]);
     setDraftItem('');
-    const t = window.setTimeout(() => (mode === 'text' ? taRef.current?.focus() : undefined), 0);
-    return () => window.clearTimeout(t);
   }, [mode]);
 
   function sendText() {
@@ -58,7 +55,6 @@ function Composer({ mode, onDone }: { mode: 'text' | 'checklist'; onDone: () => 
     replace((d) => { const st = d.stores.find((x) => x.id === s.id)!; addNoteMsg(st, t); });
     if (s.syncKey) notifyStorePush(s.syncKey, syncName() + ' publicó una nota', t, 'nota', pushLinkFor('notas'));
     setText('');
-    taRef.current?.focus();
     onDone();
   }
 
@@ -86,7 +82,6 @@ function Composer({ mode, onDone }: { mode: 'text' | 'checklist'; onDone: () => 
       {mode === 'text' ? (
         <>
           <textarea
-            ref={taRef}
             className="notes-box"
             rows={3}
             placeholder="Escribe tu nota aquí… (Enter para enviar, Shift+Enter para salto de línea)"
@@ -288,7 +283,6 @@ export function Notes() {
   const [threadId, setThreadId] = useState<string | null>(null);
   const [history, setHistory] = useState<{ title: string; current: string; list: NoteEditRecord[] } | null>(null);
   const [notifyState, setNotifyState] = useState(notifyPermission());
-  const [checklistDraft, setChecklistDraft] = useState<Record<string, string>>({});
 
   // Deep link de una notificación push (?tab=notas&n=<id>, ver lib/deepLink.ts):
   // abre el hilo de esa nota apenas llegue a este dispositivo (puede tardar uno
@@ -391,13 +385,6 @@ export function Notes() {
     replace((d) => { const st = d.stores.find((x) => x.id === s.id)!; toggleChecklistItem(st, n.id, itemId); });
   }
 
-  function addItemToChecklist(n: Note) {
-    const t = (checklistDraft[n.id] || '').trim();
-    if (!t) return;
-    replace((d) => { const st = d.stores.find((x) => x.id === s.id)!; addChecklistItem(st, n.id, t); });
-    setChecklistDraft((m) => ({ ...m, [n.id]: '' }));
-  }
-
   function removeItemFromChecklist(n: Note, itemId: string) {
     replace((d) => { const st = d.stores.find((x) => x.id === s.id)!; removeChecklistItem(st, n.id, itemId); });
   }
@@ -431,7 +418,9 @@ export function Notes() {
       <Composer mode={feed === 'notas' ? 'text' : 'checklist'} onDone={() => {}} />
 
       <div className="notes-scroll">
-        {visible.length ? visible.map((n) => {
+        {visible.length ? (
+          <div className="notes-list">
+            {visible.map((n) => {
           const mine = n.by === me;
           const items = [
             ...(admin ? [{ label: n.pinned ? 'Desfijar' : 'Fijar', onClick: () => doTogglePin(n) }] : []),
@@ -500,18 +489,6 @@ const replyCount = (n.replies || []).length;
                       {canEditNote(n) && <button type="button" className="icon-btn note-check-remove" title="Quitar objetivo" onClick={() => removeItemFromChecklist(n, it.id)}><CloseIcon size={12} /></button>}
                     </label>
                   ))}
-                  {canEditNote(n) && (
-                    <div className="checklist-add-row">
-                      <input
-                        placeholder="Agregar objetivo…"
-                        value={checklistDraft[n.id] || ''}
-                        maxLength={140}
-                        onChange={(e) => setChecklistDraft((m) => ({ ...m, [n.id]: e.target.value }))}
-                        onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); addItemToChecklist(n); } }}
-                      />
-                      <button type="button" className="button secondary" onClick={() => addItemToChecklist(n)}>＋</button>
-                    </div>
-                  )}
                 </div>
               ) : (
                 <div className="note-text">{esc(n.text)}</div>
@@ -522,7 +499,9 @@ const replyCount = (n.replies || []).length;
               </button>
             </div>
           );
-        }) : <div className="notice">{feed === 'notas' ? 'No hay notas todavía. Publica la primera.' : 'No hay listas de objetivos todavía. Publica la primera.'}</div>}
+            })}
+          </div>
+        ) : <div className="notice">{feed === 'notas' ? 'No hay notas todavía. Publica la primera.' : 'No hay listas de objetivos todavía. Publica la primera.'}</div>}
       </div>
 
       {threadId && <ThreadPanel noteId={threadId} onClose={() => setThreadId(null)} openHistory={openHistory} />}
