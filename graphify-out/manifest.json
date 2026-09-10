@@ -6,9 +6,9 @@
     "semantic_hash": ""
   },
   "react-app/public/sw.js": {
-    "mtime": 1789069537.0279045,
-    "seen": 1789069568.6103,
-    "ast_hash": "6b30f550c780a8bbdef5f2952140044b",
+    "mtime": 1789070605.4050083,
+    "seen": 1789070642.2498314,
+    "ast_hash": "9faa7038b94ac6e2f397510816e7de18",
     "semantic_hash": ""
   },
   "react-app/src/App.tsx": {
@@ -24,9 +24,9 @@
     "semantic_hash": ""
   },
   "react-app/src/lib/core.ts": {
-    "mtime": 1789069536.389344,
-    "seen": 1789069568.6103,
-    "ast_hash": "499f41b2c859e92902718d456462f659",
+    "mtime": 1789070604.7869673,
+    "seen": 1789070642.2498314,
+    "ast_hash": "90f4ea00a1c5fcc43956824fec591839",
     "semantic_hash": ""
   },
   "react-app/src/lib/dialog.ts": {
@@ -114,9 +114,9 @@
     "semantic_hash": ""
   },
   "react-app/src/views/Notes.tsx": {
-    "mtime": 1789023501.8770783,
-    "seen": 1789023678.425089,
-    "ast_hash": "5f532a3c2ea322d19aac73713c9de5af",
+    "mtime": 1789070499.7606077,
+    "seen": 1789070642.2498314,
+    "ast_hash": "fd3c3342255ae692a5f9fea24a01d8f5",
     "semantic_hash": ""
   },
   "react-app/src/views/ProductForm.tsx": {
@@ -162,9 +162,9 @@
     "semantic_hash": ""
   },
   "sw.js": {
-    "mtime": 1789069537.0279045,
-    "seen": 1789069568.6103,
-    "ast_hash": "6b30f550c780a8bbdef5f2952140044b",
+    "mtime": 1789070605.4050083,
+    "seen": 1789070642.2498314,
+    "ast_hash": "9faa7038b94ac6e2f397510816e7de18",
     "semantic_hash": ""
   },
   "AGENTS.md": {
@@ -180,9 +180,9 @@
     "semantic_hash": ""
   },
   "index.html": {
-    "mtime": 1789069554.0853937,
-    "seen": 1789069568.6103,
-    "ast_hash": "24e8657b282e0f1720c9bf743e8a3a4b",
+    "mtime": 1789070622.9384696,
+    "seen": 1789070642.2498314,
+    "ast_hash": "81ebfec33bc4944c4f7773869aefb780",
     "semantic_hash": ""
   },
   "react-app/index.html": {
@@ -336,9 +336,9 @@
     "semantic_hash": ""
   },
   "react-app/src/views/SettingsModal.tsx": {
-    "mtime": 1789065902.5240154,
-    "seen": 1789065953.4481668,
-    "ast_hash": "87a05d4f036a053b49f2708e3c01a7f2",
+    "mtime": 1789070519.0136437,
+    "seen": 1789070642.2498314,
+    "ast_hash": "6ec74d8dc6595dc371d5d61c73942398",
     "semantic_hash": ""
   },
   "react-app/src/test/settings.test.ts": {
