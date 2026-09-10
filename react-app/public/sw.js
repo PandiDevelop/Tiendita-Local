@@ -1,9 +1,20 @@
-const CACHE = 'mi-tiendita-1.9.4';
+const CACHE = 'mi-tiendita-1.9.5';
 // Version que se muestra en la app (el pie del menu y Opciones): sale de la
 // MISMA cadena de cache, asi el numero que ve el usuario es literalmente el
 // que identifica el despliegue activo (ver react-app/src/lib/appVersion.ts).
 const APP_VERSION = CACHE.replace('mi-tiendita-', '');
-self.addEventListener('install', () => self.skipWaiting());
+// Se cachean desde el install los recursos de los temas ocultos (logos y
+// patron de Owen) para que salgan siempre, aunque no haya red o el primer
+// uso sea offline. allSettled evita que una descarga puntual falle rompa la
+// instalacion del service worker.
+self.addEventListener('install', event => {
+  self.skipWaiting();
+  event.waitUntil(caches.open(CACHE).then(cache => {
+    const assets = ['./index.html', './logo-owen.png', './logo-crisdeku.png', './logo-pandi.png', './pattern-owen.jpg']
+      .map(url => new Request(url, { cache: 'reload' }));
+    return Promise.allSettled(assets.map(a => cache.add(a)));
+  }));
+});
 self.addEventListener('activate', event => event.waitUntil(Promise.all([self.clients.claim(), caches.keys().then(keys => Promise.all(keys.filter(key => key !== CACHE).map(key => caches.delete(key))))])));
 self.addEventListener('message', event => {
   if (event.data && event.data.type === 'MT_VERSION' && event.ports && event.ports[0]) {

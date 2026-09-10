@@ -4,7 +4,10 @@ import { canManageTeam, esc } from './lib/core';
 import { useAppVersion } from './lib/appVersion';
 import { initDeepLink, readDeepTab } from './lib/deepLink';
 import { pushOverlay } from './lib/backStack';
+import { preloadDevAssets } from './lib/preload';
 import { resolvedTheme } from './lib/theme';
+
+preloadDevAssets();
 import { DialogHost, GearIcon, ImageLightboxHost, Logo, MenuIcon, StoreImage, Toast } from './ui';
 import { DevThemesModal } from './views/DevThemes';
 import { Dashboard } from './views/Dashboard';
@@ -145,15 +148,13 @@ export function App() {
       <main className="content">
         <div className="mobile-head">
           <button className="menu-btn" onClick={() => setMenuOpen(true)} aria-label="Abrir menú"><MenuIcon /></button>
-          <button className="new-store" onClick={() => openModal('newStore')}>＋ Nueva tienda</button>
-          <button className="sync-join" onClick={() => openModal('join')}>Unirme a una tienda</button>
         </div>
         <div className="topline">
           <div className="store-title">
             <StoreImage src={s.image} cls="store-logo" alt={'Logo de ' + esc(s.name)} />
-            <div><div className="eyebrow">Tu tienda</div><h1>{esc(s.name)}</h1>{devTheme && <span className="topline-quote">Mereces lo que sueñas</span>}</div>
+            <div style={{ minWidth: 0 }}><div className="eyebrow">Tu tienda</div><h1>{esc(s.name)}</h1>{devTheme && <span className="topline-quote">Mereces lo que sueñas</span>}</div>
+            <button className="button secondary" onClick={() => setModal('editStore')}><GearIcon size={15} /> Editar tienda</button>
           </div>
-          <button className="button secondary" onClick={() => setModal('editStore')}><GearIcon size={15} /> Editar tienda</button>
         </div>
         <nav className="tabs">
           {([['inicio', 'Inicio'], ['ganancias', 'Ganancias'], ['eventos', 'Eventos'], ['productos', 'Catálogo'], ['inventario', 'Inventario'], ['empleados', 'Empleados'], ['notas', 'Notas']] as const)

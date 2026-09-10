@@ -27,6 +27,15 @@ const DEV_THEMES: { value: ThemePref; label: string; icon: string; quote: string
 
 type Stage = 'password' | 'box' | 'icons' | 'menu';
 
+// Cada logo del totem con su animacion de fade-in. Si por lo que sea una
+// imagen falla (sin red, cache rara...), se muestra la inicial del tema en su
+// lugar en vez del icono roto del navegador.
+function TotemIcon({ t, delay }: { t: { value: ThemePref; label: string; icon: string; quote: string }; delay: string }) {
+  const [bad, setBad] = useState(false);
+  if (bad) return <span className="dev-icon-fallback" style={{ animationDelay: delay }}>{t.label[0]}</span>;
+  return <img src={t.icon} alt={t.label} onError={() => setBad(true)} style={{ animationDelay: delay }} />;
+}
+
 export function DevThemesModal({ onClose }: { onClose: () => void }) {
   const [unlocked, setUnlocked] = useState(devUnlocked());
   const [pass, setPass] = useState('');
@@ -34,12 +43,13 @@ export function DevThemesModal({ onClose }: { onClose: () => void }) {
   const [active, setActive] = useState<ThemePref>(themePref());
   const [stage, setStage] = useState<Stage>(unlocked ? 'box' : 'password');
 
-  // Secuencia: primero la box sola, luego los iconos uno a uno y por último la
-  // caja se expande y se muestra el menú.
+  // Secuencia (algo mas reposada): primero la box sola, luego los logos uno
+  // a uno en forma de totem (Owen arriba, Crisdeku al medio, Pandi abajo) y
+  // por ultimo la caja se expande y se muestra el menu.
   useEffect(() => {
     if (!unlocked) return;
-    const t1 = window.setTimeout(() => setStage('icons'), 320);
-    const t2 = window.setTimeout(() => setStage('menu'), 320 + 3 * 230 + 180);
+    const t1 = window.setTimeout(() => setStage('icons'), 550);
+    const t2 = window.setTimeout(() => setStage('menu'), 550 + 2000);
     return () => { window.clearTimeout(t1); window.clearTimeout(t2); };
   }, [unlocked]);
 
@@ -72,7 +82,7 @@ export function DevThemesModal({ onClose }: { onClose: () => void }) {
           {stage === 'icons' && (
             <div className="dev-icons">
               {DEV_THEMES.map((t, i) => (
-                <img key={t.value} src={t.icon} alt={t.label} style={{ animationDelay: (0.12 + i * 0.22) + 's' }} />
+                <TotemIcon key={t.value} t={t} delay={(0.1 + i * 0.5).toFixed(2) + 's'} />
               ))}
             </div>
           )}
