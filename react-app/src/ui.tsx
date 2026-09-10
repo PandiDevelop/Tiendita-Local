@@ -38,7 +38,7 @@ export function StoreImage({ src, cls, alt = '', enlarge = true }: { src?: strin
         <path d="M29 67h102v61H29z" fill="var(--surface)" stroke="currentColor" strokeWidth="5" />
         <path d="M45 83h30v45H45z" fill="var(--mint)" stroke="currentColor" strokeWidth="4" />
         <path d="M91 83h24v20H91z" fill="var(--peach)" stroke="currentColor" strokeWidth="4" />
-        <path d="M62 93c0 3-2 5-5 5s-5-2-5-5 2-5 5-5 5 2 5 5z" fill="#ffffff" opacity="0.85" />
+        <path d="M62 93c0 3-2 5-5 5s-5-2-5-5 2-5 5-5 5 2 5 5z" fill="var(--cream)" opacity="0.85" />
       </svg>
     </span>
   );
@@ -163,21 +163,21 @@ export function Logo({ size = 40, className = '' }: { size?: number; className?:
     <svg className={className} viewBox="0 0 160 160" width={size} height={size} role="img" aria-label="Logo de Mi Tiendita" aria-hidden="true">
       <defs>
         <linearGradient id="mt-bg" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0" stopColor="#c8b2ec" />
-          <stop offset="1" stopColor="#8f73bf" />
+          <stop offset="0" stopColor="var(--brand-line)" />
+          <stop offset="1" stopColor="var(--brand)" />
         </linearGradient>
       </defs>
       <rect width="160" height="160" rx="36" fill="url(#mt-bg)" />
-      <rect x="30" y="29" width="100" height="102" rx="14" fill="#fffdf9" />
-      <circle cx="52" cy="29" r="7.5" fill="#8f73bf" stroke="#fffdf9" strokeWidth="3" />
-      <circle cx="80" cy="29" r="7.5" fill="#8f73bf" stroke="#fffdf9" strokeWidth="3" />
-      <circle cx="108" cy="29" r="7.5" fill="#8f73bf" stroke="#fffdf9" strokeWidth="3" />
-      <rect x="44" y="47" width="72" height="18" rx="9" fill="#ffe3d0" />
-      <rect x="46" y="79" width="16" height="16" rx="4" fill="#ffffff" stroke="#bca8e9" strokeWidth="4" />
-      <path d="M48.5 88.5l4.2 4.2 8-8" fill="none" stroke="#8f73bf" strokeWidth="4.5" strokeLinecap="round" strokeLinejoin="round" />
-      <rect x="70" y="80" width="44" height="9" rx="4.5" fill="#eadff7" />
-      <rect x="46" y="105" width="68" height="9" rx="4.5" fill="#eadff7" />
-      <rect x="46" y="119" width="52" height="9" rx="4.5" fill="#eadff7" />
+      <rect x="30" y="29" width="100" height="102" rx="14" fill="var(--cream)" />
+      <circle cx="52" cy="29" r="7.5" fill="var(--brand)" stroke="var(--cream)" strokeWidth="3" />
+      <circle cx="80" cy="29" r="7.5" fill="var(--brand)" stroke="var(--cream)" strokeWidth="3" />
+      <circle cx="108" cy="29" r="7.5" fill="var(--brand)" stroke="var(--cream)" strokeWidth="3" />
+      <rect x="44" y="47" width="72" height="18" rx="9" fill="var(--peach)" />
+      <rect x="46" y="79" width="16" height="16" rx="4" fill="var(--surface)" stroke="var(--lilac)" strokeWidth="4" />
+      <path d="M48.5 88.5l4.2 4.2 8-8" fill="none" stroke="var(--brand)" strokeWidth="4.5" strokeLinecap="round" strokeLinejoin="round" />
+      <rect x="70" y="80" width="44" height="9" rx="4.5" fill="var(--lav)" />
+      <rect x="46" y="105" width="68" height="9" rx="4.5" fill="var(--lav)" />
+      <rect x="46" y="119" width="52" height="9" rx="4.5" fill="var(--lav)" />
     </svg>
   );
 }

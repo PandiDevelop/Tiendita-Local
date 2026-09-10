@@ -23,6 +23,26 @@ import { SettingsModal } from './views/SettingsModal';
 import { ProductForm } from './views/ProductForm';
 import { SaleRegistration } from './views/SaleRegistration';
 
+const DEV_LOGO: Record<string, string> = {
+  owen: './logo-owen.png',
+  crisdeku: './logo-crisdeku.png',
+  pandi: './logo-pandi.png',
+};
+
+function MenuClock() {
+  const [now, setNow] = useState(() => new Date());
+  useEffect(() => {
+    const id = window.setInterval(() => setNow(new Date()), 30000);
+    return () => window.clearInterval(id);
+  }, []);
+  return (
+    <>
+      <span className="clock-date">{now.toLocaleDateString('es', { weekday: 'long', day: 'numeric', month: 'long' })}</span>
+      <span className="clock-time">{now.toLocaleTimeString('es', { hour: '2-digit', minute: '2-digit' })}</span>
+    </>
+  );
+}
+
 export function App() {
   const { state, store, setTab, replace, modal, modalArg, setModal, toastMsg } = useStore();
   const s = store;
@@ -147,13 +167,16 @@ export function App() {
       <div className="menu-backdrop" onClick={() => setMenuOpen(false)}></div>
       <main className="content">
         <div className="mobile-head">
-          <button className="menu-btn" onClick={() => setMenuOpen(true)} aria-label="Abrir menú"><MenuIcon /></button>
+          <button className="menu-btn" onClick={() => setMenuOpen(true)} aria-label="Abrir menú" title="Abrir menú"><MenuIcon /><span className="menu-clock"><MenuClock /></span></button>
         </div>
         <div className="topline">
           <div className="store-title">
             <StoreImage src={s.image} cls="store-logo" alt={'Logo de ' + esc(s.name)} />
-            <div style={{ minWidth: 0 }}><div className="eyebrow">Tu tienda</div><h1>{esc(s.name)}</h1>{devTheme && <span className="topline-quote">Mereces lo que sueñas</span>}</div>
-            <button className="button secondary" onClick={() => setModal('editStore')}><GearIcon size={15} /> Editar tienda</button>
+            <div style={{ minWidth: 0 }}><div className="eyebrow">Tu tienda</div><h1>{esc(s.name)}</h1></div>
+            <div className="store-actions">
+              <button className="button secondary" onClick={() => setModal('editStore')}><GearIcon size={15} /> Editar tienda</button>
+              {devTheme && <span className="store-quote"><img className="store-quote-logo" src={DEV_LOGO[t]} alt="" />Mereces lo que sueñas</span>}
+            </div>
           </div>
         </div>
         <nav className="tabs">

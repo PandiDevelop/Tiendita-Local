@@ -258,7 +258,7 @@ export function Inventory() {
             })
           )
         ) : <div className="empty"><div className="emoji">
-          <svg viewBox="0 0 24 24" width="40" height="40" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" style={{ color: '#a98dde', display: 'block', margin: '0 auto' }}>
+          <svg viewBox="0 0 24 24" width="40" height="40" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" style={{ color: 'var(--brand-line)', display: 'block', margin: '0 auto' }}>
             <path d="M4 8l8 -4 8 4 -8 4z" /><path d="M4 8v8l8 4 8 -4V8" /><path d="M12 12v8" />
           </svg>
         </div><b>Aún no hay productos en el catálogo.</b><p>Agrega productos al catálogo para verlos aquí y llevar el control de existencias.</p></div>}

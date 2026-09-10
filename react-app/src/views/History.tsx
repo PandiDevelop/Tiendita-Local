@@ -87,7 +87,7 @@ export function History() {
         <button className="button secondary" onClick={() => exportTxt(s.sales)}><DownloadIcon /> Exportar a texto</button>
       </div>
       {!dates.length ? <div className="empty"><div className="emoji">
-        <svg viewBox="0 0 24 24" width="40" height="40" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" style={{ color: '#a98dde', display: 'block', margin: '0 auto' }}>
+        <svg viewBox="0 0 24 24" width="40" height="40" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" style={{ color: 'var(--brand-line)', display: 'block', margin: '0 auto' }}>
           <rect x="3" y="4.5" width="18" height="16" rx="3" /><path d="M8 2.5v4M16 2.5v4M3 9.5h18" /><path d="M8.5 14.8l2.4 2.4 4.6-4.8" strokeWidth="2" />
         </svg>
       </div><b>Aún no hay ventas registradas</b><p>Registra tu primera venta desde la pestaña Inicio.</p></div> : dates.map((d) => {
