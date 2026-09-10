@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { useStore, type ModalKind } from './store';
 import { DEFAULT_STORE_IMAGE, canManageTeam, esc } from './lib/core';
 import { useAppVersion } from './lib/appVersion';
-import { DialogHost, GearIcon, Image, ImageLightboxHost, MenuIcon, StorefrontIcon, Toast } from './ui';
+import { DialogHost, GearIcon, Image, ImageLightboxHost, Logo, MenuIcon, Toast } from './ui';
 import { Dashboard } from './views/Dashboard';
 import { Catalog } from './views/Catalog';
 import { Inventory } from './views/Inventory';
@@ -57,13 +57,21 @@ export function App() {
   if (!s) {
     return (
       <>
-        <main className="content">
-          <div className="empty">
-            <div className="shop-hero"><StorefrontIcon size={48} /></div>
-            <h1>Crea tu primera tienda</h1>
-            <p>Organiza productos, promociones y ventas diarias en un solo lugar.</p>
-            <button className="button primary" onClick={() => openModal('newStore')}>Crear mi primera tienda</button>
-            <button className="button secondary" style={{ marginTop: 12 }} onClick={() => openModal('join')}>Unirme a una tienda</button>
+        <main className="content landing-wrap">
+          <div className="landing">
+            <Logo size={88} />
+            <h1 className="landing-title">mi<span>tiendita</span></h1>
+            <p className="landing-tag">Organiza productos, promociones y ventas diarias en un solo lugar.</p>
+            <div className="landing-feats">
+              <span>Catálogo y existencias</span>
+              <span>Ventas y ganancias</span>
+              <span>Notas del equipo</span>
+            </div>
+            <div className="landing-actions">
+              <button className="button primary" onClick={() => openModal('newStore')}>Crear mi primera tienda</button>
+              <button className="button secondary" onClick={() => openModal('join')}>Unirme a una tienda</button>
+            </div>
+            <p className="landing-note">Tus datos se guardan en este dispositivo; si lo deseas, se sincronizan en tiempo real con tu equipo.</p>
           </div>
         </main>
         {modals}
@@ -77,7 +85,7 @@ export function App() {
   return (
     <>
       <div className="sidebar">
-        <div className="brand">mi<span>tiendita</span></div>
+        <div className="brand"><Logo size={36} /><span className="brand-text">mi<span className="brand-accent">tiendita</span></span></div>
         <div className="label">Mis tiendas</div>
         <div className="store-list">
           {state.stores.map((x) => (

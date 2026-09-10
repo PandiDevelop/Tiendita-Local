@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
-import { cleanup, fireEvent, render, screen } from '@testing-library/react';
+import { cleanup, fireEvent, render, screen, within } from '@testing-library/react';
 import { Catalog } from '../views/Catalog';
 import { Inventory } from '../views/Inventory';
 import { ProductForm } from '../views/ProductForm';
@@ -140,6 +140,13 @@ describe('Tag opcional del producto', () => {
     return { ...utils, stateRef };
   }
 
+  function addTag(container: HTMLElement, value: string) {
+    const input = fieldControl(/Etiqueta \/ tag/, container);
+    fireEvent.focus(input);
+    fireEvent.change(input, { target: { value } });
+    fireEvent.keyDown(input, { key: 'Enter' });
+  }
+
   it('muestra "General" como texto fantasma en un producto nuevo (sin pre-llenar)', () => {
     const { container } = setup(makeStore());
     const tagInput = fieldControl(/Etiqueta \/ tag/, container);
@@ -151,30 +158,44 @@ describe('Tag opcional del producto', () => {
     const { container, stateRef } = setup(makeStore());
     fireEvent.change(fieldControl('Nombre del producto', container), { target: { value: 'Agua' } });
     fireEvent.change(fieldControl('Precio del producto', container), { target: { value: '1000' } });
-    fireEvent.change(fieldControl(/Etiqueta \/ tag/, container), { target: { value: '' } });
     fireEvent.click(screen.getByRole('button', { name: 'Guardar producto' }));
     const saved = stateRef.current.stores[0].products[0];
     expect(saved.name).toBe('Agua');
+    expect(saved.tags).toEqual([DEFAULT_PRODUCT_TAG]);
     expect(saved.tag).toBe(DEFAULT_PRODUCT_TAG);
   });
 
-  it('si no se toca el campo, guarda el tag sugerido por defecto', () => {
+  it('permite agregar hasta 3 etiquetas y guarda la lista completa', () => {
     const { container, stateRef } = setup(makeStore());
     fireEvent.change(fieldControl('Nombre del producto', container), { target: { value: 'Jugo' } });
     fireEvent.change(fieldControl('Precio del producto', container), { target: { value: '2000' } });
+    addTag(container, 'oferta');
+    addTag(container, 'vitrina');
+    addTag(container, 'nuevo');
+    // Con 3 tags el campo para agregar desaparece: el cuarto nunca entra.
+    expect(container.querySelectorAll('.tag-editor input').length).toBe(0);
     fireEvent.click(screen.getByRole('button', { name: 'Guardar producto' }));
-    expect(stateRef.current.stores[0].products[0].tag).toBe(DEFAULT_PRODUCT_TAG);
+    const saved = stateRef.current.stores[0].products[0];
+    // El cuarto tag no entra: quedan solo 3, y el campo que agregaba tags
+    // desaparecio al llegar al maximo.
+    expect(saved.tags).toEqual(['oferta', 'vitrina', 'nuevo']);
+    expect(saved.tag).toBe('oferta');
   });
 
-  it('al editar, muestra el tag propio del producto (no el default) y permite cambiarlo', () => {
-    const custom = makeProduct({ name: 'Con tag', tag: 'promo' });
+  it('al editar, muestra los tags propios del producto (no el default) y permite quitarlos', () => {
+    const custom = makeProduct({ name: 'Con tag', tags: ['promo', 'verano'] });
     const store = makeStore({ products: [custom] });
     const { container, stateRef } = setup(store, custom.id);
-    const tagInput = fieldControl(/Etiqueta \/ tag/, container);
-    expect(tagInput.value).toBe('promo');
-    fireEvent.change(tagInput, { target: { value: 'oferta' } });
+    const chips = Array.from(container.querySelectorAll('.tag-chip'));
+    expect(chips).toHaveLength(2);
+    expect(chips[0].textContent).toContain('promo');
+    // Quitar el primer tag y agregar uno nuevo.
+    fireEvent.click(chips[0].querySelector('button')!);
+    addTag(container, 'oferta');
     fireEvent.click(screen.getByRole('button', { name: 'Guardar producto' }));
-    expect(stateRef.current.stores[0].products[0].tag).toBe('oferta');
+    const saved = stateRef.current.stores[0].products[0];
+    expect(saved.tags).not.toContain('promo');
+    expect(saved.tags).toEqual(['verano', 'oferta']);
   });
 
   it('al editar un producto sin tag, el campo queda vacío (no fuerza el default)', () => {
@@ -183,6 +204,7 @@ describe('Tag opcional del producto', () => {
     const { container } = setup(store, bare.id);
     const tagInput = fieldControl(/Etiqueta \/ tag/, container);
     expect(tagInput.value).toBe('');
+    expect(container.querySelectorAll('.tag-chip')).toHaveLength(0);
   });
 });
 
@@ -347,14 +369,15 @@ describe('Libro de catálogo virtual', () => {
         makeProduct({ id: 'p2', name: 'Papas', price: 2000, category: 'Snacks' }),
       ],
     });
-    render(<TestProvider initialState={makeState(store)}><VirtualCatalog onClose={() => {}} /></TestProvider>);
-    expect(screen.getByText('Bebidas')).toBeInTheDocument();
-    expect(screen.getByText('Snacks')).toBeInTheDocument();
-    expect(screen.getByText('Agua')).toBeInTheDocument();
-    expect(screen.getByText('Papas')).toBeInTheDocument();
-    expect(screen.getByText(/\$[\s\u00a0]*1\.500/)).toBeInTheDocument();
-    expect(screen.getByText(/\$[\s\u00a0]*2\.000/)).toBeInTheDocument();
-    const card = screen.getByText('Agua').closest('.vc-card') as HTMLElement;
+    const { container } = render(<TestProvider initialState={makeState(store)}><VirtualCatalog onClose={() => {}} /></TestProvider>);
+    const body = container.querySelector('.vc-body') as HTMLElement;
+    expect(within(body).getByText('Bebidas')).toBeInTheDocument();
+    expect(within(body).getByText('Snacks')).toBeInTheDocument();
+    expect(within(body).getByText('Agua')).toBeInTheDocument();
+    expect(within(body).getByText('Papas')).toBeInTheDocument();
+    expect(within(body).getByText(/\$[\s\u00a0]*1\.500/)).toBeInTheDocument();
+    expect(within(body).getByText(/\$[\s\u00a0]*2\.000/)).toBeInTheDocument();
+    const card = within(body).getByText('Agua').closest('.vc-card') as HTMLElement;
     expect(card.querySelector('img.vc-img')).toBeTruthy();
   });
 
@@ -364,5 +387,37 @@ describe('Libro de catálogo virtual', () => {
     fireEvent.click(screen.getByRole('button', { name: /Ver catálogo virtual/ }));
     expect(screen.getByText(/Catálogo virtual/)).toBeInTheDocument();
     expect(screen.getAllByText('Agua').length).toBeGreaterThan(0);
+  });
+
+  it('prepara el impreso: botón Imprimir, portada de categoría y 4 productos por página', () => {
+    const products = Array.from({ length: 5 }, (_, i) => makeProduct({ id: 'p' + i, name: 'Producto ' + i, price: 1000, category: 'Bebidas' }));
+    const store = makeStore({ categories: ['Bebidas'], products });
+    const { container } = render(<TestProvider initialState={makeState(store)}><VirtualCatalog onClose={() => {}} /></TestProvider>);
+    expect(screen.getByRole('button', { name: /Imprimir/ })).toBeInTheDocument();
+    // 5 productos → 1 portada de la categoría + 2 hojas (4 y 1).
+    expect(container.querySelectorAll('.print-catalog .pc-page').length).toBe(3);
+    expect(container.querySelectorAll('.print-catalog .pc-cover').length).toBe(1);
+    expect(container.querySelectorAll('.print-catalog .pc-grid').length).toBe(2);
+    expect(container.querySelectorAll('.print-catalog .pc-card').length).toBe(5);
+    const cover = container.querySelector('.print-catalog .pc-cover h2') as HTMLElement;
+    expect(cover.textContent).toBe('Bebidas');
+  });
+
+  it('omite del impreso las categorías sin productos y deshabilita Imprimir sin productos', () => {
+    const store = makeStore({
+      categories: ['Bebidas', 'Vacía'],
+      products: [makeProduct({ id: 'p1', name: 'Agua', price: 1000, category: 'Bebidas' })],
+    });
+    const { container } = render(<TestProvider initialState={makeState(store)}><VirtualCatalog onClose={() => {}} /></TestProvider>);
+    const covers = container.querySelectorAll('.print-catalog .pc-cover h2');
+    expect(covers.length).toBe(1);
+    expect(covers[0].textContent).toBe('Bebidas');
+    expect(container.querySelector('.print-catalog')).toBeTruthy();
+
+    cleanup();
+    const empty = makeStore({ products: [] });
+    const { container: emptyContainer } = render(<TestProvider initialState={makeState(empty)}><VirtualCatalog onClose={() => {}} /></TestProvider>);
+    expect(screen.getByRole('button', { name: /Imprimir/ })).toBeDisabled();
+    expect(emptyContainer.querySelector('.print-catalog')).toBeNull();
   });
 });

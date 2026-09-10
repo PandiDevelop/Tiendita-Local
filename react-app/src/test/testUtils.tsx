@@ -86,6 +86,7 @@ export function makeProduct(overrides: Partial<Product> = {}): Product {
     image: '',
     promos: overrides.promos || [],
     category: overrides.category ?? '',
+    tags: overrides.tags,
     tag: overrides.tag,
     order: overrides.order,
   };

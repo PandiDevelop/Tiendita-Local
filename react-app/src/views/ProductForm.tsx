@@ -1,9 +1,9 @@
 import { useState } from 'react';
 import { useStore } from '../store';
-import { DEFAULT_PRODUCT_IMAGE, DEFAULT_PRODUCT_TAG, compressImage, storeCats, adoptInvLog, setCategoryPricing, insertCatSorted, toEditablePromos, fromEditablePromos, uid, syncClientId, syncName } from '../lib/core';
+import { DEFAULT_PRODUCT_IMAGE, DEFAULT_PRODUCT_TAG, esc, compressImage, storeCats, adoptInvLog, setCategoryPricing, insertCatSorted, toEditablePromos, fromEditablePromos, uid, syncClientId, syncName, productTags } from '../lib/core';
 import { notifyStorePush } from '../lib/push';
 import type { EditablePromo } from '../lib/core';
-import { ImagePicker, Modal, CategorySuggest, SuggestInput } from '../ui';
+import { ImagePicker, Modal, CategorySuggest } from '../ui';
 import { PromoEditor } from './PromoEditor';
 
 export function ProductForm({ editingId, onClose }: { editingId?: string; onClose: () => void }) {
@@ -18,14 +18,24 @@ export function ProductForm({ editingId, onClose }: { editingId?: string; onClos
   const [image, setImage] = useState(p?.image || '');
   const [qty, setQty] = useState('');
   const [promos, setPromos] = useState<EditablePromo[]>(toEditablePromos(p?.promos));
-  // El tag es opcional y editable. En un producto nuevo el campo arranca
-  // vacío con "General" como texto fantasma; si se guarda vacío se agrega
-  // automáticamente el tag por defecto.
-  const [tag, setTag] = useState(editingId ? (p?.tag || '') : '');
+  // Los tags son opcionales y editables (hasta 3). En un producto nuevo el
+  // area arranca vacia con "General" como texto fantasma; si se guarda sin
+  // ninguno se agrega automaticamente el tag por defecto.
+  const [tags, setTags] = useState<string[]>(editingId ? productTags(p) : []);
+  const [tagDraft, setTagDraft] = useState('');
+  const [tagOpen, setTagOpen] = useState(false);
 
   // Tags que ya usan otros productos, para sugerirlos al escribir (se puede
   // escribir uno nuevo o elegir uno existente con un clic).
-  const existingTags = [...new Set(s.products.map((x) => (x.tag || '').trim()).filter(Boolean))];
+  const existingTags = [...new Set(s.products.flatMap((x) => productTags(x)))];
+
+  function commitTag(raw: string) {
+    const t = raw.trim();
+    if (!t) return;
+    setTags((arr) => (arr.includes(t) || arr.length >= 3 ? arr : [...arr, t]));
+    setTagDraft('');
+    setTagOpen(false);
+  }
 
   function onFile(f: File | undefined) {
     if (!f) return;
@@ -54,14 +64,16 @@ export function ProductForm({ editingId, onClose }: { editingId?: string; onClos
       const catHasNoOtherProducts = !!catVal && !st.products.some((x) => (x.category || '').trim() === catVal && x.id !== editingId);
       const shouldSeedPricing = catHasNoPricing && catHasNoOtherProducts;
       if (catVal) insertCatSorted(st, catVal);
-      const tagVal = tag.trim() || (!editingId ? DEFAULT_PRODUCT_TAG : '');
+      if (shouldSeedPricing) setCategoryPricing(st, catVal, pr, cst, promoList);
+      const tagList = tags.map((t) => t.trim()).filter(Boolean).slice(0, 3);
+      const tagsVal = tagList.length ? tagList : !editingId ? [DEFAULT_PRODUCT_TAG] : [];
+      const tag0 = tagsVal[0];
       if (editingId) {
         const t = st.products.find((x) => x.id === editingId);
-        if (t) Object.assign(t, { name: nm, price: pr, cost: cst, image: image || DEFAULT_PRODUCT_IMAGE, promos: promoList, category: catVal, tag: tagVal || undefined });
+        if (t) Object.assign(t, { name: nm, price: pr, cost: cst, image: image || DEFAULT_PRODUCT_IMAGE, promos: promoList, category: catVal, tags: tagsVal, tag: tag0 || undefined });
       } else {
-        st.products.push({ id: uid(), by: syncClientId(), name: nm, price: pr, cost: cst, image: image || DEFAULT_PRODUCT_IMAGE, promos: promoList, category: catVal, tag: tagVal || undefined });
+        st.products.push({ id: uid(), by: syncClientId(), name: nm, price: pr, cost: cst, image: image || DEFAULT_PRODUCT_IMAGE, promos: promoList, category: catVal, tags: tagsVal, tag: tag0 || undefined });
       }
-      if (shouldSeedPricing) setCategoryPricing(st, catVal, pr, cst, promoList);
       if (!editingId && qty.trim() !== '') {
         const q = Math.round(Number(qty));
         if (Number.isFinite(q) && q >= 0) {
@@ -97,9 +109,32 @@ export function ProductForm({ editingId, onClose }: { editingId?: string; onClos
       <div className="field"><label>Nombre del producto</label>
         <input maxLength={80} placeholder="Ej. Caja de galletas" value={name} onChange={(e) => setName(e.target.value)} />
       </div>
-      <div className="field"><label>Etiqueta / tag <span className="muted">(opcional)</span></label>
-        <SuggestInput options={existingTags} value={tag} onChange={setTag} onPick={setTag} placeholder={editingId ? 'Ej. general' : 'General'} maxLength={30} newLabel="Nuevo tag" onNewPick={() => undefined} />
-        <p className="muted">Etiqueta corta para agrupar productos (si la dejas vacía se usa "General").</p>
+      <div className="field"><label>Etiqueta / tag <span className="muted">(opcional, hasta 3)</span></label>
+        <div className="tag-editor">
+          {tags.map((t) => (
+            <span className="tag-chip" key={t}>{esc(t)}<button type="button" title={'Quitar ' + t} aria-label={'Quitar ' + t} onClick={() => setTags((arr) => arr.filter((x) => x !== t))}>×</button></span>
+          ))}
+          {tags.length < 3 && (
+            <div className="cat-suggest tag-suggest">
+              <input maxLength={30} placeholder={tags.length ? 'Agregar otro tag…' : (editingId ? 'Ej. general' : 'General')} value={tagDraft}
+                onChange={(e) => setTagDraft(e.target.value)}
+                onFocus={() => setTagOpen(true)}
+                onBlur={() => { commitTag(tagDraft); setTagOpen(false); }}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === ',') { e.preventDefault(); commitTag(tagDraft); }
+                  else if (e.key === 'Backspace' && tagDraft === '' && tags.length) setTags((arr) => arr.slice(0, -1));
+                }} />
+              {tagOpen && existingTags.filter((t) => !tags.includes(t) && (!tagDraft.trim() || t.toLowerCase().includes(tagDraft.trim().toLowerCase()))).slice(0, 6).length > 0 && (
+                <div className="cat-suggest-list">
+                  {existingTags.filter((t) => !tags.includes(t) && (!tagDraft.trim() || t.toLowerCase().includes(tagDraft.trim().toLowerCase()))).slice(0, 6).map((t) => (
+                    <button type="button" key={t} onMouseDown={(e) => { e.preventDefault(); commitTag(t); }}>{esc(t)}</button>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+        <p className="muted">Hasta 3 etiquetas cortas para agrupar productos (si no pones ninguna, se usa "General").</p>
       </div>
       <div className="field"><label>Precio del producto</label>
         <input min={0} type="number" placeholder="0" value={price} onChange={(e) => setPrice(e.target.value)} />

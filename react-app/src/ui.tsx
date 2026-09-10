@@ -128,6 +128,43 @@ export function GearIcon({ size = 19 }: { size?: number }) {
   );
 }
 
+// Logotipo de la app: rectangulo redondeado con degradado lila y un toldo
+// crema con lacuetes y una puerta (misma pieza de arte que public/logo.svg,
+// usado como favicon e icono de la PWA). Se usa en la portada de inicio y en
+// la barra lateral, para que en pantalla, en la pestana del navegador y en la
+// app instalada se vea siempre el mismo logo.
+export function Logo({ size = 40, className = '' }: { size?: number; className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 160 160" width={size} height={size} role="img" aria-label="Logo de Mi Tiendita" aria-hidden="true">
+      <defs>
+        <linearGradient id="mt-bg" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stopColor="#c8b2ec" />
+          <stop offset="1" stopColor="#8f73bf" />
+        </linearGradient>
+      </defs>
+      <rect width="160" height="160" rx="36" fill="url(#mt-bg)" />
+      <rect x="30" y="46" width="100" height="18" rx="9" fill="#fffdf9" />
+      <path d="M39 64a9 9 0 0 0 18 0z" fill="#fffdf9" />
+      <path d="M63 64a9 9 0 0 0 18 0z" fill="#fffdf9" />
+      <path d="M87 64a9 9 0 0 0 18 0z" fill="#fffdf9" />
+      <path d="M111 64a9 9 0 0 0 18 0z" fill="#fffdf9" />
+      <rect x="64" y="86" width="32" height="52" rx="15" fill="#fffdf9" />
+      <circle cx="88" cy="112" r="3.5" fill="#8f73bf" />
+    </svg>
+  );
+}
+
+// Impresora: boton "Imprimir" del libro de catalogo virtual.
+export function PrintIcon({ size = 15 }: { size?: number }) {
+  return (
+    <svg viewBox="0 0 24 24" width={size} height={size} fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <rect x="7.5" y="3.5" width="9" height="4.5" rx="1.2" />
+      <path d="M7 6.5A4.2 4.2 0 0 0 2.8 10.7v4.3a1 1 0 0 0 1 1h3.2v5H17v-5h3.2a1 1 0 0 0 1-1v-4.3A4.2 4.2 0 0 0 17 6.5z" />
+      <rect x="9.5" y="15" width="5" height="3.5" rx="1" />
+    </svg>
+  );
+}
+
 // Icono de lapiz, con el mismo trazo de los demas iconos. Se usa en la opcion
 // "Nueva categoria / Nuevo tag" que aparece cuando el valor que se escribe no
 // coincide con ninguno ya registrado.

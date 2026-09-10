@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { useStore } from '../store';
-import { DEFAULT_PRODUCT_IMAGE, activeEvent, catLabel, findActivePromo, money, saleCatsOf, saleUnitPrice, shortTag, sortProducts, syncClientId, syncName, today, uid } from '../lib/core';
+import { DEFAULT_PRODUCT_IMAGE, activeEvent, catLabel, findActivePromo, money, saleCatsOf, saleUnitPrice, shortTag, sortProducts, syncClientId, syncName, today, uid, productTags } from '../lib/core';
 import { notifyStorePush } from '../lib/push';
 import { Dropdown } from '../Dropdown';
 import { CloseIcon, Image, Modal, ReceiptIcon, UndoIcon } from '../ui';
@@ -39,7 +39,7 @@ export function SaleRegistration({ onClose }: { onClose: () => void }) {
   const list = sortProducts(categories.length ? s.products.filter((p) => categories.includes(catLabel(p))) : s.products);
   const q = query.trim().toLowerCase();
   const filtered = q
-    ? list.filter((p) => (p.tag && p.tag.trim().toLowerCase().includes(q)) || p.name.toLowerCase().includes(q))
+    ? list.filter((p) => p.name.toLowerCase().includes(q) || productTags(p).some((t) => t.toLowerCase().includes(q)))
     : list;
   // Paginado: solo se muestran 4 productos a la vez y el resto se desliza
   // (fila horizontal con ajuste de pagina).
@@ -195,7 +195,7 @@ export function SaleRegistration({ onClose }: { onClose: () => void }) {
             <div className="prod-cat">{(p.category || '').trim() || 'Sin categoría'}</div>
             <div className="sale-builder-name-row">
               <span className="b-name">{p.name}</span>
-              {p.tag ? <span className="prod-tag sale-tag">{shortTag(p.tag)}</span> : null}
+              {productTags(p).map((t) => <span className="prod-tag sale-tag" key={t}>{shortTag(t)}</span>)}
             </div>
           </div>
           <button className="sale-del" title="Quitar este producto de la venta" onClick={() => removeLine(n)}><CloseIcon size={13} /></button>

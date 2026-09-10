@@ -40,8 +40,12 @@ export interface Product {
   image: string;
   promos: Promo[];
   category: string;
-  // Etiqueta opcional (tag). Se sugiere un valor por defecto global ('general')
-  // al crear el producto, pero se puede cambiar o dejar vacio. No es obligatorio.
+  // Etiquetas opcionales (hasta 3). Se sugiere un valor por defecto global
+  // ('general') al crear el producto, pero se pueden cambiar o dejar vacias.
+  // No son obligatorias. `tags` es la lista completa; `tag` se conserva como
+  // legado (primer tag) para que los datos antiguos y lo que los lea sigan
+  // funcionando (ver productTags en lib/core).
+  tags?: string[];
   tag?: string;
   // Quien lo creo (syncClientId). Solo sirve para silenciar en este mismo
   // dispositivo el aviso de "producto nuevo" cuando lo agrega uno mismo; sin

@@ -7,7 +7,7 @@ export const USER_KEY = 'mi-tiendita-user';
 // Version de arranque/mostrada hasta que el service worker responde con la
 // suya (ver lib/appVersion.ts): la real es la del sw.js activo (public/sw.js),
 // que refleja lo que esta desplegado de verdad.
-export const APP_VERSION = '1.8.11';
+export const APP_VERSION = '1.8.12';
 
 const DEFAULT_STORE_SVG = encodeURIComponent(
   '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 160"><rect width="160" height="160" rx="34" fill="#f3eaff"/><path d="M29 67h102v61H29z" fill="#fffdf9" stroke="#9b7dcc" stroke-width="5"/><path d="M22 66 36 38h88l14 28z" fill="#ffc7b5" stroke="#9b7dcc" stroke-width="5"/><path d="M40 39h15v28H40zm32 0h16v28H72zm33 0h15v28h-15z" fill="#fffaf3"/><path d="M45 83h30v45H45z" fill="#b9e4d0" stroke="#9b7dcc" stroke-width="4"/><path d="M91 83h24v20H91z" fill="#fff0a9" stroke="#9b7dcc" stroke-width="4"/></svg>',
@@ -32,6 +32,17 @@ export function shortTag(tag: string | undefined, max = 5): string {
   const t = (tag || '').trim().toUpperCase();
   if (!t) return '';
   return t.length > max ? t.slice(0, max) : t;
+}
+
+// Etiquetas reales de un producto (hasta 3). Los productos nuevos guardan un
+// arreglo `tags`; los antiguos solo tenian el campo de texto `tag`, asi que si
+// el arreglo no existe todavia se toma ese campo para que los viejos datos
+// sigan mostrandose y buscandose igual.
+export function productTags(p: Pick<Product, 'tags' | 'tag'> | undefined | null): string[] {
+  if (!p) return [];
+  if (Array.isArray(p.tags) && p.tags.length) return p.tags.map((t) => (t || '').trim()).filter(Boolean);
+  const solo = (p.tag || '').trim();
+  return solo ? [solo] : [];
 }
 
 export function today(): string {

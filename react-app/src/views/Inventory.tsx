@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import type { PointerEvent as ReactPointerEvent } from 'react';
 import { useStore } from '../store';
-import { DEFAULT_PRODUCT_IMAGE, esc, inventorySold, adoptInvLog, syncName, groupedByCategory, storeCats, reorderCategoryProducts, shortTag } from '../lib/core';
+import { DEFAULT_PRODUCT_IMAGE, esc, inventorySold, adoptInvLog, syncName, groupedByCategory, storeCats, reorderCategoryProducts, shortTag, productTags } from '../lib/core';
 import { customConfirm } from '../lib/dialog';
 import { GearMenu, Image, Modal, PencilIcon, TruckIcon } from '../ui';
 import { notifyStorePush } from '../lib/push';
@@ -43,7 +43,7 @@ export function Inventory() {
   const [query, setQuery] = useState('');
   const q = query.trim().toLowerCase();
   const searching = q.length > 0;
-  const productMatches = (p: Product) => p.name.toLowerCase().includes(q) || (!!p.tag && p.tag.trim().toLowerCase().includes(q));
+  const productMatches = (p: Product) => p.name.toLowerCase().includes(q) || productTags(p).some((t) => t.toLowerCase().includes(q));
   const visibleGroups = searching
     ? groups.map((g) => ({ ...g, list: g.list.filter(productMatches) })).filter((g) => g.list.length > 0)
     : groups;
@@ -238,7 +238,7 @@ export function Inventory() {
                             return (
                               <tr key={p.id} data-pid={p.id} className={prodDrag?.pid === p.id ? 'dragging' : ''}>
                                 <td className="drag-cell">{!searching && <button type="button" className="icon-btn drag-handle" title="Arrastrar para reordenar" onPointerDown={(e) => startProdDrag(e, g.name, p.id, g.list)}>⠿</button>}</td>
-                                <td className="cat-bar"><div className="product-cell"><Image src={p.image || DEFAULT_PRODUCT_IMAGE} cls="product-image-cell" /><div className="product-name">{esc(p.name)}{p.tag && p.tag.trim() ? <span className="prod-tag" title={esc(p.tag)}>{esc(shortTag(p.tag))}</span> : null}</div></div></td>
+                                <td className="cat-bar"><div className="product-cell"><Image src={p.image || DEFAULT_PRODUCT_IMAGE} cls="product-image-cell" /><div className="product-name">{esc(p.name)}{productTags(p).map((t) => <span className="prod-tag" key={t} title={esc(t)}>{esc(shortTag(t))}</span>)}</div></div></td>
                                 <td>{avail == null ? '—' : avail}</td>
                                 <td>{soldQty}</td>
                                 <td>{buy == null ? '—' : buy}</td>
