@@ -93,7 +93,7 @@ export function ImagePicker({ id, src, cls, hint, onFile, disabled }: { id: stri
   );
 }
 
-export function Modal({ onClose, children }: { onClose: () => void; children: ReactNode }) {
+export function Modal({ onClose, children, backdropClose = true }: { onClose: () => void; children: ReactNode; backdropClose?: boolean }) {
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose(); };
     document.addEventListener('keydown', onKey);
@@ -102,7 +102,7 @@ export function Modal({ onClose, children }: { onClose: () => void; children: Re
   // El botón atrás del celular cierra este modal antes de salir de la app.
   useEffect(() => pushOverlay(onClose), [onClose]);
   return (
-    <div className="modal-backdrop" onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}>
+    <div className="modal-backdrop" onClick={(e) => { if (backdropClose && e.target === e.currentTarget) onClose(); }}>
       <div className="modal">{children}</div>
     </div>
   );

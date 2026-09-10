@@ -9,20 +9,33 @@ export function History() {
   const s = store!;
   const [open, setOpen] = useState<Record<string, boolean>>({});
 
-  function exportExcel(sales: Sale[]) {
-    const rows: (string | number)[][] = [['Tienda', 'Fecha', 'Hora', 'Producto', 'Categoría', 'Ítem', 'Precio', 'Cantidad vendida', 'Total', 'Empleado']];
+  function exportTxt(sales: Sale[]) {
+    const lines: string[] = [];
+    lines.push('HISTORIAL DE VENTAS');
+    lines.push('Tienda: ' + s.name);
+    lines.push('Exportado: ' + new Date().toLocaleString('es'));
+    lines.push('');
     sales.forEach((x) => x.items.forEach((i) => {
       const p = s.products.find((pp) => pp.id === i.productId);
       const pr = p && p.promos.find((z) => z.id === i.promotionId);
       const name = pr ? pr.label : (p ? p.name : 'Producto eliminado');
       const parent = pr ? p!.name : 'Producto';
-      rows.push([s.name, x.date, x.time || '', parent, p ? catLabel(p) : 'Sin categoría', name, priceFor(i, s), i.qty, priceFor(i, s) * i.qty, x.employee || '']);
+      lines.push(
+        'Fecha: ' + x.date + '  Hora: ' + (x.time || '—') +
+        '  Producto: ' + parent +
+        '  Categoría: ' + (p ? catLabel(p) : 'Sin categoría') +
+        '  Ítem: ' + name +
+        '  Precio: ' + money(priceFor(i, s)) +
+        '  Cantidad: ' + i.qty +
+        '  Total: ' + money(priceFor(i, s) * i.qty) +
+        '  Empleado: ' + (x.employee || '—')
+      );
     }));
-    const csv = '\ufeff' + rows.map((r) => r.map((v) => '"' + String(v == null ? '' : v).replace(/"/g, '""') + '"').join(';')).join('\r\n');
-    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const txt = '\ufeff' + lines.join('\n') + '\n';
+    const blob = new Blob([txt], { type: 'text/plain;charset=utf-8;' });
     const a = document.createElement('a');
     a.href = URL.createObjectURL(blob);
-    a.download = 'ventas-' + s.name.toLowerCase().replace(/[^a-z0-9]+/gi, '-') + '.csv';
+    a.download = 'ventas-' + s.name.toLowerCase().replace(/[^a-z0-9]+/gi, '-') + '.txt';
     a.click();
     URL.revokeObjectURL(a.href);
   }
@@ -71,7 +84,7 @@ export function History() {
     <div className="panel">
       <div className="panel-head">
         <div><h2>Historial de ventas</h2><p className="muted">Cada venta con su fecha, hora y quién la registró.</p></div>
-        <button className="button secondary" onClick={() => exportExcel(s.sales)}><DownloadIcon /> Exportar a Excel</button>
+        <button className="button secondary" onClick={() => exportTxt(s.sales)}><DownloadIcon /> Exportar a texto</button>
       </div>
       {!dates.length ? <div className="empty"><div className="emoji">
         <svg viewBox="0 0 24 24" width="40" height="40" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" style={{ color: '#a98dde', display: 'block', margin: '0 auto' }}>

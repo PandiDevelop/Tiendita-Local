@@ -60,4 +60,5 @@ function ensureSystemListener(): void {
 export function applyTheme(): void {
   document.documentElement.dataset.theme = resolvedTheme();
   ensureSystemListener();
+  try { window.dispatchEvent(new Event('mt-theme-changed')); } catch { /* ignorar */ }
 }

@@ -4,6 +4,7 @@ import { canManageTeam, esc } from './lib/core';
 import { useAppVersion } from './lib/appVersion';
 import { initDeepLink, readDeepTab } from './lib/deepLink';
 import { pushOverlay } from './lib/backStack';
+import { resolvedTheme } from './lib/theme';
 import { DialogHost, GearIcon, ImageLightboxHost, Logo, MenuIcon, StoreImage, Toast } from './ui';
 import { DevThemesModal } from './views/DevThemes';
 import { Dashboard } from './views/Dashboard';
@@ -25,6 +26,15 @@ export function App() {
   const version = useAppVersion();
   const [menuOpen, setMenuOpen] = useState(false);
   const [devOpen, setDevOpen] = useState(false);
+  // La cita junto al nombre de la tienda solo aparece con un tema de dev.
+  const [, setThemeTick] = useState(0);
+  useEffect(() => {
+    const h = () => setThemeTick((n) => n + 1);
+    window.addEventListener('mt-theme-changed', h);
+    return () => window.removeEventListener('mt-theme-changed', h);
+  }, []);
+  const t = resolvedTheme();
+  const devTheme = t === 'owen' || t === 'crisdeku' || t === 'pandi';
   // Menú oculto de desarrollo: 10 toques seguidos en el logo de la app.
   const logoTaps = useRef(0);
   const logoTimer = useRef<number | undefined>(undefined);
@@ -91,7 +101,6 @@ export function App() {
           <button className="gear-btn landing-gear" onClick={() => openModal('settings')} title="Opciones: nombre, notificaciones, sonido y descargas de registros. También sirve para restaurar una tienda borrada"><GearIcon size={18} /></button>
           <div className="landing">
             <button className="brand-logo-btn" onClick={tapLogo} title=""><Logo size={88} /></button>
-            <div className="landing-phrase"><span className="phrase-logo" aria-hidden="true" />Mereces lo que sueñas</div>
             <h1 className="landing-title">mi<span>tiendita</span></h1>
             <p className="landing-tag">Organiza productos, promociones y ventas diarias en un solo lugar.</p>
             <div className="landing-feats">
@@ -118,7 +127,6 @@ export function App() {
     <>
       <div className="sidebar">
         <div className="brand"><button className="brand-logo-btn" onClick={tapLogo} title=""><Logo size={36} /></button><span className="brand-text">mi<span className="brand-accent">tiendita</span></span></div>
-        <div className="side-phrase"><span className="phrase-logo" aria-hidden="true" />Mereces lo que sueñas</div>
         <div className="label">Mis tiendas</div>
         <div className="store-list">
           {state.stores.map((x) => (
@@ -143,7 +151,7 @@ export function App() {
         <div className="topline">
           <div className="store-title">
             <StoreImage src={s.image} cls="store-logo" alt={'Logo de ' + esc(s.name)} />
-            <div><div className="eyebrow">Tu tienda</div><h1>{esc(s.name)}</h1></div>
+            <div><div className="eyebrow">Tu tienda</div><h1>{esc(s.name)}</h1>{devTheme && <span className="topline-quote">Mereces lo que sueñas</span>}</div>
           </div>
           <button className="button secondary" onClick={() => setModal('editStore')}><GearIcon size={15} /> Editar tienda</button>
         </div>
