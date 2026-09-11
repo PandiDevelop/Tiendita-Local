@@ -8,6 +8,7 @@ const ASSETS = [
   './logo-crisdeku.png',
   './logo-pandi.png',
   './pattern-owen.jpg',
+  './pattern-crisdeku.svg',
 ];
 
 export function preloadDevAssets(): void {
