@@ -138,7 +138,7 @@ th,td{text-align:left;vertical-align:middle}
 .card.stat.stat-h .captioned-stat .value{font:700 27px 'Nunito',sans-serif;margin:0;overflow-wrap:break-word}
 .card.stat.stat-h .small{flex-basis:100%}
 .profit-grid{gap:14px;margin-bottom:4px}
-.profit-grid .card{padding:13px 16px;border-radius:16px}
+.profit-grid .card{padding:13px 16px;border-radius:18px}
 .profit-grid .stat-icon{width:30px;height:30px;border-radius:9px}
 .profit-grid .card.stat.stat-h .captioned-stat .value{font-size:21px}
 .profit-grid .card.stat.stat-h .small{font-size:12px;margin-top:2px}
@@ -522,11 +522,12 @@ td.cat-bar .product-name .prod-tag{margin-left:auto;flex:0 0 auto}
 }
 :root[data-theme="crisdeku"] body{background-color:#f0e6ff;background-image:url("./pattern-crisdeku.svg");background-size:cover;background-position:center;background-repeat:no-repeat}
 /* Patina translucida de la app: los paneles, pestañas y tarjetas dejan ver el
-   fondo del tema (con un leve desenfoque para que el texto siga legible). El
-   menu lateral y los modales (incluido DevThemes) se mantienen opacos. */
-.panel,.store-title,.topline,.tabs,.cat-group,.cat-head,.inv-modes,.day-tab,.dd-btn,.dd-opt,.settings-cat,.notes-feed-tabs,.notes-feed-tab{background-color:color-mix(in srgb,var(--surface) 74%,transparent)}
-.card{background-color:color-mix(in srgb,var(--surface) 74%,transparent)}
-.panel,.store-title,.topline,.tabs,.inv-modes,.cat-group{backdrop-filter:blur(10px)}
+   fondo del tema (60% de opacidad, con un leve desenfoque para que el texto
+   siga legible). El menu lateral, la franja del titulo (topline) y los
+   modales (incluido DevThemes) se mantienen opacos. */
+.panel,.store-title,.tabs,.cat-group,.cat-head,.inv-modes,.day-tab,.dd-btn,.dd-opt,.settings-cat,.notes-feed-tabs,.notes-feed-tab{background-color:color-mix(in srgb,var(--surface) 60%,transparent)}
+.card{background-color:color-mix(in srgb,var(--surface) 60%,transparent)}
+.panel,.store-title,.tabs,.inv-modes,.cat-group{backdrop-filter:blur(10px)}
 :root[data-theme="pandi"]{
 	--ink:#ddf6ff;--muted:#86b4d9;--line:#274a73;--cream:#0a1730;--lav:#122a4d;--lilac:#58a8d8;--peach:#163252;--mint:#12303f;--pink:#20304d;--red:#7fe0ff;
 	--brand:#38c8f0;--brand-deep:#a5e4ff;--brand-2:#5dd4f5;--brand-line:#3e7fb0;--surface:#112a4d;--shadow:0 12px 35px rgba(0,0,0,.45);background:#0a1730;color:var(--ink)
@@ -609,16 +610,8 @@ td.cat-bar .product-name .prod-tag{margin-left:auto;flex:0 0 auto}
 :root[data-theme="pandi"] .dev-icons img,:root[data-theme="pandi"] .dev-theme-icon,:root[data-theme="pandi"] .store-quote-logo,:root[data-theme="pandi"] .theme-dev-logo{filter:invert(1) brightness(1.06)}
 .sugg{color:var(--muted);font-style:italic}
 
-/* ---- Resumen tipo panel (Inicio y Ganancias) ----
-   Las cajas de resumen usan el MISMO estilo que las de la lista de productos
-   (panel): antes eran tarjetas aparte, sin el mismo desenfoque ni bordes, y se
-   veían distintas. Cada dato va en una celda con su icono propio. */
-.sum-panel{padding:0}
-.sum-cells{display:grid;grid-template-columns:repeat(3,1fr)}
-.sum-cell{display:flex;flex-direction:column;gap:3px;padding:18px 22px;min-width:0}
-.sum-cell+.sum-cell{border-left:1px solid var(--line)}
-.sum-ico{width:30px;height:30px;flex:0 0 auto;display:inline-flex;align-items:center;justify-content:center;border-radius:9px;background:var(--lav);color:var(--brand-deep);margin-bottom:8px}
-.sum-cell .sum-title{font-size:13px;font-weight:700;color:var(--muted)}
-.sum-cell .sum-val{font:800 24px 'Nunito',sans-serif;color:var(--ink);overflow-wrap:break-word}
-.sum-cell .sum-sub{font-size:12px;font-weight:600;color:var(--muted)}
-@media (max-width:760px){.sum-cells{grid-template-columns:1fr}.sum-cell+.sum-cell{border-left:0;border-top:1px solid var(--line)}.sum-cell{padding:15px 16px}}
+/* ---- Resumen (Inicio y Ganancias) ----
+   Tres cajas delgadas, cada una con su icono a un lado y el titulo+dato a la
+   derecha. Estilo igual al de las listas: borde, redondeado y desenfoque de
+   panel, pero sin la sombra de tarjeta (las listas no la tienen). */
+.stat-panel{box-shadow:none;backdrop-filter:blur(10px)}

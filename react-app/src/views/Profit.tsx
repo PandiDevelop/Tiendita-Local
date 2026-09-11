@@ -59,23 +59,27 @@ export function Profit() {
 
   return (
     <>
-      <div className="panel sum-panel">
-        <div className="sum-cells">
-          <div className="sum-cell">
-            <div className="sum-ico"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M12 2v20" /><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" /></svg></div>
-            <div className="sum-title">Ingresos</div><div className="sum-val">{money(revenue)}</div>
-            <div className="sum-sub">{filtered.length} venta{filtered.length === 1 ? '' : 's'}</div>
+      <div className="grid profit-grid">
+        <div className="card stat stat-h stat-panel">
+          <div className="stat-icon">
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M12 2v20" /><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" /></svg>
           </div>
-          <div className="sum-cell">
-            <div className="sum-ico"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><rect x="3" y="7" width="18" height="13" rx="2" /><path d="M3 7l9 6 9-6" /><path d="M9 20h6" /></svg></div>
-            <div className="sum-title">Costo</div><div className="sum-val">{money(cost)}</div>
-            <div className="sum-sub">Costo de lo vendido</div>
+          <div className="captioned-stat"><div>Ingresos</div><div className="value">{money(revenue)}</div></div>
+          <div className="small">{filtered.length} venta{filtered.length === 1 ? '' : 's'}</div>
+        </div>
+        <div className="card stat stat-h stat-panel">
+          <div className="stat-icon">
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><rect x="3" y="7" width="18" height="13" rx="2" /><path d="M3 7l9 6 9-6" /><path d="M9 20h6" /></svg>
           </div>
-          <div className="sum-cell">
-            <div className="sum-ico"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18" /><polyline points="17 6 23 6 23 12" /></svg></div>
-            <div className="sum-title">Ganancia</div><div className="sum-val">{money(profit)}</div>
-            <div className="sum-sub">{revenue > 0 ? margin.toFixed(1) + '% de margen' : 'Sin ventas en este periodo'}</div>
+          <div className="captioned-stat"><div>Costo</div><div className="value">{money(cost)}</div></div>
+          <div className="small">Costo de lo vendido</div>
+        </div>
+        <div className="card stat stat-h stat-panel">
+          <div className="stat-icon">
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18" /><polyline points="17 6 23 6 23 12" /></svg>
           </div>
+          <div className="captioned-stat"><div>Ganancia</div><div className="value">{money(profit)}</div></div>
+          <div className="small">{revenue > 0 ? margin.toFixed(1) + '% de margen' : 'Sin ventas en este periodo'}</div>
         </div>
       </div>
 
