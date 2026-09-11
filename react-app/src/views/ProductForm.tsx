@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useStore } from '../store';
-import { DEFAULT_PRODUCT_IMAGE, DEFAULT_PRODUCT_TAG, esc, compressImage, storeCats, adoptInvLog, setCategoryPricing, insertCatSorted, toEditablePromos, fromEditablePromos, uid, syncClientId, syncName, productTags, nextSuppTag, recordSupplierPrice } from '../lib/core';
+import { DEFAULT_PRODUCT_IMAGE, DEFAULT_PRODUCT_TAG, esc, compressImage, storeCats, adoptInvLog, setCategoryPricing, insertCatSorted, toEditablePromos, fromEditablePromos, uid, syncClientId, syncName, productTags, nextSuppTag, recordSupplierPrice, setSupplierCost } from '../lib/core';
 import { notifyStorePush } from '../lib/push';
 import type { EditablePromo } from '../lib/core';
 import { ImagePicker, Modal, CategorySuggest } from '../ui';
@@ -70,7 +70,7 @@ export function ProductForm({ editingId, onClose }: { editingId?: string; onClos
       const tagList = tags.map((t) => t.trim()).filter(Boolean).slice(0, 3);
       const tagsVal = tagList.length ? tagList : !editingId ? [DEFAULT_PRODUCT_TAG] : [];
       const tag0 = tagsVal[0];
-      const prodTag = sup ? nextSuppTag(st, sup) : undefined;
+      const prodTag = sup ? (cst > 0 ? setSupplierCost(st, sup, cst) : nextSuppTag(st, sup)) : undefined;
       if (editingId) {
         const t = st.products.find((x) => x.id === editingId);
         if (t) Object.assign(t, { name: nm, price: pr, cost: cst, image: image || DEFAULT_PRODUCT_IMAGE, promos: promoList, category: catVal, tags: tagsVal, tag: tag0 || undefined, supplier: sup || undefined, supplierTag: prodTag });

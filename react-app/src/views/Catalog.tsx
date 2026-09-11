@@ -186,12 +186,10 @@ export function Catalog() {
           <button className="button primary" onClick={addCategory}>＋ Categoría</button>
           <button className="button primary" onClick={() => setModal('newProduct')}>＋ Producto</button>
         </div>
-        <div className="cat-actions-row">
-          <div className="panel-search" style={{ flex: 1, margin: 0 }}>
-            <input type="search" inputMode="search" placeholder="Buscar producto…" value={query} onChange={(e) => setQuery(e.target.value)} />
-            {searching && <button type="button" className="panel-search-clear" title="Limpiar búsqueda" onClick={() => setQuery('')}>×</button>}
-          </div>
-          <button className="button outline" disabled={!s.products.length} onClick={() => setBookOpen(true)} style={{ whiteSpace: 'nowrap' }}><StorefrontIcon size={16} /> Ver catálogo</button>
+        <button className="button outline cat-actions-cta" disabled={!s.products.length} onClick={() => setBookOpen(true)}><StorefrontIcon size={16} /> Ver catálogo</button>
+        <div className="panel-search cat-actions-search">
+          <input type="search" inputMode="search" placeholder="Buscar producto…" value={query} onChange={(e) => setQuery(e.target.value)} />
+          {searching && <button type="button" className="panel-search-clear" title="Limpiar búsqueda" onClick={() => setQuery('')}>×</button>}
         </div>
       </div>
       {searching && <p className="muted panel-search-info">{foundCount} resultado{foundCount === 1 ? '' : 's'} para «{esc(query.trim())}».</p>}

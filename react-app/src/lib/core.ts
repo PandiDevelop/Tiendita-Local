@@ -7,7 +7,7 @@ export const USER_KEY = 'mi-tiendita-user';
 // Version de arranque/mostrada hasta que el service worker responde con la
 // suya (ver lib/appVersion.ts): la real es la del sw.js activo (public/sw.js),
 // que refleja lo que esta desplegado de verdad.
-export const APP_VERSION = '1.10.8';
+export const APP_VERSION = '1.10.9';
 
 const DEFAULT_STORE_SVG = encodeURIComponent(
   '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 160"><rect width="160" height="160" rx="34" fill="#f3eaff"/><path d="M29 67h102v61H29z" fill="#fffdf9" stroke="#9b7dcc" stroke-width="5"/><path d="M22 66 36 38h88l14 28z" fill="#ffc7b5" stroke="#9b7dcc" stroke-width="5"/><path d="M40 39h15v28H40zm32 0h16v28H72zm33 0h15v28h-15z" fill="#fffaf3"/><path d="M45 83h30v45H45z" fill="#b9e4d0" stroke="#9b7dcc" stroke-width="4"/><path d="M91 83h24v20H91z" fill="#fff0a9" stroke="#9b7dcc" stroke-width="4"/></svg>',
@@ -758,8 +758,12 @@ export function setCategoryPricing(s: Store, cat: string, price: number, cost: n
 // Genera la siguiente etiqueta corta (hasta 3 letras) para un proveedor. Con
 // "Ceres" da "CER"; si acabaran de existir "CER", "CERE" y "CER6" ya usadas,
 // elige la siguiente libre del mismo bloque (CER7...). Así cada proveedor de
-// la tienda tiene su tag de una pasada, siempre reproducible.
+// la tienda tiene su tag de una pasada, siempre reproducible. Si el proveedor
+// ya está en el registro global (s.suppliers), devuelve su tag ya existente
+// para que la ID sea estable entre cargamentos.
 export function nextSuppTag(s: Store, supplierName: string): string {
+  const existing = supplierName && s.suppliers ? s.suppliers[supplierKey(supplierName)] : undefined;
+  if (existing?.tag) return existing.tag;
   const used = new Set<string>();
   Object.values(s.categoryPricing || {}).forEach((c) => { if (c.supplierTag) used.add(c.supplierTag); });
   s.products.forEach((p) => { if (p.supplierTag) used.add(p.supplierTag); });
@@ -767,14 +771,48 @@ export function nextSuppTag(s: Store, supplierName: string): string {
   if (!base) return 'DES';
   let tag = base;
   let n = 1;
-  while (used.has(tag)) {
-    if (n > 9) {
-      tag = base + n;
-    } else {
-      tag = base + n;
-    }
-    n++;
-  }
+  while (used.has(tag)) { tag = base + n; n++; }
+  return tag;
+}
+
+// Nombre de distribuidor normalizado como clave del registro global de
+// proveedores: minusculas, sin acentos y con espacios colapsados. Así
+// "Distribuidora del Sur" y "distribuidora  del  sur" comparten registro.
+export function supplierKey(name: string): string {
+  return (name || '')
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+// Costo por unidad registrado para un distribuidor (si existe en la tienda).
+export function getSupplierCost(s: Store, name: string): number | undefined {
+  const k = supplierKey(name);
+  const info = k && s.suppliers ? s.suppliers[k] : undefined;
+  return info ? info.cost : undefined;
+}
+
+// Info registrada de un distribuidor (tag + costo) si existe.
+export function getSupplierInfo(s: Store, name: string): { tag: string; cost: number } | undefined {
+  const k = supplierKey(name);
+  const info = k && s.suppliers ? s.suppliers[k] : undefined;
+  return info ? { tag: info.tag, cost: info.cost } : undefined;
+}
+
+// Registra (o actualiza) el costo por unidad de un distribuidor. Reusa su tag
+// si ya existia (la ID es estable); con un distribuidor nuevo genera la
+// siguiente tag libre. Devuelve el tag. No toca las ventas ya registradas.
+export function setSupplierCost(s: Store, name: string, cost: number): string {
+  const sup = (name || '').trim();
+  const k = supplierKey(sup);
+  if (!k) return '';
+  const cst = Number.isFinite(cost) && cost >= 0 ? cost : 0;
+  s.suppliers = s.suppliers || {};
+  const prev = s.suppliers[k];
+  const tag = prev ? prev.tag : nextSuppTag(s, sup);
+  s.suppliers[k] = { tag, cost: cst, at: today() };
   return tag;
 }
 
@@ -794,6 +832,7 @@ export function recordSupplierPrice(s: Store, cat: string, supplier: string, cos
   if (sup) prev.supplier = sup;
   if (sup && !prev.supplierTag) prev.supplierTag = nextSuppTag(s, sup);
   if (!sup && !prev.supplier) { prev.supplier = 'Desconocido'; if (!prev.supplierTag) prev.supplierTag = 'DES'; }
+  if (sup) setSupplierCost(s, sup, cst);
   return prev.supplierTag || '';
 }
 

@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import type { PointerEvent as ReactPointerEvent } from 'react';
 import { useStore } from '../store';
-import { DEFAULT_PRODUCT_IMAGE, esc, inventorySold, adoptInvLog, syncName, groupedByCategory, storeCats, reorderCategoryProducts, shortTag, productTags, recordSupplierPrice } from '../lib/core';
+import { DEFAULT_PRODUCT_IMAGE, esc, inventorySold, adoptInvLog, syncName, groupedByCategory, storeCats, reorderCategoryProducts, shortTag, productTags, recordSupplierPrice, getSupplierCost, getSupplierInfo, setSupplierCost } from '../lib/core';
 import { customConfirm } from '../lib/dialog';
 import { GearMenu, Image, Modal, PencilIcon, CargoIcon } from '../ui';
 import { notifyStorePush } from '../lib/push';
@@ -133,12 +133,80 @@ export function Inventory() {
     setEdit({ p, qty: String(cur(p)), who: syncName(), cost: '' });
   }
 
-  // Cargamento: añadir un lote nuevo con distribuidor.
-  function openCargo(p: Product) {
+  // Cargamento: añadir un lote nuevo con distribuidor. El campo de
+  // distribuidor arranca sugerido con el que se usó la última vez (del
+  // producto o de su categoría), en gris, y el costo con el que ese
+  // distribuidor tiene registrado (o el del producto); al hacer click se
+  // limpian los dos para escribir la info de una compra nueva.
+  const cargoSugg = (p: Product): { supp: string; cost: number } => {
     const cat = (p.category || '').trim();
     const cp = cat && s.categoryPricing ? s.categoryPricing[cat] : undefined;
-    setCargo({ p, qty: '', who: syncName(), cost: cp && cp.cost != null ? String(cp.cost) : '' });
-    setCargoSupplier(cp?.supplier || '');
+    const supp = (p.supplier || cp?.supplier || '').trim();
+    const cost = supp ? (getSupplierCost(s, supp) ?? (p.cost != null ? p.cost : (cp?.cost ?? 0))) : (p.cost != null ? p.cost : (cp?.cost ?? 0));
+    return { supp, cost };
+  };
+  const [cargoDirty, setCargoDirty] = useState(false);
+  function openCargo(p: Product) {
+    const { supp, cost } = cargoSugg(p);
+    setCargo({ p, qty: '', who: syncName(), cost: cost > 0 ? String(cost) : '' });
+    setCargoSupplier(supp);
+    setCargoDirty(false);
+  }
+
+  // Al click sobre el distribuidor sugerido (gris): se limpia el campo y el
+  // costo para escribir la info de una compra nueva. Si al final lo deja
+  // vacío, el blur restaura la sugerencia anterior.
+  function onCargoSuppFocus() {
+    if (!cargo) return;
+    if (!cargoDirty && cargoSupplier.trim() !== '') {
+      setCargoSupplier('');
+      setCargo({ ...cargo, cost: '' });
+    }
+    setCargoDirty(true);
+  }
+  function onCargoSuppBlur() {
+    if (!cargo) return;
+    const name = cargoSupplier.trim();
+    if (!name) {
+      const { supp, cost } = cargoSugg(cargo.p);
+      setCargoSupplier(supp);
+      setCargo({ ...cargo, cost: cost > 0 ? String(cost) : '' });
+      setCargoDirty(false);
+      return;
+    }
+    const info = getSupplierInfo(s, name);
+    if (info) {
+      // Distribuidor conocido: se pone su costo registrado (se puede editar).
+      setCargo({ ...cargo, cost: info.cost > 0 ? String(info.cost) : '' });
+    }
+  }
+  function saveCargo() {
+    if (!cargo) return;
+    const q = parseQty(cargo.qty);
+    if (q <= 0) return toast('Escribe una cantidad mayor a 0.');
+    const cst = Math.round(Number(cargo.cost));
+    const cost = Number.isFinite(cst) && cst >= 0 ? cst : 0;
+    const sup = cargoSupplier.trim();
+    replace((x) => {
+      const st = x.stores.find((y) => y.id === s.id)!;
+      const prod = st.products.find((y) => y.id === cargo.p.id);
+      const cat = (cargo.p.category || '').trim();
+      let tag = '';
+      if (sup) {
+        // Si no se escribió costo se conserva el último registrado del
+        // distribuidor (no se borra con un cargamento sin costo).
+        tag = setSupplierCost(st, sup, cost > 0 ? cost : getSupplierCost(st, sup) ?? 0);
+        if (cat && cost > 0) recordSupplierPrice(st, cat, sup, cost);
+        if (prod) { prod.supplier = sup; prod.supplierTag = tag; }
+      }
+      if (prod && cost > 0) prod.cost = cost;
+      adoptInvLog(st, cargo.p.id, q, sup, cargo.who, tag);
+    });
+    if (s.syncKey) notifyStorePush(s.syncKey, syncName() + ' recibió un cargamento', (cargo.p.name || 'Producto') + ' · ' + q + (q === 1 ? ' unidad' : ' unidades'), 'cargamento');
+    toast('Cargamento registrado.');
+    setCargo(null);
+    setCargoSupplier('');
+    setCargoDirty(false);
   }
 
   function saveEdit() {
@@ -153,28 +221,6 @@ export function Inventory() {
     }
     toast('Cantidad actualizada.');
     setEdit(null);
-  }
-
-  function saveCargo() {
-    if (!cargo) return;
-    const q = parseQty(cargo.qty);
-    if (q <= 0) return toast('Escribe una cantidad mayor a 0.');
-    const cst = Math.round(Number(cargo.cost));
-    const cost = Number.isFinite(cst) && cst >= 0 ? cst : 0;
-    let tag = '';
-    const sup = cargoSupplier.trim();
-    replace((x) => {
-      const st = x.stores.find((y) => y.id === s.id)!;
-      adoptInvLog(st, cargo.p.id, q, sup, cargo.who, tag);
-      const cat = (cargo.p.category || '').trim();
-      if (sup && cat && st.categoryPricing && st.categoryPricing[cat]) {
-        tag = recordSupplierPrice(st, cat, sup, cost);
-      }
-    });
-    if (s.syncKey) notifyStorePush(s.syncKey, syncName() + ' recibió un cargamento', (cargo.p.name || 'Producto') + ' · ' + q + (q === 1 ? ' unidad' : ' unidades'), 'cargamento');
-    toast('Cargamento registrado.');
-    setCargo(null);
-    setCargoSupplier('');
   }
 
   const [cargoSupplier, setCargoSupplier] = useState('');
@@ -319,12 +365,13 @@ export function Inventory() {
             </div>
             <p className="muted">Llega ahora y se suma a las existencias.</p>
           </div>
-          <div className="field"><label>Distribuidor / proveedor</label>
-            <input maxLength={60} placeholder="Ej. Distribuidora del Sur" value={cargoSupplier} onChange={(e) => setCargoSupplier(e.target.value)} onFocus={(e) => e.target.select()} />
+          <div className="field"><label>Distribuidor / proveedor <span className="muted">(opcional)</span></label>
+            <input maxLength={60} className={!cargoDirty && cargoSupplier.trim() ? 'sugg' : undefined} placeholder="Distribuidor / proveedor" value={cargoSupplier} onChange={(e) => setCargoSupplier(e.target.value)} onFocus={onCargoSuppFocus} onBlur={onCargoSuppBlur} />
+            {!cargoDirty && cargoSupplier.trim() && <p className="muted">Usado la última vez. Haz click para escribir uno nuevo.</p>}
           </div>
-          <div className="field"><label>Costo del lote <span className="muted">(opcional)</span></label>
+          <div className="field"><label>Costo por unidad <span className="muted">(opcional)</span></label>
             <input min={0} type="number" inputMode="decimal" placeholder="0" value={cargo.cost} onChange={(e) => setCargo({ ...cargo, cost: e.target.value })} onFocus={(e) => e.target.select()} />
-            <p className="muted">Se guarda como historial de precio de la categoría.</p>
+            <p className="muted">Lo que cobra el distribuidor por unidad. Se guarda en su registro y se rellena solo la próxima vez.</p>
           </div>
           <div className="field"><label>Quién recibe el cargamento</label>
             <input maxLength={40} placeholder="Tu nombre" value={cargo.who} onChange={(e) => setCargo({ ...cargo, who: e.target.value })} />

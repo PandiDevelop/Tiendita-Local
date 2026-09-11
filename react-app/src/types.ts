@@ -32,6 +32,19 @@ export interface CategoryPricing {
   supplierHistory?: { supplier: string; cost: number; date: string }[];
 }
 
+// Registro global de distribuidores de la tienda: cada proveedor tiene una ID
+// corta (tag) y el ultimo costo por unidad registrado, guardado bajo su nombre
+// normalizado. Al escribir el nombre de un distribuidor que ya existe se
+// rellena solo su costo guardado, y este se actualiza con cada cargamento. Un
+// distribuidor puede tener varios costos a lo largo del tiempo; el mas reciente
+// es el que se sugiere. NUNCA afecta a las ventas ya registradas: ellas copian
+// su costo en el momento de la venta (ver SaleItem.cost).
+export interface SupplierInfo {
+  tag: string;
+  cost: number;
+  at?: string;
+}
+
 export interface Product {
   id: string;
   name: string;
@@ -225,6 +238,7 @@ export interface Store {
   sales: Sale[];
   categories: string[];
   categoryPricing?: Record<string, CategoryPricing>;
+  suppliers?: Record<string, SupplierInfo>;
   inventory: Record<string, number>;
   notes: string;
   noteLog: NoteEntry[];
