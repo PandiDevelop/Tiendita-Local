@@ -32,14 +32,14 @@ const DEV_LOGO: Record<string, string> = {
 function MenuClock() {
   const [now, setNow] = useState(() => new Date());
   useEffect(() => {
-    const id = window.setInterval(() => setNow(new Date()), 30000);
+    const id = window.setInterval(() => setNow(new Date()), 1000);
     return () => window.clearInterval(id);
   }, []);
   return (
     <>
       <span className="clock-date">{now.toLocaleDateString('es', { weekday: 'long', day: 'numeric', month: 'long' })}</span>
       <span className="clock-sep" aria-hidden="true" />
-      <span className="clock-time">{now.toLocaleTimeString('es', { hour: '2-digit', minute: '2-digit' })}</span>
+      <span className="clock-time">{now.toLocaleTimeString('es', { hour: '2-digit', minute: '2-digit', second: '2-digit' })}</span>
     </>
   );
 }

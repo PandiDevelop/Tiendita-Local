@@ -383,10 +383,10 @@ describe('Libro de catálogo virtual', () => {
     expect(card.querySelector('img.vc-img')).toBeTruthy();
   });
 
-  it('se abre desde el botón "Ver catálogo virtual" de Catálogo', () => {
+  it('se abre desde el botón "Ver catálogo" de Catálogo', () => {
     const store = makeStore({ products: [makeProduct({ id: 'p1', name: 'Agua', price: 1000, category: 'Bebidas' })] });
     render(<TestProvider initialState={makeState(store)}><Catalog /></TestProvider>);
-    fireEvent.click(screen.getByRole('button', { name: /Ver catálogo virtual/ }));
+    fireEvent.click(screen.getByRole('button', { name: /Ver catálogo/ }));
     expect(screen.getByText(/Catálogo virtual/)).toBeInTheDocument();
     expect(screen.getAllByText('Agua').length).toBeGreaterThan(0);
   });

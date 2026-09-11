@@ -7,7 +7,7 @@ export const USER_KEY = 'mi-tiendita-user';
 // Version de arranque/mostrada hasta que el service worker responde con la
 // suya (ver lib/appVersion.ts): la real es la del sw.js activo (public/sw.js),
 // que refleja lo que esta desplegado de verdad.
-export const APP_VERSION = '1.10.7';
+export const APP_VERSION = '1.10.8';
 
 const DEFAULT_STORE_SVG = encodeURIComponent(
   '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 160"><rect width="160" height="160" rx="34" fill="#f3eaff"/><path d="M29 67h102v61H29z" fill="#fffdf9" stroke="#9b7dcc" stroke-width="5"/><path d="M22 66 36 38h88l14 28z" fill="#ffc7b5" stroke="#9b7dcc" stroke-width="5"/><path d="M40 39h15v28H40zm32 0h16v28H72zm33 0h15v28h-15z" fill="#fffaf3"/><path d="M45 83h30v45H45z" fill="#b9e4d0" stroke="#9b7dcc" stroke-width="4"/><path d="M91 83h24v20H91z" fill="#fff0a9" stroke="#9b7dcc" stroke-width="4"/></svg>',
@@ -220,7 +220,7 @@ export function normalizeStore(store: Store): Store {
 }
 
 export function makeDraft(): AppState {
-  return { stores: [], activeStoreId: null, tab: 'inicio', editingSaleId: null, summaryPage: 0, summaryDate: null, summaryMonth: null, saleDraft: null, openCats: {} };
+  return { stores: [], activeStoreId: null, tab: 'inicio', editingSaleId: null, summaryPage: 0, dayPage: 0, summaryDate: null, summaryMonth: null, saleDraft: null, openCats: {} };
 }
 
 export function loadState(): AppState {
@@ -337,13 +337,13 @@ export interface InvLogRow extends InventoryLogEntry {
 // total por producto viaja como mapa y se une por el mayor valor. Guarda
 // quien hizo el cambio igual que en las ventas (nombre editable, con el
 // nombre configurado del dispositivo como valor por defecto).
-export function adoptInvLog(s: Store, productId: string, delta: number, supplier: string, byName?: string): void {
+export function adoptInvLog(s: Store, productId: string, delta: number, supplier: string, byName?: string, supplierTag?: string): void {
   const d = Math.round(delta);
   if (!d) return;
   s.invLog ||= [];
   s.inventory = s.inventory || {};
   const total = Math.max(0, Math.round(s.inventory[productId] || 0) + d);
-  (s.invLog as InvLogRow[]).push({ id: uid(), productId, date: today(), time: timeNow(), qty: d, total, supplier: (supplier || '').trim(), by: syncClientId(), byName: (byName || syncName()).trim() || syncName() });
+  (s.invLog as InvLogRow[]).push({ id: uid(), productId, date: today(), time: timeNow(), qty: d, total, supplier: (supplier || '').trim(), by: syncClientId(), byName: (byName || syncName()).trim() || syncName(), supplierTag: supplierTag || '' });
   s.inventory[productId] = total;
 }
 
@@ -725,7 +725,7 @@ export function sweepExpiredNotes(s: Store): Note[] {
 // un grupo comparte el mismo precio/costo). Cada producto se puede editar
 // despues para tener un precio o costo distinto sin afectar a los demas.
 // cost es opcional (igual que en el producto): si no se define, queda en 0.
-export function setCategoryPricing(s: Store, cat: string, price: number, cost: number, promos: Promo[]): CategoryPricing | null {
+export function setCategoryPricing(s: Store, cat: string, price: number, cost: number, promos: Promo[], supplier?: string): CategoryPricing | null {
   const v = (cat || '').trim();
   if (!v || !Number.isFinite(price) || price < 0) return null;
   const cst = Number.isFinite(cost) && cost >= 0 ? cost : 0;
@@ -733,16 +733,68 @@ export function setCategoryPricing(s: Store, cat: string, price: number, cost: n
     .filter((x) => x && x.label && x.label.trim())
     .map((x) => normalizePromo(x, price));
   s.categoryPricing = s.categoryPricing || {};
-  const entry: CategoryPricing = { price, cost: cst, promos: clean };
+  const prev = s.categoryPricing[v];
+  const entry: CategoryPricing = {
+    price,
+    cost: cst,
+    promos: clean,
+    supplier: prev?.supplier,
+    supplierTag: prev?.supplierTag,
+    supplierHistory: prev?.supplierHistory ? JSON.parse(JSON.stringify(prev.supplierHistory)) : undefined,
+  };
+  if (supplier !== undefined) entry.supplier = (supplier || '').trim();
   s.categoryPricing[v] = entry;
   s.products.forEach((p) => {
     if ((p.category || '').trim() === v) {
       p.price = price;
       p.cost = cst;
       p.promos = JSON.parse(JSON.stringify(clean));
+      if (supplier !== undefined) p.supplier = entry.supplier;
     }
   });
   return entry;
+}
+
+// Genera la siguiente etiqueta corta (hasta 3 letras) para un proveedor. Con
+// "Ceres" da "CER"; si acabaran de existir "CER", "CERE" y "CER6" ya usadas,
+// elige la siguiente libre del mismo bloque (CER7...). Así cada proveedor de
+// la tienda tiene su tag de una pasada, siempre reproducible.
+export function nextSuppTag(s: Store, supplierName: string): string {
+  const used = new Set<string>();
+  Object.values(s.categoryPricing || {}).forEach((c) => { if (c.supplierTag) used.add(c.supplierTag); });
+  s.products.forEach((p) => { if (p.supplierTag) used.add(p.supplierTag); });
+  const base = (supplierName || '').trim().toUpperCase().replace(/[^A-Z]/g, '').slice(0, 3);
+  if (!base) return 'DES';
+  let tag = base;
+  let n = 1;
+  while (used.has(tag)) {
+    if (n > 9) {
+      tag = base + n;
+    } else {
+      tag = base + n;
+    }
+    n++;
+  }
+  return tag;
+}
+
+// Guarda en el historial del proveedor de la categoría el costo actual de esa
+// compra (con fecha), y si el proveedor cambió actualiza el nombre y su tag.
+// Devuelve el tag del proveedor vigente para esa categoría.
+export function recordSupplierPrice(s: Store, cat: string, supplier: string, cost: number): string {
+  const v = (cat || '').trim();
+  const sup = (supplier || '').trim();
+  const cst = Number.isFinite(cost) && cost >= 0 ? cost : 0;
+  s.categoryPricing = s.categoryPricing || {};
+  const prev = s.categoryPricing[v];
+  if (!prev) return sup ? nextSuppTag(s, sup) : '';
+  const hist = prev.supplierHistory ? JSON.parse(JSON.stringify(prev.supplierHistory)) : [];
+  if (sup && cst >= 0) hist.push({ supplier: sup, cost: cst, date: today() });
+  prev.supplierHistory = hist.slice(-50);
+  if (sup) prev.supplier = sup;
+  if (sup && !prev.supplierTag) prev.supplierTag = nextSuppTag(s, sup);
+  if (!sup && !prev.supplier) { prev.supplier = 'Desconocido'; if (!prev.supplierTag) prev.supplierTag = 'DES'; }
+  return prev.supplierTag || '';
 }
 
 // Las promociones se editan como texto (no numero) para poder borrar un '0' y

@@ -25,6 +25,7 @@ export function CategoryModal({ mode, catName, onClose, onSaved }: Props) {
   const [name, setName] = useState(catName || '');
   const [price, setPrice] = useState(cp ? String(cp.price) : '');
   const [cost, setCost] = useState(cp && cp.cost != null ? String(cp.cost) : '');
+  const [supplier, setSupplier] = useState(cp?.supplier || (mode === 'new' ? '' : ''));
   const [promos, setPromos] = useState<EditablePromo[]>(toEditablePromos(cp?.promos));
 
   function save() {
@@ -44,6 +45,7 @@ export function CategoryModal({ mode, catName, onClose, onSaved }: Props) {
     const cst = costTxt === '' ? 0 : Number(costTxt);
     if (!Number.isFinite(cst) || cst < 0) { toast('Añade un costo válido para la categoría.'); return; }
     const promoList = fromEditablePromos(promos);
+    const sup = supplier.trim();
     replace((d) => {
       const st = d.stores.find((x) => x.id === s.id)!;
       if (mode === 'new') {
@@ -58,7 +60,9 @@ export function CategoryModal({ mode, catName, onClose, onSaved }: Props) {
           delete st.categoryPricing[catName];
         }
       }
-      if (pr != null) setCategoryPricing(st, v, pr, cst, promoList);
+      if (pr != null) {
+        setCategoryPricing(st, v, pr, cst, promoList, sup || undefined);
+      }
     });
     onClose();
     toast(mode === 'new' ? 'Categoría añadida.' : 'Categoría actualizada.');
@@ -87,6 +91,16 @@ export function CategoryModal({ mode, catName, onClose, onSaved }: Props) {
       <div className="field"><label>Costo <span className="muted">(opcional)</span></label>
         <input min={0} type="number" placeholder="0" value={cost} onChange={(e) => setCost(e.target.value)} />
         <p className="muted">Costo por defecto de esta categoría.</p>
+      </div>
+      <div className="field"><label>Proveedor <span className="muted">(opcional)</span></label>
+        <input
+          maxLength={40}
+          placeholder="Ej. Ceres"
+          value={supplier}
+          onChange={(e) => setSupplier(e.target.value)}
+          onFocus={(e) => e.target.select()}
+        />
+        <p className="muted">Quién surte esta categoría. Su tag corto se suma al guardar.</p>
       </div>
       <div className="field"><label>Promociones <span className="muted">(se aplican solas al vender)</span></label>
         <PromoEditor promos={promos} onChange={setPromos} priceHint={price} />

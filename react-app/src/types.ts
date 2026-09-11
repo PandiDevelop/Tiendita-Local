@@ -27,6 +27,9 @@ export interface CategoryPricing {
   price: number;
   cost?: number;
   promos: Promo[];
+  supplier?: string;
+  supplierTag?: string;
+  supplierHistory?: { supplier: string; cost: number; date: string }[];
 }
 
 export interface Product {
@@ -47,6 +50,8 @@ export interface Product {
   // funcionando (ver productTags en lib/core).
   tags?: string[];
   tag?: string;
+  supplier?: string;
+  supplierTag?: string;
   // Quien lo creo (syncClientId). Solo sirve para silenciar en este mismo
   // dispositivo el aviso de "producto nuevo" cuando lo agrega uno mismo; sin
   // esto, cada producto que uno crea le sonaria/le llegararia el aviso a si
@@ -68,6 +73,7 @@ export interface SaleItem {
   // asi si despues cambias el costo del producto, las ventas viejas
   // conservan su ganancia real de ese momento.
   cost?: number;
+  supplierTag?: string;
   who?: Record<string, number>;
 }
 
@@ -115,6 +121,7 @@ export interface InventoryLogEntry {
   time: string;
   qty: number;
   supplier: string;
+  supplierTag?: string;
   by?: string;
   byName?: string;
 }
@@ -237,7 +244,7 @@ export interface SaleDraft {
   storeId: string;
   employee: string;
   categories: string[];
-  lines: { pid: string; price: number; qty: number }[];
+  lines: { pid: string; price: number; qty: number; cost?: number; supplierTag?: string }[];
 }
 
 export interface AppState {
@@ -246,6 +253,7 @@ export interface AppState {
   tab: Tab;
   editingSaleId: string | null;
   summaryPage: number;
+  dayPage: number;
   summaryDate: string | null;
   summaryMonth: string | null;
   saleDraft: SaleDraft | null;

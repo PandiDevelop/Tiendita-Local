@@ -6,7 +6,7 @@ import { Dropdown } from '../Dropdown';
 import { CloseIcon, Image, Modal, ReceiptIcon, UndoIcon } from '../ui';
 import type { Product } from '../types';
 
-interface Line { pid: string; price: number; cost: number; qty: number; manual?: boolean; }
+interface Line { pid: string; price: number; cost: number; qty: number; manual?: boolean; supplierTag?: string; }
 
 const SALE_PAGE_SIZE = 4;
 
@@ -113,10 +113,13 @@ export function SaleRegistration({ onClose }: { onClose: () => void }) {
     // Si el mismo producto ya está en la venta, se suma una unidad más a esa
     // línea en vez de agregar otra instancia; los precios automáticos se
     // recalculan (las promos dependen del total de la categoría).
+    const cat = (p.category || '').trim();
+    const cp = cat && s.categoryPricing ? s.categoryPricing[cat] : undefined;
+    const suppTag = (p.supplierTag || cp?.supplierTag || '').trim() || undefined;
     const i = lines.findIndex((l) => l.pid === p.id);
     const next = i >= 0
       ? recomputeAutos(lines.map((l, n) => n === i ? { ...l, qty: l.qty + 1 } : l))
-      : recomputeAutos([...lines, { pid: p.id, price: p.price, cost: p.cost ?? 0, qty: 1 }]);
+      : recomputeAutos([...lines, { pid: p.id, price: p.price, cost: p.cost ?? 0, qty: 1, supplierTag: suppTag }]);
     setLines(next);
     persist({ lines: next }, false);
   }
@@ -152,7 +155,7 @@ export function SaleRegistration({ onClose }: { onClose: () => void }) {
 
   function register() {
     const emp = (employee.trim() || syncName());
-    const items = lines.filter((l) => l.qty > 0).map((l) => ({ productId: l.pid, promotionId: null, qty: l.qty, price: l.price, cost: l.cost }));
+    const items = lines.filter((l) => l.qty > 0).map((l) => ({ productId: l.pid, promotionId: null, qty: l.qty, price: l.price, cost: l.cost, supplierTag: l.supplierTag }));
     if (!items.length) return toast('Añade al menos un producto con cantidad mayor a cero.');
     const now = new Date();
     replace((x) => {

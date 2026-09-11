@@ -157,7 +157,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
   const setTab = useCallback((tab: Tab) => {
     replace((d) => {
-      if (tab === 'inicio') { d.summaryPage = 0; d.summaryDate = null; d.summaryMonth = null; }
+      if (tab === 'inicio') { d.summaryPage = 0; d.dayPage = 0; d.summaryDate = null; d.summaryMonth = null; }
       d.tab = tab;
       if (tab !== 'inicio') d.editingSaleId = null;
     });

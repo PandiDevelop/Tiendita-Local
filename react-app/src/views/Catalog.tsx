@@ -182,13 +182,16 @@ export function Catalog() {
     <div className="panel">
       <div className="panel-head"><div><h2>Catálogo de productos</h2><p className="muted">Productos por categoría con su precio y existencias. Arrastra ⠿ para ordenar.</p></div></div>
       <div className="cat-actions">
-        <button className="button primary" onClick={addCategory}>＋ Añadir categoría</button>
-        <div className="cat-divider"></div>
-        <button className="button primary" onClick={() => setModal('newProduct')}>＋ Añadir producto</button>
-        <button className="button outline" disabled={!s.products.length} onClick={() => setBookOpen(true)}><StorefrontIcon size={16} /> Ver catálogo virtual</button>
-        <div className="panel-search">
-          <input type="search" inputMode="search" placeholder="Buscar producto…" value={query} onChange={(e) => setQuery(e.target.value)} />
-          {searching && <button type="button" className="panel-search-clear" title="Limpiar búsqueda" onClick={() => setQuery('')}>×</button>}
+        <div className="cat-actions-row">
+          <button className="button primary" onClick={addCategory}>＋ Categoría</button>
+          <button className="button primary" onClick={() => setModal('newProduct')}>＋ Producto</button>
+        </div>
+        <div className="cat-actions-row">
+          <div className="panel-search" style={{ flex: 1, margin: 0 }}>
+            <input type="search" inputMode="search" placeholder="Buscar producto…" value={query} onChange={(e) => setQuery(e.target.value)} />
+            {searching && <button type="button" className="panel-search-clear" title="Limpiar búsqueda" onClick={() => setQuery('')}>×</button>}
+          </div>
+          <button className="button outline" disabled={!s.products.length} onClick={() => setBookOpen(true)} style={{ whiteSpace: 'nowrap' }}><StorefrontIcon size={16} /> Ver catálogo</button>
         </div>
       </div>
       {searching && <p className="muted panel-search-info">{foundCount} resultado{foundCount === 1 ? '' : 's'} para «{esc(query.trim())}».</p>}

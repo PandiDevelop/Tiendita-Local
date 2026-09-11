@@ -1,9 +1,9 @@
 import { useState } from 'react';
 import type { PointerEvent as ReactPointerEvent } from 'react';
 import { useStore } from '../store';
-import { DEFAULT_PRODUCT_IMAGE, esc, inventorySold, adoptInvLog, syncName, groupedByCategory, storeCats, reorderCategoryProducts, shortTag, productTags } from '../lib/core';
+import { DEFAULT_PRODUCT_IMAGE, esc, inventorySold, adoptInvLog, syncName, groupedByCategory, storeCats, reorderCategoryProducts, shortTag, productTags, recordSupplierPrice } from '../lib/core';
 import { customConfirm } from '../lib/dialog';
-import { GearMenu, Image, Modal, PencilIcon, TruckIcon } from '../ui';
+import { GearMenu, Image, Modal, PencilIcon, CargoIcon } from '../ui';
 import { notifyStorePush } from '../lib/push';
 import { CategoryModal } from './CategoryModal';
 import type { Product } from '../types';
@@ -12,7 +12,7 @@ import type { Product } from '../types';
 // se pueda borrar; se interpreta como numero (0 si esta vacio) al guardar.
 // who es quien hace el cambio (igual que el empleado en Registrar venta):
 // arranca con el nombre configurado del dispositivo, pero se puede editar.
-interface QtyPopup { p: Product; qty: string; who: string; }
+interface QtyPopup { p: Product; qty: string; who: string; cost: string; }
 
 function parseQty(v: string): number {
   const n = Math.round(Number(v));
@@ -130,12 +130,15 @@ export function Inventory() {
 
   // Lápiz: fijar la cantidad exacta (sin proveedor).
   function openEdit(p: Product) {
-    setEdit({ p, qty: String(cur(p)), who: syncName() });
+    setEdit({ p, qty: String(cur(p)), who: syncName(), cost: '' });
   }
 
   // Cargamento: añadir un lote nuevo con distribuidor.
   function openCargo(p: Product) {
-    setCargo({ p, qty: '', who: syncName() });
+    const cat = (p.category || '').trim();
+    const cp = cat && s.categoryPricing ? s.categoryPricing[cat] : undefined;
+    setCargo({ p, qty: '', who: syncName(), cost: cp && cp.cost != null ? String(cp.cost) : '' });
+    setCargoSupplier(cp?.supplier || '');
   }
 
   function saveEdit() {
@@ -156,9 +159,17 @@ export function Inventory() {
     if (!cargo) return;
     const q = parseQty(cargo.qty);
     if (q <= 0) return toast('Escribe una cantidad mayor a 0.');
+    const cst = Math.round(Number(cargo.cost));
+    const cost = Number.isFinite(cst) && cst >= 0 ? cst : 0;
+    let tag = '';
+    const sup = cargoSupplier.trim();
     replace((x) => {
       const st = x.stores.find((y) => y.id === s.id)!;
-      adoptInvLog(st, cargo.p.id, q, cargoSupplier, cargo.who);
+      adoptInvLog(st, cargo.p.id, q, sup, cargo.who, tag);
+      const cat = (cargo.p.category || '').trim();
+      if (sup && cat && st.categoryPricing && st.categoryPricing[cat]) {
+        tag = recordSupplierPrice(st, cat, sup, cost);
+      }
     });
     if (s.syncKey) notifyStorePush(s.syncKey, syncName() + ' recibió un cargamento', (cargo.p.name || 'Producto') + ' · ' + q + (q === 1 ? ' unidad' : ' unidades'), 'cargamento');
     toast('Cargamento registrado.');
@@ -245,7 +256,7 @@ export function Inventory() {
                                     <button className="qty-btn" title="Restar 1" onClick={() => bump(p, -1)}>−</button>
                                     <button className="icon-btn" title="Editar cantidad exacta" onClick={() => openEdit(p)}><PencilIcon size={14} /></button>
                                     <button className="qty-btn" title="Sumar 1" onClick={() => bump(p, 1)}>+</button>
-                                    <button className="inv-cargo" title="Nuevo cargamento" onClick={() => openCargo(p)}><TruckIcon size={16} /></button>
+                                    <button className="inv-cargo" title="Nuevo cargamento" onClick={() => openCargo(p)}><CargoIcon size={16} /></button>
                                   </div>
                                 </td>
                               </tr>
@@ -309,7 +320,11 @@ export function Inventory() {
             <p className="muted">Llega ahora y se suma a las existencias.</p>
           </div>
           <div className="field"><label>Distribuidor / proveedor</label>
-            <input maxLength={60} placeholder="Ej. Distribuidora del Sur" value={cargoSupplier} onChange={(e) => setCargoSupplier(e.target.value)} />
+            <input maxLength={60} placeholder="Ej. Distribuidora del Sur" value={cargoSupplier} onChange={(e) => setCargoSupplier(e.target.value)} onFocus={(e) => e.target.select()} />
+          </div>
+          <div className="field"><label>Costo del lote <span className="muted">(opcional)</span></label>
+            <input min={0} type="number" inputMode="decimal" placeholder="0" value={cargo.cost} onChange={(e) => setCargo({ ...cargo, cost: e.target.value })} onFocus={(e) => e.target.select()} />
+            <p className="muted">Se guarda como historial de precio de la categoría.</p>
           </div>
           <div className="field"><label>Quién recibe el cargamento</label>
             <input maxLength={40} placeholder="Tu nombre" value={cargo.who} onChange={(e) => setCargo({ ...cargo, who: e.target.value })} />

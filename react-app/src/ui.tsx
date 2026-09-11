@@ -99,7 +99,7 @@ export function Modal({ onClose, children, backdropClose = true, modalClassName 
     document.addEventListener('keydown', onKey);
     return () => document.removeEventListener('keydown', onKey);
   }, [onClose]);
-  // El botón atrás del celular cierra este modal antes de salir de la app.
+  useEffect(() => { document.body.style.overflow = 'hidden'; return () => { document.body.style.overflow = ''; }; }, []);
   useEffect(() => pushOverlay(onClose), [onClose]);
   return (
     <div className="modal-backdrop" onClick={(e) => { if (backdropClose && e.target === e.currentTarget) onClose(); }}>
@@ -325,7 +325,7 @@ export function StorefrontIcon({ size = 40 }: { size?: number }) {
 }
 
 // Camion: registrar un nuevo cargamento/entrada de inventario.
-export function TruckIcon({ size = 16 }: { size?: number }) {
+export function CargoIcon({ size = 16 }: { size?: number }) {
   return (
     <svg viewBox="0 0 24 24" width={size} height={size} fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
       <path d="M2.5 6.5h11v10h-11z" />

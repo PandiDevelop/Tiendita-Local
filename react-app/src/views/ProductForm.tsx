@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useStore } from '../store';
-import { DEFAULT_PRODUCT_IMAGE, DEFAULT_PRODUCT_TAG, esc, compressImage, storeCats, adoptInvLog, setCategoryPricing, insertCatSorted, toEditablePromos, fromEditablePromos, uid, syncClientId, syncName, productTags } from '../lib/core';
+import { DEFAULT_PRODUCT_IMAGE, DEFAULT_PRODUCT_TAG, esc, compressImage, storeCats, adoptInvLog, setCategoryPricing, insertCatSorted, toEditablePromos, fromEditablePromos, uid, syncClientId, syncName, productTags, nextSuppTag, recordSupplierPrice } from '../lib/core';
 import { notifyStorePush } from '../lib/push';
 import type { EditablePromo } from '../lib/core';
 import { ImagePicker, Modal, CategorySuggest } from '../ui';
@@ -15,6 +15,7 @@ export function ProductForm({ editingId, onClose }: { editingId?: string; onClos
   const [name, setName] = useState(p?.name || '');
   const [price, setPrice] = useState(p?.price != null ? String(p.price) : '');
   const [cost, setCost] = useState(p?.cost != null ? String(p.cost) : '');
+  const [supplier, setSupplier] = useState(p?.supplier || '');
   const [image, setImage] = useState(p?.image || '');
   const [qty, setQty] = useState('');
   const [promos, setPromos] = useState<EditablePromo[]>(toEditablePromos(p?.promos));
@@ -47,6 +48,7 @@ export function ProductForm({ editingId, onClose }: { editingId?: string; onClos
     const pr = Number(price);
     const costTxt = cost.trim();
     const cst = costTxt === '' ? 0 : Number(costTxt);
+    const sup = supplier.trim();
     if (!nm) return toast('Escribe el nombre del producto.');
     if (!Number.isFinite(pr) || pr < 0) return toast('Añade un precio válido.');
     if (!Number.isFinite(cst) || cst < 0) return toast('Añade un costo válido.');
@@ -64,15 +66,19 @@ export function ProductForm({ editingId, onClose }: { editingId?: string; onClos
       const catHasNoOtherProducts = !!catVal && !st.products.some((x) => (x.category || '').trim() === catVal && x.id !== editingId);
       const shouldSeedPricing = catHasNoPricing && catHasNoOtherProducts;
       if (catVal) insertCatSorted(st, catVal);
-      if (shouldSeedPricing) setCategoryPricing(st, catVal, pr, cst, promoList);
+      if (shouldSeedPricing) setCategoryPricing(st, catVal, pr, cst, promoList, sup || undefined);
       const tagList = tags.map((t) => t.trim()).filter(Boolean).slice(0, 3);
       const tagsVal = tagList.length ? tagList : !editingId ? [DEFAULT_PRODUCT_TAG] : [];
       const tag0 = tagsVal[0];
+      const prodTag = sup ? nextSuppTag(st, sup) : undefined;
       if (editingId) {
         const t = st.products.find((x) => x.id === editingId);
-        if (t) Object.assign(t, { name: nm, price: pr, cost: cst, image: image || DEFAULT_PRODUCT_IMAGE, promos: promoList, category: catVal, tags: tagsVal, tag: tag0 || undefined });
+        if (t) Object.assign(t, { name: nm, price: pr, cost: cst, image: image || DEFAULT_PRODUCT_IMAGE, promos: promoList, category: catVal, tags: tagsVal, tag: tag0 || undefined, supplier: sup || undefined, supplierTag: prodTag });
       } else {
-        st.products.push({ id: uid(), by: syncClientId(), name: nm, price: pr, cost: cst, image: image || DEFAULT_PRODUCT_IMAGE, promos: promoList, category: catVal, tags: tagsVal, tag: tag0 || undefined });
+        st.products.push({ id: uid(), by: syncClientId(), name: nm, price: pr, cost: cst, image: image || DEFAULT_PRODUCT_IMAGE, promos: promoList, category: catVal, tags: tagsVal, tag: tag0 || undefined, supplier: sup || undefined, supplierTag: prodTag });
+      }
+      if (sup && catVal && !shouldSeedPricing && st.categoryPricing && st.categoryPricing[catVal]) {
+        recordSupplierPrice(st, catVal, sup, cst);
       }
       if (!editingId && qty.trim() !== '') {
         const q = Math.round(Number(qty));
@@ -101,6 +107,7 @@ export function ProductForm({ editingId, onClose }: { editingId?: string; onClos
               const cp = s.categoryPricing[c];
               setPrice(String(cp.price));
               setCost(cp.cost != null ? String(cp.cost) : '');
+              setSupplier(cp.supplier || '');
               setPromos(toEditablePromos(cp.promos));
             }
           }}
@@ -142,6 +149,10 @@ export function ProductForm({ editingId, onClose }: { editingId?: string; onClos
       <div className="field"><label>Costo del producto <span className="muted">(opcional)</span></label>
         <input min={0} type="number" placeholder="0" value={cost} onChange={(e) => setCost(e.target.value)} />
         <p className="muted">Lo que te cuesta. Se usa para la ganancia.</p>
+      </div>
+      <div className="field"><label>Proveedor <span className="muted">(opcional)</span></label>
+        <input maxLength={40} placeholder="Ej. Ceres" value={supplier} onChange={(e) => setSupplier(e.target.value)} onFocus={(e) => e.target.select()} />
+        <p className="muted">Quién surte el producto. Su tag corto se suma al guardar.</p>
       </div>
       <div className="field"><label>Imagen del producto</label>
         <ImagePicker id="product-image" src={image || DEFAULT_PRODUCT_IMAGE} cls="image-preview product-preview" hint="Foto o logo opcional del producto." onFile={onFile} />
