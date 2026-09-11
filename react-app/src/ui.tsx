@@ -356,6 +356,98 @@ export function UndoIcon({ size = 14 }: { size?: number }) {
   );
 }
 
+// Iconos de navegación y del resumen del inicio (antes eran emojis: se veían
+// distintos según el dispositivo/fuente). Mismo trazo que los demás iconos.
+
+// Casita: pestaña "Inicio".
+export function HomeIcon({ size = 16 }: { size?: number }) {
+  return (
+    <svg viewBox="0 0 24 24" width={size} height={size} fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M4 10.5 12 4l8 6.5" />
+      <path d="M6 9.5V20h12V9.5" />
+      <path d="M10 20v-4.2h4V20" />
+    </svg>
+  );
+}
+
+// Grafica de linea en tendencia: pestaña "Ganancias".
+export function ChartIcon({ size = 16 }: { size?: number }) {
+  return (
+    <svg viewBox="0 0 24 24" width={size} height={size} fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M4 19.5h16" />
+      <path d="M5.5 15l4-4.5 3.5 2 5.5-6.5" />
+      <path d="M18.5 6h-3.2M18.5 6v3.2" />
+    </svg>
+  );
+}
+
+// Calendario: pestaña "Eventos".
+export function CalendarIcon({ size = 16 }: { size?: number }) {
+  return (
+    <svg viewBox="0 0 24 24" width={size} height={size} fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <rect x="4" y="5" width="16" height="15.5" rx="2.5" />
+      <path d="M4 10h16M8.2 2.8V6M15.8 2.8V6" />
+    </svg>
+  );
+}
+
+// Retícula de productos (bento): pestaña "Catálogo".
+export function CatalogIcon({ size = 16 }: { size?: number }) {
+  return (
+    <svg viewBox="0 0 24 24" width={size} height={size} fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <rect x="4" y="4" width="6.4" height="6.4" rx="1.6" />
+      <rect x="13.6" y="4" width="6.4" height="6.4" rx="1.6" />
+      <rect x="4" y="13.6" width="6.4" height="6.4" rx="1.6" />
+      <rect x="13.6" y="13.6" width="6.4" height="6.4" rx="1.6" />
+    </svg>
+  );
+}
+
+// Caja: pestaña "Inventario".
+export function BoxIcon({ size = 16 }: { size?: number }) {
+  return (
+    <svg viewBox="0 0 24 24" width={size} height={size} fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M4 7.5 12 3.5l8 4v9l-8 4-8-4z" />
+      <path d="M4 7.5l8 4 8-4M12 11.5v9" />
+    </svg>
+  );
+}
+
+// Dos personas (equipo): pestaña "Empleados".
+export function TeamIcon({ size = 16 }: { size?: number }) {
+  return (
+    <svg viewBox="0 0 24 24" width={size} height={size} fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <circle cx="9.5" cy="8.5" r="3.1" />
+      <path d="M4.5 19.3v-.7a4.2 4.2 0 0 1 4.2-4.2h1.6a4.2 4.2 0 0 1 4.2 4.2v.7" />
+      <circle cx="16.2" cy="9.6" r="2.3" />
+      <path d="M15.6 14.6a3.4 3.4 0 0 1 4.6 0 2.9 2.9 0 0 1 1 2.2v2.3" />
+    </svg>
+  );
+}
+
+// Carrito: "Unidades" del resumen del inicio.
+export function CartIcon({ size = 18 }: { size?: number }) {
+  return (
+    <svg viewBox="0 0 24 24" width={size} height={size} fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M3 4.5h2l2.2 9.6a1.4 1.4 0 0 0 1.4 1.1h7.1a1.4 1.4 0 0 0 1.4-1.1l1.5-6.6H6.2" />
+      <circle cx="9.4" cy="19" r="1.6" />
+      <circle cx="16.8" cy="19" r="1.6" />
+    </svg>
+  );
+}
+
+// Pila de monedas: "Total producido" del resumen del inicio.
+export function CashIcon({ size = 18 }: { size?: number }) {
+  return (
+    <svg viewBox="0 0 24 24" width={size} height={size} fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <ellipse cx="12" cy="7" rx="6" ry="2.6" />
+      <path d="M6 7v5a6 6 0 0 0 12 0V7" />
+      <ellipse cx="12" cy="12" rx="6" ry="2.6" />
+      <ellipse cx="12" cy="16.8" rx="6" ry="2.6" />
+    </svg>
+  );
+}
+
 // Menú desplegable de la tuerca: Editar y Eliminar (productos y categorías).
 // Se renderiza en un portal pegado al body y con posición fija, así que se
 // SUPERPONE a las demás cajas (nunca lo corta una tabla o tarjeta con

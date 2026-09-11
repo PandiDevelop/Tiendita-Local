@@ -1,6 +1,6 @@
 import { useStore } from '../store';
 import { money, formatDate, today, total, priceFor, esc } from '../lib/core';
-import { ChevronIcon } from '../ui';
+import { BoxIcon, CartIcon, CashIcon, ChevronIcon } from '../ui';
 import type { SaleItem } from '../types';
 
 import type { Store as IStore } from '../types';
@@ -50,10 +50,12 @@ export function Dashboard() {
   return (
     <>
       <div className="sale-cta-row"><button className="button primary sale-cta" onClick={() => setModal('sale')}>＋ Registrar venta</button></div>
-      <div className="grid profit-grid">
-        <div className="card stat stat-h"><div className="stat-icon">📦</div><div className="captioned-stat"><div>Productos</div><div className="value">{s.products.length}</div></div></div>
-        <div className="card stat stat-h"><div className="stat-icon">🛒</div><div className="captioned-stat"><div>Unidades</div><div className="value">{units}</div><div className="small">{formatDate(selected)}</div></div></div>
-        <div className="card stat accent stat-h"><div className="stat-icon">💰</div><div className="captioned-stat"><div>Total producido</div><div className="value">{money(revenue)}</div><div className="small">{formatDate(selected)}</div></div></div>
+      <div className="panel sum-panel">
+        <div className="sum-cells">
+          <div className="sum-cell"><div className="sum-ico"><BoxIcon size={18} /></div><div className="sum-title">Productos</div><div className="sum-val">{s.products.length}</div></div>
+          <div className="sum-cell"><div className="sum-ico"><CartIcon size={18} /></div><div className="sum-title">Unidades</div><div className="sum-val">{units}</div><div className="sum-sub">{formatDate(selected)}</div></div>
+          <div className="sum-cell"><div className="sum-ico"><CashIcon size={18} /></div><div className="sum-title">Total producido</div><div className="sum-val">{money(revenue)}</div><div className="sum-sub">{formatDate(selected)}</div></div>
+        </div>
       </div>
       <div className="panel">
         <div className="panel-head"><div><h2>Resumen por día</h2><p className="muted">Lo vendido por día.</p></div></div>

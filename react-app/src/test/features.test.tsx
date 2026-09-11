@@ -293,13 +293,12 @@ describe('Ganancias: íconos SVG en vez de emoji, ícono antes que texto', () =>
     const store = makeStore();
     const { container } = render(<TestProvider initialState={makeState(store)}><Profit /></TestProvider>);
 
-    const cards = container.querySelectorAll('.card.stat');
-    expect(cards.length).toBeGreaterThan(0);
-    cards.forEach((card) => {
-      const first = card.firstElementChild;
-      expect(first).toHaveClass('stat-icon');
+    const cells = container.querySelectorAll('.sum-cell');
+    expect(cells.length).toBeGreaterThan(0);
+    cells.forEach((cell) => {
+      const first = cell.firstElementChild;
+      expect(first).toHaveClass('sum-ico');
       expect(first?.querySelector('svg')).toBeTruthy();
-      expect(first?.nextElementSibling).toHaveClass('captioned-stat');
     });
 
     // eslint-disable-next-line no-misleading-character-class

@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { useStore, type ModalKind } from './store';
 import { canManageTeam, esc } from './lib/core';
 import { useAppVersion } from './lib/appVersion';
@@ -8,7 +8,7 @@ import { preloadDevAssets } from './lib/preload';
 import { resolvedTheme } from './lib/theme';
 
 preloadDevAssets();
-import { DialogHost, GearIcon, ImageLightboxHost, Logo, MenuIcon, StoreImage, Toast } from './ui';
+import { BoxIcon, CalendarIcon, CatalogIcon, ChartIcon, DialogHost, GearIcon, HomeIcon, ImageLightboxHost, Logo, MenuIcon, NoteTextIcon, StoreImage, TeamIcon, Toast } from './ui';
 import { DevThemesModal } from './views/DevThemes';
 import { Dashboard } from './views/Dashboard';
 import { Catalog } from './views/Catalog';
@@ -29,6 +29,52 @@ const DEV_LOGO: Record<string, string> = {
   pandi: './logo-pandi.png',
 };
 
+// Iconos propios (SVG) de cada pestaña, mismo trazo del resto de la app: antes
+// las pestañas no tenían icono o algunos aparecían como emojis según el sistema.
+const TAB_ICONS: Record<string, ReactNode> = {
+  inicio: <HomeIcon size={15} />,
+  ganancias: <ChartIcon size={15} />,
+  eventos: <CalendarIcon size={15} />,
+  productos: <CatalogIcon size={15} />,
+  inventario: <BoxIcon size={15} />,
+  empleados: <TeamIcon size={15} />,
+  notas: <NoteTextIcon size={15} />,
+};
+
+// El scroll con el mouse/pantalla táctil del trackpad puede moverse "en
+// diagonal" (vertical y horizontal a la vez) cuando hay secciones que
+// desbordan en ambos ejes. Aquí se bloquea eso: cada gesto se deja en un solo
+// eje, el de la dirección dominante, así el contenido solo se desplaza en
+// vertical o en horizontal, nunca en diagonal.
+function useScrollAxisLock() {
+  useEffect(() => {
+    const onWheel = (e: WheelEvent) => {
+      if (!e.cancelable || e.ctrlKey) return;
+      const dx = e.deltaX, dy = e.deltaY;
+      if (dx === 0 || dy === 0) return;
+      e.preventDefault();
+      const vertical = Math.abs(dy) >= Math.abs(dx);
+      (e.target as Element | null)?.dispatchEvent(new WheelEvent('wheel', {
+        deltaX: vertical ? 0 : dx,
+        deltaY: vertical ? dy : 0,
+        deltaZ: e.deltaZ,
+        deltaMode: e.deltaMode,
+        clientX: e.clientX,
+        clientY: e.clientY,
+        screenX: e.screenX,
+        screenY: e.screenY,
+        button: e.button,
+        buttons: e.buttons,
+        shiftKey: e.shiftKey,
+        bubbles: true,
+        cancelable: true,
+      }));
+    };
+    window.addEventListener('wheel', onWheel, { passive: false });
+    return () => window.removeEventListener('wheel', onWheel);
+  }, []);
+}
+
 function MenuClock() {
   const [now, setNow] = useState(() => new Date());
   useEffect(() => {
@@ -39,13 +85,14 @@ function MenuClock() {
     <>
       <span className="clock-date">{now.toLocaleDateString('es', { weekday: 'long', day: 'numeric', month: 'long' })}</span>
       <span className="clock-sep" aria-hidden="true" />
-      <span className="clock-time">{now.toLocaleTimeString('es', { hour: '2-digit', minute: '2-digit', second: '2-digit' })}</span>
+      <span className="clock-time">{now.toLocaleTimeString('es', { hour: '2-digit', minute: '2-digit' })}</span>
     </>
   );
 }
 
 export function App() {
   const { state, store, setTab, replace, modal, modalArg, setModal, toastMsg } = useStore();
+  useScrollAxisLock();
   const s = store;
   const version = useAppVersion();
   const [menuOpen, setMenuOpen] = useState(false);
@@ -185,7 +232,7 @@ export function App() {
             .filter(([id]) => id !== 'empleados' || owner)
             .filter(([id]) => id !== 'eventos' || owner)
             .map(([id, l]) => (
-              <button key={id} className={'tab ' + (state.tab === id ? 'active' : '')} onClick={() => setTab(id)}>{l}</button>
+              <button key={id} className={'tab ' + (state.tab === id ? 'active' : '')} onClick={() => setTab(id)}>{TAB_ICONS[id]}{l}</button>
             ))}
         </nav>
         {state.tab === 'inicio' && <Dashboard />}
