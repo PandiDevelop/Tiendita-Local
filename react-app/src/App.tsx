@@ -225,7 +225,7 @@ export function App() {
             <div style={{ minWidth: 0 }}><div className="eyebrow">Tu tienda</div><h1>{esc(s.name)}</h1></div>
             <div className="store-actions">
               <button className="button secondary" onClick={() => setModal('editStore')}><GearIcon size={15} /> Editar tienda</button>
-              {devTheme && <><span className="store-quote">Mereces lo que sueñas</span><img className="store-quote-logo" src={DEV_LOGO[t]} alt="" /></>}
+              {devTheme && <><span className="store-quote">Mereces lo que sueñas</span><span className="store-quote-logo" style={{background:'var(--brand)', WebkitMaskImage:`url(${DEV_LOGO[t]})`, WebkitMaskSize:'contain', WebkitMaskRepeat:'no-repeat', WebkitMaskPosition:'center', maskImage:`url(${DEV_LOGO[t]})`, maskSize:'contain', maskRepeat:'no-repeat', maskPosition:'center'}} /></>}
             </div>
           </div>
         </div>
