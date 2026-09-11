@@ -23,6 +23,14 @@ import { SettingsModal } from './views/SettingsModal';
 import { ProductForm } from './views/ProductForm';
 import { SaleRegistration } from './views/SaleRegistration';
 
+// Logo del tema oculto que se muestra bajo la frase "Mereces lo que sueñas":
+// el de Owen-chan, Crisdeku o Pandi según el tema elegido.
+const DEV_LOGO: Record<string, string> = {
+  owen: './logo-owen.png',
+  crisdeku: './logo-crisdeku.png',
+  pandi: './logo-pandi.png',
+};
+
 // Iconos propios (SVG) de cada pestaña, mismo trazo del resto de la app: antes
 // las pestañas no tenían icono o algunos aparecían como emojis según el sistema.
 const TAB_ICONS: Record<string, ReactNode> = {
@@ -217,7 +225,7 @@ export function App() {
             <div style={{ minWidth: 0 }}><div className="eyebrow">Tu tienda</div><h1>{esc(s.name)}</h1></div>
             <div className="store-actions">
               <button className="button secondary" onClick={() => setModal('editStore')}><GearIcon size={15} /> Editar tienda</button>
-              {devTheme && <><span className="store-quote">Mereces lo que sueñas</span><Logo size={28} /></>}
+              {devTheme && <><span className="store-quote">Mereces lo que sueñas</span><img className="store-quote-logo" src={DEV_LOGO[t]} alt="" /></>}
             </div>
           </div>
         </div>
