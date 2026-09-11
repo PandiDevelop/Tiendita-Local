@@ -3,7 +3,7 @@ import type { PointerEvent as ReactPointerEvent } from 'react';
 import { useStore } from '../store';
 import { money, esc, inventorySold, reorderCategoryProducts, groupedByCategory, storeCats, shortTag, promoText, DEFAULT_PRODUCT_IMAGE, productTags } from '../lib/core';
 import { customConfirm } from '../lib/dialog';
-import { GearMenu, Image, StorefrontIcon } from '../ui';
+import { GearMenu, Image, StorefrontIcon, CaretIcon } from '../ui';
 import { CategoryModal } from './CategoryModal';
 import { VirtualCatalog } from './VirtualCatalog';
 import type { Product } from '../types';
@@ -208,7 +208,7 @@ export function Catalog() {
                 <button type="button" className="icon-btn drag-handle" title="Arrastrar para reordenar" onPointerDown={(e) => startCatDrag(e, g.name)}>⠿</button>
               )}
               <button className="cat-head-toggle" onClick={() => toggleCat(g.name)}>
-                <span className="cat-caret">{open ? '▾' : '▸'}</span><b>{esc(g.name)}</b>
+                <span className="cat-caret"><CaretIcon size={15} deg={open ? 0 : -90} /></span><b>{esc(g.name)}</b>
                 <span className="muted">· {g.list.length} producto{g.list.length === 1 ? '' : 's'}</span>
               </button>
               {editable && (

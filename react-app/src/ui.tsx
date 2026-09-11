@@ -303,6 +303,19 @@ export function ChevronIcon({ size = 14, dir = 'left' }: { size?: number; dir?: 
   );
 }
 
+// Caret de menus desplegables: punta de flecha ANCHA y rellena, mucho mas
+// clara que el caracter de texto ▾/▸. Apunta hacia abajo por defecto y `deg`
+// la rota al estado que corresponda (abierta hacia arriba en los dropdowns,
+// hacia la derecha en los encabezados de categoria cerrados). La transicion
+// la pone el CSS sobre el svg (ver .dd-caret svg / .cat-caret svg).
+export function CaretIcon({ size = 13, deg = 0 }: { size?: number; deg?: number }) {
+  return (
+    <svg viewBox="0 0 24 24" width={size} height={size} fill="currentColor" stroke="currentColor" strokeWidth="1.6" strokeLinejoin="round" aria-hidden="true" style={deg ? { transform: 'rotate(' + deg + 'deg)' } : undefined}>
+      <path d="M12 16.9 6 9.3h12Z" />
+    </svg>
+  );
+}
+
 // Tres lineas: abrir el menu lateral en movil.
 export function MenuIcon({ size = 20 }: { size?: number }) {
   return (

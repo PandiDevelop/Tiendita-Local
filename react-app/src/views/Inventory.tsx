@@ -3,7 +3,7 @@ import type { PointerEvent as ReactPointerEvent } from 'react';
 import { useStore } from '../store';
 import { DEFAULT_PRODUCT_IMAGE, esc, inventorySold, adoptInvLog, syncName, groupedByCategory, storeCats, reorderCategoryProducts, shortTag, productTags, recordSupplierPrice, getSupplierCost, getSupplierInfo, setSupplierCost, ensureCost, money } from '../lib/core';
 import { customConfirm } from '../lib/dialog';
-import { GearMenu, Image, Modal, PencilIcon, CargoIcon } from '../ui';
+import { GearMenu, Image, Modal, PencilIcon, CargoIcon, CaretIcon } from '../ui';
 import { notifyStorePush } from '../lib/push';
 import { CategoryModal } from './CategoryModal';
 import type { Product } from '../types';
@@ -276,7 +276,7 @@ export function Inventory() {
                 <div className="cat-group" key={g.name}>
                   <div className="cat-head">
                     <button className="cat-head-toggle" onClick={() => toggleCat(g.name)}>
-                      <span className="cat-caret">{open ? '▾' : '▸'}</span><b>{esc(g.name)}</b>
+                      <span className="cat-caret"><CaretIcon size={15} deg={open ? 0 : -90} /></span><b>{esc(g.name)}</b>
                       <span className="muted">· {g.list.length} producto{g.list.length === 1 ? '' : 's'}</span>
                     </button>
                     {editable && (

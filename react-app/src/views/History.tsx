@@ -1,5 +1,5 @@
 import { Fragment, ReactNode, useState } from 'react';
-import { DownloadIcon } from '../ui';
+import { DownloadIcon, CaretIcon } from '../ui';
 import { useStore } from '../store';
 import { money, esc, total, shortDate, saleUnits, priceFor, formatDate, catLabel, findActivePromo } from '../lib/core';
 import type { Sale } from '../types';
@@ -102,7 +102,7 @@ export function History() {
                 <Fragment key={x.id}>
                   <tr>
                     <td>{shortDate(x.date)}</td><td>{esc(x.time || '—')}{x.event ? <span className="prod-tag ev-tag" title={esc(x.event)}>Evento: {esc(x.event)}</span> : null}</td><td>{saleUnits(x)}</td><td><b>{money(total(x, s))}</b></td><td>{esc(x.employee || '—')}</td>
-                    <td><button className="icon-btn sale-details-btn" title="Ver detalles" onClick={() => setOpen((o) => ({ ...o, [x.id]: !o[x.id] }))}><span className="sale-caret">▾</span></button></td>
+                    <td><button className="icon-btn sale-details-btn" title="Ver detalles" onClick={() => setOpen((o) => ({ ...o, [x.id]: !o[x.id] }))}><span className="sale-caret"><CaretIcon size={14} /></span></button></td>
                   </tr>
                   {open[x.id] && <tr className="sale-detail-row"><td colSpan={6}><div className="sale-detail"><div className="sale-detail-title">Detalles de la venta</div>{details(x).length ? details(x) : <p className="muted" style={{ margin: 0 }}>Sin productos en esta venta.</p>}</div></td></tr>}
                 </Fragment>

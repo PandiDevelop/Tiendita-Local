@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { CaretIcon } from './ui';
 
 export interface DropdownItem {
   v: string;
@@ -13,7 +14,7 @@ export function Dropdown({ value, ph, items, onPick }: { value: string; ph?: str
     <div className={'dd' + (open ? ' open' : '')} data-v={cur ? String(cur.v) : ''}>
       <button type="button" className="dd-btn" onClick={() => setOpen((o) => !o)}>
         <span className="dd-value">{cur ? cur.label : (ph || 'Seleccionar…')}</span>
-        <span className="dd-caret">▾</span>
+        <span className="dd-caret"><CaretIcon size={13} deg={open ? 180 : 0} /></span>
       </button>
       <div className="dd-options">
         <div className="dd-pop">
