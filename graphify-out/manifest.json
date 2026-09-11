@@ -6,15 +6,15 @@
     "semantic_hash": ""
   },
   "react-app/public/sw.js": {
-    "mtime": 1789123868.6877632,
-    "seen": 1789123911.0620928,
-    "ast_hash": "2f7df1a8890b290f036142bcd783ae06",
+    "mtime": 1789124468.4760458,
+    "seen": 1789124516.2369862,
+    "ast_hash": "e08113f39af4358eb57a8f870df3874e",
     "semantic_hash": ""
   },
   "react-app/src/App.tsx": {
-    "mtime": 1789123865.2414527,
-    "seen": 1789123911.0620928,
-    "ast_hash": "b94eb6d3a60cfe7d916181373e3105a2",
+    "mtime": 1789124408.61748,
+    "seen": 1789124516.2369862,
+    "ast_hash": "dbd4716b913bcfd18a64d63886f3fbbc",
     "semantic_hash": ""
   },
   "react-app/src/Dropdown.tsx": {
@@ -24,9 +24,9 @@
     "semantic_hash": ""
   },
   "react-app/src/lib/core.ts": {
-    "mtime": 1789123868.5241394,
-    "seen": 1789123911.0620928,
-    "ast_hash": "251928e0a82f8afab975ddaee1877ccf",
+    "mtime": 1789124467.639991,
+    "seen": 1789124516.2369862,
+    "ast_hash": "06b08b119a91f4c129fc94032ed9d7cc",
     "semantic_hash": ""
   },
   "react-app/src/lib/dialog.ts": {
@@ -162,9 +162,9 @@
     "semantic_hash": ""
   },
   "sw.js": {
-    "mtime": 1789123868.6877632,
-    "seen": 1789123911.0620928,
-    "ast_hash": "2f7df1a8890b290f036142bcd783ae06",
+    "mtime": 1789124468.4760458,
+    "seen": 1789124516.2369862,
+    "ast_hash": "e08113f39af4358eb57a8f870df3874e",
     "semantic_hash": ""
   },
   "AGENTS.md": {
@@ -180,9 +180,9 @@
     "semantic_hash": ""
   },
   "index.html": {
-    "mtime": 1789123883.1105492,
-    "seen": 1789123911.0620928,
-    "ast_hash": "52e85e9f1f5294ba14737712f9ce7093",
+    "mtime": 1789124479.6069021,
+    "seen": 1789124516.2369862,
+    "ast_hash": "ce1a8e434d6590877b57dafdd0506e27",
     "semantic_hash": ""
   },
   "react-app/index.html": {
