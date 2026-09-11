@@ -173,7 +173,7 @@ describe('Tag opcional del producto', () => {
     addTag(container, 'vitrina');
     addTag(container, 'nuevo');
     // Con 3 tags el campo para agregar desaparece: el cuarto nunca entra.
-    expect(container.querySelectorAll('.tag-editor input').length).toBe(0);
+    expect(document.querySelectorAll('.tag-editor input').length).toBe(0);
     fireEvent.click(screen.getByRole('button', { name: 'Guardar producto' }));
     const saved = stateRef.current.stores[0].products[0];
     // El cuarto tag no entra: quedan solo 3, y el campo que agregaba tags
@@ -186,7 +186,7 @@ describe('Tag opcional del producto', () => {
     const custom = makeProduct({ name: 'Con tag', tags: ['promo', 'verano'] });
     const store = makeStore({ products: [custom] });
     const { container, stateRef } = setup(store, custom.id);
-    const chips = Array.from(container.querySelectorAll('.tag-chip'));
+    const chips = Array.from(document.querySelectorAll('.tag-chip'));
     expect(chips).toHaveLength(2);
     expect(chips[0].textContent).toContain('promo');
     // Quitar el primer tag y agregar uno nuevo.
@@ -204,7 +204,7 @@ describe('Tag opcional del producto', () => {
     const { container } = setup(store, bare.id);
     const tagInput = fieldControl(/Etiqueta \/ tag/, container);
     expect(tagInput.value).toBe('');
-    expect(container.querySelectorAll('.tag-chip')).toHaveLength(0);
+    expect(document.querySelectorAll('.tag-chip')).toHaveLength(0);
   });
 });
 

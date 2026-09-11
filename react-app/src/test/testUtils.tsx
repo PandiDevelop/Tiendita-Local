@@ -98,8 +98,8 @@ export function makeProduct(overrides: Partial<Product> = {}): Product {
 // <input>/<select> en si; los compuestos (p.ej. SuggestInput con su lista de
 // sugerencias) envuelven el <input> en un contenedor, asi que se baja a buscar
 // el control real dentro.
-export function fieldControl(labelText: string | RegExp, container: HTMLElement): HTMLInputElement {
-  const labels = Array.from(container.querySelectorAll('label'));
+export function fieldControl(labelText: string | RegExp, _container: HTMLElement): HTMLInputElement {
+  const labels = Array.from(document.querySelectorAll('label'));
   const label = labels.find((l) => (typeof labelText === 'string' ? l.textContent?.trim().startsWith(labelText) : labelText.test(l.textContent || '')));
   if (!label) throw new Error('No se encontro la etiqueta: ' + labelText);
   const el = label.nextElementSibling as HTMLElement | null;

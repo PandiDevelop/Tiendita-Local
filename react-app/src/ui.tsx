@@ -93,6 +93,10 @@ export function ImagePicker({ id, src, cls, hint, onFile, disabled }: { id: stri
   );
 }
 
+// Las ventanas (editar producto, cargamento, categorias...) se pintan por
+// encima de TODO: se montan en document.body (React portal), fuera del flujo
+// y de cualquier caja/contenedor que pudiera recortarlas o encerrarlas, y la
+// capa .modal-backdrop tapa toda la pantalla (posicion fija con z-index alto).
 export function Modal({ onClose, children, backdropClose = true, modalClassName }: { onClose: () => void; children: ReactNode; backdropClose?: boolean; modalClassName?: string }) {
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose(); };
@@ -101,10 +105,11 @@ export function Modal({ onClose, children, backdropClose = true, modalClassName 
   }, [onClose]);
   useEffect(() => { document.body.style.overflow = 'hidden'; return () => { document.body.style.overflow = ''; }; }, []);
   useEffect(() => pushOverlay(onClose), [onClose]);
-  return (
+  return createPortal(
     <div className="modal-backdrop" onClick={(e) => { if (backdropClose && e.target === e.currentTarget) onClose(); }}>
       <div className={'modal' + (modalClassName ? ' ' + modalClassName : '')}>{children}</div>
-    </div>
+    </div>,
+    document.body,
   );
 }
 

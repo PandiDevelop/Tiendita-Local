@@ -2,6 +2,11 @@ import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import { viteSingleFile } from 'vite-plugin-singlefile';
 
+// La version se inyecta en el sw.js copiado a dist/ (via marcador
+// __APP_VERSION__) con el script scripts/inject-sw-version.mjs, que corre al
+// final del build (tsc && vite build && node ...). La unica fuente de la
+// version es src/lib/version.ts.
+
 export default defineConfig({
   // La app se abre con doble clic sobre index.html (sin servidor: ver
   // README, "No requiere instalación ni conexión"). Un <script type="module"
