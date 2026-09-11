@@ -1,4 +1,4 @@
-const CACHE = 'mi-tiendita-1.10.16';
+const CACHE = 'mi-tiendita-1.10.17';
 // Version que se muestra en la app (el pie del menu y Opciones): sale de la
 // MISMA cadena de cache, asi el numero que ve el usuario es literalmente el
 // que identifica el despliegue activo (ver react-app/src/lib/appVersion.ts).
@@ -10,7 +10,7 @@ const APP_VERSION = CACHE.replace('mi-tiendita-', '');
 self.addEventListener('install', event => {
   self.skipWaiting();
   event.waitUntil(caches.open(CACHE).then(cache => {
-    const assets = ['./index.html', './logo-owen.png', './logo-crisdeku.png', './logo-pandi.png', './pattern-owen.jpg', './pattern-cris.png', './pattern-pandi.png']
+    const assets = ['./index.html', './logo-owen.png', './logo-crisdeku.png', './logo-pandi.png', './pattern-owen.jpg', './pattern-cris.jpg', './pattern-pandi.jpg']
       .map(url => new Request(url, { cache: 'reload' }));
     return Promise.allSettled(assets.map(a => cache.add(a)));
   }));

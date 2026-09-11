@@ -57,8 +57,25 @@ function ensureSystemListener(): void {
   systemListenerReady = true;
 }
 
+// Color de la barra del navegador (theme-color) por tema: cada tema pinta la
+// franja de Chrome (arriba/abajo de la pantalla) con su fondo en vez del
+// morado del manifest original, para que se vea del color de la app.
+const THEME_CHROME: Record<string, string> = {
+  light: '#faf8fc',
+  dark: '#17131f',
+  rosa: '#fff2f9',
+  menta: '#f1fbf6',
+  owen: '#fff3ef',
+  crisdeku: '#f0e6ff',
+  pandi: '#0a1730',
+};
+
 export function applyTheme(): void {
-  document.documentElement.dataset.theme = resolvedTheme();
+  const t = resolvedTheme();
+  document.documentElement.dataset.theme = t;
+  const meta = document.querySelector('meta[name="theme-color"]')
+    || document.head.appendChild(Object.assign(document.createElement('meta'), { name: 'theme-color' }));
+  meta.setAttribute('content', THEME_CHROME[t]);
   ensureSystemListener();
   try { window.dispatchEvent(new Event('mt-theme-changed')); } catch { /* ignorar */ }
 }

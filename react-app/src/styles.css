@@ -513,16 +513,16 @@ td.cat-bar .product-name .prod-tag{margin-left:auto;flex:0 0 auto}
 }
 :root[data-theme="owen"]{
 	--ink:#3a1d18;--muted:#a5746a;--line:#f7d4ce;--cream:#fff3ef;--lav:#ffe0d8;--lilac:#e88274;--peach:#ffcfc3;--mint:#fdece0;--pink:#fbd2cc;--red:#c9332a;
-	--brand:#cf3b2e;--brand-deep:#a2251b;--brand-2:#e8695c;--brand-line:#f0a394;--surface:#fff9f6;--surface-alpha:50%;--blur:3px;--shadow:0 12px 35px rgba(162,37,27,.12)
+	--brand:#cf3b2e;--brand-deep:#a2251b;--brand-2:#e8695c;--brand-line:#f0a394;--surface:#fff9f6;--surface-alpha:65%;--blur:3px;--shadow:0 12px 35px rgba(162,37,27,.12)
 }
 :root[data-theme="owen"] body{background-color:var(--cream);background-image:url("./pattern-owen.jpg");background-size:360px 540px;background-repeat:repeat;background-attachment:fixed}
 :root[data-theme="crisdeku"]{
 	--ink:#2a1b40;--muted:#8a79a8;--line:#e2d8f2;--cream:#f7f2ff;--lav:#ebdfff;--lilac:#b79bd9;--peach:#efe4ff;--mint:#eee4fb;--pink:#f3ebff;--red:#a06ec2;
-	--brand:#8f5fc9;--brand-deep:#6b3fa0;--brand-2:#a985d6;--brand-line:#c9afe8;--surface:#ffffff;--surface-alpha:50%;--blur:3px;--shadow:0 12px 35px rgba(107,63,160,.10)
+	--brand:#8f5fc9;--brand-deep:#6b3fa0;--brand-2:#a985d6;--brand-line:#c9afe8;--surface:#ffffff;--surface-alpha:65%;--blur:3px;--shadow:0 12px 35px rgba(107,63,160,.10)
 }
-:root[data-theme="crisdeku"] body{background-color:#f0e6ff;background-image:url("./pattern-cris.png");background-size:600px 400px;background-repeat:repeat;background-attachment:fixed}
+:root[data-theme="crisdeku"] body{background-color:#f0e6ff;background-image:url("./pattern-cris.jpg");background-size:600px 400px;background-repeat:repeat;background-attachment:fixed}
 /* Patina translucida de la app: los paneles, pestañas y tarjetas dejan ver el
-   fondo del tema (50% de opacidad en los temas ocultos Owen, Crisdeku y Pandi;
+   fondo del tema (65% de opacidad en los temas ocultos Owen, Crisdeku y Pandi;
    60% en el resto, con un leve desenfoque para que el texto siga legible). El
    menu lateral, la franja del titulo (topline) y los modales (incluido
    DevThemes) se mantienen opacos. */
@@ -531,9 +531,9 @@ td.cat-bar .product-name .prod-tag{margin-left:auto;flex:0 0 auto}
 .panel,.store-title,.tabs,.inv-modes,.cat-group{backdrop-filter:blur(var(--blur))}
 :root[data-theme="pandi"]{
 	--ink:#ddf6ff;--muted:#86b4d9;--line:#274a73;--cream:#0a1730;--lav:#122a4d;--lilac:#58a8d8;--peach:#163252;--mint:#12303f;--pink:#20304d;--red:#7fe0ff;
-	--brand:#38c8f0;--brand-deep:#a5e4ff;--brand-2:#5dd4f5;--brand-line:#3e7fb0;--surface:#112a4d;--surface-alpha:50%;--blur:3px;--shadow:0 12px 35px rgba(0,0,0,.45);background:#0a1730;color:var(--ink)
+	--brand:#38c8f0;--brand-deep:#a5e4ff;--brand-2:#5dd4f5;--brand-line:#3e7fb0;--surface:#112a4d;--surface-alpha:65%;--blur:3px;--shadow:0 12px 35px rgba(0,0,0,.45);background:#0a1730;color:var(--ink)
 }
-:root[data-theme="pandi"] body{background-color:#0a1730;background-attachment:fixed;background-image:url("./pattern-pandi.png");background-size:600px 400px;background-repeat:repeat}
+:root[data-theme="pandi"] body{background-color:#0a1730;background-attachment:fixed;background-image:url("./pattern-pandi.jpg");background-size:600px 400px;background-repeat:repeat}
 :root[data-theme="pandi"] .button.secondary{background:#0f2240;color:var(--ink);border-color:var(--line)}
 :root[data-theme="pandi"] .sync-join{background:#1a3a66;color:#ddf6ff;border-color:var(--brand-line)}
 :root[data-theme="pandi"] .dd-opt.on{background:var(--lav);border-color:var(--lilac)}

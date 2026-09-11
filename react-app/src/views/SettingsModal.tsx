@@ -11,6 +11,7 @@ import { themePref, setThemePref, themeOptions } from '../lib/theme';
 import type { ThemePref } from '../lib/theme';
 import { exportNotesArchiveTxt, exportObjectivesArchiveTxt } from '../lib/notesArchive';
 import { DownloadIcon, Modal } from '../ui';
+import { useInstallable } from '../lib/install';
 import type { NotifCat } from '../types';
 
 const NOTIF_CAT_LABELS: { cat: NotifCat; label: string }[] = [
@@ -44,6 +45,7 @@ export function SettingsModal({ onClose }: { onClose: () => void }) {
   const [pushState, setPushState] = useState<string | null>(null);
   const [theme, setTheme] = useState<ThemePref>(themePref());
   const [deleted, setDeleted] = useState(deletedStores());
+  const installable = useInstallable();
 
   async function restoreOne(rec: DeletedStoreRecord) {
     if (busy) return;
@@ -179,6 +181,22 @@ export function SettingsModal({ onClose }: { onClose: () => void }) {
           ) : (
             <p className="muted">Los registros de notas y objetivos están disponibles para el dueño y los administradores.</p>
           )}
+        </div>
+      </div>
+
+      <div className="settings-block">
+        <div className="label">App instalada</div>
+        <div className="field">
+          {installable.installed ? (
+            <p className="muted">Ya está instalada como app en este dispositivo.</p>
+          ) : installable.ready ? (
+            <div className="settings-row">
+              <button className="button outline" onClick={installable.install} title="Instala la app en el escritorio o pantalla de inicio para que abra como una app normal, sin la barra del navegador">Instalar la app</button>
+            </div>
+          ) : (
+            <p className="muted">Abre el sitio en Chrome y toca "Instalar app" (icono de monitor con flecha en la barra): queda como una app normal, con su icono en el escritorio y la pantalla de inicio.</p>
+          )}
+          <p className="muted">Instalada abre en su propia ventana, sin la barra de Chrome.</p>
         </div>
       </div>
 

@@ -8,8 +8,8 @@ const ASSETS = [
   './logo-crisdeku.png',
   './logo-pandi.png',
   './pattern-owen.jpg',
-  './pattern-cris.png',
-  './pattern-pandi.png',
+  './pattern-cris.jpg',
+  './pattern-pandi.jpg',
 ];
 
 export function preloadDevAssets(): void {
