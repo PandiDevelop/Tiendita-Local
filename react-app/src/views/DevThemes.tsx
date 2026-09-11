@@ -43,15 +43,17 @@ export function DevThemesModal({ onClose }: { onClose: () => void }) {
   const [active, setActive] = useState<ThemePref>(themePref());
   const [stage, setStage] = useState<Stage>(unlocked ? 'icons' : 'password');
   const [leaving, setLeaving] = useState(false);
+  const [growing, setGrowing] = useState(false);
 
   // Secuencia: primero el totem con los logos uno a uno (Owen arriba,
-  // Crisdeku al medio, Pandi abajo), luego los logos se desvanecen y la caja
-  // se expande con el menu.
+  // Crisdeku al medio, Pandi abajo), luego la caja se expande hasta el tamaño
+  // del menú, los logos se desvanecen y por último aparece la selección.
   useEffect(() => {
     if (!unlocked) return;
-    const a = window.setTimeout(() => setLeaving(true), 1550);
-    const b = window.setTimeout(() => setStage('menu'), 2050);
-    return () => { window.clearTimeout(a); window.clearTimeout(b); };
+    const a = window.setTimeout(() => setGrowing(true), 1500);
+    const b = window.setTimeout(() => setLeaving(true), 2100);
+    const c = window.setTimeout(() => setStage('menu'), 2600);
+    return () => { window.clearTimeout(a); window.clearTimeout(b); window.clearTimeout(c); };
   }, [unlocked]);
 
   function tryPass() {
@@ -76,7 +78,7 @@ export function DevThemesModal({ onClose }: { onClose: () => void }) {
           </div>
         </>
       ) : (
-        <div className={'dev-stage ' + (stage === 'menu' ? 'menu' : 'icons')} role="status">
+        <div className={'dev-stage ' + (stage === 'menu' ? 'menu' : 'icons') + (stage === 'icons' && growing ? ' grow' : '')} role="status">
           {stage === 'icons' && (
             <div className={'dev-icons' + (leaving ? ' out' : '')}>
               {DEV_THEMES.map((t, i) => (
