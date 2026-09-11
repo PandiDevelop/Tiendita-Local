@@ -6,9 +6,9 @@
     "semantic_hash": ""
   },
   "react-app/public/sw.js": {
-    "mtime": 1789091523.8990881,
-    "seen": 1789091573.8008773,
-    "ast_hash": "1c4b350a7c85123f5956162a23cea612",
+    "mtime": 1789096250.19937,
+    "seen": 1789096488.2397108,
+    "ast_hash": "df4a724983b8fad5c56c71758abb9c8f",
     "semantic_hash": ""
   },
   "react-app/src/App.tsx": {
@@ -24,9 +24,9 @@
     "semantic_hash": ""
   },
   "react-app/src/lib/core.ts": {
-    "mtime": 1789091523.2345605,
-    "seen": 1789091573.8008773,
-    "ast_hash": "fdd340aef412a6839d939e5e6d4aedf6",
+    "mtime": 1789096250.1103585,
+    "seen": 1789096488.2397108,
+    "ast_hash": "7bc44835ec2ede739884aa85c89212ce",
     "semantic_hash": ""
   },
   "react-app/src/lib/dialog.ts": {
@@ -162,9 +162,9 @@
     "semantic_hash": ""
   },
   "sw.js": {
-    "mtime": 1789091523.8990881,
-    "seen": 1789091573.8008773,
-    "ast_hash": "1c4b350a7c85123f5956162a23cea612",
+    "mtime": 1789096250.19937,
+    "seen": 1789096488.2397108,
+    "ast_hash": "df4a724983b8fad5c56c71758abb9c8f",
     "semantic_hash": ""
   },
   "AGENTS.md": {
@@ -180,9 +180,9 @@
     "semantic_hash": ""
   },
   "index.html": {
-    "mtime": 1789091545.5295787,
-    "seen": 1789091573.8008773,
-    "ast_hash": "d92db50d4db22e58f68729eee3c2cadd",
+    "mtime": 1789096429.5487387,
+    "seen": 1789096488.2397108,
+    "ast_hash": "8d0cea271690b64dedd7fb05371a4564",
     "semantic_hash": ""
   },
   "react-app/index.html": {
@@ -426,9 +426,21 @@
     "semantic_hash": ""
   },
   "react-app/src/lib/preload.ts": {
-    "mtime": 1789067158.8482106,
-    "seen": 1789067401.316585,
-    "ast_hash": "b263bca9f8da39a12baad19b6fa79d84",
+    "mtime": 1789096094.0356047,
+    "seen": 1789096488.2397108,
+    "ast_hash": "8f7b5c8b195449e9ca0bfb23e0982245",
+    "semantic_hash": ""
+  },
+  "pattern-crisdeku.svg": {
+    "mtime": 1789095703.9883053,
+    "seen": 1789096488.2397108,
+    "ast_hash": "83cfde5a82a17aafb0b52bdad1e88102",
+    "semantic_hash": ""
+  },
+  "react-app/public/pattern-crisdeku.svg": {
+    "mtime": 1789095703.9883053,
+    "seen": 1789096488.2397108,
+    "ast_hash": "83cfde5a82a17aafb0b52bdad1e88102",
     "semantic_hash": ""
   }
 }
