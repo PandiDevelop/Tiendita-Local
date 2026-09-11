@@ -1,10 +1,10 @@
 import { useEffect, useRef, useState } from 'react';
 import { useStore } from '../store';
-import { DEFAULT_PRODUCT_IMAGE, activeEvent, catLabel, findActivePromo, money, saleCatsOf, saleUnitPrice, shortTag, sortProducts, syncClientId, syncName, today, uid, productTags } from '../lib/core';
+import { DEFAULT_PRODUCT_IMAGE, activeEvent, catLabel, findActivePromo, money, saleCatsOf, saleUnitPrice, shortTag, sortProducts, syncClientId, syncName, today, uid, productTags, ensureCost } from '../lib/core';
 import { notifyStorePush } from '../lib/push';
 import { Dropdown } from '../Dropdown';
 import { CloseIcon, Image, Modal, ReceiptIcon, UndoIcon } from '../ui';
-import type { Product } from '../types';
+import type { Product, SaleItem } from '../types';
 
 interface Line { pid: string; price: number; cost: number; qty: number; manual?: boolean; supplierTag?: string; }
 
@@ -155,14 +155,25 @@ export function SaleRegistration({ onClose }: { onClose: () => void }) {
 
   function register() {
     const emp = (employee.trim() || syncName());
-    const items = lines.filter((l) => l.qty > 0).map((l) => ({ productId: l.pid, promotionId: null, qty: l.qty, price: l.price, cost: l.cost, supplierTag: l.supplierTag }));
-    if (!items.length) return toast('Añade al menos un producto con cantidad mayor a cero.');
     const now = new Date();
+    let items: SaleItem[] = [];
     replace((x) => {
       const st = x.stores.find((y) => y.id === s.id)!;
+      // Cada linea deja fijo el costo que se uso en ESTA venta: el respaldo
+      // `cost` (igual que antes) y la referencia `costId` al registro unico del
+      // historial (producto+proveedor+costo). Si el costo actual cambia
+      // despues, la venta vieja sigue calculando con el de su momento.
+      items = lines.filter((l) => l.qty > 0).map((l) => {
+        const p = st.products.find((y) => y.id === l.pid);
+        const sup = (p?.supplier || '').trim();
+        const cid = sup && l.cost > 0 ? ensureCost(st, l.pid, sup, l.cost, p?.supplierTag) : '';
+        return { productId: l.pid, promotionId: null, qty: l.qty, price: l.price, cost: l.cost, supplierTag: l.supplierTag, costId: cid };
+      });
+      if (!items.length) return;
       st.sales.push({ id: uid(), by: syncClientId(), date: today(), time: now.toTimeString().slice(0, 5), employee: emp, items: JSON.parse(JSON.stringify(items)), closed: false, event: ev ? ev.name : undefined });
       x.saleDraft = null;
     });
+    if (!items.length) return toast('Añade al menos un producto con cantidad mayor a cero.');
     if (s.syncKey) notifyStorePush(s.syncKey, syncName() + ' registró una venta', items.length + (items.length === 1 ? ' producto' : ' productos') + ' · ' + money(total), 'venta');
     onClose();
     toast('Venta registrada.');

@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import type { PointerEvent as ReactPointerEvent } from 'react';
 import { useStore } from '../store';
-import { DEFAULT_PRODUCT_IMAGE, esc, inventorySold, adoptInvLog, syncName, groupedByCategory, storeCats, reorderCategoryProducts, shortTag, productTags, recordSupplierPrice, getSupplierCost, getSupplierInfo, setSupplierCost } from '../lib/core';
+import { DEFAULT_PRODUCT_IMAGE, esc, inventorySold, adoptInvLog, syncName, groupedByCategory, storeCats, reorderCategoryProducts, shortTag, productTags, recordSupplierPrice, getSupplierCost, getSupplierInfo, setSupplierCost, ensureCost, money } from '../lib/core';
 import { customConfirm } from '../lib/dialog';
 import { GearMenu, Image, Modal, PencilIcon, CargoIcon } from '../ui';
 import { notifyStorePush } from '../lib/push';
@@ -192,15 +192,19 @@ export function Inventory() {
       const prod = st.products.find((y) => y.id === cargo.p.id);
       const cat = (cargo.p.category || '').trim();
       let tag = '';
+      let costId = '';
       if (sup) {
         // Si no se escribió costo se conserva el último registrado del
         // distribuidor (no se borra con un cargamento sin costo).
         tag = setSupplierCost(st, sup, cost > 0 ? cost : getSupplierCost(st, sup) ?? 0);
         if (cat && cost > 0) recordSupplierPrice(st, cat, sup, cost);
         if (prod) { prod.supplier = sup; prod.supplierTag = tag; }
+        // Registro unico del historial (producto+proveedor+costo): si ese costo
+        // ya se uso antes se reutiliza; el lote queda referenciado a el.
+        if (cost > 0) costId = ensureCost(st, cargo.p.id, sup, cost, tag);
       }
       if (prod && cost > 0) prod.cost = cost;
-      adoptInvLog(st, cargo.p.id, q, sup, cargo.who, tag);
+      adoptInvLog(st, cargo.p.id, q, sup, cargo.who, tag, cost > 0 ? cost : undefined, costId);
     });
     if (s.syncKey) notifyStorePush(s.syncKey, syncName() + ' recibió un cargamento', (cargo.p.name || 'Producto') + ' · ' + q + (q === 1 ? ' unidad' : ' unidades'), 'cargamento');
     toast('Cargamento registrado.');
@@ -240,13 +244,14 @@ export function Inventory() {
       {mode === 'log' ? (
         log.length ? (
           <div className="notes-list inv-list">
-            <table><thead><tr><th>Fecha</th><th>Hora</th><th>Producto</th><th>Cantidad</th><th>Quién</th><th>Proveedor</th></tr></thead><tbody>
+            <table><thead><tr><th>Fecha</th><th>Hora</th><th>Producto</th><th>Cantidad</th><th>Costo</th><th>Quién</th><th>Proveedor</th></tr></thead><tbody>
               {log.map((e) => (
                 <tr key={e.id}>
                   <td className="muted">{esc(e.date || '—')}</td>
                   <td className="muted">{esc(e.time || '—')}</td>
                   <td className="product-name">{esc(nameOf(e.productId))}</td>
                   <td className={'inv-qty ' + (e.qty >= 0 ? 'add' : 'sub')}>{e.qty >= 0 ? '+' + e.qty : e.qty}</td>
+                  <td className="muted">{e.cost != null ? money(e.cost) + (e.qty > 0 ? ' · ' + money(e.cost * e.qty) : '') : '—'}</td>
                   <td className="muted">{esc(e.byName || 'Alguien')}</td>
                   <td className="muted">{e.supplier ? esc(e.supplier) : '—'}</td>
                 </tr>
@@ -371,7 +376,7 @@ export function Inventory() {
           </div>
           <div className="field"><label>Costo por unidad <span className="muted">(opcional)</span></label>
             <input min={0} type="number" inputMode="decimal" placeholder="0" value={cargo.cost} onChange={(e) => setCargo({ ...cargo, cost: e.target.value })} onFocus={(e) => e.target.select()} />
-            <p className="muted">Lo que cobra el distribuidor por unidad. Se guarda en su registro y se rellena solo la próxima vez.</p>
+            <p className="muted">Lo que cobra el distribuidor por unidad. Se guarda en su registro y en el historial de costos del producto (si ya se usó ese costo, se reutiliza).</p>
           </div>
           <div className="field"><label>Quién recibe el cargamento</label>
             <input maxLength={40} placeholder="Tu nombre" value={cargo.who} onChange={(e) => setCargo({ ...cargo, who: e.target.value })} />

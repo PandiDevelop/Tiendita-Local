@@ -1,7 +1,7 @@
 import { initializeApp, FirebaseApp } from 'firebase/app';
 import { initializeFirestore, Firestore, collection, doc, query, onSnapshot, setDoc, getDoc, getDocs, deleteDoc, deleteField } from 'firebase/firestore';
 import type { AppState, Member, NotifCat, Product, Role, Sale, Store } from '../types';
-import { toProductsArr, toSalesArr, toInvLogArr, toNoteLogArr, toNoteBoardArr, mergeItems, mergeInvLog, mergeNoteLog, syncKeyOf, syncClientId, syncName, normalizeStore, DEFAULT_STORE_IMAGE, uid, isNoteDeleted, markNoteDeleted, deletedNoteIdsOf, clearDeletedNotes, rememberDeletedStore, deletedStores, forgetDeletedStore } from './core';
+import { toProductsArr, toSalesArr, toInvLogArr, toNoteLogArr, toNoteBoardArr, mergeItems, mergeInvLog, mergeNoteLog, syncKeyOf, syncClientId, syncName, normalizeStore, DEFAULT_STORE_IMAGE, uid, isNoteDeleted, markNoteDeleted, deletedNoteIdsOf, clearDeletedNotes, rememberDeletedStore, deletedStores, forgetDeletedStore, toCostArr, mergeCostEntries } from './core';
 import type { DeletedStoreRecord } from './core';
 import { customAlert, customConfirm } from './dialog';
 
@@ -282,6 +282,7 @@ export function createSync(
       notes: s.notes || '', noteLog: s.noteLog || [],
       invLog: s.invLog || [], inventory: s.inventory || {},
       noteBoard: s.noteBoard || [],
+      costs: s.costs || [],
     }));
   }
 
@@ -358,6 +359,13 @@ export function createSync(
       const invLogPatch: Record<string, unknown> = {};
       (s.invLog || []).forEach((e) => { if (e && e.id) invLogPatch[e.id] = e; });
       if (Object.keys(invLogPatch).length) main.invLog = invLogPatch;
+      // Historial de costos por producto+proveedor: igual que invLog, mapa por
+      // id para que el merge:true de Firestore fusione por clave. La unicidad
+      // por combinacion (producto+proveedor+costo) se refuerza al recibir, en
+      // mergeCostEntries, para que nunca quede un combo duplicado en el estado.
+      const costsPatch: Record<string, unknown> = {};
+      (s.costs || []).forEach((e) => { if (e && e.id) costsPatch[e.id] = e; });
+      if (Object.keys(costsPatch).length) main.costs = costsPatch;
       // Tablero de notas: igual que noteLog/invLog, mapa por id para que el
       // merge:true de Firestore fusione por clave sin pisar las notas de
       // otro dispositivo. A diferencia de esos dos (que nunca se borran),
@@ -640,6 +648,7 @@ export function applyRemote(getState: () => AppState, mutate: (fn: (d: AppState)
     }
     st.noteLog = mergeNoteLog(st.noteLog, toNoteLogArr(remote.noteLog));
     st.invLog = mergeInvLog(st.invLog, toInvLogArr(remote.invLog));
+    st.costs = mergeCostEntries(st.costs, toCostArr(remote.costs));
     // Tablero de notas: a diferencia de mergeNoteLog (union pura, nunca
     // borra), aca se reconcilia con lo que este cliente ya vio antes
     // (seenNoteIds) para que una nota borrada en otro dispositivo tambien

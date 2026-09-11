@@ -1,4 +1,4 @@
-import type { AppState, CategoryPricing, InventoryLogEntry, Note, NoteChecklistItem, NoteEntry, NoteReply, Product, Promo, Role, Sale, SaleItem, Store, StoreEvent } from '../types';
+import type { AppState, CategoryPricing, CostEntry, InventoryLogEntry, Note, NoteChecklistItem, NoteEntry, NoteReply, Product, Promo, Role, Sale, SaleItem, Store, StoreEvent } from '../types';
 
 export const KEY = 'mi-tiendita-v1';
 export const CLIENT_KEY = 'mi-tiendita-client';
@@ -7,7 +7,7 @@ export const USER_KEY = 'mi-tiendita-user';
 // Version de arranque/mostrada hasta que el service worker responde con la
 // suya (ver lib/appVersion.ts): la real es la del sw.js activo (public/sw.js),
 // que refleja lo que esta desplegado de verdad.
-export const APP_VERSION = '1.10.17';
+export const APP_VERSION = '1.10.18';
 
 const DEFAULT_STORE_SVG = encodeURIComponent(
   '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 160"><rect width="160" height="160" rx="34" fill="#f3eaff"/><path d="M29 67h102v61H29z" fill="#fffdf9" stroke="#9b7dcc" stroke-width="5"/><path d="M22 66 36 38h88l14 28z" fill="#ffc7b5" stroke="#9b7dcc" stroke-width="5"/><path d="M40 39h15v28H40zm32 0h16v28H72zm33 0h15v28h-15z" fill="#fffaf3"/><path d="M45 83h30v45H45z" fill="#b9e4d0" stroke="#9b7dcc" stroke-width="4"/><path d="M91 83h24v20H91z" fill="#fff0a9" stroke="#9b7dcc" stroke-width="4"/></svg>',
@@ -175,6 +175,7 @@ export function normalizeStore(store: Store): Store {
   store.notes = typeof store.notes === 'string' ? store.notes : '';
   store.noteLog = Array.isArray(store.noteLog) ? store.noteLog : [];
   store.invLog = Array.isArray(store.invLog) ? store.invLog : [];
+  store.costs = dedupeCosts(store.costs);
   store.noteBoard = Array.isArray(store.noteBoard) ? store.noteBoard : [];
   // Las notas del tablero siempre deben tener kind y createdAt bien puestos:
   // con eso el orden que muestra la vista (por createdAt, ver Notes.tsx) es
@@ -337,13 +338,19 @@ export interface InvLogRow extends InventoryLogEntry {
 // total por producto viaja como mapa y se une por el mayor valor. Guarda
 // quien hizo el cambio igual que en las ventas (nombre editable, con el
 // nombre configurado del dispositivo como valor por defecto).
-export function adoptInvLog(s: Store, productId: string, delta: number, supplier: string, byName?: string, supplierTag?: string): void {
+export function adoptInvLog(s: Store, productId: string, delta: number, supplier: string, byName?: string, supplierTag?: string, cost?: number, costId?: string): void {
   const d = Math.round(delta);
   if (!d) return;
   s.invLog ||= [];
   s.inventory = s.inventory || {};
   const total = Math.max(0, Math.round(s.inventory[productId] || 0) + d);
-  (s.invLog as InvLogRow[]).push({ id: uid(), productId, date: today(), time: timeNow(), qty: d, total, supplier: (supplier || '').trim(), by: syncClientId(), byName: (byName || syncName()).trim() || syncName(), supplierTag: supplierTag || '' });
+  (s.invLog as InvLogRow[]).push({
+    id: uid(), productId, date: today(), time: timeNow(), qty: d, total,
+    supplier: (supplier || '').trim(), by: syncClientId(), byName: (byName || syncName()).trim() || syncName(),
+    supplierTag: supplierTag || '',
+    cost: Number.isFinite(cost) && (cost as number) > 0 ? Math.round(cost as number) : undefined,
+    costId: costId || '',
+  });
   s.inventory[productId] = total;
 }
 
@@ -362,6 +369,80 @@ export function toInvLogArr(src: unknown): InventoryLogEntry[] {
       .map((k) => JSON.parse(JSON.stringify((src as Record<string, InventoryLogEntry>)[k])));
   }
   return [];
+}
+
+// Normaliza cualquier fuente de costos (arreglo local o mapa por id que llega
+// de Firestore) a un arreglo, como toInvLogArr. A diferencia de esa, aqui la
+// clave de unicidad es la combinacion producto + proveedor + costo: un mismo
+// combo no puede existir dos veces (ver dedupeCosts/mergeCostEntries).
+export function toCostArr(src: unknown): CostEntry[] {
+  if (Array.isArray(src)) return JSON.parse(JSON.stringify(src));
+  if (src && typeof src === 'object') {
+    return Object.keys(src as Record<string, CostEntry>)
+      .map((k) => JSON.parse(JSON.stringify((src as Record<string, CostEntry>)[k])));
+  }
+  return [];
+}
+
+// Clave unica de un costo dentro del historial: producto + proveedor
+// (normalizado, sin acentos/mayusculas) + costo. Garantiza que el MISMO combo
+// nunca exista dos veces, ni siquiera si llega desde otro dispositivo.
+export function costEntryKey(e: CostEntry): string {
+  return e.productId + '|' + (e.supplier || '') + '|' + e.cost;
+}
+
+// Normaliza y purga duplicados de un arreglo de costos: se queda con la
+// PRIMERA entrada de cada combinacion producto+proveedor+costo. Limpia campos
+// faltantes o mal escritos que pudieran haber quedado en datos viejos.
+export function dedupeCosts(list: CostEntry[] | undefined): CostEntry[] {
+  const map = new Map<string, CostEntry>();
+  (list || []).forEach((raw) => {
+    if (!raw || !raw.id || !raw.productId || !raw.supplier) return;
+    const e: CostEntry = {
+      id: raw.id,
+      productId: raw.productId,
+      supplier: (raw.supplier || '').trim(),
+      cost: Math.round(Number(raw.cost) || 0),
+      supplierTag: raw.supplierTag || '',
+      at: raw.at || '',
+    };
+    const key = costEntryKey(e);
+    if (!map.has(key)) map.set(key, e);
+  });
+  return Array.from(map.values());
+}
+
+// Union de costos entre dos dispositivos manteniendo la unicidad por
+// combinacion: si una entrada remota repite un combo ya existente se reutiliza
+// la entrada que ya estaba (prefiere el id local cuando este dispositivo ya lo
+// tenia; si no, adopta la id remota). Asi un mismo producto+proveedor+costo
+// NUNCA queda duplicado en el estado, aunque dos dispositivos lo hayan
+// registrado sin verse todavia.
+export function mergeCostEntries(a: CostEntry[] | undefined, b: CostEntry[] | undefined): CostEntry[] {
+  const byId = new Map<string, CostEntry>();
+  const byKey = new Map<string, string>();
+  (a || []).forEach((e) => {
+    if (!e || !e.id || !e.productId || !e.supplier) return;
+    const copy = JSON.parse(JSON.stringify(e));
+    byId.set(copy.id, copy);
+    byKey.set(costEntryKey(copy), copy.id);
+  });
+  (b || []).forEach((e) => {
+    if (!e || !e.id || !e.productId || !e.supplier) return;
+    const copy = JSON.parse(JSON.stringify(e));
+    const key = costEntryKey(copy);
+    const existingId = byKey.get(key);
+    if (existingId) {
+      // Mismo combo que ya estaba: actualiza la que se quedo (se prefiere la
+      // primera id, para que las operaciones que ya la referencian sigan
+      // apuntando a una entrada que existe).
+      byId.set(existingId, { ...byId.get(existingId)!, ...copy, id: existingId });
+      return;
+    }
+    byId.set(copy.id, copy);
+    byKey.set(key, copy.id);
+  });
+  return Array.from(byId.values());
 }
 
 export function toNoteLogArr(src: unknown): NoteEntry[] {
@@ -799,6 +880,41 @@ export function getSupplierInfo(s: Store, name: string): { tag: string; cost: nu
   const k = supplierKey(name);
   const info = k && s.suppliers ? s.suppliers[k] : undefined;
   return info ? { tag: info.tag, cost: info.cost } : undefined;
+}
+
+// Busca en el historial el id del costo ya registrado para ese producto +
+// proveedor + costo (si existe). La clave compuesta usa el proveedor
+// normalizado, asi el mismo nombre con acentos/mayusculas distintas coincide.
+export function findCostId(s: Store, productId: string, supplierName: string, cost: number): string {
+  if (!productId) return '';
+  const k = supplierKey(supplierName);
+  if (!k) return '';
+  const c = Math.round(Number(cost) || 0);
+  return (s.costs || []).find((e) => e.productId === productId && e.supplier === k && e.cost === c)?.id || '';
+}
+
+// Devuelve la entrada de costo por su id (si aun existe en el historial).
+export function findCostEntry(s: Store, id: string): CostEntry | undefined {
+  return (s.costs || []).find((e) => e.id === id);
+}
+
+// Registro UNICO del costo usado para un producto + proveedor: si ese combo ya
+// existe se reutiliza su id (no se crea ningun duplicado); si no, crea la
+// entrada y devuelve el id nuevo. Los cargamentos, el inventario inicial y las
+// ventas guardan ese id (costId) junto con el costo de respaldo, asi el costo
+// de una operacion vieja queda fijo aunque el proveedor cambie su precio
+// despues (ver CostEntry, InventoryLogEntry.costId y SaleItem.costId).
+export function ensureCost(s: Store, productId: string, supplierName: string, cost: number, supplierTag?: string): string {
+  if (!productId) return '';
+  const k = supplierKey(supplierName);
+  if (!k) return '';
+  const c = Math.round(Number(cost) || 0);
+  s.costs = s.costs || [];
+  const existing = s.costs.find((e) => e.productId === productId && e.supplier === k && e.cost === c);
+  if (existing) return existing.id;
+  const entry: CostEntry = { id: uid(), productId, supplier: k, cost: c, supplierTag: supplierTag || '', at: today() };
+  s.costs.push(entry);
+  return entry.id;
 }
 
 // Registra (o actualiza) el costo por unidad de un distribuidor. Reusa su tag

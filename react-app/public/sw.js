@@ -1,4 +1,4 @@
-const CACHE = 'mi-tiendita-1.10.17';
+const CACHE = 'mi-tiendita-1.10.18';
 // Version que se muestra en la app (el pie del menu y Opciones): sale de la
 // MISMA cadena de cache, asi el numero que ve el usuario es literalmente el
 // que identifica el despliegue activo (ver react-app/src/lib/appVersion.ts).

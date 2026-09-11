@@ -45,6 +45,25 @@ export interface SupplierInfo {
   at?: string;
 }
 
+// Costo concreto que se ha usado alguna vez para un producto + proveedor. El
+// historial es UNICO por combinacion (producto + proveedor + costo): si vuelve
+// un costo que ya se uso antes se reutiliza el mismo registro (ensureCost en
+// core.ts), nunca se duplica. Cada operacion (cargamento, inventario inicial,
+// venta) guarda en su entrada el id del costo que uso (costId) junto con el
+// costo como respaldo, asi el calculo historico no depende de lo que cobre el
+// proveedor hoy (ver InventoryLogEntry.costId y SaleItem.costId).
+export interface CostEntry {
+  id: string;
+  productId: string;
+  // Clave normalizada del proveedor (supplierKey en core.ts): mismo nombre con
+  // mayusculas/acentos/espacios distintos comparte registro. El nombre
+  // legible viaja en las operaciones (InventoryLogEntry.supplier).
+  supplier: string;
+  cost: number;
+  supplierTag?: string;
+  at?: string;
+}
+
 export interface Product {
   id: string;
   name: string;
@@ -86,6 +105,10 @@ export interface SaleItem {
   // asi si despues cambias el costo del producto, las ventas viejas
   // conservan su ganancia real de ese momento.
   cost?: number;
+  // Referencia al costo concreto del historial (CostEntry) que se uso en esta
+  // venta; junto con el respaldo `cost` mantiene el calculo historico estable
+  // aunque el proveedor cambie el precio.
+  costId?: string;
   supplierTag?: string;
   who?: Record<string, number>;
 }
@@ -135,6 +158,12 @@ export interface InventoryLogEntry {
   qty: number;
   supplier: string;
   supplierTag?: string;
+  // Costo por unidad que tuvo este lote/cambio y referencia al registro unico
+  // del historial (CostEntry) que lo representa. El costo se guarda como
+  // respaldo para que el calculo del lote no dependa del costo actual del
+  // producto/proveedor; costId permite volver al registro unico del historial.
+  cost?: number;
+  costId?: string;
   by?: string;
   byName?: string;
 }
@@ -244,6 +273,8 @@ export interface Store {
   noteLog: NoteEntry[];
   noteBoard: Note[];
   invLog: InventoryLogEntry[];
+  // Historial unico de costos por producto + proveedor (ver CostEntry).
+  costs?: CostEntry[];
   syncKey?: string;
   syncPin?: string;
   createdBy?: string | null;

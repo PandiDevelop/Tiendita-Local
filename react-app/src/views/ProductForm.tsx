@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useStore } from '../store';
-import { DEFAULT_PRODUCT_IMAGE, DEFAULT_PRODUCT_TAG, esc, compressImage, storeCats, adoptInvLog, setCategoryPricing, insertCatSorted, toEditablePromos, fromEditablePromos, uid, syncClientId, syncName, productTags, nextSuppTag, recordSupplierPrice, setSupplierCost } from '../lib/core';
+import { DEFAULT_PRODUCT_IMAGE, DEFAULT_PRODUCT_TAG, esc, compressImage, storeCats, adoptInvLog, setCategoryPricing, insertCatSorted, toEditablePromos, fromEditablePromos, uid, syncClientId, syncName, productTags, nextSuppTag, recordSupplierPrice, setSupplierCost, ensureCost } from '../lib/core';
 import { notifyStorePush } from '../lib/push';
 import type { EditablePromo } from '../lib/core';
 import { ImagePicker, Modal, CategorySuggest } from '../ui';
@@ -77,6 +77,12 @@ export function ProductForm({ editingId, onClose }: { editingId?: string; onClos
       } else {
         st.products.push({ id: uid(), by: syncClientId(), name: nm, price: pr, cost: cst, image: image || DEFAULT_PRODUCT_IMAGE, promos: promoList, category: catVal, tags: tagsVal, tag: tag0 || undefined, supplier: sup || undefined, supplierTag: prodTag });
       }
+      // Cada costo que se guarda en un producto (con su proveedor) queda en el
+      // historial unico de costos: reutiliza el registro si ese costo ya se
+      // uso antes, si no lo crea. El costo actual del producto puede cambiar
+      // despues sin tocar los costos viejos.
+      const prodId = editingId || (st.products.length ? st.products[st.products.length - 1].id : '');
+      const cid = sup && cst > 0 && prodId ? ensureCost(st, prodId, sup, cst, prodTag || '') : '';
       if (sup && catVal && !shouldSeedPricing && st.categoryPricing && st.categoryPricing[catVal]) {
         recordSupplierPrice(st, catVal, sup, cst);
       }
@@ -85,7 +91,7 @@ export function ProductForm({ editingId, onClose }: { editingId?: string; onClos
         if (Number.isFinite(q) && q >= 0) {
           st.inventory = st.inventory || {};
           const pid = st.products[st.products.length - 1].id;
-          adoptInvLog(st, pid, q, 'Catálogo');
+          adoptInvLog(st, pid, q, 'Catálogo', undefined, undefined, cst > 0 ? cst : undefined, cid);
         }
       }
     });

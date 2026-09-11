@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
-import type { AppState, Product, Store } from '../types';
-import { makeDraft, normalizeStore, addNote, addNoteMsg, deleteNoteMsg, adoptInvLog, sortByOrder, uid, costFor, priceFor, total, costTotal, profitTotal, setCategoryPricing, groupedByCategory, syncClientId, toggleNotePin } from '../lib/core';
+import type { AppState, Product, Store, CostEntry, SaleItem } from '../types';
+import { makeDraft, normalizeStore, addNote, addNoteMsg, deleteNoteMsg, adoptInvLog, sortByOrder, uid, costFor, priceFor, total, costTotal, profitTotal, setCategoryPricing, groupedByCategory, syncClientId, toggleNotePin, ensureCost, findCostId, mergeCostEntries } from '../lib/core';
 import { applyRemote } from '../lib/sync';
 
 vi.mock('firebase/app', () => ({ initializeApp: () => ({}) }));
@@ -323,6 +323,119 @@ describe('ganancias: costo por producto y calculo de margen', () => {
     expect(total(sale, s)).toBe(3000);
     expect(costTotal(sale, s)).toBe(1200);
     expect(profitTotal(sale, s)).toBe(1800);
+  });
+});
+
+describe('historial de costos por producto + proveedor', () => {
+  it('ensureCost crea un registro la primera vez y reutiliza el mismo combo sin duplicar', () => {
+    const s = newStore('s1');
+    const pid = addProduct(s, 'Camiseta', 20000);
+    const a = ensureCost(s, pid, 'Proveedor A', 20000);
+    const a2 = ensureCost(s, pid, 'Proveedor A', 20000);
+    expect(a).toBeTruthy();
+    expect(a2).toBe(a);
+    expect(findCostId(s, pid, 'Proveedor A', 20000)).toBe(a);
+    expect(s.costs!.length).toBe(1);
+  });
+
+  it('conserva costos distintos del mismo producto+proveedor y reutiliza el que vuelve a aparecer', () => {
+    const s = newStore('s1');
+    const pid = addProduct(s, 'Camiseta', 20000);
+    const a = ensureCost(s, pid, 'Proveedor A', 20000); // cargamento 1
+    const b = ensureCost(s, pid, 'Proveedor A', 22000); // cargamento 2
+    const c = ensureCost(s, pid, 'Proveedor A', 19000); // cargamento 3
+    const aAgain = ensureCost(s, pid, 'Proveedor A', 22000); // cargamento 4: vuelve
+    expect(new Set([a, b, c]).size).toBe(3);
+    expect(aAgain).toBe(b); // reutiliza el de $22.000, no crea otro
+    expect(s.costs!.length).toBe(3);
+  });
+
+  it('distingue claves por producto y por proveedor', () => {
+    const s = newStore('s1');
+    const cam = addProduct(s, 'Camiseta', 20000);
+    const pan = addProduct(s, 'Pan', 1000);
+    const a = ensureCost(s, cam, 'Proveedor A', 20000);
+    const b = ensureCost(s, pan, 'Proveedor A', 20000); // otro producto
+    const c = ensureCost(s, cam, 'Proveedor B', 20000); // otro proveedor
+    expect(new Set([a, b, c]).size).toBe(3);
+    expect(s.costs!.length).toBe(3);
+  });
+
+  it('normaliza el nombre del proveedor para la clave compuesta', () => {
+    const s = newStore('s1');
+    const pid = addProduct(s, 'Zapatos', 30000);
+    const a = ensureCost(s, pid, 'Distribuidora del Sur', 30000);
+    const b = ensureCost(s, pid, 'distribuidora  del  SUR', 30000);
+    expect(b).toBe(a);
+    expect(s.costs!.length).toBe(1);
+  });
+
+  it('el cargamento guarda el costo y la referencia al registro del historial', () => {
+    const s = newStore('s1');
+    const pid = addProduct(s, 'Zapatos', 30000);
+    const cid = ensureCost(s, pid, 'ABC', 35000, 'ABC');
+    adoptInvLog(s, pid, 10, 'ABC', 'Marco', 'ABC', 35000, cid);
+    expect(s.invLog[0].costId).toBe(cid);
+    expect(s.invLog[0].cost).toBe(35000);
+    expect(s.inventory[pid]).toBe(10);
+  });
+
+  it('un registrador sin costo no crea entradas en el historial', () => {
+    const s = newStore('s1');
+    const pid = addProduct(s, 'Pan', 1000);
+    adoptInvLog(s, pid, 5, '');
+    expect(s.invLog[0].cost).toBeUndefined();
+    expect(s.invLog[0].costId).toBe('');
+    expect(s.costs || []).toHaveLength(0);
+  });
+
+  it('mergeCostEntries no duplica un combo que llega desde otro dispositivo', () => {
+    const s = newStore('s1');
+    const pid = addProduct(s, 'Zapatos', 30000);
+    const mine = ensureCost(s, pid, 'ABC', 30000);
+    const remote: CostEntry[] = [{ id: 'remote-otro-id', productId: pid, supplier: 'abc', cost: 30000, at: '2026-09-11' }];
+    const merged = mergeCostEntries(s.costs, remote);
+    expect(merged.length).toBe(1);
+    expect(merged[0].id).toBe(mine); // gana la id que ya existia
+  });
+
+  it('mergeCostEntries adopta la id remota si el combo solo existe alla', () => {
+    const pid = 'p1';
+    const merged = mergeCostEntries([], [{ id: 'r1', productId: pid, supplier: 'abc', cost: 5000 }]);
+    expect(merged.length).toBe(1);
+    expect(merged[0].id).toBe('r1');
+  });
+
+  it('normalizeStore purga costos duplicados que hayan quedado por error', () => {
+    const s = normalizeStore({
+      id: 's1', name: 'T', image: '', products: [], sales: [], categories: [], inventory: {}, notes: '', noteLog: [], noteBoard: [], invLog: [],
+      costs: [
+        { id: 'x1', productId: 'p1', supplier: 'abc', cost: 5000 },
+        { id: 'x2', productId: 'p1', supplier: 'abc', cost: 5000 },
+        { id: 'x3', productId: 'p1', supplier: 'abc', cost: 9000 },
+      ],
+    } as Store);
+    expect(s.costs!.length).toBe(2);
+    expect(s.costs!.some((c) => c.cost === 5000)).toBe(true);
+    expect(s.costs!.some((c) => c.cost === 9000)).toBe(true);
+  });
+
+  it('la venta guarda costId y su costo no cambia aunque el proveedor suba despues', () => {
+    const s = newStore('s1');
+    const pid = addProduct(s, 'Zapatos', 30000);
+    const p = s.products.find((x) => x.id === pid)!;
+    p.supplier = 'ABC';
+    p.cost = 35000;
+    const cid = ensureCost(s, pid, 'ABC', 35000);
+    const item: SaleItem = { productId: pid, promotionId: null, qty: 2, price: 30000, cost: 35000, costId: cid };
+    // El proveedor sube luego a $40.000: entra en el historial sin tocar el viejo.
+    const cid2 = ensureCost(s, pid, 'ABC', 40000);
+    s.products.find((x) => x.id === pid)!.cost = 40000;
+    expect(item.costId).toBe(cid);
+    expect(cid2).not.toBe(cid);
+    expect(s.costs!.length).toBe(2);
+    // La venta vieja sigue calculando con $35.000, no con el actual.
+    expect(costFor(item, s)).toBe(35000);
   });
 });
 
