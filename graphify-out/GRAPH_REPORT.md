@@ -1,7 +1,7 @@
-# Graph Report - repo-local  (2026-09-10)
+# Graph Report - repo-local  (2026-09-11)
 
 ## Corpus Check
-- 52 files · ~138,760 words
+- 52 files · ~138,833 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
@@ -10,7 +10,7 @@
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `84a72a85`
+- Built from commit: `b20dc858`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
@@ -132,7 +132,7 @@ Nodes (19): BellIcon(), CargoIcon(), CheckboxOutlineIcon(), ChecklistIcon(), Clo
 
 ### Community 20 - "App.tsx"
 Cohesion: 0.13
-Nodes (13): DEV_LOGO, TAB_ICONS, ASSETS, preloadDevAssets(), CalendarIcon(), CatalogIcon(), ChartIcon(), GearIcon() (+5 more)
+Nodes (13): DEV_QUOTES, TAB_ICONS, ASSETS, preloadDevAssets(), CalendarIcon(), CatalogIcon(), ChartIcon(), GearIcon() (+5 more)
 
 ### Community 21 - "lightbox.ts"
 Cohesion: 0.36

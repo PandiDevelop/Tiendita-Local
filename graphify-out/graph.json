@@ -2941,7 +2941,7 @@
       "file_type": "code",
       "norm_label": "menuclock()",
       "source_file": "react-app/src/App.tsx",
-      "source_location": "L78"
+      "source_location": "L81"
     },
     {
       "id": "react_app_src_lib_preload_preloaddevassets",
@@ -4429,7 +4429,7 @@
       "file_type": "code",
       "norm_label": "app()",
       "source_file": "react-app/src/App.tsx",
-      "source_location": "L93"
+      "source_location": "L96"
     },
     {
       "id": "react_app_src_app_app_openmodal",
@@ -4441,7 +4441,7 @@
       "file_type": "code",
       "norm_label": "openmodal()",
       "source_file": "react-app/src/App.tsx",
-      "source_location": "L148"
+      "source_location": "L151"
     },
     {
       "id": "react_app_src_app_app_selectstore",
@@ -4453,7 +4453,7 @@
       "file_type": "code",
       "norm_label": "selectstore()",
       "source_file": "react-app/src/App.tsx",
-      "source_location": "L150"
+      "source_location": "L153"
     },
     {
       "id": "react_app_src_app_app_setmenu",
@@ -4465,7 +4465,7 @@
       "file_type": "code",
       "norm_label": "setmenu()",
       "source_file": "react-app/src/App.tsx",
-      "source_location": "L143"
+      "source_location": "L146"
     },
     {
       "id": "react_app_src_app_app_taplogo",
@@ -4477,7 +4477,7 @@
       "file_type": "code",
       "norm_label": "taplogo()",
       "source_file": "react-app/src/App.tsx",
-      "source_location": "L113"
+      "source_location": "L116"
     },
     {
       "id": "react_app_src_app_usescrollaxislock",
@@ -4489,7 +4489,7 @@
       "file_type": "code",
       "norm_label": "usescrollaxislock()",
       "source_file": "react-app/src/App.tsx",
-      "source_location": "L49"
+      "source_location": "L52"
     },
     {
       "id": "react_app_src_lib_deeplink_consumedeepnote",
@@ -6017,15 +6017,15 @@
       "source_location": "L1"
     },
     {
-      "id": "react_app_src_app_dev_logo",
-      "label": "DEV_LOGO",
+      "id": "react_app_src_app_dev_quotes",
+      "label": "DEV_QUOTES",
       "_origin": "ast",
       "community": 20,
       "community_name": "App.tsx",
       "file_type": "code",
-      "norm_label": "dev_logo",
+      "norm_label": "dev_quotes",
       "source_file": "react-app/src/App.tsx",
-      "source_location": "L26"
+      "source_location": "L29"
     },
     {
       "id": "react_app_src_app_tab_icons",
@@ -6036,7 +6036,7 @@
       "file_type": "code",
       "norm_label": "tab_icons",
       "source_file": "react-app/src/App.tsx",
-      "source_location": "L34"
+      "source_location": "L37"
     },
     {
       "id": "react_app_src_lib_preload",
@@ -7218,6 +7218,18 @@
     },
     {
       "source": "react_app_src_app_app",
+      "target": "react_app_src_lib_appversion_useappversion",
+      "relation": "calls",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "call",
+      "source_file": "react-app/src/App.tsx",
+      "source_location": "L100",
+      "weight": 1.0
+    },
+    {
+      "source": "react_app_src_app_app",
       "target": "react_app_src_lib_theme_resolvedtheme",
       "relation": "calls",
       "_origin": "ast",
@@ -7225,7 +7237,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "react-app/src/App.tsx",
-      "source_location": "L107",
+      "source_location": "L110",
       "weight": 1.0
     },
     {
@@ -7237,7 +7249,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "react-app/src/App.tsx",
-      "source_location": "L125",
+      "source_location": "L128",
       "weight": 1.0
     },
     {
@@ -7249,7 +7261,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "react-app/src/App.tsx",
-      "source_location": "L132",
+      "source_location": "L135",
       "weight": 1.0
     },
     {
@@ -7261,7 +7273,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "react-app/src/App.tsx",
-      "source_location": "L137",
+      "source_location": "L140",
       "weight": 1.0
     },
     {
@@ -7273,7 +7285,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "react-app/src/App.tsx",
-      "source_location": "L138",
+      "source_location": "L141",
       "weight": 1.0
     },
     {
@@ -7285,7 +7297,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "react-app/src/App.tsx",
-      "source_location": "L205",
+      "source_location": "L208",
       "weight": 1.0
     },
     {
@@ -7297,7 +7309,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "react-app/src/App.tsx",
-      "source_location": "L94",
+      "source_location": "L97",
       "weight": 1.0
     },
     {
@@ -7309,19 +7321,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "react-app/src/App.tsx",
-      "source_location": "L95",
-      "weight": 1.0
-    },
-    {
-      "source": "react_app_src_app_app",
-      "target": "react_app_src_lib_appversion_useappversion",
-      "relation": "calls",
-      "_origin": "ast",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "context": "call",
-      "source_file": "react-app/src/App.tsx",
-      "source_location": "L97",
+      "source_location": "L98",
       "weight": 1.0
     },
     {
@@ -7333,7 +7333,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "react-app/src/App.tsx",
-      "source_location": "L152",
+      "source_location": "L155",
       "weight": 1.0
     },
     {
@@ -14461,7 +14461,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "react-app/src/App.tsx",
-      "source_location": "L148",
+      "source_location": "L151",
       "weight": 1.0
     },
     {
@@ -14473,7 +14473,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "react-app/src/App.tsx",
-      "source_location": "L150",
+      "source_location": "L153",
       "weight": 1.0
     },
     {
@@ -23361,13 +23361,13 @@
     },
     {
       "source": "react_app_src_app",
-      "target": "react_app_src_app_dev_logo",
+      "target": "react_app_src_app_dev_quotes",
       "relation": "contains",
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "react-app/src/App.tsx",
-      "source_location": "L26",
+      "source_location": "L29",
       "weight": 1.0
     },
     {
@@ -23378,7 +23378,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "react-app/src/App.tsx",
-      "source_location": "L34",
+      "source_location": "L37",
       "weight": 1.0
     },
     {
@@ -23389,7 +23389,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "react-app/src/App.tsx",
-      "source_location": "L49",
+      "source_location": "L52",
       "weight": 1.0
     },
     {
@@ -23400,7 +23400,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "react-app/src/App.tsx",
-      "source_location": "L78",
+      "source_location": "L81",
       "weight": 1.0
     },
     {
@@ -23411,7 +23411,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "react-app/src/App.tsx",
-      "source_location": "L93",
+      "source_location": "L96",
       "weight": 1.0
     },
     {
@@ -23422,7 +23422,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "react-app/src/App.tsx",
-      "source_location": "L113",
+      "source_location": "L116",
       "weight": 1.0
     },
     {
@@ -23433,7 +23433,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "react-app/src/App.tsx",
-      "source_location": "L143",
+      "source_location": "L146",
       "weight": 1.0
     },
     {
@@ -28202,5 +28202,5 @@
     }
   ],
   "hyperedges": [],
-  "built_at_commit": "84a72a85e8f0075493163acc8040ae37658cfe5f"
+  "built_at_commit": "b20dc85835170c0dcd6e6aa01da73262e273ec56"
 }
