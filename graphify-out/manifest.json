@@ -6,9 +6,9 @@
     "semantic_hash": ""
   },
   "react-app/public/sw.js": {
-    "mtime": 1789090602.1663795,
-    "seen": 1789090642.1836956,
-    "ast_hash": "8ec90a20f088669e9c06eb96d8844ddb",
+    "mtime": 1789091523.8990881,
+    "seen": 1789091573.8008773,
+    "ast_hash": "1c4b350a7c85123f5956162a23cea612",
     "semantic_hash": ""
   },
   "react-app/src/App.tsx": {
@@ -24,9 +24,9 @@
     "semantic_hash": ""
   },
   "react-app/src/lib/core.ts": {
-    "mtime": 1789090601.4390457,
-    "seen": 1789090642.1836956,
-    "ast_hash": "c7e729a879788ecc899743c6bf43d2d6",
+    "mtime": 1789091523.2345605,
+    "seen": 1789091573.8008773,
+    "ast_hash": "fdd340aef412a6839d939e5e6d4aedf6",
     "semantic_hash": ""
   },
   "react-app/src/lib/dialog.ts": {
@@ -72,9 +72,9 @@
     "semantic_hash": ""
   },
   "react-app/src/ui.tsx": {
-    "mtime": 1789067972.0979142,
-    "seen": 1789068499.0974226,
-    "ast_hash": "e15d448a50c82448c32cee8e8b319636",
+    "mtime": 1789091463.1577454,
+    "seen": 1789091573.8008773,
+    "ast_hash": "17f4808c7188bd0642430e1f4523fbbe",
     "semantic_hash": ""
   },
   "react-app/src/views/Catalog.tsx": {
@@ -162,9 +162,9 @@
     "semantic_hash": ""
   },
   "sw.js": {
-    "mtime": 1789090602.1663795,
-    "seen": 1789090642.1836956,
-    "ast_hash": "8ec90a20f088669e9c06eb96d8844ddb",
+    "mtime": 1789091523.8990881,
+    "seen": 1789091573.8008773,
+    "ast_hash": "1c4b350a7c85123f5956162a23cea612",
     "semantic_hash": ""
   },
   "AGENTS.md": {
@@ -180,9 +180,9 @@
     "semantic_hash": ""
   },
   "index.html": {
-    "mtime": 1789090624.9260182,
-    "seen": 1789090642.1836956,
-    "ast_hash": "5cfc6d9e6812eb4e6911b34e31674ed8",
+    "mtime": 1789091545.5295787,
+    "seen": 1789091573.8008773,
+    "ast_hash": "d92db50d4db22e58f68729eee3c2cadd",
     "semantic_hash": ""
   },
   "react-app/index.html": {
@@ -324,9 +324,9 @@
     "semantic_hash": ""
   },
   "react-app/src/lib/appVersion.ts": {
-    "mtime": 1788979497.708452,
-    "seen": 1788979980.4900744,
-    "ast_hash": "a306c866ab798310d40d31f3865e0d7e",
+    "mtime": 1789091483.5187569,
+    "seen": 1789091573.8008773,
+    "ast_hash": "fb97ffc3afb1b4200345e2a4b4f85a72",
     "semantic_hash": ""
   },
   "react-app/src/lib/settings.ts": {
@@ -372,9 +372,9 @@
     "semantic_hash": ""
   },
   "react-app/src/views/DevThemes.tsx": {
-    "mtime": 1789090417.2960596,
-    "seen": 1789090499.3900528,
-    "ast_hash": "2af9196dd780f340dd195724c73a92c9",
+    "mtime": 1789091466.2358239,
+    "seen": 1789091573.8008773,
+    "ast_hash": "ad21508288f96da103d8bef78366deb0",
     "semantic_hash": ""
   },
   "logo-crisdeku.png": {
