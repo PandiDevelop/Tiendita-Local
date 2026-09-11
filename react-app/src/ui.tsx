@@ -93,7 +93,7 @@ export function ImagePicker({ id, src, cls, hint, onFile, disabled }: { id: stri
   );
 }
 
-export function Modal({ onClose, children, backdropClose = true }: { onClose: () => void; children: ReactNode; backdropClose?: boolean }) {
+export function Modal({ onClose, children, backdropClose = true, modalClassName }: { onClose: () => void; children: ReactNode; backdropClose?: boolean; modalClassName?: string }) {
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose(); };
     document.addEventListener('keydown', onKey);
@@ -103,7 +103,7 @@ export function Modal({ onClose, children, backdropClose = true }: { onClose: ()
   useEffect(() => pushOverlay(onClose), [onClose]);
   return (
     <div className="modal-backdrop" onClick={(e) => { if (backdropClose && e.target === e.currentTarget) onClose(); }}>
-      <div className="modal">{children}</div>
+      <div className={'modal' + (modalClassName ? ' ' + modalClassName : '')}>{children}</div>
     </div>
   );
 }

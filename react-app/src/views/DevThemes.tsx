@@ -8,7 +8,7 @@ import type { ThemePref } from '../lib/theme';
 // iconos de los temas ocultos apareciendo uno sobre otro y, después, la caja
 // se expande y muestra el menú con cada tema y su logo. El tap por fuera no lo
 // cierra: solo Escape o los botones.
-const DEV_PASS = '0208';
+const DEV_PASS = '028007';
 const DEV_KEY = 'mt_dev_unlocked';
 
 export function devUnlocked(): boolean {
@@ -62,7 +62,7 @@ export function DevThemesModal({ onClose }: { onClose: () => void }) {
   }
 
   return (
-    <Modal onClose={onClose} backdropClose={false}>
+    <Modal onClose={onClose} backdropClose={false} modalClassName="dev-modal">
       {stage === 'password' ? (
         <>
           <h2>DevThemes</h2>
