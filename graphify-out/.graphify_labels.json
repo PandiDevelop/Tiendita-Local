@@ -1,11 +1,10 @@
 {
   "0": "sync.ts",
   "1": "setup.ts",
-  "2": "sync.test.ts",
+  "2": "syncClientId",
   "3": "SettingsModal.tsx",
   "4": "react-app/package.json",
   "5": "App",
-  "6": "theme.ts",
   "7": "compilerOptions",
   "8": "Notes.tsx",
   "9": "vite-env.d.ts",
@@ -19,14 +18,10 @@
   "17": "push-worker/package.json",
   "18": "Avisos push reales para Mi Tiendita (con la app cerrada del todo)",
   "19": "lightbox.ts",
-  "20": "ui.tsx",
-  "21": "store.tsx",
+  "20": "App.tsx",
   "22": "Inventory.tsx",
   "23": "pushOverlay",
   "24": "StoreModal.tsx",
-  "25": "Dashboard.tsx",
-  "26": "Profit.tsx",
-  "27": "History.tsx",
-  "28": "dialog.ts",
-  "29": "Employees.tsx"
+  "25": "ui.tsx",
+  "28": "dialog.ts"
 }
