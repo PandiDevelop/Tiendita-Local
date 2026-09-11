@@ -23,10 +23,13 @@ import { SettingsModal } from './views/SettingsModal';
 import { ProductForm } from './views/ProductForm';
 import { SaleRegistration } from './views/SaleRegistration';
 
-const DEV_LOGO: Record<string, string> = {
-  owen: './logo-owen.png',
-  crisdeku: './logo-crisdeku.png',
-  pandi: './logo-pandi.png',
+// Frase de cada tema oculto, mostrada junto al logo de la tienda. El logo se
+// pinta con el color de la marca del tema (rojo Owen, morado Crisdeku, cian
+// Pandi) en lugar de usar la imagen fija de cada personaje.
+const DEV_QUOTES: Record<string, string> = {
+  owen: 'Lograrás lo que quieres, nunca pierdas tu voluntad y determinación.',
+  crisdeku: 'Afronta las dificultades con creatividad y valentía.',
+  pandi: 'Analiza, sé paciente, puedes con todo pero no estás solo.',
 };
 
 // Iconos propios (SVG) de cada pestaña, mismo trazo del resto de la app: antes
@@ -223,7 +226,7 @@ export function App() {
             <div style={{ minWidth: 0 }}><div className="eyebrow">Tu tienda</div><h1>{esc(s.name)}</h1></div>
             <div className="store-actions">
               <button className="button secondary" onClick={() => setModal('editStore')}><GearIcon size={15} /> Editar tienda</button>
-              {devTheme && <><span className="store-quote">Mereces lo que sueñas</span><img className="store-quote-logo" src={DEV_LOGO[t]} alt="" /></>}
+              {devTheme && <><span className="store-quote">{DEV_QUOTES[t]}</span><Logo size={28} /></>}
             </div>
           </div>
         </div>
