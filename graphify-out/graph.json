@@ -4164,7 +4164,7 @@
       "file_type": "code",
       "norm_label": "trypass()",
       "source_file": "react-app/src/views/DevThemes.tsx",
-      "source_location": "L54"
+      "source_location": "L57"
     },
     {
       "id": "react_app_src_views_devthemes_devunlocked",
@@ -11329,7 +11329,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "react-app/src/views/DevThemes.tsx",
-      "source_location": "L90",
+      "source_location": "L93",
       "weight": 1.0
     },
     {
@@ -11341,7 +11341,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "react-app/src/views/DevThemes.tsx",
-      "source_location": "L55",
+      "source_location": "L58",
       "weight": 1.0
     },
     {
@@ -12949,7 +12949,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "react-app/src/views/Profit.tsx",
-      "source_location": "L127",
+      "source_location": "L125",
       "weight": 1.0
     },
     {
@@ -13021,7 +13021,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "react-app/src/views/Profit.tsx",
-      "source_location": "L68",
+      "source_location": "L67",
       "weight": 1.0
     },
     {
@@ -14197,7 +14197,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "react-app/src/views/DevThemes.tsx",
-      "source_location": "L54",
+      "source_location": "L57",
       "weight": 1.0
     },
     {
@@ -27463,5 +27463,5 @@
     }
   ],
   "hyperedges": [],
-  "built_at_commit": "a729f986866b26c4610bf4bd7d112d8c1982b5c5"
+  "built_at_commit": "35a1c7d481aff696ee39ffeab366b99abdbed711"
 }

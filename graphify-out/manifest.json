@@ -6,9 +6,9 @@
     "semantic_hash": ""
   },
   "react-app/public/sw.js": {
-    "mtime": 1789074108.076893,
-    "seen": 1789074167.3853126,
-    "ast_hash": "c17830df9480d8d232efc87e64f6aeb8",
+    "mtime": 1789090181.9875612,
+    "seen": 1789090244.7359884,
+    "ast_hash": "f325acc68cd174223ddc4f0d63f7eed9",
     "semantic_hash": ""
   },
   "react-app/src/App.tsx": {
@@ -24,9 +24,9 @@
     "semantic_hash": ""
   },
   "react-app/src/lib/core.ts": {
-    "mtime": 1789074107.5082006,
-    "seen": 1789074167.3853126,
-    "ast_hash": "4552975bf455ec62a46eebb4ecae0a29",
+    "mtime": 1789090181.4441433,
+    "seen": 1789090244.7359884,
+    "ast_hash": "c223bed4c29552f3ff6e89b663b98e8a",
     "semantic_hash": ""
   },
   "react-app/src/lib/dialog.ts": {
@@ -126,9 +126,9 @@
     "semantic_hash": ""
   },
   "react-app/src/views/Profit.tsx": {
-    "mtime": 1789051696.5791636,
-    "seen": 1789051836.7017143,
-    "ast_hash": "cde23daa0635aa0a0403732c47e7553b",
+    "mtime": 1789090115.1850388,
+    "seen": 1789090244.7359884,
+    "ast_hash": "952fe63c4ee6187711df773dd18d7140",
     "semantic_hash": ""
   },
   "react-app/src/views/SaleRegistration.tsx": {
@@ -162,9 +162,9 @@
     "semantic_hash": ""
   },
   "sw.js": {
-    "mtime": 1789074108.076893,
-    "seen": 1789074167.3863122,
-    "ast_hash": "c17830df9480d8d232efc87e64f6aeb8",
+    "mtime": 1789090181.9875612,
+    "seen": 1789090244.7359884,
+    "ast_hash": "f325acc68cd174223ddc4f0d63f7eed9",
     "semantic_hash": ""
   },
   "AGENTS.md": {
@@ -180,9 +180,9 @@
     "semantic_hash": ""
   },
   "index.html": {
-    "mtime": 1789074137.5960734,
-    "seen": 1789074167.3863122,
-    "ast_hash": "bd99531e6d1c3693f61ee629447dd94f",
+    "mtime": 1789090204.0709598,
+    "seen": 1789090244.7359884,
+    "ast_hash": "164f7ddade37d3073ded6241c0a5f6cf",
     "semantic_hash": ""
   },
   "react-app/index.html": {
@@ -372,9 +372,9 @@
     "semantic_hash": ""
   },
   "react-app/src/views/DevThemes.tsx": {
-    "mtime": 1789071643.8279228,
-    "seen": 1789071822.244753,
-    "ast_hash": "078c1ae2717027193791fcdaafcf200d",
+    "mtime": 1789090139.7049603,
+    "seen": 1789090244.7359884,
+    "ast_hash": "311e8349bda3497f1861a5e90cebdc06",
     "semantic_hash": ""
   },
   "logo-crisdeku.png": {
