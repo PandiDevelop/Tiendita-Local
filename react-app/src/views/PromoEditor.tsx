@@ -44,27 +44,31 @@ export function PromoEditor({ promos, onChange, priceHint }: Props) {
       {promos.length === 0 && <p className="muted">Sin promociones. La primera que cumpla su condición se aplica sola (el orden = prioridad). "Cantidad fija" = precio del paquete completo.</p>}
       {promos.map((x, n) => (
         <div className="promo-input" key={x.id}>
-          <div className="promo-row-top">
-            <input className="promo-label" maxLength={70} placeholder="Nombre de la promoción" value={x.label} onChange={(e) => setAt(n, { label: e.target.value })} />
+          <div className="promo-prior">
             <button type="button" className="icon-btn inv-stepper" title="Subir prioridad" onClick={() => move(n, -1)}><ChevUp /></button>
             <button type="button" className="icon-btn inv-stepper" title="Bajar prioridad" onClick={() => move(n, 1)}><ChevDown /></button>
-            <button type="button" className="icon-remove" title="Quitar promoción" onClick={() => onChange(promos.filter((_, i) => i !== n))}><CloseIcon size={13} /></button>
           </div>
-          <div className="promo-row-conds">
-            <select className="promo-select" value={x.type} onChange={(e) => setAt(n, { type: e.target.value as EditablePromo['type'] })}>
-              <option value="price">Precio fijo</option>
-              <option value="pct">% de descuento</option>
-            </select>
-            {x.type === 'price'
-              ? <input className="promo-price" min={0} type="number" placeholder={x.cond === 'qtyeq' ? 'Precio total del paquete' : 'Precio por unidad'} value={x.price} onChange={(e) => setAt(n, { price: e.target.value })} />
-              : <input className="promo-pct" min={0} max={100} type="number" placeholder="% de descuento" value={x.pct} onChange={(e) => setAt(n, { pct: e.target.value })} />}
-            <select className="promo-select" value={x.cond} onChange={(e) => setAt(n, { cond: e.target.value as EditablePromo['cond'] })}>
-              <option value="qtyeq">Cantidad fija</option>
-              <option value="qtygt">Cantidad mayor a</option>
-            </select>
-            {x.cond === 'qtyeq'
-              ? <input className="promo-min" min={1} type="number" placeholder="Unidades exactas" value={x.min} onChange={(e) => setAt(n, { min: e.target.value })} />
-              : <input className="promo-min" min={0} type="number" placeholder="Unidades mínimas" value={x.min} onChange={(e) => setAt(n, { min: e.target.value })} />}
+          <div className="promo-body">
+            <div className="promo-row-top">
+              <input className="promo-label" maxLength={70} placeholder="Nombre de la promoción" value={x.label} onChange={(e) => setAt(n, { label: e.target.value })} />
+              <button type="button" className="icon-remove" title="Quitar promoción" onClick={() => onChange(promos.filter((_, i) => i !== n))}><CloseIcon size={13} /></button>
+            </div>
+            <div className="promo-row-conds">
+              <select className="promo-select" value={x.type} onChange={(e) => setAt(n, { type: e.target.value as EditablePromo['type'] })}>
+                <option value="price">Precio fijo</option>
+                <option value="pct">% de descuento</option>
+              </select>
+              {x.type === 'price'
+                ? <input className="promo-price" min={0} type="number" placeholder={x.cond === 'qtyeq' ? 'Precio total' : 'Precio por uni.'} value={x.price} onChange={(e) => setAt(n, { price: e.target.value })} />
+                : <input className="promo-pct" min={0} max={100} type="number" placeholder="%" value={x.pct} onChange={(e) => setAt(n, { pct: e.target.value })} />}
+              <select className="promo-select" value={x.cond} onChange={(e) => setAt(n, { cond: e.target.value as EditablePromo['cond'] })}>
+                <option value="qtyeq">Cantidad fija</option>
+                <option value="qtygt">Cantidad mayor a</option>
+              </select>
+              {x.cond === 'qtyeq'
+                ? <input className="promo-min" min={1} type="number" placeholder="Unidades" value={x.min} onChange={(e) => setAt(n, { min: e.target.value })} />
+                : <input className="promo-min" min={0} type="number" placeholder="Unidades" value={x.min} onChange={(e) => setAt(n, { min: e.target.value })} />}
+            </div>
           </div>
         </div>
       ))}

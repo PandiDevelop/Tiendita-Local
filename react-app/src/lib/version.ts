@@ -6,4 +6,4 @@
 //     worker siempre lleva la MISMA version que el index.html.
 //   - src/lib/appVersion.ts muestra esta version como minimo y la actualiza
 //     con la real del service worker activo.
-export const APP_VERSION = '1.11.7';
+export const APP_VERSION = '1.11.8';
