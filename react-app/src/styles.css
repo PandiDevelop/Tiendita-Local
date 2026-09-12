@@ -347,18 +347,18 @@ td.cat-bar .product-name .prod-tag{margin-left:auto;flex:0 0 auto}
 /* Banda de evento activo en Registrar venta. */
 .event-banner{background:var(--mint);border:1px solid var(--line);color:var(--brand-deep);border-radius:11px;padding:9px 12px;font-size:13px;font-weight:700;margin:6px 0}
 
-/* Editor de promos (orden = prioridad, la primera que cumpla gana). */
+/* Editor de promos (orden = prioridad, la primera que cumpla gana). La caja
+   usa un grid de 2x2 para los controles (tipo, valor, condicion, unidades):
+   quedan alineados y cuadrados en vez de irse envolviendo a saltos. En
+   pantallas chicas cada control ocupa su renglon. */
 .promo-editor{display:grid;gap:4px}
-.promo-editor .promo-input{display:grid;gap:9px;margin-bottom:9px;border:1px solid var(--line);border-radius:11px;padding:11px;background:var(--surface)}
+.promo-editor .promo-input{display:grid;gap:9px;margin-bottom:9px;border:1px solid var(--line);border-radius:11px;padding:11px;background:color-mix(in srgb,var(--surface) 88%,white)}
 .promo-row-top{display:flex;align-items:center;gap:7px}
 .promo-row-top .promo-label{flex:1;min-width:0}
-.promo-row-conds{display:flex;flex-wrap:wrap;gap:7px;align-items:center}
-.promo-row-conds input,.promo-row-conds select{border:1px solid var(--brand-line);border-radius:9px;padding:8px 9px;font-size:13px;color:var(--ink);background:var(--surface)}
-.promo-row-conds .promo-price,.promo-row-conds .promo-pct{width:96px;flex:0 1 96px;min-width:0}
-.promo-row-conds .promo-min{width:120px;flex:0 1 120px;min-width:0}
-.promo-row-conds .promo-date{flex:1 1 auto;min-width:128px;width:auto}
-.promo-row-conds .promo-select{flex:1 1 150px;min-width:0;width:auto}
-@media (max-width:760px){.promo-editor .promo-input{position:static;padding:11px}.promo-editor .promo-input .icon-btn{position:static}.promo-row-top .promo-label{width:auto}.promo-row-conds{gap:7px}.promo-row-conds input,.promo-row-conds select{width:100%;min-width:0;flex:1 1 100%}}
+.promo-row-conds{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;align-items:center}
+.promo-row-conds input,.promo-row-conds select{border:1px solid var(--brand-line);border-radius:9px;padding:8px 9px;font-size:13px;color:var(--ink);background:var(--surface);width:100%;min-width:0}
+.promo-row-conds .promo-date{grid-column:1/-1}
+@media (max-width:760px){.promo-editor .promo-input{position:static;padding:11px}.promo-editor .promo-input .icon-btn{position:static}.promo-row-top .promo-label{width:auto}.promo-row-conds{grid-template-columns:1fr;gap:7px}}
 
 /* Venta: separacion de empleados por roles. */
 .team-group{display:grid;gap:7px}
