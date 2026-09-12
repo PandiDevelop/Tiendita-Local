@@ -1539,7 +1539,7 @@
       "file_type": "code",
       "norm_label": "onfile()",
       "source_file": "react-app/src/views/ProductForm.tsx",
-      "source_location": "L41"
+      "source_location": "L42"
     },
     {
       "id": "react_app_src_views_settingsmodal_settingsmodal_restoreone",
@@ -3039,7 +3039,7 @@
       "file_type": "code",
       "norm_label": "save()",
       "source_file": "react-app/src/views/ProductForm.tsx",
-      "source_location": "L46"
+      "source_location": "L47"
     },
     {
       "id": "react_app_src_views_promoeditor_blank",
@@ -3927,7 +3927,7 @@
       "file_type": "code",
       "norm_label": "committag()",
       "source_file": "react-app/src/views/ProductForm.tsx",
-      "source_location": "L33"
+      "source_location": "L34"
     },
     {
       "id": "react_app_src_views_virtualcatalog_chunks",
@@ -13544,7 +13544,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "react-app/src/views/ProductForm.tsx",
-      "source_location": "L139",
+      "source_location": "L140",
       "weight": 1.0
     },
     {
@@ -13580,127 +13580,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "react-app/src/views/ProductForm.tsx",
-      "source_location": "L43",
-      "weight": 1.0
-    },
-    {
-      "source": "react_app_src_views_productform_productform_save",
-      "target": "react_app_src_lib_core_fromeditablepromos",
-      "relation": "calls",
-      "_origin": "ast",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "context": "call",
-      "source_file": "react-app/src/views/ProductForm.tsx",
-      "source_location": "L56",
-      "weight": 1.0
-    },
-    {
-      "source": "react_app_src_views_productform_productform_save",
-      "target": "react_app_src_lib_core_insertcatsorted",
-      "relation": "calls",
-      "_origin": "ast",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "context": "call",
-      "source_file": "react-app/src/views/ProductForm.tsx",
-      "source_location": "L68",
-      "weight": 1.0
-    },
-    {
-      "source": "react_app_src_views_productform_productform_save",
-      "target": "react_app_src_lib_core_setcategorypricing",
-      "relation": "calls",
-      "_origin": "ast",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "context": "call",
-      "source_file": "react-app/src/views/ProductForm.tsx",
-      "source_location": "L69",
-      "weight": 1.0
-    },
-    {
-      "source": "react_app_src_views_productform_productform_save",
-      "target": "react_app_src_lib_core_nextsupptag",
-      "relation": "calls",
-      "_origin": "ast",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "context": "call",
-      "source_file": "react-app/src/views/ProductForm.tsx",
-      "source_location": "L73",
-      "weight": 1.0
-    },
-    {
-      "source": "react_app_src_views_productform_productform_save",
-      "target": "react_app_src_lib_core_setsuppliercost",
-      "relation": "calls",
-      "_origin": "ast",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "context": "call",
-      "source_file": "react-app/src/views/ProductForm.tsx",
-      "source_location": "L73",
-      "weight": 1.0
-    },
-    {
-      "source": "react_app_src_views_productform_productform_save",
-      "target": "react_app_src_lib_core_syncclientid",
-      "relation": "calls",
-      "_origin": "ast",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "context": "call",
-      "source_file": "react-app/src/views/ProductForm.tsx",
-      "source_location": "L78",
-      "weight": 1.0
-    },
-    {
-      "source": "react_app_src_views_productform_productform_save",
-      "target": "react_app_src_lib_core_uid",
-      "relation": "calls",
-      "_origin": "ast",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "context": "call",
-      "source_file": "react-app/src/views/ProductForm.tsx",
-      "source_location": "L78",
-      "weight": 1.0
-    },
-    {
-      "source": "react_app_src_views_productform_productform_save",
-      "target": "react_app_src_lib_core_ensurecost",
-      "relation": "calls",
-      "_origin": "ast",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "context": "call",
-      "source_file": "react-app/src/views/ProductForm.tsx",
-      "source_location": "L85",
-      "weight": 1.0
-    },
-    {
-      "source": "react_app_src_views_productform_productform_save",
-      "target": "react_app_src_lib_core_recordsupplierprice",
-      "relation": "calls",
-      "_origin": "ast",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "context": "call",
-      "source_file": "react-app/src/views/ProductForm.tsx",
-      "source_location": "L87",
-      "weight": 1.0
-    },
-    {
-      "source": "react_app_src_views_productform_productform_save",
-      "target": "react_app_src_lib_core_adoptinvlog",
-      "relation": "calls",
-      "_origin": "ast",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "context": "call",
-      "source_file": "react-app/src/views/ProductForm.tsx",
-      "source_location": "L94",
+      "source_location": "L44",
       "weight": 1.0
     },
     {
@@ -13712,7 +13592,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "react-app/src/views/ProductForm.tsx",
-      "source_location": "L99",
+      "source_location": "L100",
       "weight": 1.0
     },
     {
@@ -13724,7 +13604,127 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "react-app/src/views/ProductForm.tsx",
-      "source_location": "L99",
+      "source_location": "L100",
+      "weight": 1.0
+    },
+    {
+      "source": "react_app_src_views_productform_productform_save",
+      "target": "react_app_src_lib_core_fromeditablepromos",
+      "relation": "calls",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "call",
+      "source_file": "react-app/src/views/ProductForm.tsx",
+      "source_location": "L57",
+      "weight": 1.0
+    },
+    {
+      "source": "react_app_src_views_productform_productform_save",
+      "target": "react_app_src_lib_core_insertcatsorted",
+      "relation": "calls",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "call",
+      "source_file": "react-app/src/views/ProductForm.tsx",
+      "source_location": "L69",
+      "weight": 1.0
+    },
+    {
+      "source": "react_app_src_views_productform_productform_save",
+      "target": "react_app_src_lib_core_setcategorypricing",
+      "relation": "calls",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "call",
+      "source_file": "react-app/src/views/ProductForm.tsx",
+      "source_location": "L70",
+      "weight": 1.0
+    },
+    {
+      "source": "react_app_src_views_productform_productform_save",
+      "target": "react_app_src_lib_core_nextsupptag",
+      "relation": "calls",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "call",
+      "source_file": "react-app/src/views/ProductForm.tsx",
+      "source_location": "L74",
+      "weight": 1.0
+    },
+    {
+      "source": "react_app_src_views_productform_productform_save",
+      "target": "react_app_src_lib_core_setsuppliercost",
+      "relation": "calls",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "call",
+      "source_file": "react-app/src/views/ProductForm.tsx",
+      "source_location": "L74",
+      "weight": 1.0
+    },
+    {
+      "source": "react_app_src_views_productform_productform_save",
+      "target": "react_app_src_lib_core_syncclientid",
+      "relation": "calls",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "call",
+      "source_file": "react-app/src/views/ProductForm.tsx",
+      "source_location": "L79",
+      "weight": 1.0
+    },
+    {
+      "source": "react_app_src_views_productform_productform_save",
+      "target": "react_app_src_lib_core_uid",
+      "relation": "calls",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "call",
+      "source_file": "react-app/src/views/ProductForm.tsx",
+      "source_location": "L79",
+      "weight": 1.0
+    },
+    {
+      "source": "react_app_src_views_productform_productform_save",
+      "target": "react_app_src_lib_core_ensurecost",
+      "relation": "calls",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "call",
+      "source_file": "react-app/src/views/ProductForm.tsx",
+      "source_location": "L86",
+      "weight": 1.0
+    },
+    {
+      "source": "react_app_src_views_productform_productform_save",
+      "target": "react_app_src_lib_core_recordsupplierprice",
+      "relation": "calls",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "call",
+      "source_file": "react-app/src/views/ProductForm.tsx",
+      "source_location": "L88",
+      "weight": 1.0
+    },
+    {
+      "source": "react_app_src_views_productform_productform_save",
+      "target": "react_app_src_lib_core_adoptinvlog",
+      "relation": "calls",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "call",
+      "source_file": "react-app/src/views/ProductForm.tsx",
+      "source_location": "L95",
       "weight": 1.0
     },
     {
@@ -15296,7 +15296,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "react-app/src/views/ProductForm.tsx",
-      "source_location": "L33",
+      "source_location": "L34",
       "weight": 1.0
     },
     {
@@ -28194,7 +28194,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "react-app/src/views/ProductForm.tsx",
-      "source_location": "L41",
+      "source_location": "L42",
       "weight": 1.0
     },
     {
@@ -28205,7 +28205,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "react-app/src/views/ProductForm.tsx",
-      "source_location": "L46",
+      "source_location": "L47",
       "weight": 1.0
     },
     {
@@ -29105,5 +29105,5 @@
     }
   ],
   "hyperedges": [],
-  "built_at_commit": "07326c609a57311019df975740017c46c9f8a431"
+  "built_at_commit": "dba46b79a0b6f64e04ebed496809a05dd5d4cf89"
 }
