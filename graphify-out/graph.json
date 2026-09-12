@@ -13856,7 +13856,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "react-app/src/views/PromoEditor.tsx",
-      "source_location": "L71",
+      "source_location": "L75",
       "weight": 1.0
     },
     {
@@ -29105,5 +29105,5 @@
     }
   ],
   "hyperedges": [],
-  "built_at_commit": "dba46b79a0b6f64e04ebed496809a05dd5d4cf89"
+  "built_at_commit": "70ee6e618d98a856b9bd6ff4d6912ae8d4a83dcb"
 }
