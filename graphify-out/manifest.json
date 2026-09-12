@@ -162,9 +162,9 @@
     "semantic_hash": ""
   },
   "sw.js": {
-    "mtime": 1789159665.664421,
-    "seen": 1789159699.962749,
-    "ast_hash": "ffc92606c8519d989edfa532430dfb27",
+    "mtime": 1789203707.352466,
+    "seen": 1789203741.22319,
+    "ast_hash": "286a1ffb3f74c22b7b5153a828343d47",
     "semantic_hash": ""
   },
   "AGENTS.md": {
@@ -180,9 +180,9 @@
     "semantic_hash": ""
   },
   "index.html": {
-    "mtime": 1789159664.9859085,
-    "seen": 1789159699.962749,
-    "ast_hash": "2cbe1d671ca589489e6ff5bb4a2b23c7",
+    "mtime": 1789203706.6860373,
+    "seen": 1789203741.22319,
+    "ast_hash": "7f9266fb6d4cdce1a54244348a1f3393",
     "semantic_hash": ""
   },
   "react-app/index.html": {
@@ -486,9 +486,9 @@
     "semantic_hash": ""
   },
   "react-app/src/lib/version.ts": {
-    "mtime": 1789159653.39793,
-    "seen": 1789159699.962749,
-    "ast_hash": "bdbefd5ca58f02e90d33b3385ab1b61e",
+    "mtime": 1789203680.6174936,
+    "seen": 1789203741.22319,
+    "ast_hash": "e0cb72c321db9b1ae31dd8d71179f22d",
     "semantic_hash": ""
   }
 }
