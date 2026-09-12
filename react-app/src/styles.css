@@ -71,12 +71,12 @@ th,td{text-align:left;vertical-align:middle}
 .sale-search input{width:100%;padding:11px 13px;border:1px solid var(--brand-line);border-radius:11px;background:var(--surface);color:var(--ink);font-weight:600}
 .sale-products-scroll{display:flex;overflow-x:auto;scroll-snap-type:x mandatory;gap:0;scrollbar-width:thin;overscroll-behavior-x:contain}
 .sale-prod-page{flex:0 0 100%;min-width:100%;scroll-snap-align:start;display:grid;grid-template-columns:repeat(2,1fr);gap:8px;padding:1px 0 2px}
-.sale-prod-card{display:flex;flex-direction:column;gap:8px;padding:10px;background:#fdfcf8;border:1px solid var(--line);border-radius:11px}
+.sale-prod-card{display:flex;flex-direction:column;gap:8px;padding:10px;background:var(--surface);border:1px solid var(--line);border-radius:11px}
 .sale-prod-card .sale-brand{align-items:flex-start;gap:8px}
 .sale-prod-card .product-name{font-size:13px;overflow-wrap:break-word}
 .sale-prod-card .sale-add{width:100%;flex:0 0 auto;background:var(--lav);color:var(--brand);border-radius:9px}
 .sale-pager-dots{display:flex;justify-content:center;gap:6px;margin-top:6px}
-.sale-dot{width:8px;height:8px;border-radius:999px;background:#ddd6ec;padding:0;transition:background .15s}
+.sale-dot{width:8px;height:8px;border-radius:999px;background:var(--brand-line);padding:0;transition:background .15s}
 .sale-dot.on{background:var(--brand)}
 .sale-modal-head{display:flex;justify-content:space-between;align-items:center;gap:10px}
 .sale-window{display:flex;flex-direction:column;max-height:calc(100dvh - 44px)}
@@ -236,13 +236,13 @@ th,td{text-align:left;vertical-align:middle}
 /* Boton generico de "quitar algo" (promo, miembro, evento...): con el mismo
    lapiz violeta que el resto de la app, contorno suave y tamano contenido. */
 .icon-remove{height:34px;min-width:34px;padding:0 10px;border-radius:9px;background:var(--surface);border:1.5px solid var(--line);box-shadow:0 0 0 3px var(--lav);color:var(--brand-deep);font-weight:700;font-size:15px;flex:0 0 auto;display:inline-flex;align-items:center;justify-content:center;line-height:1}
-.icon-remove:hover{background:#f7f2ff}
+.icon-remove:hover{background:var(--lav)}
 .icon-remove.reset-price{width:34px;padding:0;font-size:15px}
 
 /* Boton "quitar" (una X) de una linea en Registrar venta: mismo estilo X y
    color que el resto de la pagina, pequeno. */
 .sale-del{display:inline-flex;align-items:center;justify-content:center;height:36px;width:36px;padding:0;border-radius:10px;background:var(--surface);border:1.5px solid var(--line);box-shadow:0 0 0 3px var(--lav);color:var(--brand-deep);font-weight:700;font-size:16px;flex:0 0 auto;line-height:1;white-space:nowrap}
-.sale-del:hover{background:#f7f2ff}
+.sale-del:hover{background:var(--lav)}
 .sale-builder-head{display:flex;align-items:center;gap:10px}
 
 /* Arrastre: fila centrada y boton con el handle centrado (alto ok). Las
@@ -304,7 +304,7 @@ td.cat-bar .product-name .prod-tag{margin-left:auto;flex:0 0 auto}
 
 /* Caja de la categoria encima del nombre en las tarjetas de producto de
    Registrar venta (punto 8). */
-.prod-cat{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--brand);background:#f1ebff;border-radius:999px;padding:2px 9px;align-self:flex-start;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.prod-cat{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--brand);background:var(--lav);border-radius:999px;padding:2px 9px;align-self:flex-start;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 
 /* Campo de categoria con sugerencias de las ya registradas: se eligen con un
    clic o se escribe un nombre nuevo. */
