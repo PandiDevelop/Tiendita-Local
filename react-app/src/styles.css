@@ -320,7 +320,7 @@ td.cat-bar .product-name .prod-tag{margin-left:auto;flex:0 0 auto}
    clic o se escribe un nombre nuevo. */
 .cat-suggest{position:relative}
 .cat-suggest .cat-suggest-list{position:absolute;z-index:50;left:0;right:0;top:calc(100% + 4px);background:var(--surface);border:1px solid var(--line);border-radius:11px;box-shadow:0 6px 18px rgba(24,20,32,.14);padding:5px;display:grid;gap:2px;max-height:184px;overflow-y:auto;scrollbar-width:thin}
-.cat-suggest .cat-suggest-list button{display:block;width:100%;text-align:left;padding:8px 12px;border-radius:8px;background:none;border:none;cursor:pointer;font-weight:600;font-size:13px;color:#4b4358}
+.cat-suggest .cat-suggest-list button{display:block;width:100%;text-align:left;padding:8px 12px;border-radius:8px;background:none;border:none;cursor:pointer;font-weight:600;font-size:13px;color:var(--ink)}
 .cat-suggest .cat-suggest-list button:hover{background:var(--lav)}
 
 /* Ventanas de edicion: que quepan en la pantalla sin desbordes ni scroll
@@ -348,17 +348,20 @@ td.cat-bar .product-name .prod-tag{margin-left:auto;flex:0 0 auto}
 .event-banner{background:var(--mint);border:1px solid var(--line);color:var(--brand-deep);border-radius:11px;padding:9px 12px;font-size:13px;font-weight:700;margin:6px 0}
 
 /* Editor de promos (orden = prioridad, la primera que cumpla gana). La caja
-   usa un grid de 2x2 para los controles (tipo, valor, condicion, unidades):
-   quedan alineados y cuadrados en vez de irse envolviendo a saltos. En
-   pantallas chicas cada control ocupa su renglon. */
+   es COMPACTA para que quepa en la ventana de categoria/producto sin cortarse:
+   los controles (tipo, valor, condicion, unidades) caben en un solo renglon
+   en el ancho del modal; en pantallas chicas pasan a un grid 2x2 balanced. */
 .promo-editor{display:grid;gap:4px}
-.promo-editor .promo-input{display:grid;gap:9px;margin-bottom:9px;border:1px solid var(--line);border-radius:11px;padding:11px;background:color-mix(in srgb,var(--surface) 88%,white)}
-.promo-row-top{display:flex;align-items:center;gap:7px}
+.promo-editor .promo-input{display:grid;gap:8px;margin-bottom:8px;border:1px solid var(--line);border-radius:11px;padding:10px;background:color-mix(in srgb,var(--surface) 88%,white)}
+.promo-row-top{display:flex;align-items:center;gap:6px}
 .promo-row-top .promo-label{flex:1;min-width:0}
-.promo-row-conds{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;align-items:center}
-.promo-row-conds input,.promo-row-conds select{border:1px solid var(--brand-line);border-radius:9px;padding:8px 9px;font-size:13px;color:var(--ink);background:var(--surface);width:100%;min-width:0}
-.promo-row-conds .promo-date{grid-column:1/-1}
-@media (max-width:760px){.promo-editor .promo-input{position:static;padding:11px}.promo-editor .promo-input .icon-btn{position:static}.promo-row-top .promo-label{width:auto}.promo-row-conds{grid-template-columns:1fr;gap:7px}}
+.promo-row-conds{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.promo-row-conds input,.promo-row-conds select{border:1px solid var(--brand-line);border-radius:9px;padding:7px 8px;font-size:12px;color:var(--ink);background:var(--surface)}
+.promo-row-conds .promo-price,.promo-row-conds .promo-pct{flex:0 1 92px;width:92px;min-width:0}
+.promo-row-conds .promo-min{flex:0 1 92px;width:92px;min-width:0}
+.promo-row-conds .promo-date{flex:1 1 auto;min-width:118px;width:auto}
+.promo-row-conds .promo-select{flex:1 1 110px;min-width:88px;width:auto}
+@media (max-width:760px){.promo-editor .promo-input{position:static;padding:10px}.promo-editor .promo-input .icon-btn{position:static}.promo-row-top .promo-label{width:auto}.promo-row-conds{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px}.promo-row-conds input,.promo-row-conds select{width:100%;min-width:0}}
 
 /* Venta: separacion de empleados por roles. */
 .team-group{display:grid;gap:7px}
