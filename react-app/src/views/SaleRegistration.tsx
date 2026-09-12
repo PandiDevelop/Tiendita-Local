@@ -247,12 +247,12 @@ export function SaleRegistration({ onClose }: { onClose: () => void }) {
             {catsOpen ? (
               <div className="sale-cats">
                 <span className="sale-pick-label">Categorías</span>
-                {categories.map((c) => (
-                  <div className="cat-chip" key={c}>{c}<button type="button" title={`Quitar ${c}`} onClick={() => { const next = categories.filter((x) => x !== c); setCategories(next); persist({ categories: next }); }}>×</button></div>
-                ))}
                 {selectableCats.length > 0 && (
                   <Dropdown value="" ph="＋ Añadir categoría" items={selectableCats} onPick={(v) => { const next = [...categories, v]; setCategories(next); persist({ categories: next }); }} />
                 )}
+                {categories.map((c) => (
+                  <div className="cat-chip" key={c}>{c}<button type="button" title={`Quitar ${c}`} onClick={() => { const next = categories.filter((x) => x !== c); setCategories(next); persist({ categories: next }); }}>×</button></div>
+                ))}
               </div>
             ) : null}
             <label className="sale-pick-label">{categories.length ? 'Productos de las categorías · ' + filtered.length : 'Todos los productos' + (filtered.length ? ' · ' + filtered.length : '')}</label>

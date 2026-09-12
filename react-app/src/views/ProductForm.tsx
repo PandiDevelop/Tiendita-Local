@@ -29,6 +29,7 @@ export function ProductForm({ editingId, onClose }: { editingId?: string; onClos
   // Tags que ya usan otros productos, para sugerirlos al escribir (se puede
   // escribir uno nuevo o elegir uno existente con un clic).
   const existingTags = [...new Set(s.products.flatMap((x) => productTags(x)))];
+  const tagMatches = existingTags.filter((t) => !tags.includes(t) && (!tagDraft.trim() || t.toLowerCase().includes(tagDraft.trim().toLowerCase())));
 
   function commitTag(raw: string) {
     const t = raw.trim();
@@ -133,9 +134,9 @@ export function ProductForm({ editingId, onClose }: { editingId?: string; onClos
                 if (e.key === 'Enter' || e.key === ',') { e.preventDefault(); commitTag(tagDraft); }
                 else if (e.key === 'Backspace' && tagDraft === '' && tags.length) setTags((arr) => arr.slice(0, -1));
               }} />
-            {tagOpen && existingTags.filter((t) => !tags.includes(t) && (!tagDraft.trim() || t.toLowerCase().includes(tagDraft.trim().toLowerCase()))).slice(0, 6).length > 0 && (
+            {tagOpen && tagMatches.length > 0 && (
               <div className="cat-suggest-list">
-                {existingTags.filter((t) => !tags.includes(t) && (!tagDraft.trim() || t.toLowerCase().includes(tagDraft.trim().toLowerCase()))).slice(0, 6).map((t) => (
+                {tagMatches.map((t) => (
                   <button type="button" key={t} onMouseDown={(e) => { e.preventDefault(); commitTag(t); }}>{esc(t)}</button>
                 ))}
               </div>

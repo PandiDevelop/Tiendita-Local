@@ -70,7 +70,12 @@ th,td{text-align:left;vertical-align:middle}
 .sale-search{margin:-4px 0 4px}
 .sale-search input{width:100%;padding:11px 13px;border:1px solid var(--brand-line);border-radius:11px;background:var(--surface);color:var(--ink);font-weight:600}
 .sale-products-scroll{display:flex;overflow-x:auto;scroll-snap-type:x mandatory;gap:0;scrollbar-width:thin;overscroll-behavior-x:contain}
-.sale-prod-page{flex:0 0 100%;min-width:100%;scroll-snap-align:start;display:grid;grid-template-columns:repeat(2,1fr);grid-auto-rows:1fr;gap:8px;padding:1px 18px 2px 0;box-sizing:border-box}
+.sale-prod-page{flex:0 0 100%;min-width:100%;scroll-snap-align:start;display:grid;grid-template-columns:repeat(2,1fr);grid-auto-rows:1fr;gap:8px;padding:1px 6px;box-sizing:border-box}
+/* Textos del cajero (nombre, subtitulos, la linea de la venta): los saltos de
+   linea usan guion silabico (es) en vez de cortar la palabra a medias. La tag
+   de la linea puede envolverse a mas de un renglon si no cabe. */
+.sale-prod-card .product-name,.sale-builder-name,.sale-builder-name-row .b-name,.prod-sub,.sale-detail-name{hyphens:auto;overflow-wrap:break-word}
+.sale-builder-name-row .sale-tag{white-space:normal;max-width:100%;line-height:1.25;overflow:visible;text-overflow:clip}
 /* Tarjetas de producto con ALTO FIJO (mismo tamano siempre, 4 por pagina en
    2x2): el nombre se recorta a 2 lineas para que ninguna box crezca y se vaya
    hacia abajo/arriba. El fondo es ligeramente mas claro que el del contenedor
@@ -109,7 +114,7 @@ th,td{text-align:left;vertical-align:middle}
 .sale-del{flex:0 0 auto}
 .product-image-cell{width:38px;height:38px;object-fit:cover;border-radius:9px;background:var(--peach);flex:0 0 auto}
 .product-cell{display:flex;flex-direction:row;align-items:center;gap:10px;min-width:0}
-.product-cell .product-name{white-space:normal;overflow-wrap:break-word;line-height:1.35}.prod-tag{display:inline-block;margin-left:6px;padding:2px 7px;border-radius:999px;background:color-mix(in srgb,var(--brand) 16%,var(--surface));border:1px solid var(--brand-line);color:var(--brand-deep);font-size:10px;font-weight:700;line-height:1.3;vertical-align:middle;max-width:110px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.product-cell .product-name{white-space:normal;overflow-wrap:break-word;line-height:1.35}.prod-tag{display:inline-block;margin-left:6px;padding:2px 7px;border-radius:999px;background:var(--brand);color:var(--surface);font-size:10px;font-weight:700;line-height:1.3;vertical-align:middle;max-width:110px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .product-cell .product-image-cell{flex:0 0 auto}
 
 .cat-actions{display:flex;flex-direction:column;gap:9px;margin:0 0 18px}
@@ -463,10 +468,11 @@ td.cat-bar .product-name .prod-tag{margin-left:auto;flex:0 0 auto}
    de escritura/sugerencias va siempre arriba y los chips elegidos debajo. */
 .tag-editor{display:flex;flex-direction:column;gap:8px}
 .tag-chips{display:flex;flex-wrap:wrap;gap:6px}
-.tag-chip{display:inline-flex;align-items:center;gap:7px;padding:6px 10px;border-radius:999px;background:color-mix(in srgb,var(--brand) 16%,var(--surface));border:1px solid var(--brand-line);color:var(--brand-deep);font-size:13px;font-weight:700}
-.tag-chip button{display:inline-flex;align-items:center;justify-content:center;width:19px;height:19px;border-radius:50%;background:var(--brand-line);color:var(--ink);font-size:14px;line-height:1;flex:0 0 auto}
-.tag-editor .tag-suggest{flex:1 1 160px;min-width:0}
+.tag-chip{display:inline-flex;align-items:center;gap:7px;padding:6px 10px;border-radius:999px;background:var(--brand);color:var(--surface);font-size:13px;font-weight:700}
+.tag-chip button{display:inline-flex;align-items:center;justify-content:center;width:19px;height:19px;border-radius:50%;background:var(--surface);color:var(--brand);font-size:14px;line-height:1;flex:0 0 auto}
+.tag-editor .tag-suggest{width:100%}
 .tag-editor .tag-suggest input{width:100%;padding:8px 11px}
+.tag-editor .cat-suggest-list{max-height:172px}
 .tag-limit-note{margin:0}
 /* ------------------------------------------------------------------ */
 /* Version imprimible del catalogo virtual: oculta en pantalla, solo
