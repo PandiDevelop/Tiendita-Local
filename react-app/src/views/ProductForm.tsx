@@ -124,28 +124,29 @@ export function ProductForm({ editingId, onClose }: { editingId?: string; onClos
       </div>
       <div className="field"><label>Etiqueta / tag <span className="muted">(opcional, hasta 3)</span></label>
         <div className="tag-editor">
-          {tags.map((t) => (
-            <span className="tag-chip" key={t}>{esc(t)}<button type="button" title={'Quitar ' + t} aria-label={'Quitar ' + t} onClick={() => setTags((arr) => arr.filter((x) => x !== t))}>×</button></span>
-          ))}
-          {tags.length < 3 && (
-            <div className="cat-suggest tag-suggest">
-              <input maxLength={30} placeholder={tags.length ? 'Agregar otro tag…' : (editingId ? 'Ej. general' : 'General')} value={tagDraft}
-                onChange={(e) => setTagDraft(e.target.value)}
-                onFocus={() => setTagOpen(true)}
-                onBlur={() => { commitTag(tagDraft); setTagOpen(false); }}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter' || e.key === ',') { e.preventDefault(); commitTag(tagDraft); }
-                  else if (e.key === 'Backspace' && tagDraft === '' && tags.length) setTags((arr) => arr.slice(0, -1));
-                }} />
-              {tagOpen && existingTags.filter((t) => !tags.includes(t) && (!tagDraft.trim() || t.toLowerCase().includes(tagDraft.trim().toLowerCase()))).slice(0, 6).length > 0 && (
-                <div className="cat-suggest-list">
-                  {existingTags.filter((t) => !tags.includes(t) && (!tagDraft.trim() || t.toLowerCase().includes(tagDraft.trim().toLowerCase()))).slice(0, 6).map((t) => (
-                    <button type="button" key={t} onMouseDown={(e) => { e.preventDefault(); commitTag(t); }}>{esc(t)}</button>
-                  ))}
-                </div>
-              )}
-            </div>
-          )}
+          <div className="cat-suggest tag-suggest">
+            <input maxLength={30} placeholder={tags.length ? 'Agregar otro tag…' : (editingId ? 'Ej. general' : 'General')} value={tagDraft}
+              onChange={(e) => setTagDraft(e.target.value)}
+              onFocus={() => setTagOpen(true)}
+              onBlur={() => { commitTag(tagDraft); setTagOpen(false); }}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' || e.key === ',') { e.preventDefault(); commitTag(tagDraft); }
+                else if (e.key === 'Backspace' && tagDraft === '' && tags.length) setTags((arr) => arr.slice(0, -1));
+              }} />
+            {tagOpen && existingTags.filter((t) => !tags.includes(t) && (!tagDraft.trim() || t.toLowerCase().includes(tagDraft.trim().toLowerCase()))).slice(0, 6).length > 0 && (
+              <div className="cat-suggest-list">
+                {existingTags.filter((t) => !tags.includes(t) && (!tagDraft.trim() || t.toLowerCase().includes(tagDraft.trim().toLowerCase()))).slice(0, 6).map((t) => (
+                  <button type="button" key={t} onMouseDown={(e) => { e.preventDefault(); commitTag(t); }}>{esc(t)}</button>
+                ))}
+              </div>
+            )}
+          </div>
+          <div className="tag-chips">
+            {tags.map((t) => (
+              <span className="tag-chip" key={t}>{esc(t)}<button type="button" title={'Quitar ' + t} aria-label={'Quitar ' + t} onClick={() => setTags((arr) => arr.filter((x) => x !== t))}>×</button></span>
+            ))}
+          </div>
+          {tags.length === 3 && <p className="muted tag-limit-note">Solo puedes añadir 3 tags por producto.</p>}
         </div>
         <p className="muted">Hasta 3 etiquetas cortas para agrupar productos (si no pones ninguna, se usa "General").</p>
       </div>

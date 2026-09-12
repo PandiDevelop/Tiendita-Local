@@ -165,19 +165,22 @@ describe('Tag opcional del producto', () => {
     expect(saved.tag).toBe(DEFAULT_PRODUCT_TAG);
   });
 
-  it('permite agregar hasta 3 etiquetas y guarda la lista completa', () => {
+  it('permite agregar hasta 3 etiquetas, mantiene el campo visible y avisa el límite', () => {
     const { container, stateRef } = setup(makeStore());
     fireEvent.change(fieldControl('Nombre del producto', container), { target: { value: 'Jugo' } });
     fireEvent.change(fieldControl('Precio del producto', container), { target: { value: '2000' } });
     addTag(container, 'oferta');
     addTag(container, 'vitrina');
     addTag(container, 'nuevo');
-    // Con 3 tags el campo para agregar desaparece: el cuarto nunca entra.
-    expect(document.querySelectorAll('.tag-editor input').length).toBe(0);
+    // El campo se mantiene siempre (sirve para crear/mezclar tags) y avisa el
+    // limite; el cuarto tag no entra.
+    expect(document.querySelectorAll('.tag-editor input').length).toBe(1);
+    expect(screen.getByText('Solo puedes añadir 3 tags por producto.')).toBeInTheDocument();
+    addTag(container, 'cuatro');
     fireEvent.click(screen.getByRole('button', { name: 'Guardar producto' }));
     const saved = stateRef.current.stores[0].products[0];
-    // El cuarto tag no entra: quedan solo 3, y el campo que agregaba tags
-    // desaparecio al llegar al maximo.
+    // El cuarto tag no entra: quedan solo 3, y el campo que agrega tags sigue
+    // visible pidiendo elegir/crear, con los chips debajo del cuadro.
     expect(saved.tags).toEqual(['oferta', 'vitrina', 'nuevo']);
     expect(saved.tag).toBe('oferta');
   });
