@@ -120,9 +120,9 @@
     "semantic_hash": ""
   },
   "react-app/src/views/ProductForm.tsx": {
-    "mtime": 1789152647.247075,
-    "seen": 1789152761.469932,
-    "ast_hash": "c733bb5ac69ead99125cd1b837de8227",
+    "mtime": 1789235463.3102825,
+    "seen": 1789235573.8122818,
+    "ast_hash": "b1eb2c71d2a2795976986ccff4a3ef98",
     "semantic_hash": ""
   },
   "react-app/src/views/Profit.tsx": {
@@ -162,9 +162,9 @@
     "semantic_hash": ""
   },
   "sw.js": {
-    "mtime": 1789204199.5122783,
-    "seen": 1789204225.2123365,
-    "ast_hash": "ec9528619222ff6609aee9b9479e7a95",
+    "mtime": 1789235502.456042,
+    "seen": 1789235573.8122818,
+    "ast_hash": "9dca37e8c387f8cac08f8023c78a8a81",
     "semantic_hash": ""
   },
   "AGENTS.md": {
@@ -180,9 +180,9 @@
     "semantic_hash": ""
   },
   "index.html": {
-    "mtime": 1789204198.8478928,
-    "seen": 1789204225.2123365,
-    "ast_hash": "e6c7e44c8d1df987d28b524059742520",
+    "mtime": 1789235501.7603085,
+    "seen": 1789235573.8122818,
+    "ast_hash": "da45a06d49b2dff5c30a7b3c6bf60550",
     "semantic_hash": ""
   },
   "react-app/index.html": {
@@ -258,9 +258,9 @@
     "semantic_hash": ""
   },
   "react-app/src/test/features.test.tsx": {
-    "mtime": 1789154942.1446555,
-    "seen": 1789155011.952083,
-    "ast_hash": "35e4400eacecc52f1427419c61cb9538",
+    "mtime": 1789235469.4109397,
+    "seen": 1789235573.8122818,
+    "ast_hash": "249a79692174604a783f56cde0805a4e",
     "semantic_hash": ""
   },
   "react-app/src/test/setup.ts": {
@@ -486,9 +486,9 @@
     "semantic_hash": ""
   },
   "react-app/src/lib/version.ts": {
-    "mtime": 1789204182.8290532,
-    "seen": 1789204225.2123365,
-    "ast_hash": "8162b5f5be81c5c485912c3be351ea40",
+    "mtime": 1789235478.6081884,
+    "seen": 1789235573.8122818,
+    "ast_hash": "ff3c7ac780fe89c5581eee9ea473df04",
     "semantic_hash": ""
   }
 }
