@@ -358,7 +358,7 @@ td.cat-bar .product-name .prod-tag{margin-left:auto;flex:0 0 auto}
 .promo-body{display:grid;gap:8px;min-width:0}
 .promo-row-top{display:flex;align-items:center;gap:6px}
 .promo-row-top .promo-label{flex:1 1 200px;width:100%;max-width:300px;min-width:0}
-.promo-row-top .icon-remove{margin-left:auto}
+.promo-row-top .icon-remove{margin-left:auto;height:27px;min-width:27px;width:27px;padding:0;border-radius:7px;border-width:1px;box-shadow:none;display:grid;place-items:center}
 .promo-row-conds{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
 .promo-row-conds input,.promo-row-conds select{border:1px solid var(--brand-line);border-radius:9px;padding:7px 8px;font-size:12px;color:var(--ink);background:var(--surface)}
 .promo-row-conds .promo-price,.promo-row-conds .promo-pct{flex:0 1 80px;width:80px;min-width:0}

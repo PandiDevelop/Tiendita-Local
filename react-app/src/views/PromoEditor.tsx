@@ -51,7 +51,7 @@ export function PromoEditor({ promos, onChange, priceHint }: Props) {
           <div className="promo-body">
             <div className="promo-row-top">
               <input className="promo-label" maxLength={70} placeholder="Nombre de la promoción" value={x.label} onChange={(e) => setAt(n, { label: e.target.value })} />
-              <button type="button" className="icon-remove" title="Quitar promoción" onClick={() => onChange(promos.filter((_, i) => i !== n))}><CloseIcon size={13} /></button>
+              <button type="button" className="icon-remove" title="Quitar promoción" onClick={() => onChange(promos.filter((_, i) => i !== n))}><CloseIcon size={11} /></button>
             </div>
             <div className="promo-row-conds">
               <select className="promo-select" value={x.type} onChange={(e) => setAt(n, { type: e.target.value as EditablePromo['type'] })}>
