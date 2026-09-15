@@ -162,9 +162,9 @@
     "semantic_hash": ""
   },
   "sw.js": {
-    "mtime": 1789265667.0118532,
-    "seen": 1789265688.446555,
-    "ast_hash": "7273e318bc9c6bd45774a7694e54b2f0",
+    "mtime": 1789454533.518383,
+    "seen": 1789454571.2156851,
+    "ast_hash": "9b322bc3f1c6330e184873ea4cc4bf5b",
     "semantic_hash": ""
   },
   "AGENTS.md": {
@@ -180,15 +180,15 @@
     "semantic_hash": ""
   },
   "index.html": {
-    "mtime": 1789265666.3123987,
-    "seen": 1789265688.446555,
-    "ast_hash": "9abc997b07a04c406fb092b155339618",
+    "mtime": 1789454532.8085244,
+    "seen": 1789454571.2156851,
+    "ast_hash": "8a927a3975b3edfc5f75819d3825dfa3",
     "semantic_hash": ""
   },
   "react-app/index.html": {
-    "mtime": 1789151764.3235204,
-    "seen": 1789151943.775039,
-    "ast_hash": "141ac4cc80404e17d7191dc192a81520",
+    "mtime": 1789454501.3977282,
+    "seen": 1789454571.2156851,
+    "ast_hash": "7cbb115b913acc2a3c6c4a8a55c38ff5",
     "semantic_hash": ""
   },
   "icon-180.png": {
@@ -486,9 +486,9 @@
     "semantic_hash": ""
   },
   "react-app/src/lib/version.ts": {
-    "mtime": 1789265640.8059237,
-    "seen": 1789265688.446555,
-    "ast_hash": "dce6023afcb60534ddf0ff6324345d97",
+    "mtime": 1789454504.0392575,
+    "seen": 1789454571.2156851,
+    "ast_hash": "c670e395edd6860b4ba93418cf826d73",
     "semantic_hash": ""
   }
 }
