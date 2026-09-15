@@ -421,6 +421,9 @@ td.cat-bar .product-name .prod-tag{margin-left:auto;flex:0 0 auto}
 .settings-block .label{margin-bottom:8px}
 .settings-row{display:flex;align-items:center;gap:10px}
 .settings-row input{flex:1;padding:11px 12px;border:1px solid var(--line);border-radius:10px;color:var(--ink)}
+.settings-account input{flex:1;width:100%;padding:11px 12px;border:1px solid var(--line);border-radius:10px;color:var(--ink);background:var(--surface)}
+.link-btn{background:none;border:0;color:var(--brand-deep);font-weight:700;cursor:pointer;padding:6px 0;text-decoration:underline}
+:root[data-theme="dark"] .settings-account input,:root[data-theme="pandi"] .settings-account input{background:var(--lilac);border-color:var(--brand);color:#1c1830}
 .settings-version{margin:0 0 6px}
 .settings-cats{margin-top:14px;display:grid;gap:8px}
 .settings-cats-label{font-size:12px;font-weight:700;color:var(--muted);margin-bottom:2px}

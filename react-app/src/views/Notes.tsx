@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { useStore } from '../store';
 import {
-  esc, shortDate, syncClientId, syncName,
+  esc, shortDate, syncClientId, syncName, samePerson,
   addNoteMsg, addChecklistNote, editNoteMsg, editChecklistNote, deleteNoteMsg, toggleNotePin,
   addNoteReply, editNoteReply, deleteNoteReply,
   toggleChecklistItem, removeChecklistItem,
@@ -220,7 +220,7 @@ function ThreadPanel({ noteId, onClose, openHistory }: { noteId: string; onClose
           </div>
           <div className="thread-replies">
             {(note.replies || []).length ? (note.replies || []).map((r) => {
-              const mine = r.by === me;
+              const mine = samePerson(r.by);
               const items = [
                 ...(canEditNote(r) ? [{ label: 'Editar', onClick: () => setEditing({ id: r.id, text: r.text }) }] : []),
                 ...((r.history && r.history.length) ? [{ label: 'Ver historial de cambios', onClick: () => openHistory('Historial de la respuesta', r) }] : []),
@@ -421,7 +421,7 @@ export function Notes() {
         {visible.length ? (
           <div className="notes-list">
             {visible.map((n) => {
-          const mine = n.by === me;
+          const mine = samePerson(n.by);
           const items = [
             ...(admin ? [{ label: n.pinned ? 'Desfijar' : 'Fijar', onClick: () => doTogglePin(n) }] : []),
             ...(canEditNote(n) ? [{ label: 'Editar', onClick: () => startEdit(n) }] : []),

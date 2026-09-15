@@ -106,6 +106,13 @@ export function firebaseApp(): FirebaseApp | null {
   return app;
 }
 
+// Igual que firebaseApp, pero para la instancia de Firestore (la usa
+// lib/account.ts al re-vincular una tienda a una cuenta).
+export function firestoreDb(): Firestore | null {
+  syncReady();
+  return DB;
+}
+
 // Guarda (o reemplaza) el token de FCM de ESTE dispositivo para la tienda
 // dada, en el documento principal de Firestore (mapa por syncClientId,
 // igual que "members": si el dispositivo ya tenia un token guardado antes,
@@ -772,6 +779,11 @@ export async function joinStore(pin: string, getState: () => AppState, mutate: (
     const r = snap.data();
     if (r.deleted) { await customAlert('Esa tienda fue eliminada. Pide un código nuevo.'); return; }
     const remote: Record<string, Member> = (r.members || {}) as Record<string, Member>;
+    // ¿Esta persona ES el dueño? (createdBy es el id de la cuenta cuando la
+    // persona inició sesión, o el id del dispositivo si sigue en modo invitado).
+    // Si coincide, al re-vincular la tienda en este teléfono entra como dueño,
+    // no como empleado más.
+    const meIsOwner = !r.createdBy || r.createdBy === syncClientId();
     // Cada empleado se registra con un UUID unico (eid) generado aqui. El
     // nombre tampoco puede repetirse entre empleados de la tienda: antes de
     // unirse se valida contra los miembros remotos, y al sincronizar (ver
@@ -781,7 +793,7 @@ export async function joinStore(pin: string, getState: () => AppState, mutate: (
       return;
     }
     const members: Record<string, Member> = {};
-    members[syncClientId()] = { name: syncName(), role: 'worker', joinedAt: Date.now(), eid: (remote[syncClientId()] && remote[syncClientId()].eid) || uid() };
+    members[syncClientId()] = { name: syncName(), role: meIsOwner ? 'owner' : 'worker', joinedAt: Date.now(), eid: (remote[syncClientId()] && remote[syncClientId()].eid) || uid() };
     await setDoc(ref, { members }, { merge: true });
     // Productos: se combinan los que aun puedan vivir embebidos en el
     // documento principal (modelo viejo) con los de la subcoleccion (modelo
@@ -809,7 +821,7 @@ export async function joinStore(pin: string, getState: () => AppState, mutate: (
       syncPin: pin,
       createdBy: r.createdBy || null,
       members: Object.assign({}, JSON.parse(JSON.stringify((r.members || {}))), members),
-      localRole: 'worker',
+      localRole: meIsOwner ? 'owner' : 'worker',
     };
     normalizeStore(s);
     mutate((d) => {

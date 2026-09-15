@@ -1,6 +1,6 @@
 import { createContext, useCallback, useContext, useEffect, useRef, ReactNode, useState } from 'react';
 import type { AppState, InventoryLogEntry, Product, Sale, Store, Tab } from './types';
-import { loadState, saveState, syncClientId, NOTE_TTL_MS, deletedStores } from './lib/core';
+import { loadState, saveState, samePerson, NOTE_TTL_MS, deletedStores } from './lib/core';
 import { createSync, applyRemote, activateSync, joinStore, SyncHandle, pruneDeletedStores } from './lib/sync';
 import { archiveUpsert, archiveMarkGone, noteToArchiveEntry, replyToArchiveEntry } from './lib/notesArchive';
 import { playNoteChime, showSystemNotification } from './lib/sound';
@@ -182,13 +182,12 @@ export function AppProvider({ children }: { children: ReactNode }) {
     const firstLook = prevNotesStoreRef.current !== storeId;
     const prevMap = firstLook ? new Map<string, Note>() : prevNotesRef.current;
     const nextMap = new Map<string, Note>();
-    const me = syncClientId();
     let notify = 0;
     (s.noteBoard || []).forEach((n) => {
       const prev = prevMap.get(n.id);
       if (!prev) {
         if (!firstLook) {
-          if (n.by !== me) notify++;
+          if (!samePerson(n.by)) notify++;
           archiveUpsert(storeId, noteToArchiveEntry(n));
         }
       } else if (prev.text !== n.text || prev.editedAt !== n.editedAt || !!prev.pinned !== !!n.pinned) {
@@ -199,7 +198,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
         const pr = prevReplies.get(r.id);
         if (!pr) {
           if (!firstLook) {
-            if (r.by !== me) notify++;
+            if (!samePerson(r.by)) notify++;
             archiveUpsert(storeId, replyToArchiveEntry(n.id, r));
           }
         } else if (pr.text !== r.text || pr.editedAt !== r.editedAt) {
@@ -268,16 +267,12 @@ export function AppProvider({ children }: { children: ReactNode }) {
     prevInvRef.current = nextInv;
     prevBizStoreRef.current = storeId;
     if (firstLook || (!rawVentas && !rawProductos && !rawCargamentos)) return;
-    // Recien aca se lee el id de este dispositivo: es algo que solo importa
-    // cuando de verdad aparecio algo nuevo, y keeps syncClientId() fuera de
-    // este efecto en los montajes tranquilos de cada tienda.
-    const me = syncClientId();
     let ventas = 0;
     let productos = 0;
     let cargamentos = 0;
-    (s.sales || []).forEach((x) => { if (!prevSales.has(x.id) && x.by && x.by !== me) ventas++; });
-    (s.products || []).forEach((p) => { if (!prevProducts.has(p.id) && p.by && p.by !== me) productos++; });
-    (s.invLog || []).forEach((e) => { if (!prevInv.has(e.id) && e.by && e.by !== me && e.qty > 0) cargamentos++; });
+    (s.sales || []).forEach((x) => { if (!prevSales.has(x.id) && x.by && !samePerson(x.by)) ventas++; });
+    (s.products || []).forEach((p) => { if (!prevProducts.has(p.id) && p.by && !samePerson(p.by)) productos++; });
+    (s.invLog || []).forEach((e) => { if (!prevInv.has(e.id) && e.by && !samePerson(e.by) && e.qty > 0) cargamentos++; });
     if (!ventas && !productos && !cargamentos) return;
     const parts: string[] = [];
     if (ventas && notifCatEnabled('venta')) parts.push(ventas === 1 ? 'Venta nueva' : ventas + ' ventas nuevas');

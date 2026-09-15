@@ -1,7 +1,9 @@
 import { useState } from 'react';
 import { useStore } from '../store';
-import { syncName, syncSetName, deletedStores, canManageNotes } from '../lib/core';
+import { syncName, syncSetName, resetClientId, deletedStores, canManageNotes } from '../lib/core';
 import type { DeletedStoreRecord } from '../lib/core';
+import { accountId, accountEmail, setAccountEmail, setAccountId } from '../lib/accountStore';
+import { currentIdentity, linkStoresToAccount, registerAccount, sendPasswordReset, signInAccount, signOutAccount } from '../lib/account';
 import { useAppVersion } from '../lib/appVersion';
 import { notifyEnabled, setNotifyEnabled, notifCats, setNotifCat } from '../lib/settings';
 import { requestNotifyPermission } from '../lib/sound';
@@ -46,6 +48,79 @@ export function SettingsModal({ onClose }: { onClose: () => void }) {
   const [theme, setTheme] = useState<ThemePref>(themePref());
   const [deleted, setDeleted] = useState(deletedStores());
   const installable = useInstallable();
+  const [acct, setAcct] = useState<string | null>(accountId());
+  const [acctEmail, setAcctEmail] = useState<string | null>(accountEmail());
+  const [accBusy, setAccBusy] = useState(false);
+  const [aemail, setAemail] = useState('');
+  const [apass, setApass] = useState('');
+
+  async function doSignIn() {
+    if (accBusy) return;
+    if (!aemail.trim() || !apass) { toast('Escribe tu correo y contraseña.'); return; }
+    setAccBusy(true);
+    try {
+      const from = currentIdentity();
+      const r = await signInAccount(aemail, apass);
+      if (!r.ok || !r.uid) { toast(r.message); return; }
+      setAccountEmail(r.email || null);
+      const link = await linkStoresToAccount(r.uid, from, () => state, replace);
+      setAccountId(r.uid);
+      resetClientId();
+      setAcct(r.uid);
+      setAcctEmail(r.email || null);
+      if (link.stores) toast('Tus tiendas quedaron vinculadas a tu cuenta. Puedes recuperarlas iniciando sesión en otro teléfono.');
+      else toast('Sesión iniciada. Vincula una tienda con su código y serás el dueño en este teléfono.');
+    } finally {
+      setAccBusy(false);
+    }
+  }
+
+  async function doRegister() {
+    if (accBusy) return;
+    if (!aemail.trim() || !apass) { toast('Escribe tu correo y una contraseña.'); return; }
+    setAccBusy(true);
+    try {
+      const from = currentIdentity();
+      const r = await registerAccount(aemail, apass);
+      if (!r.ok || !r.uid) { toast(r.message); return; }
+      setAccountEmail(r.email || null);
+      const link = await linkStoresToAccount(r.uid, from, () => state, replace);
+      setAccountId(r.uid);
+      resetClientId();
+      setAcct(r.uid);
+      setAcctEmail(r.email || null);
+      if (link.stores) toast('Cuenta creada y tus tiendas quedaron vinculadas.');
+      else toast('Cuenta creada. Crea una tienda o únete con el código de la tuya.');
+    } finally {
+      setAccBusy(false);
+    }
+  }
+
+  async function doResetPass() {
+    if (accBusy) return;
+    if (!aemail.trim()) { toast('Escribe tu correo primero.'); return; }
+    setAccBusy(true);
+    try {
+      const r = await sendPasswordReset(aemail);
+      toast(r.message);
+    } finally {
+      setAccBusy(false);
+    }
+  }
+
+  async function doLogout() {
+    if (accBusy) return;
+    setAccBusy(true);
+    try {
+      const r = await signOutAccount();
+      toast(r.message);
+      setAcct(null);
+      setAcctEmail(null);
+      window.location.reload();
+    } finally {
+      setAccBusy(false);
+    }
+  }
 
   async function restoreOne(rec: DeletedStoreRecord) {
     if (busy) return;
@@ -116,6 +191,38 @@ export function SettingsModal({ onClose }: { onClose: () => void }) {
             <button className="button secondary" onClick={saveName}>Guardar</button>
           </div>
           <p className="muted">Es el nombre con el que firmas notas, ventas e inventario del equipo.</p>
+        </div>
+      </div>
+
+      <div className="settings-block">
+        <div className="label">Cuenta</div>
+        <div className="field">
+          {acct ? (
+            <>
+              <p className="muted"><b>Sesión iniciada</b> con {acctEmail || 'tu cuenta'}. Si cambias de teléfono o reinstalas la app, entra con tu correo y el código de tu tienda para recuperarla como dueño.</p>
+              <div className="settings-row">
+                <button className="button outline" disabled={accBusy} onClick={doLogout} title="Termina la sesión de Firebase en este navegador">Cerrar sesión</button>
+              </div>
+              <p className="muted">Cerrar sesión no quita tus tiendas de este dispositivo: sigues viéndolas igual.</p>
+            </>
+          ) : (
+            <>
+              <div className="field settings-account">
+                <label htmlFor="account-email">Correo</label>
+                <input id="account-email" type="email" maxLength={120} autoComplete="email" placeholder="tucorreo@ejemplo.com" value={aemail} onChange={(e) => setAemail(e.target.value)} />
+              </div>
+              <div className="field settings-account">
+                <label htmlFor="account-pass">Contraseña</label>
+                <input id="account-pass" type="password" maxLength={120} autoComplete="current-password" placeholder="Mínimo 6 caracteres" value={apass} onChange={(e) => setApass(e.target.value)} />
+              </div>
+              <div className="settings-row" style={{ flexWrap: 'wrap' }}>
+                <button className="button secondary" disabled={accBusy} onClick={doSignIn}>{accBusy ? '…' : 'Iniciar sesión'}</button>
+                <button className="button secondary" disabled={accBusy} onClick={doRegister}>{accBusy ? '…' : 'Crear cuenta'}</button>
+              </div>
+              <button className="link-btn" disabled={accBusy} onClick={doResetPass}>¿Olvidaste tu contraseña?</button>
+              <p className="muted">Con una cuenta, si pierdes tu teléfono o reinstalas la app, vuelves a entrar con tu correo y recuperas tus tiendas como dueño.</p>
+            </>
+          )}
         </div>
       </div>
 

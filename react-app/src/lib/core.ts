@@ -1,4 +1,5 @@
 import type { AppState, CategoryPricing, CostEntry, InventoryLogEntry, Note, NoteChecklistItem, NoteEntry, NoteReply, Product, Promo, Role, Sale, SaleItem, Store, StoreEvent } from '../types';
+import { accountId, legacyAccountIds } from './accountStore';
 
 export const KEY = 'mi-tiendita-v1';
 export const CLIENT_KEY = 'mi-tiendita-client';
@@ -254,6 +255,8 @@ export function uid(): string {
 
 let _cid: string | null = null;
 export function syncClientId(): string {
+  const acct = accountId();
+  if (acct) { _cid = acct; return acct; }
   if (_cid) return _cid;
   let v = localStorage.getItem(CLIENT_KEY);
   if (!v) {
@@ -262,6 +265,19 @@ export function syncClientId(): string {
   }
   _cid = v;
   return v;
+}
+
+// Se usa tras iniciar o cerrar sesión: la identidad cambió en localStorage y
+// hay que dejar que la próxima llamada la vuelva a leer.
+export function resetClientId(): void { _cid = null; }
+
+// true si el id dado pertenece a ESTA persona: la identidad actual (cuenta o
+// dispositivo) o cualquiera de los ids que esa persona tuvo antes de vincular
+// su cuenta (ver accountStore.rememberLegacyId). Así, al pasar a "cuenta", las
+// notas, ventas y cargamentos firmados con el id viejo siguen siendo propios.
+export function samePerson(id: string | null | undefined): boolean {
+  if (!id) return false;
+  return id === syncClientId() || legacyAccountIds().includes(id);
 }
 
 export function syncName(): string {
@@ -611,7 +627,7 @@ export function canManageNotes(s: Store): boolean {
 }
 
 export function canEditNote(n: Pick<Note, 'by'>): boolean {
-  return !!n.by && n.by === syncClientId();
+  return samePerson(n.by);
 }
 
 export function canDeleteNote(s: Store, n: Pick<Note, 'by'>): boolean {
