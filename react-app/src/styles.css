@@ -755,3 +755,15 @@ input[type="number"]::-webkit-inner-spin-button,input[type="number"]::-webkit-ou
    perdía. Ahora toma el color de texto suave del propio tema. */
 :root[data-theme="dark"] .ev-card .ev-name::placeholder,
 :root[data-theme="pandi"] .ev-card .ev-name::placeholder{color:var(--muted)}
+
+/* --- Área segura para pantalla completa (Android) y barra translúcida (iOS) ---
+   Con viewport-fit=cover el contenido llega hasta los bordes de la pantalla. En
+   iPhone con la barra translúcida y en Android a pantalla completa hay que
+   apartar el contenido del recorte/barra de estado para que el fondo del tema
+   se vea detrás y no quede nada tapado (incluye el borde de la cámara). */
+.content{padding-top:calc(40px + env(safe-area-inset-top,0px));padding-right:calc(55px + env(safe-area-inset-right,0px));padding-bottom:calc(70px + env(safe-area-inset-bottom,0px));padding-left:calc(55px + env(safe-area-inset-left,0px))}
+.sidebar{padding-top:calc(28px + env(safe-area-inset-top,0px));padding-bottom:calc(28px + env(safe-area-inset-bottom,0px))}
+@media (max-width:760px){
+  .content{padding-top:calc(20px + env(safe-area-inset-top,0px));padding-right:calc(14px + env(safe-area-inset-right,0px));padding-bottom:calc(42px + env(safe-area-inset-bottom,0px));padding-left:calc(14px + env(safe-area-inset-left,0px))}
+  .sidebar{padding-top:calc(28px + env(safe-area-inset-top,0px));padding-bottom:calc(28px + env(safe-area-inset-bottom,0px))}
+}
