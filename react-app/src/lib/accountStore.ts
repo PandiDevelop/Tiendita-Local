@@ -2,6 +2,7 @@ export const ACCOUNT_KEY = 'mi-tiendita-account';
 const ACCOUNT_EMAIL_KEY = 'mi-tiendita-account-email';
 const ACCOUNT_LEGACY_KEY = 'mi-tiendita-account-legacy';
 const ACCOUNT_SESSION_KEY = 'mi-tiendita-account-session';
+const ACCOUNT_NAME_KEY = 'mi-tiendita-account-name';
 
 // Id de la cuenta (Firebase Auth uid) con sesión en este dispositivo. Mientras
 // exista, la identidad de la app (syncClientId en core.ts) es ESTE id; sin
@@ -26,6 +27,20 @@ export function setAccountEmail(email: string | null): void {
   try {
     if (email) localStorage.setItem(ACCOUNT_EMAIL_KEY, email);
     else localStorage.removeItem(ACCOUNT_EMAIL_KEY);
+  } catch { /* no crítico */ }
+}
+
+// Nombre de usuario elegido al crear la cuenta (el displayName de Firebase).
+// Es el nombre que la cuenta usa SIEMPRE y el que cada teléfono que inicie
+// sesión adopta como propio (ver initAccountAuth/signInAccount en account.ts).
+export function accountName(): string | null {
+  try { return localStorage.getItem(ACCOUNT_NAME_KEY); } catch { return null; }
+}
+
+export function setAccountName(v: string | null): void {
+  try {
+    if (v) localStorage.setItem(ACCOUNT_NAME_KEY, v);
+    else localStorage.removeItem(ACCOUNT_NAME_KEY);
   } catch { /* no crítico */ }
 }
 

@@ -1,7 +1,7 @@
 import type { AppState } from '../types';
-import { accountId, rememberLegacyId, setAccountId, setAccountEmail, sessionActive, setSessionActive } from './accountStore';
+import { accountId, rememberLegacyId, setAccountId, setAccountEmail, setAccountName, sessionActive, setSessionActive } from './accountStore';
 import { buildRekeyedStore } from './identity';
-import { CLIENT_KEY, resetClientId } from './core';
+import { CLIENT_KEY, resetClientId, syncSetName } from './core';
 import { firebaseApp, firestoreDb } from './sync';
 
 let initialized = false;
@@ -42,6 +42,13 @@ export async function initAccountAuth(): Promise<void> {
       if (user) {
         setSessionActive(true);
         setAccountEmail(user.email || null);
+        // El nombre de usuario elegido al crear la cuenta se conserva como
+        // displayName de Firebase: cada teléfono que inicie sesión lo adopta
+        // como su nombre, para que siempre sea el mismo en todo el equipo.
+        if (user.displayName && user.displayName.trim()) {
+          setAccountName(user.displayName.trim());
+          syncSetName(user.displayName.trim());
+        }
         if (accountId() !== user.uid) {
           setAccountId(user.uid);
           resetClientId();
@@ -91,19 +98,33 @@ export async function signInAccount(email: string, pw: string): Promise<{ ok: bo
       return { ok: false, message: 'Tu correo todavía no está confirmado. Te reenviamos el enlace de confirmación: revísalo (y el spam) y vuelve a intentarlo.' };
     }
     setSessionActive(true);
+    if (user.displayName && user.displayName.trim()) {
+      setAccountName(user.displayName.trim());
+      syncSetName(user.displayName.trim());
+    }
     return { ok: true, uid: user.uid, email: user.email || undefined, message: 'Sesión iniciada.' };
   } catch (e) {
     return { ok: false, message: authMessage(e) };
   }
 }
 
-export async function registerAccount(email: string, pw: string): Promise<{ ok: boolean; uid?: string; email?: string; message: string }> {
+export async function registerAccount(email: string, pw: string, name?: string): Promise<{ ok: boolean; uid?: string; email?: string; message: string }> {
   const priorId = accountId();
   try {
-    const { getAuth, createUserWithEmailAndPassword, signOut, sendEmailVerification } = await import('firebase/auth');
+    const { getAuth, createUserWithEmailAndPassword, signOut, sendEmailVerification, updateProfile } = await import('firebase/auth');
     const auth = getAuth(firebaseApp()!);
     const cred = await createUserWithEmailAndPassword(auth, email.trim(), pw);
     const user = cred.user;
+    // El nombre de usuario que se pide al crear la cuenta pasa a ser el
+    // displayName de Firebase: es el nombre que la cuenta usa SIEMPRE en
+    // notas, ventas e inventario, y que se adopta en cada teléfono que
+    // inicie sesión (ver initAccountAuth/signInAccount).
+    const display = (name && name.trim()) ? name.trim() : '';
+    try { if (display) await updateProfile(user, { displayName: display }); } catch { /* best-effort: no es crítico */ }
+    if (display) {
+      setAccountName(display);
+      syncSetName(display);
+    }
     // Confirmación obligatoria antes de usar la cuenta: se manda el correo de
     // verificación y se sale de la sesión recién creada (no se vincula nada
     // hasta que el usuario confirme el correo y entre con Iniciar sesión).
@@ -175,12 +196,19 @@ export async function linkStoresToAccount(to: string, from: string, getState: ()
       const del = deleteField();
       const upd: Record<string, unknown> = { updatedBy: to };
       upd.members = { [to]: (rekeyed.members && rekeyed.members[to]) || null, [from]: del };
+      // El índice de membresía (ver "memberIds" en sync.ts) también se
+      // re-vincula: se quita el id viejo y se agrega el de la cuenta, para
+      // que un teléfono nuevo que inicie sesión encuentre la tienda sola.
       if (data) {
         const pt = (data.pushTokens || {}) as Record<string, unknown>;
         if (Object.prototype.hasOwnProperty.call(pt, from)) upd.pushTokens = { [to]: pt[from], [from]: del };
         const pp = (data.pushPrefs || {}) as Record<string, unknown>;
         if (Object.prototype.hasOwnProperty.call(pp, from)) upd.pushPrefs = { [to]: pp[from], [from]: del };
         if (data.createdBy === from) upd.createdBy = to;
+        const mIds = new Set<string>(Array.isArray(data.memberIds) ? (data.memberIds as string[]) : Object.keys(rekeyed.members || {}));
+        if (mIds.has(from)) mIds.delete(from);
+        mIds.add(to);
+        upd.memberIds = Array.from(mIds);
       }
       await setDoc(ref, upd, { merge: true });
       res.remote += 1;

@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import { describe, expect, it, beforeEach } from 'vitest';
 import { CLIENT_KEY, resetClientId, samePerson, syncClientId } from '../lib/core';
-import { accountEmail, accountId, legacyAccountIds, rememberLegacyId, sessionActive, setAccountEmail, setAccountId, setSessionActive } from '../lib/accountStore';
+import { accountEmail, accountId, accountName, legacyAccountIds, rememberLegacyId, sessionActive, setAccountEmail, setAccountId, setAccountName, setSessionActive } from '../lib/accountStore';
 import { buildRekeyedStore } from '../lib/identity';
 import { makeStore } from './testUtils';
 
@@ -70,6 +70,15 @@ describe('cuenta: samePerson y legacy', () => {
     setAccountId(null);
     setSessionActive(true);
     expect(sessionActive()).toBe(false);
+  });
+
+  it('el nombre de usuario de la cuenta se guarda aparte y se puede limpiar', () => {
+    expect(accountName()).toBeNull();
+    setAccountName('  Ana  ');
+    // se guarda tal cual llega (el recorte lo decide quien escribe)
+    expect(accountName()).toBe('  Ana  ');
+    setAccountName(null);
+    expect(accountName()).toBeNull();
   });
 });
 

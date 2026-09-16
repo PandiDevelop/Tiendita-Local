@@ -406,6 +406,13 @@ export function createSync(
       if (Object.keys(noteBoardPatch).length) main.noteBoard = noteBoardPatch;
       main.inventory = s.inventory || {};
       if (!s.createdBy || s.createdBy === cid()) { main.name = s.name; main.image = s.image; }
+      // Indice de membresía (array de ids, incluido este dispositivo o la
+      // cuenta): permite a la nube contestar "¿en qué tiendas está el usuario
+      // X?" (consulta array-contains) sin barrer todas las tiendas. Se
+      // mantiene en cuanto se escriben "members" (join/activate/roles/abandonar/
+      // re-vinculado con cuenta) y también aquí en cada push, para que las
+      // tiendas ya existentes lo ganen sin otro paso.
+      if (s.members && Object.keys(s.members).length) main.memberIds = Object.keys(s.members);
 
       await setDoc(storeDocRef(s.syncKey), main, { merge: true });
       // Antes se marcaba "ya lo mande" (lastPush) ANTES de saber si el
@@ -794,7 +801,8 @@ export async function joinStore(pin: string, getState: () => AppState, mutate: (
     }
     const members: Record<string, Member> = {};
     members[syncClientId()] = { name: syncName(), role: meIsOwner ? 'owner' : 'worker', joinedAt: Date.now(), eid: (remote[syncClientId()] && remote[syncClientId()].eid) || uid() };
-    await setDoc(ref, { members }, { merge: true });
+    const memberIds = Array.from(new Set([...Object.keys(remote), ...Object.keys(members)]));
+    await setDoc(ref, { members, memberIds }, { merge: true });
     // Productos: se combinan los que aun puedan vivir embebidos en el
     // documento principal (modelo viejo) con los de la subcoleccion (modelo
     // nuevo), ganando la subcoleccion en caso de conflicto.
@@ -868,7 +876,7 @@ export async function activateSync(storeId: string, pin: string, getState: () =>
         categoryPricing: s.categoryPricing || {},
         notes: s.notes || '', noteLog, invLog, inventory: s.inventory || {},
         events: s.events || [],
-        createdBy: syncClientId(), members, updatedBy: syncClientId(),
+        createdBy: syncClientId(), members, memberIds: Object.keys(members), updatedBy: syncClientId(),
       }, { merge: true });
       mutate((d) => { const st = d.stores.find((x) => x.id === storeId); if (st) { st.localRole = 'owner'; st.syncKey = key; st.syncPin = pin; } });
       // Conectar el listener YA, antes del aviso: si se espera a que el
@@ -891,7 +899,8 @@ export async function activateSync(storeId: string, pin: string, getState: () =>
       }
       const upd: Record<string, Member> = {};
       upd[syncClientId()] = { name: syncName(), role: isOwner ? 'owner' : 'worker', joinedAt: (prev as Member).joinedAt || Date.now(), eid: (prev as Member).eid || uid() };
-      await setDoc(ref, { members: upd }, { merge: true });
+      const memberIds = Array.from(new Set([...Object.keys((r.members || {}) as Record<string, unknown>), ...Object.keys(upd)]));
+      await setDoc(ref, { members: upd, memberIds }, { merge: true });
       if (isOwner && !r.createdBy) await setDoc(ref, { createdBy: syncClientId() }, { merge: true });
       // Se incorporan tambien los productos de la subcoleccion, para que el
       // estado local quede completo desde ya (el listener attach() los
@@ -930,7 +939,7 @@ export async function removeMemberFn(storeId: string, memberId: string, getState
   mutate((d) => { const st = d.stores.find((x) => x.id === storeId); if (st) st.members = members; });
   try {
     const del = deleteField();
-    await setDoc(doc(collection(DB, 'stores'), s.syncKey), { members: { [memberId]: del } }, { merge: true });
+    await setDoc(doc(collection(DB, 'stores'), s.syncKey), { members: { [memberId]: del }, memberIds: Object.keys(members) }, { merge: true });
     toast('Trabajador eliminado de la tienda.');
   } catch (e) { console.warn(e); toast('No se pudo eliminar al trabajador.'); }
 }
@@ -950,7 +959,7 @@ export async function setMemberRoleFn(storeId: string, memberId: string, role: R
   const members = Object.assign({}, s.members || {}, { [memberId]: updated });
   mutate((d) => { const st = d.stores.find((x) => x.id === storeId); if (st) st.members = members; });
   try {
-    await setDoc(doc(collection(DB, 'stores'), s.syncKey), { members: { [memberId]: updated } }, { merge: true });
+    await setDoc(doc(collection(DB, 'stores'), s.syncKey), { members: { [memberId]: updated }, memberIds: Object.keys(members) }, { merge: true });
     toast(role === 'admin' ? 'Ahora es administrador.' : 'Ya no es administrador.');
   } catch (e) { console.warn(e); toast('No se pudo actualizar el permiso.'); }
 }
@@ -981,7 +990,7 @@ export async function leaveStoreFn(id: string, getState: () => AppState, mutate:
   if (!(await customConfirm(q))) return false;
   if (DB) {
     try {
-      await setDoc(doc(collection(DB, 'stores'), s.syncKey), { members: { [syncClientId()]: deleteField() } }, { merge: true });
+      await setDoc(doc(collection(DB, 'stores'), s.syncKey), { members: { [syncClientId()]: deleteField() }, memberIds: Object.keys(s.members || {}).filter((k) => k !== syncClientId()) }, { merge: true });
     } catch (e) { console.warn('No se pudo avisar del retiro:', e); }
   }
   removeLocalStoreFn(id, getState, mutate, detach);
@@ -1005,7 +1014,7 @@ async function purgeDeletedStore(key: string): Promise<void> {
     const products = await loadProducts(key);
     await Promise.all(products.map((p) => deleteDoc(productDocRef(key, p.id))));
     const purge: Record<string, unknown> = { deleted: true, deletedAt: Date.now() };
-    ['members', 'pushTokens', 'pushPrefs', 'sales', 'noteBoard', 'noteLog', 'invLog', 'notes', 'inventory', 'categories', 'categoryPricing', 'events', 'image', 'createdBy', 'updatedBy', 'products'].forEach((k) => { purge[k] = deleteField(); });
+    ['members', 'memberIds', 'pushTokens', 'pushPrefs', 'sales', 'noteBoard', 'noteLog', 'invLog', 'notes', 'inventory', 'categories', 'categoryPricing', 'events', 'image', 'createdBy', 'updatedBy', 'products'].forEach((k) => { purge[k] = deleteField(); });
     await setDoc(storeDocRef(key), purge, { merge: true });
   } catch (e) { console.warn('Purga de tienda vencida fallida:', e); }
 }
@@ -1037,6 +1046,73 @@ function buildStoreFromRemote(r: Record<string, unknown>, key: string, code: str
   };
   normalizeStore(s);
   return s;
+}
+
+// Trae de la nube las tiendas donde el uid dado figura como miembro (en el
+// índice "memberIds", en el mapa "members" o como dueño en "createdBy") y las
+// agrega a este dispositivo SIN escribir ni crear una membresía nueva: usa la
+// que el uid ya tiene en la nube. Es lo que hace que al iniciar sesión en un
+// teléfono nuevo aparezcan solas las tiendas de la cuenta, sin tener que
+// escribir su código. Al barrer la colección (igual que ya hace storeNameTaken
+// con este mismo volumen de tiendas) se encuentran también las tiendas viejas
+// que todavía no tienen "memberIds": la alternativa de consultar con
+// array-contains dejaría fuera a las que aún no migraron. Devuelve cuántas
+// tiendas se agregaron. Best-effort: si no hay red o la consulta falla,
+// devuelve 0 y no rompe nada.
+export async function pullJoinedStores(accountUid: string, getState: () => AppState, mutate: (fn: (d: AppState) => void) => void, attach: (id: string) => void): Promise<number> {
+  if (!syncReady() || !DB || !accountUid) return 0;
+  try {
+    const snap = await getDocs(collection(DB, 'stores'));
+    let added = 0;
+    const existingKeys = new Set(getState().stores.filter((x) => x.syncKey).map((x) => x.syncKey));
+    for (const d of snap.docs) {
+      const r = d.data() || {};
+      if (r.deleted) continue;
+      const key = d.id;
+      if (existingKeys.has(key)) continue;
+      const members = (r.members || {}) as Record<string, Member>;
+      const me = members[accountUid];
+      const owner = r.createdBy ? String(r.createdBy) === accountUid : false;
+      const indexed = Array.isArray(r.memberIds) && (r.memberIds as string[]).includes(accountUid);
+      if (!me && !owner && !indexed) continue;
+      const legacyProducts = toProductsArr(r.products);
+      const subProducts = await loadProducts(key);
+      const merged = new Map<string, Product>();
+      legacyProducts.forEach((p) => merged.set(p.id, p));
+      subProducts.forEach((p) => merged.set(p.id, p));
+      const s: Store = {
+        id: uid(),
+        name: `${r.name || 'Tienda compartida'}`,
+        image: `${r.image || DEFAULT_STORE_IMAGE}`,
+        products: Array.from(merged.values()),
+        sales: toSalesArr(r.sales),
+        categories: JSON.parse(JSON.stringify((r.categories || []))),
+        categoryPricing: r.categoryPricing && typeof r.categoryPricing === 'object' ? JSON.parse(JSON.stringify(r.categoryPricing)) : {},
+        events: Array.isArray(r.events) ? JSON.parse(JSON.stringify(r.events)) : [],
+        inventory: r.inventory && typeof r.inventory === 'object' ? { ...(r.inventory as Record<string, number>) } : {},
+        notes: typeof r.notes === 'string' ? r.notes : '',
+        noteLog: toNoteLogArr(r.noteLog),
+        noteBoard: toNoteBoardArr(r.noteBoard),
+        invLog: toInvLogArr(r.invLog),
+        syncKey: key,
+        createdBy: r.createdBy ? `${r.createdBy}` : null,
+        members: JSON.parse(JSON.stringify(members)),
+        localRole: owner ? 'owner' : me && (me.role === 'owner' || me.role === 'admin') ? me.role : 'worker',
+      };
+      normalizeStore(s);
+      mutate((d) => {
+        if (d.stores.some((x) => x.syncKey === key)) return;
+        d.stores.push(s);
+        if (!d.activeStoreId) { d.activeStoreId = s.id; d.tab = 'inicio'; }
+      });
+      attach(s.id);
+      added++;
+    }
+    return added;
+  } catch (e) {
+    console.warn('No se pudieron recuperar las tiendas de la cuenta:', e);
+    return 0;
+  }
 }
 
 export async function restoreStoreFn(key: string, _getState: () => AppState, mutate: (fn: (d: AppState) => void) => void, attach: (id: string) => void, toast: (m: string) => void): Promise<boolean> {

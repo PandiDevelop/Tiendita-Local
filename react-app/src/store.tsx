@@ -1,7 +1,8 @@
 import { createContext, useCallback, useContext, useEffect, useRef, ReactNode, useState } from 'react';
 import type { AppState, InventoryLogEntry, Product, Sale, Store, Tab } from './types';
-import { loadState, saveState, samePerson, NOTE_TTL_MS, deletedStores } from './lib/core';
-import { createSync, applyRemote, activateSync, joinStore, SyncHandle, pruneDeletedStores } from './lib/sync';
+import { loadState, saveState, samePerson, syncClientId, NOTE_TTL_MS, deletedStores } from './lib/core';
+import { createSync, applyRemote, activateSync, joinStore, pullJoinedStores, SyncHandle, pruneDeletedStores } from './lib/sync';
+import { onAccountChange } from './lib/account';
 import { archiveUpsert, archiveMarkGone, noteToArchiveEntry, replyToArchiveEntry } from './lib/notesArchive';
 import { playNoteChime, showSystemNotification } from './lib/sound';
 import { notifyEnabled, notifCatEnabled } from './lib/settings';
@@ -152,6 +153,21 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const detach = useCallback((id: string) => { sync.current!.detach(id); }, []);
   const activate = useCallback((storeId: string, pin: string) => activateSync(storeId, pin, () => stateRef.current, replace, attach), [replace, attach]);
   const join = useCallback((pin: string) => joinStore(pin, () => stateRef.current, replace, attach), [replace, attach]);
+
+  // Cuando la sesión de una cuenta se activa (al iniciar sesión o al
+  // restaurarse al arrancar la app), se buscan en la nube las tiendas donde
+  // esa cuenta está unida (miembro en "memberIds") y se agregan solas a este
+  // teléfono: por eso en un teléfono nuevo las tiendas aparecen sin tener que
+  // escribir su código. Se dispara solo cuando la identidad ya pasó a ser el
+  // uid (syncClientId() === uid), que es lo que sucede tras setAccountId.
+  useEffect(() => {
+    return onAccountChange((uid) => {
+      if (!uid || syncClientId() !== uid) return;
+      pullJoinedStores(uid, () => stateRef.current, replace, attach).then((n) => {
+        if (n > 0) toast(n === 1 ? 'Se restauró 1 tienda de tu cuenta en este teléfono.' : `Se restauraron ${n} tiendas de tu cuenta en este teléfono.`);
+      });
+    });
+  }, [replace, attach, toast]);
 
   const active = state.stores.find((s) => s.id === state.activeStoreId) ?? state.stores[0];
 

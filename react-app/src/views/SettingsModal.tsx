@@ -54,6 +54,7 @@ export function SettingsModal({ onClose }: { onClose: () => void }) {
   const [accBusy, setAccBusy] = useState(false);
   const [aemail, setAemail] = useState('');
   const [apass, setApass] = useState('');
+  const [auser, setAuser] = useState('');
   const [showPass, setShowPass] = useState(false);
   const [accNote, setAccNote] = useState<string | null>(null);
   const accNoteTimer = useRef<number | null>(null);
@@ -68,6 +69,7 @@ export function SettingsModal({ onClose }: { onClose: () => void }) {
   function closeAccountPopup() {
     setAemail('');
     setApass('');
+    setAuser('');
     setShowPass(false);
     setAccNote(null);
     setShowAccount(false);
@@ -102,9 +104,10 @@ export function SettingsModal({ onClose }: { onClose: () => void }) {
   async function doRegister() {
     if (accBusy) return;
     if (!aemail.trim() || !apass) { flashAccNote('Escribe tu correo y una contraseña.'); return; }
+    if (!auser.trim()) { flashAccNote('Escribe tu nombre de usuario: será con el que firmes notas, ventas e inventario.'); return; }
     setAccBusy(true);
     try {
-      const r = await registerAccount(aemail, apass);
+      const r = await registerAccount(aemail, apass, auser);
       if (r.ok) setApass('');
       flashAccNote(r.message);
       toast(r.message);
@@ -256,11 +259,16 @@ export function SettingsModal({ onClose }: { onClose: () => void }) {
                     </button>
                   </div>
                 </div>
+                <div className="field settings-account">
+                  <label htmlFor="account-name">Nombre de usuario</label>
+                  <input id="account-name" type="text" maxLength={30} autoComplete="nickname" placeholder="Cómo te llamarán tus compañeros" value={auser} onChange={(e) => setAuser(e.target.value)} />
+                </div>
                 <div className="settings-row account-actions" style={{ flexWrap: 'wrap' }}>
                   <button className="button secondary" disabled={accBusy} onClick={doSignIn}>Iniciar sesión</button>
                   <button className="button secondary" disabled={accBusy} onClick={doRegister}>Crear cuenta</button>
                 </div>
                 <button className="link-btn" disabled={accBusy} onClick={doResetPass}>¿Olvidaste tu contraseña?</button>
+                <p className="muted">Tu nombre de usuario será el mismo en todos los teléfonos donde inicies sesión.</p>
                 <p className="muted">Te enviaremos un correo para confirmar tu cuenta antes de usarla.</p>
               </>
             )}
