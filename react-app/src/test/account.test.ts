@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import { describe, expect, it, beforeEach } from 'vitest';
 import { CLIENT_KEY, resetClientId, samePerson, syncClientId } from '../lib/core';
-import { accountEmail, accountId, legacyAccountIds, rememberLegacyId, setAccountEmail, setAccountId } from '../lib/accountStore';
+import { accountEmail, accountId, legacyAccountIds, rememberLegacyId, sessionActive, setAccountEmail, setAccountId, setSessionActive } from '../lib/accountStore';
 import { buildRekeyedStore } from '../lib/identity';
 import { makeStore } from './testUtils';
 
@@ -57,6 +57,19 @@ describe('cuenta: samePerson y legacy', () => {
     rememberLegacyId('dev-1');
     rememberLegacyId('dev-1');
     expect(legacyAccountIds()).toEqual(['dev-1']);
+  });
+
+  it('la sesión activa requiere identidad de cuenta Y flag de sesión', () => {
+    setAccountId('uid-9');
+    expect(sessionActive()).toBe(false);
+    setSessionActive(true);
+    expect(sessionActive()).toBe(true);
+    setSessionActive(false);
+    expect(sessionActive()).toBe(false);
+    // sin identidad de cuenta, el flag solo no cuenta
+    setAccountId(null);
+    setSessionActive(true);
+    expect(sessionActive()).toBe(false);
   });
 });
 

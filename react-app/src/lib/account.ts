@@ -1,5 +1,5 @@
 import type { AppState } from '../types';
-import { accountId, rememberLegacyId, setAccountId, setAccountEmail } from './accountStore';
+import { accountId, rememberLegacyId, setAccountId, setAccountEmail, sessionActive, setSessionActive } from './accountStore';
 import { buildRekeyedStore } from './identity';
 import { CLIENT_KEY, resetClientId } from './core';
 import { firebaseApp, firestoreDb } from './sync';
@@ -17,7 +17,7 @@ function emit(uid: string | null) {
 }
 
 export function accountEnabled(): boolean {
-  return !!accountId();
+  return sessionActive();
 }
 
 // Id que está usando este dispositivo HOY, antes de que el uid de la cuenta
@@ -40,6 +40,7 @@ export async function initAccountAuth(): Promise<void> {
     initialized = true;
     onAuthStateChanged(auth, (user) => {
       if (user) {
+        setSessionActive(true);
         setAccountEmail(user.email || null);
         if (accountId() !== user.uid) {
           setAccountId(user.uid);
@@ -70,20 +71,45 @@ function authMessage(e: unknown): string {
 }
 
 export async function signInAccount(email: string, pw: string): Promise<{ ok: boolean; uid?: string; email?: string; message: string }> {
+  const priorId = accountId();
   try {
-    const { getAuth, signInWithEmailAndPassword } = await import('firebase/auth');
-    const cred = await signInWithEmailAndPassword(getAuth(firebaseApp()!), email.trim(), pw);
-    return { ok: true, uid: cred.user.uid, email: cred.user.email || undefined, message: 'Sesión iniciada.' };
+    const { getAuth, signInWithEmailAndPassword, signOut, sendEmailVerification } = await import('firebase/auth');
+    const auth = getAuth(firebaseApp()!);
+    const cred = await signInWithEmailAndPassword(auth, email.trim(), pw);
+    const user = cred.user;
+    if (!user.emailVerified) {
+      // No se puede usar la cuenta sin confirmar el correo: se cierra la
+      // sesión (Firebase la deja iniciada al crearla/entrar), se reenvía el
+      // enlace de confirmación y se restaura la identidad anterior para que
+      // las tiendas de este teléfono sigan funcionando igual.
+      try { await sendEmailVerification(user); } catch { /* el reenvío no es crítico */ }
+      await signOut(auth);
+      if (accountId() === user.uid) { setAccountId(priorId || null); resetClientId(); }
+      setSessionActive(false);
+      return { ok: false, message: 'Tu correo todavía no está confirmado. Te reenviamos el enlace de confirmación: revísalo (y el spam) y vuelve a intentarlo.' };
+    }
+    setSessionActive(true);
+    return { ok: true, uid: user.uid, email: user.email || undefined, message: 'Sesión iniciada.' };
   } catch (e) {
     return { ok: false, message: authMessage(e) };
   }
 }
 
 export async function registerAccount(email: string, pw: string): Promise<{ ok: boolean; uid?: string; email?: string; message: string }> {
+  const priorId = accountId();
   try {
-    const { getAuth, createUserWithEmailAndPassword } = await import('firebase/auth');
-    const cred = await createUserWithEmailAndPassword(getAuth(firebaseApp()!), email.trim(), pw);
-    return { ok: true, uid: cred.user.uid, email: cred.user.email || undefined, message: 'Cuenta creada.' };
+    const { getAuth, createUserWithEmailAndPassword, signOut, sendEmailVerification } = await import('firebase/auth');
+    const auth = getAuth(firebaseApp()!);
+    const cred = await createUserWithEmailAndPassword(auth, email.trim(), pw);
+    const user = cred.user;
+    // Confirmación obligatoria antes de usar la cuenta: se manda el correo de
+    // verificación y se sale de la sesión recién creada (no se vincula nada
+    // hasta que el usuario confirme el correo y entre con Iniciar sesión).
+    try { await sendEmailVerification(user); } catch { /* no romper la creación */ }
+    await signOut(auth);
+    if (accountId() === user.uid) { setAccountId(priorId || null); resetClientId(); }
+    setSessionActive(false);
+    return { ok: true, uid: user.uid, email: user.email || undefined, message: 'Cuenta creada. Te enviamos un correo para confirmarla: revísalo (y el spam) y luego inicia sesión.' };
   } catch (e) {
     return { ok: false, message: authMessage(e) };
   }
@@ -106,6 +132,7 @@ export async function signOutAccount(): Promise<{ ok: boolean; message: string }
   try {
     const { getAuth, signOut } = await import('firebase/auth');
     await signOut(getAuth(firebaseApp()!));
+    setSessionActive(false);
     emit(null);
     return { ok: true, message: 'Sesión cerrada. Este dispositivo conserva sus tiendas.' };
   } catch (e) {
