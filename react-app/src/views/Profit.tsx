@@ -77,7 +77,7 @@ export function Profit() {
             <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><rect x="3" y="7" width="18" height="13" rx="2" /><path d="M3 7l9 6 9-6" /><path d="M9 20h6" /></svg>
           </div>
           <div className="captioned-stat"><div>Coste de producción</div><div className="value">{money(cost)}</div></div>
-          <div className="small">{stockTotal} existencia{stockTotal === 1 ? '' : 's'}</div>
+          <div className="small">{stockTotal} producto{stockTotal === 1 ? '' : 's'} en bodega</div>
         </div>
         <div className="card stat stat-h stat-panel">
           <div className="stat-icon">
