@@ -15086,7 +15086,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "react-app/src/views/SettingsModal.tsx",
-      "source_location": "L269",
+      "source_location": "L274",
       "weight": 1.0
     },
     {
@@ -15098,7 +15098,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "react-app/src/views/SettingsModal.tsx",
-      "source_location": "L270",
+      "source_location": "L275",
       "weight": 1.0
     },
     {
@@ -15110,7 +15110,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "react-app/src/views/SettingsModal.tsx",
-      "source_location": "L316",
+      "source_location": "L321",
       "weight": 1.0
     },
     {
@@ -15122,7 +15122,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "react-app/src/views/SettingsModal.tsx",
-      "source_location": "L319",
+      "source_location": "L324",
       "weight": 1.0
     },
     {
@@ -15134,7 +15134,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "react-app/src/views/SettingsModal.tsx",
-      "source_location": "L320",
+      "source_location": "L325",
       "weight": 1.0
     },
     {
@@ -31295,5 +31295,5 @@
     }
   ],
   "hyperedges": [],
-  "built_at_commit": "ee6c2a31864cde5096dfbcea086445efe685db17"
+  "built_at_commit": "1a0994be87a54c4477377a181f423e1c5337fc2e"
 }
