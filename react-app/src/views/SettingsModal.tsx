@@ -235,7 +235,7 @@ export function SettingsModal({ onClose }: { onClose: () => void }) {
               <>
                 <p className="muted"><b>Estás conectado a {acctEmail || 'tu cuenta'}</b>.</p>
                 <div className="settings-row" style={{ flexWrap: 'wrap' }}>
-                  <button className="button outline" disabled={accBusy} onClick={doLogout} title="Termina la sesión de Firebase en este navegador">{accBusy ? '…' : 'Cerrar sesión'}</button>
+                  <button className="button outline" disabled={accBusy} onClick={doLogout} title="Termina la sesión de Firebase en este navegador">Cerrar sesión</button>
                 </div>
                 <p className="muted">Cerrar sesión no quita tus tiendas de este dispositivo: sigues viéndolas igual.</p>
               </>
@@ -250,14 +250,19 @@ export function SettingsModal({ onClose }: { onClose: () => void }) {
                   <input id="account-pass" type="password" maxLength={120} autoComplete="current-password" placeholder="Mínimo 6 caracteres" value={apass} onChange={(e) => setApass(e.target.value)} />
                 </div>
                 <div className="settings-row account-actions" style={{ flexWrap: 'wrap' }}>
-                  <button className="button secondary" disabled={accBusy} onClick={doSignIn}>{accBusy ? '…' : 'Iniciar sesión'}</button>
-                  <button className="button secondary" disabled={accBusy} onClick={doRegister}>{accBusy ? '…' : 'Crear cuenta'}</button>
+                  <button className="button secondary" disabled={accBusy} onClick={doSignIn}>Iniciar sesión</button>
+                  <button className="button secondary" disabled={accBusy} onClick={doRegister}>Crear cuenta</button>
                 </div>
                 <button className="link-btn" disabled={accBusy} onClick={doResetPass}>¿Olvidaste tu contraseña?</button>
                 <p className="muted">Te enviaremos un correo para confirmar tu cuenta antes de usarla.</p>
               </>
             )}
             {accNote && <p className="account-note" role="status">{accNote}</p>}
+            {accBusy && (
+              <div className="account-loading" role="status" aria-label="Cargando">
+                <span className="spinner" />
+              </div>
+            )}
           </div>
         </div>
       )}
