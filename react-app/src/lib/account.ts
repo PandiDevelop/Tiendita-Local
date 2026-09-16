@@ -66,6 +66,8 @@ function authMessage(e: unknown): string {
     'auth/network-request-failed': 'Sin conexión. Revisa tu red.',
     'auth/operation-not-allowed': 'Todavía no está activado el acceso con correo en Firebase (Authentication → Sign-in method → Email/Password).',
     'auth/api-key-not-valid': 'La Firebase Auth no quedó bien configurada en la consola.',
+    'auth/unauthorized-domain': 'Este dominio no está autorizado en Firebase (Authentication → Settings → Authorized domains); agrega el dominio de tu página.',
+    'auth/invalid-credential': 'Correo o contraseña incorrectos.',
   };
   return map[code] || 'No se pudo completar la operación. Revisa tu conexión.';
 }
@@ -105,11 +107,14 @@ export async function registerAccount(email: string, pw: string): Promise<{ ok: 
     // Confirmación obligatoria antes de usar la cuenta: se manda el correo de
     // verificación y se sale de la sesión recién creada (no se vincula nada
     // hasta que el usuario confirme el correo y entre con Iniciar sesión).
-    try { await sendEmailVerification(user); } catch { /* no romper la creación */ }
+    let verifOk = true;
+    try { await sendEmailVerification(user); } catch { verifOk = false; }
     await signOut(auth);
     if (accountId() === user.uid) { setAccountId(priorId || null); resetClientId(); }
     setSessionActive(false);
-    return { ok: true, uid: user.uid, email: user.email || undefined, message: 'Cuenta creada. Te enviamos un correo para confirmarla: revísalo (y el spam) y luego inicia sesión.' };
+    const userEmail = user.email || undefined;
+    if (verifOk) return { ok: true, uid: user.uid, email: userEmail, message: 'Cuenta creada. Te enviamos un correo para confirmarla: revísalo (y el spam) y luego inicia sesión.' };
+    return { ok: false, uid: user.uid, email: userEmail, message: 'Cuenta creada, pero no se pudo enviar el correo de confirmación ahora. Espera un momento y usa "¿Olvidaste tu contraseña?" con tu correo para recibir un enlace.' };
   } catch (e) {
     return { ok: false, message: authMessage(e) };
   }

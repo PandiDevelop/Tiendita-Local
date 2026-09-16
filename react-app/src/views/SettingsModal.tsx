@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useStore } from '../store';
 import { syncName, syncSetName, resetClientId, deletedStores, canManageNotes } from '../lib/core';
 import type { DeletedStoreRecord } from '../lib/core';
@@ -12,7 +12,7 @@ import { setPushPrefs, restoreStoreFn } from '../lib/sync';
 import { themePref, setThemePref, themeOptions } from '../lib/theme';
 import type { ThemePref } from '../lib/theme';
 import { exportNotesArchiveTxt, exportObjectivesArchiveTxt } from '../lib/notesArchive';
-import { DownloadIcon, Modal } from '../ui';
+import { DownloadIcon, Modal, CloseIcon } from '../ui';
 import { useInstallable } from '../lib/install';
 import type { NotifCat } from '../types';
 
@@ -54,6 +54,22 @@ export function SettingsModal({ onClose }: { onClose: () => void }) {
   const [accBusy, setAccBusy] = useState(false);
   const [aemail, setAemail] = useState('');
   const [apass, setApass] = useState('');
+  const [accNote, setAccNote] = useState<string | null>(null);
+  const accNoteTimer = useRef<number | null>(null);
+
+  // Mensaje temporal de la popup de cuenta (se ve durante unos segundos).
+  function flashAccNote(msg: string) {
+    setAccNote(msg);
+    if (accNoteTimer.current) window.clearTimeout(accNoteTimer.current);
+    accNoteTimer.current = window.setTimeout(() => setAccNote(null), 4000);
+  }
+
+  function closeAccountPopup() {
+    setAemail('');
+    setApass('');
+    setAccNote(null);
+    setShowAccount(false);
+  }
 
   // Si una sesión se restaura o se cierra entre tanto (p. ej. la de Firebase
   // que se recupera al arrancar), el estado de "conectado" se refresca solo.
@@ -61,21 +77,21 @@ export function SettingsModal({ onClose }: { onClose: () => void }) {
 
   async function doSignIn() {
     if (accBusy) return;
-    if (!aemail.trim() || !apass) { toast('Escribe tu correo y contraseña.'); return; }
+    if (!aemail.trim() || !apass) { flashAccNote('Escribe tu correo y contraseña.'); return; }
     setAccBusy(true);
     try {
       const from = currentIdentity();
       const r = await signInAccount(aemail, apass);
-      if (!r.ok || !r.uid) { toast(r.message); return; }
+      if (!r.ok || !r.uid) { flashAccNote(r.message); toast(r.message); return; }
       setAccountEmail(r.email || null);
       const link = await linkStoresToAccount(r.uid, from, () => state, replace);
       setAccountId(r.uid);
       resetClientId();
       setAcct(true);
       setAcctEmail(r.email || null);
-      setShowAccount(false);
-      if (link.stores) toast('Tus tiendas quedaron vinculadas a tu cuenta. Puedes recuperarlas iniciando sesión en otro teléfono.');
-      else toast('Sesión iniciada. Vincula una tienda con su código y serás el dueño en este teléfono.');
+      if (link.stores) flashAccNote('Tus tiendas quedaron vinculadas a tu cuenta. Puedes recuperarlas iniciando sesión en otro teléfono.');
+      else flashAccNote('Sesión iniciada. Vincula una tienda con su código y serás el dueño en este teléfono.');
+      setApass('');
     } finally {
       setAccBusy(false);
     }
@@ -83,11 +99,12 @@ export function SettingsModal({ onClose }: { onClose: () => void }) {
 
   async function doRegister() {
     if (accBusy) return;
-    if (!aemail.trim() || !apass) { toast('Escribe tu correo y una contraseña.'); return; }
+    if (!aemail.trim() || !apass) { flashAccNote('Escribe tu correo y una contraseña.'); return; }
     setAccBusy(true);
     try {
       const r = await registerAccount(aemail, apass);
       if (r.ok) setApass('');
+      flashAccNote(r.message);
       toast(r.message);
     } finally {
       setAccBusy(false);
@@ -96,10 +113,11 @@ export function SettingsModal({ onClose }: { onClose: () => void }) {
 
   async function doResetPass() {
     if (accBusy) return;
-    if (!aemail.trim()) { toast('Escribe tu correo primero.'); return; }
+    if (!aemail.trim()) { flashAccNote('Escribe tu correo primero.'); return; }
     setAccBusy(true);
     try {
       const r = await sendPasswordReset(aemail);
+      flashAccNote(r.message);
       toast(r.message);
     } finally {
       setAccBusy(false);
@@ -111,10 +129,10 @@ export function SettingsModal({ onClose }: { onClose: () => void }) {
     setAccBusy(true);
     try {
       const r = await signOutAccount();
+      flashAccNote(r.message);
       toast(r.message);
       setAcct(false);
       setAcctEmail(null);
-      setShowAccount(false);
     } finally {
       setAccBusy(false);
     }
@@ -207,9 +225,12 @@ export function SettingsModal({ onClose }: { onClose: () => void }) {
       </div>
 
       {showAccount && (
-        <div className="modal-backdrop" onClick={(e) => { if (e.target === e.currentTarget) setShowAccount(false); }}>
+        <div className="modal-backdrop" onClick={(e) => { if (e.target === e.currentTarget) closeAccountPopup(); }}>
           <div className="modal settings-account-modal">
-            <h2>Cuenta</h2>
+            <div className="settings-account-head">
+              <h2>Cuenta</h2>
+              <button className="account-close" onClick={closeAccountPopup} title="Cerrar" aria-label="Cerrar"><CloseIcon size={14} /></button>
+            </div>
             {acct ? (
               <>
                 <p className="muted"><b>Estás conectado a {acctEmail || 'tu cuenta'}</b>.</p>
@@ -228,7 +249,7 @@ export function SettingsModal({ onClose }: { onClose: () => void }) {
                   <label htmlFor="account-pass">Contraseña</label>
                   <input id="account-pass" type="password" maxLength={120} autoComplete="current-password" placeholder="Mínimo 6 caracteres" value={apass} onChange={(e) => setApass(e.target.value)} />
                 </div>
-                <div className="settings-row" style={{ flexWrap: 'wrap' }}>
+                <div className="settings-row account-actions" style={{ flexWrap: 'wrap' }}>
                   <button className="button secondary" disabled={accBusy} onClick={doSignIn}>{accBusy ? '…' : 'Iniciar sesión'}</button>
                   <button className="button secondary" disabled={accBusy} onClick={doRegister}>{accBusy ? '…' : 'Crear cuenta'}</button>
                 </div>
@@ -236,9 +257,7 @@ export function SettingsModal({ onClose }: { onClose: () => void }) {
                 <p className="muted">Te enviaremos un correo para confirmar tu cuenta antes de usarla.</p>
               </>
             )}
-            <div className="modal-actions">
-              <button className="button primary" onClick={() => setShowAccount(false)}>Cerrar</button>
-            </div>
+            {accNote && <p className="account-note" role="status">{accNote}</p>}
           </div>
         </div>
       )}
