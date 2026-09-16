@@ -120,9 +120,9 @@
     "semantic_hash": ""
   },
   "react-app/src/views/ProductForm.tsx": {
-    "mtime": 1789593367.6686218,
-    "seen": 1789593653.684911,
-    "ast_hash": "afe2768cd7d732bb211273372312241e",
+    "mtime": 1789595969.5602355,
+    "seen": 1789596044.4635808,
+    "ast_hash": "a132ee02080e8a4e1455e637e40cd7d6",
     "semantic_hash": ""
   },
   "react-app/src/views/Profit.tsx": {
@@ -162,9 +162,9 @@
     "semantic_hash": ""
   },
   "sw.js": {
-    "mtime": 1789595872.0252814,
-    "seen": 1789595896.1616251,
-    "ast_hash": "6381ac31114f3aa26f557b4bb734261a",
+    "mtime": 1789596024.1458485,
+    "seen": 1789596044.4635808,
+    "ast_hash": "986bafc11c9bf1a7e86bc13d7e4fb79a",
     "semantic_hash": ""
   },
   "AGENTS.md": {
@@ -180,9 +180,9 @@
     "semantic_hash": ""
   },
   "index.html": {
-    "mtime": 1789595871.3236346,
-    "seen": 1789595896.1616251,
-    "ast_hash": "f7a9a0d912707d60a5b8d600092c381f",
+    "mtime": 1789596023.4071505,
+    "seen": 1789596044.4635808,
+    "ast_hash": "18d79858f3aa4582eb4b5a43cc2341bf",
     "semantic_hash": ""
   },
   "react-app/index.html": {
@@ -252,9 +252,9 @@
     "semantic_hash": ""
   },
   "react-app/src/views/CategoryModal.tsx": {
-    "mtime": 1789594863.7304246,
-    "seen": 1789595445.5103815,
-    "ast_hash": "4caaf161842a9ce92fcc6ac03f598257",
+    "mtime": 1789595981.0465422,
+    "seen": 1789596044.4635808,
+    "ast_hash": "5f3819bac7a24063415c9a56b771ebdc",
     "semantic_hash": ""
   },
   "react-app/src/test/features.test.tsx": {
@@ -282,9 +282,9 @@
     "semantic_hash": ""
   },
   "react-app/src/views/PromoEditor.tsx": {
-    "mtime": 1789265638.7603507,
-    "seen": 1789265688.446555,
-    "ast_hash": "9a1f69f29708f7f05fc9daa72b7e897e",
+    "mtime": 1789595971.5608692,
+    "seen": 1789596044.4635808,
+    "ast_hash": "abef64a4d9ebdf2fbc822e24395a1e47",
     "semantic_hash": ""
   },
   "push-worker/package.json": {
@@ -486,9 +486,9 @@
     "semantic_hash": ""
   },
   "react-app/src/lib/version.ts": {
-    "mtime": 1789595857.7712696,
-    "seen": 1789595896.1616251,
-    "ast_hash": "e4c423d068c51fbc4c0ffd6d724f0e98",
+    "mtime": 1789596008.8502817,
+    "seen": 1789596044.4635808,
+    "ast_hash": "7a3af663099dc68fbe77b8983ad3f01e",
     "semantic_hash": ""
   },
   "react-app/src/lib/account.ts": {
