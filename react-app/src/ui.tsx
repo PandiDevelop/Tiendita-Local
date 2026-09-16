@@ -299,6 +299,27 @@ export function CloseIcon({ size = 14 }: { size?: number }) {
   );
 }
 
+// Ojo abierto: boton para ver la contraseña escrita en un campo.
+export function EyeIcon({ size = 16 }: { size?: number }) {
+  return (
+    <svg viewBox="0 0 24 24" width={size} height={size} fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M2.5 12S6 5.5 12 5.5 21.5 12 21.5 12 18 18.5 12 18.5 2.5 12 2.5 12z" />
+      <circle cx="12" cy="12" r="3.1" />
+    </svg>
+  );
+}
+
+// Ojo tachado: boton para ocultar la contraseña ya visible.
+export function EyeOffIcon({ size = 16 }: { size?: number }) {
+  return (
+    <svg viewBox="0 0 24 24" width={size} height={size} fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M2.5 12S6 5.5 12 5.5 21.5 12 21.5 12 18 18.5 12 18.5 2.5 12 2.5 12z" />
+      <circle cx="12" cy="12" r="3.1" />
+      <path d="M4.5 4.5l15 15" />
+    </svg>
+  );
+}
+
 // Flecha (chevron) izquierda/derecha: navegacion de mes/dia.
 export function ChevronIcon({ size = 14, dir = 'left' }: { size?: number; dir?: 'left' | 'right' }) {
   return (

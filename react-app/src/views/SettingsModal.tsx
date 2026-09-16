@@ -12,7 +12,7 @@ import { setPushPrefs, restoreStoreFn } from '../lib/sync';
 import { themePref, setThemePref, themeOptions } from '../lib/theme';
 import type { ThemePref } from '../lib/theme';
 import { exportNotesArchiveTxt, exportObjectivesArchiveTxt } from '../lib/notesArchive';
-import { DownloadIcon, Modal, CloseIcon } from '../ui';
+import { DownloadIcon, Modal, CloseIcon, EyeIcon, EyeOffIcon } from '../ui';
 import { useInstallable } from '../lib/install';
 import type { NotifCat } from '../types';
 
@@ -54,6 +54,7 @@ export function SettingsModal({ onClose }: { onClose: () => void }) {
   const [accBusy, setAccBusy] = useState(false);
   const [aemail, setAemail] = useState('');
   const [apass, setApass] = useState('');
+  const [showPass, setShowPass] = useState(false);
   const [accNote, setAccNote] = useState<string | null>(null);
   const accNoteTimer = useRef<number | null>(null);
 
@@ -67,6 +68,7 @@ export function SettingsModal({ onClose }: { onClose: () => void }) {
   function closeAccountPopup() {
     setAemail('');
     setApass('');
+    setShowPass(false);
     setAccNote(null);
     setShowAccount(false);
   }
@@ -247,7 +249,12 @@ export function SettingsModal({ onClose }: { onClose: () => void }) {
                 </div>
                 <div className="field settings-account">
                   <label htmlFor="account-pass">Contraseña</label>
-                  <input id="account-pass" type="password" maxLength={120} autoComplete="current-password" placeholder="Mínimo 6 caracteres" value={apass} onChange={(e) => setApass(e.target.value)} />
+                  <div className="password-wrap">
+                    <input id="account-pass" type={showPass ? 'text' : 'password'} maxLength={120} autoComplete="current-password" placeholder="Mínimo 6 caracteres" value={apass} onChange={(e) => setApass(e.target.value)} />
+                    <button type="button" className="password-toggle" onClick={() => setShowPass(!showPass)} title={showPass ? 'Ocultar contraseña' : 'Ver contraseña'} aria-label={showPass ? 'Ocultar contraseña' : 'Ver contraseña'}>
+                      {showPass ? <EyeOffIcon size={16} /> : <EyeIcon size={16} />}
+                    </button>
+                  </div>
                 </div>
                 <div className="settings-row account-actions" style={{ flexWrap: 'wrap' }}>
                   <button className="button secondary" disabled={accBusy} onClick={doSignIn}>Iniciar sesión</button>

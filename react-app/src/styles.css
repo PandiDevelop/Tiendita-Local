@@ -429,6 +429,10 @@ td.cat-bar .product-name .prod-tag{margin-left:auto;flex:0 0 auto}
 .settings-account-head .account-close{flex:0 0 auto;height:32px;width:32px;border-radius:9px;background:var(--lav);border:1px solid var(--line);color:var(--brand-deep);display:inline-flex;align-items:center;justify-content:center}
 .account-actions{justify-content:center}
 .settings-account-modal{position:relative}
+.password-wrap{position:relative;display:flex;align-items:center}
+.password-wrap input{padding-right:42px;flex:1}
+.password-toggle{position:absolute;right:7px;top:50%;transform:translateY(-50%);background:transparent;border:0;color:var(--muted);display:inline-flex;align-items:center;justify-content:center;padding:7px;border-radius:8px}
+.password-toggle:hover{color:var(--brand-deep);background:rgba(47,52,69,.06)}
 .account-loading{position:absolute;inset:0;background:var(--surface);display:flex;align-items:center;justify-content:center;border-radius:20px;z-index:5}
 .spinner{width:34px;height:34px;border:4px solid var(--line);border-top-color:var(--brand);border-radius:50%;animation:mt-spin .7s linear infinite;flex:0 0 auto}
 @keyframes mt-spin{to{transform:rotate(360deg)}}
