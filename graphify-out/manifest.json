@@ -162,9 +162,9 @@
     "semantic_hash": ""
   },
   "sw.js": {
-    "mtime": 1789595413.2523124,
-    "seen": 1789595445.5103815,
-    "ast_hash": "5a9e5093d20a57cb9eb26f182ceb4015",
+    "mtime": 1789595872.0252814,
+    "seen": 1789595896.1616251,
+    "ast_hash": "6381ac31114f3aa26f557b4bb734261a",
     "semantic_hash": ""
   },
   "AGENTS.md": {
@@ -180,9 +180,9 @@
     "semantic_hash": ""
   },
   "index.html": {
-    "mtime": 1789595412.5073104,
-    "seen": 1789595445.5103815,
-    "ast_hash": "eba5cd4162279f019b18ad7d7bf4cdac",
+    "mtime": 1789595871.3236346,
+    "seen": 1789595896.1616251,
+    "ast_hash": "f7a9a0d912707d60a5b8d600092c381f",
     "semantic_hash": ""
   },
   "react-app/index.html": {
@@ -348,9 +348,9 @@
     "semantic_hash": ""
   },
   "react-app/src/views/VirtualCatalog.tsx": {
-    "mtime": 1789021059.4994104,
-    "seen": 1789021743.1832888,
-    "ast_hash": "f478d031aa85384b26e4a245f089f61a",
+    "mtime": 1789595823.2812066,
+    "seen": 1789595896.1616251,
+    "ast_hash": "853653be5d5915804615c84a0382c3ca",
     "semantic_hash": ""
   },
   "react-app/src/lib/backStack.ts": {
@@ -486,9 +486,9 @@
     "semantic_hash": ""
   },
   "react-app/src/lib/version.ts": {
-    "mtime": 1789595400.341642,
-    "seen": 1789595445.5103815,
-    "ast_hash": "0c8b09461a49e44d22e9031a7e773a40",
+    "mtime": 1789595857.7712696,
+    "seen": 1789595896.1616251,
+    "ast_hash": "e4c423d068c51fbc4c0ffd6d724f0e98",
     "semantic_hash": ""
   },
   "react-app/src/lib/account.ts": {
