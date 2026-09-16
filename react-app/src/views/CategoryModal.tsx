@@ -124,6 +124,33 @@ export function CategoryModal({ mode, catName, onClose, onSaved }: Props) {
         <button type="button" className="icon-btn float-save" title="Guardar" aria-label="Guardar" onClick={save}><SaveIcon size={15} /></button>
       </div>
       <h2>{isNew ? 'Nueva categoría' : 'Configurar la categoría'}</h2>
+      <div className="field"><label>Nombre de la categoría</label>
+        <input
+          maxLength={30}
+          placeholder="Ej. Bebidas"
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+          onKeyDown={(e) => { if (e.key === 'Enter') save(); }}
+        />
+      </div>
+      <div className="field"><label>Precio {isNew ? '(opcional)' : ''}</label>
+        <input min={0} type="number" placeholder="0" value={price} onChange={(e) => setPrice(e.target.value)} />
+      </div>
+      <div className="field"><label>Costo <span className="muted">(opcional)</span></label>
+        <input min={0} type="number" placeholder="0" value={cost} onChange={(e) => setCost(e.target.value)} />
+      </div>
+      <div className="field"><label>Proveedor <span className="muted">(opcional)</span></label>
+        <input
+          maxLength={40}
+          placeholder="Ej. Ceres"
+          value={supplier}
+          onChange={(e) => setSupplier(e.target.value)}
+          onFocus={(e) => e.target.select()}
+        />
+      </div>
+      <div className="field"><label>Promociones <span className="muted">(se aplican solas al vender)</span></label>
+        <PromoEditor promos={promos} onChange={setPromos} priceHint={price} />
+      </div>
       <div className="cat-switch">
         <button type="button" className="cat-switch-toggle" onClick={() => setListOpen((o) => !o)}>
           <span>Categorías de la tienda</span>
@@ -137,36 +164,6 @@ export function CategoryModal({ mode, catName, onClose, onSaved }: Props) {
             )) : <div className="cat-suggest-empty">No hay otras categorías.</div>}
           </div>
         )}
-      </div>
-      <div className="field"><label>Nombre de la categoría</label>
-        <input
-          maxLength={30}
-          placeholder="Ej. Bebidas"
-          value={name}
-          onChange={(e) => setName(e.target.value)}
-          onKeyDown={(e) => { if (e.key === 'Enter') save(); }}
-        />
-      </div>
-      <div className="field"><label>Precio {isNew ? '(opcional)' : ''}</label>
-        <input min={0} type="number" placeholder="0" value={price} onChange={(e) => setPrice(e.target.value)} />
-        <p className="muted">Precio por defecto de esta categoría.</p>
-      </div>
-      <div className="field"><label>Costo <span className="muted">(opcional)</span></label>
-        <input min={0} type="number" placeholder="0" value={cost} onChange={(e) => setCost(e.target.value)} />
-        <p className="muted">Costo por defecto de esta categoría.</p>
-      </div>
-      <div className="field"><label>Proveedor <span className="muted">(opcional)</span></label>
-        <input
-          maxLength={40}
-          placeholder="Ej. Ceres"
-          value={supplier}
-          onChange={(e) => setSupplier(e.target.value)}
-          onFocus={(e) => e.target.select()}
-        />
-        <p className="muted">Quién surte esta categoría. Su tag corto se suma al guardar.</p>
-      </div>
-      <div className="field"><label>Promociones <span className="muted">(se aplican solas al vender)</span></label>
-        <PromoEditor promos={promos} onChange={setPromos} priceHint={price} />
       </div>
     </Modal>
   );

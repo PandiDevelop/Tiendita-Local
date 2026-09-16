@@ -182,13 +182,12 @@ export function ProductForm({ editingId, onClose }: { editingId?: string; onClos
       <div className="field"><label>Precio del producto</label>
         <input min={0} type="number" placeholder="0" value={price} onChange={(e) => setPrice(e.target.value)} />
       </div>
-      <div className="field"><label>Costo del producto <span className="muted">(opcional)</span></label>
+      <div className="field"><label>Coste de producción <span className="muted">(opcional)</span></label>
         <input min={0} type="number" placeholder="0" value={cost} onChange={(e) => setCost(e.target.value)} />
         <p className="muted">Lo que te cuesta. Se usa para la ganancia.</p>
       </div>
       <div className="field"><label>Proveedor <span className="muted">(opcional)</span></label>
         <input maxLength={40} placeholder="Ej. Ceres" value={supplier} onChange={(e) => setSupplier(e.target.value)} onFocus={(e) => e.target.select()} />
-        <p className="muted">Quién surte el producto. Su tag corto se suma al guardar.</p>
       </div>
       <div className="field"><label>Imagen del producto</label>
         <ImagePicker id="product-image" src={image || DEFAULT_PRODUCT_IMAGE} cls="image-preview product-preview" hint="Foto o logo opcional del producto." onFile={onFile} />

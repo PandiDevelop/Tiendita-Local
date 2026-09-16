@@ -715,7 +715,7 @@ input[type="number"]::-webkit-inner-spin-button,input[type="number"]::-webkit-ou
    "Elegir categoría de la tienda" se despliega y muestra como máximo unas 5
    categorías a la vez (el resto con scroll); elegir una carga sus datos en el
    formulario para editarla, y también hay entrada para crear una nueva. */
-.cat-switch{margin:-4px 0 4px}
+.cat-switch{margin:4px 0 0}
 .cat-switch-toggle{display:flex;align-items:center;justify-content:space-between;gap:8px;width:100%;border:1px solid var(--brand-line);background:var(--surface);color:var(--ink);border-radius:11px;padding:9px 12px;font-weight:700;font-size:13px;cursor:pointer}
 .cat-switch-toggle:hover{background:var(--lav)}
 .cat-switch-toggle .dd-caret{color:var(--brand);display:flex;flex:0 0 auto}

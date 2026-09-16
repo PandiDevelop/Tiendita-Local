@@ -41,7 +41,7 @@ export function PromoEditor({ promos, onChange, priceHint }: Props) {
   };
   return (
     <div className="promo-editor">
-      {promos.length === 0 && <p className="muted">Sin promociones. La primera que cumpla su condición se aplica sola (el orden = prioridad). "Cantidad fija" = precio del paquete completo.</p>}
+      {promos.length === 0 && <p className="muted">Aún no hay promociones.</p>}
       {promos.map((x, n) => (
         <div className="promo-input" key={x.id}>
           <div className="promo-prior">
