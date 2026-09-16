@@ -27,15 +27,17 @@ function monthLabel(mm: string) {
   let s = new Date(mm + '-01T12:00:00').toLocaleDateString('es-CO', { month: 'long', year: 'numeric' });
   return s.charAt(0).toUpperCase() + s.slice(1);
 }
-const MAX_DAYS = 3;
-
 export function Dashboard() {
   const { store, state, replace, setModal } = useStore();
   const s = store!;
-  const dates = [...new Set(s.sales.map((x) => x.date))].sort((a, b) => b.localeCompare(a));
-  const dayPage = state.dayPage || 0;
-  const shown = dates.slice(dayPage * MAX_DAYS, dayPage * MAX_DAYS + MAX_DAYS);
-  const selected = state.summaryDate && shown.includes(state.summaryDate) ? state.summaryDate : (shown[0] || today());
+  // Día seleccionado del resumen por día: en vez de pasar solo por los días
+  // con ventas, se muestran siempre TRES fechas seguidas (día anterior, hoy y
+  // día siguiente) y las flechas lo mueven de un día a otro, para poder ver
+  // también qué días se quedaron sin registrar ventas.
+  const selected = state.summaryDate || today();
+  const prev = shiftDay(selected, -1);
+  const next = shiftDay(selected, 1);
+  const shown = [prev, selected, next];
   const records = s.sales.filter((x) => x.date === selected);
   const units = records.reduce((a, x) => a + x.items.reduce((b, i) => b + i.qty, 0), 0);
   const revenue = records.reduce((a, x) => a + total(x, s), 0);
@@ -45,7 +47,6 @@ export function Dashboard() {
   const munits = mrec.reduce((a, x) => a + x.items.reduce((b, i) => b + i.qty, 0), 0);
   const mrev = mrec.reduce((a, x) => a + total(x, s), 0);
   const mlines = monthLines(s, mrec);
-  const maxDayPage = Math.max(0, Math.ceil(dates.length / MAX_DAYS) - 1);
 
   return (
     <>
@@ -56,28 +57,24 @@ export function Dashboard() {
         <div className="card stat stat-h stat-panel"><div className="stat-icon"><CashIcon size={18} /></div><div className="captioned-stat"><div>Total producido</div><div className="value">{money(revenue)}</div><div className="small">{formatDate(selected)}</div></div></div>
       </div>
       <div className="panel">
-        <div className="panel-head"><div><h2>Resumen por día</h2><p className="muted">Lo vendido por día.</p></div></div>
-        {dates.length ? (
-          <>
-            <div className="day-tabs">
-              <button className="day-nav" disabled={dayPage === 0} onClick={() => replace((x) => { x.dayPage = Math.max(0, dayPage - 1); })}><ChevronIcon dir="left" /></button>
-              {shown.map((d) => (
-                <button key={d} className={'day-tab ' + (d === selected ? 'active' : '')} onClick={() => replace((x) => { x.summaryDate = d; })}>{formatDate(d)}</button>
-              ))}
-              <button className="day-nav" disabled={dayPage >= maxDayPage} onClick={() => replace((x) => { x.dayPage = dayPage + 1; })}><ChevronIcon dir="right" /></button>
-            </div>
-            {lines.length ? (
-              <table><thead><tr><th>Producto</th><th>Unidades</th><th>Producido</th></tr></thead><tbody>
-                {lines.map((x) => (
-                  <tr key={x.pid}><td className="product-name cat-bar"><span className="prod-main">{esc(x.name)}</span>{x.prs.length ? <span className="prod-sub">{x.prs.map(esc).join(' · ')}</span> : null}</td><td>{x.qty}</td><td><b>{money(x.value)}</b></td></tr>
-                ))}
-              </tbody></table>
-            ) : <div className="notice">No se registraron ventas este día.</div>}
-          </>
-        ) : <div className="notice">Cuando registres ventas, aquí verás el detalle diario.</div>}
+        <div className="panel-head"><div><h2>Resumen por día</h2></div></div>
+        <div className="day-tabs">
+          <button className="day-nav" onClick={() => replace((x) => { x.summaryDate = prev; })}><ChevronIcon dir="left" /></button>
+          {shown.map((d) => (
+            <button key={d} className={'day-tab ' + (d === selected ? 'active' : '')} onClick={() => replace((x) => { x.summaryDate = d; })}>{d === today() ? 'Hoy · ' : ''}{formatDate(d)}</button>
+          ))}
+          <button className="day-nav" onClick={() => replace((x) => { x.summaryDate = next; })}><ChevronIcon dir="right" /></button>
+        </div>
+        {lines.length ? (
+          <table><thead><tr><th>Producto</th><th>Unidades</th><th>Producido</th></tr></thead><tbody>
+            {lines.map((x) => (
+              <tr key={x.pid}><td className="product-name cat-bar"><span className="prod-main">{esc(x.name)}</span>{x.prs.length ? <span className="prod-sub">{x.prs.map(esc).join(' · ')}</span> : null}</td><td>{x.qty}</td><td><b>{money(x.value)}</b></td></tr>
+            ))}
+          </tbody></table>
+        ) : <div className="notice">No se registraron ventas este día.</div>}
       </div>
       <div className="panel">
-        <div className="panel-head"><div><h2>Resumen del mes</h2><p className="muted">Lo vendido en el mes.</p></div></div>
+        <div className="panel-head"><div><h2>Resumen del mes</h2></div></div>
         <div className="day-tabs month-nav"><button className="day-nav" onClick={() => replace((x) => { x.summaryMonth = monthShift(mm, -1); }) }><ChevronIcon dir="left" /></button><b className="month-label">{monthLabel(mm)}</b><button className="day-nav" onClick={() => replace((x) => { x.summaryMonth = monthShift(mm, 1); })}><ChevronIcon dir="right" /></button></div>
         <div className="month-stats"><span>{munits} unidades</span><span className="month-sep">·</span><span>{money(mrev)} producido</span></div>
         {mrec.length ? (
@@ -97,4 +94,15 @@ function monthShift(mm: string, delta: number) {
   while (m < 1) { m += 12; y--; }
   while (m > 12) { m -= 12; y++; }
   return y + '-' + ('0' + m).slice(-2);
+}
+
+// Un día antes o después de una fecha YYYY-MM-DD (a mediodía local, para no
+// saltarse el día por el cambio de zona horaria).
+function shiftDay(d: string, delta: number) {
+  const dt = new Date(d.slice(0, 4) + '-' + d.slice(5, 7) + '-' + d.slice(8, 10) + 'T12:00:00');
+  dt.setDate(dt.getDate() + delta);
+  const y = dt.getFullYear();
+  const m = String(dt.getMonth() + 1).padStart(2, '0');
+  const dd = String(dt.getDate()).padStart(2, '0');
+  return y + '-' + m + '-' + dd;
 }

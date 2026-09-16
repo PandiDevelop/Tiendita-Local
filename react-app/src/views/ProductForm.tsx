@@ -184,7 +184,6 @@ export function ProductForm({ editingId, onClose }: { editingId?: string; onClos
       </div>
       <div className="field"><label>Coste de producción <span className="muted">(opcional)</span></label>
         <input min={0} type="number" placeholder="0" value={cost} onChange={(e) => setCost(e.target.value)} />
-        <p className="muted">Lo que te cuesta. Se usa para la ganancia.</p>
       </div>
       <div className="field"><label>Proveedor <span className="muted">(opcional)</span></label>
         <input maxLength={40} placeholder="Ej. Ceres" value={supplier} onChange={(e) => setSupplier(e.target.value)} onFocus={(e) => e.target.select()} />
@@ -195,7 +194,6 @@ export function ProductForm({ editingId, onClose }: { editingId?: string; onClos
       {!editingId && (
         <div className="field"><label>Cantidad en inventario</label>
           <input min={0} step={1} type="number" inputMode="numeric" placeholder="0" value={qty} onChange={(e) => setQty(e.target.value)} />
-          <p className="muted">Existencias iniciales. Se descuentan con cada venta.</p>
         </div>
       )}
       <div className="field"><label>Promociones <span className="muted">(se aplican solas al vender)</span></label>

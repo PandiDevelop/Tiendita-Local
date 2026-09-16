@@ -19,13 +19,20 @@ export function Employees() {
   const s = store!;
   const [open, setOpen] = useState<Record<string, boolean>>({});
 
-  // Equipo vinculado: su id en la tienda (clientId), nombre y rol. El rol del
-  // dueño real (createdBy) siempre es Dueño, haya o no entrada en members.
+  // Equipo: los miembros vinculados con su rol y, además, cualquier nombre que
+  // haya registrado ventas aunque todavía no esté vinculado (se muestra como
+  // Trabajador). Así la lista por roles siempre aparece, incluso en tiendas de
+  // un solo dispositivo donde no hay mapa de miembros. El dueño real
+  // (createdBy) siempre es Dueño, haya o no entrada en members.
   const ownerId = s.createdBy || null;
   const members = Object.entries(s.members || {}) as [string, Member][];
   const teamRows = members
-    .map(([cid, m]) => ({ cid, name: m.name || 'Trabajador', role: cid === ownerId ? 'owner' as Role : (m.role || 'worker' as Role), me: cid === syncClientId() }))
-    .sort((a, b) => (a.role === 'owner' ? -1 : b.role === 'owner' ? 1 : a.name.localeCompare(b.name)));
+    .map(([cid, m]) => ({ cid, name: (m.name || 'Trabajador').trim() || 'Trabajador', role: cid === ownerId ? 'owner' as Role : (m.role || 'worker' as Role), me: cid === syncClientId() }));
+  const knownNames = new Set(teamRows.map((m) => m.name.toLowerCase()));
+  new Set((s.sales || []).map((x) => (x.employee || '').trim() || 'Trabajador')).forEach((name) => {
+    if (!knownNames.has(name.toLowerCase())) teamRows.push({ cid: 'venta:' + name, name, role: 'worker' as Role, me: false });
+  });
+  teamRows.sort((a, b) => (a.role === 'owner' ? -1 : b.role === 'owner' ? 1 : a.name.localeCompare(b.name)));
   // La lista del equipo se separa por secciones segun el rol de cada miembro
   // (Dueños / Administradores / Trabajadores), siempre con la misma sección
   // aunque no tenga integrantes.
@@ -77,7 +84,7 @@ export function Employees() {
 
   return (
     <div className="panel">
-      <div className="panel-head"><div><h2>Registro de empleados</h2><p className="muted">Equipo y cuánto vendió cada quien.</p></div></div>
+      <div className="panel-head"><div><h2>Registro de empleados</h2></div></div>
 
       {teamRows.length ? (
         <div className="team-list">

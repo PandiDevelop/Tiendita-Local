@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useStore } from '../store';
-import { costFor, esc, money, priceFor, today, DEFAULT_PRODUCT_IMAGE } from '../lib/core';
+import { costFor, esc, money, priceFor, today, DEFAULT_PRODUCT_IMAGE, inventorySold } from '../lib/core';
 import { Image } from '../ui';
 import { History } from './History';
 import type { Sale, Store as IStore } from '../types';
@@ -56,6 +56,11 @@ export function Profit() {
   const margin = revenue > 0 ? (profit / revenue) * 100 : 0;
   const lines = profitLines(s, filtered);
   const topProfit = lines.length ? lines[0].profit : 0;
+  // Existencias totales: la suma de lo que hay disponible de todos los
+  // productos (lo que se compró de cada uno menos lo que ya se vendió).
+  const sold = inventorySold(s);
+  const inv = s.inventory || {};
+  const stockTotal = s.products.reduce((a, p) => a + Math.max(0, (inv[p.id] || 0) - (sold[p.id] || 0)), 0);
 
   return (
     <>
@@ -71,8 +76,8 @@ export function Profit() {
           <div className="stat-icon">
             <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><rect x="3" y="7" width="18" height="13" rx="2" /><path d="M3 7l9 6 9-6" /><path d="M9 20h6" /></svg>
           </div>
-          <div className="captioned-stat"><div>Costo</div><div className="value">{money(cost)}</div></div>
-          <div className="small">Costo de lo vendido</div>
+          <div className="captioned-stat"><div>Coste de producción</div><div className="value">{money(cost)}</div></div>
+          <div className="small">{stockTotal} existencia{stockTotal === 1 ? '' : 's'}</div>
         </div>
         <div className="card stat stat-h stat-panel">
           <div className="stat-icon">

@@ -238,7 +238,6 @@ export function SaleRegistration({ onClose }: { onClose: () => void }) {
           <h2 style={{ margin: 0 }}>Registrar una venta</h2>
           <button type="button" className="x-close" title="Salir sin guardar" onClick={onClose}><CloseIcon size={15} /></button>
         </div>
-        <p className="muted" style={{ margin: '8px 0 14px' }}>La venta en curso se mantiene aunque cierres esta ventana.</p>
         <div className="sale-scroll">
           <div className="sale-builder">
             <div className="field"><label>Empleado que registra</label>
