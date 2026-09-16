@@ -266,6 +266,11 @@ export interface Store {
   products: Product[];
   sales: Sale[];
   categories: string[];
+  // Etiquetas conocidas de la tienda (indice para crear/reutilizar tags desde
+  // el botón "Etiqueta" del Catálogo). Es un índice: aunque un tag solo viva
+  // en un producto también se ofrece al escribir (ver storeTags en lib/core).
+  // Viaja en el documento principal igual que categories, ordenado siempre.
+  tags?: string[];
   categoryPricing?: Record<string, CategoryPricing>;
   suppliers?: Record<string, SupplierInfo>;
   inventory: Record<string, number>;

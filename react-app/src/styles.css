@@ -646,3 +646,42 @@ td.cat-bar .product-name .prod-tag{margin-left:auto;flex:0 0 auto}
    derecha. Estilo igual al de las listas: borde, redondeado y desenfoque de
    panel, pero sin la sombra de tarjeta (las listas no la tienen). */
 .stat-panel{box-shadow:none;backdrop-filter:blur(var(--blur))}
+
+/* --- Quitar las flechas (spinners) de los inputs numericos ---
+   Editar producto/categoria deja de mostrar los botones de subir/bajar: el
+   usuario pidió sin flechas y el valor se escribe a mano. */
+input[type="number"]{-moz-appearance:textfield;appearance:textfield}
+input[type="number"]::-webkit-inner-spin-button,input[type="number"]::-webkit-outer-spin-button{-webkit-appearance:none;margin:0}
+
+/* --- Acciones flotantes (X = Cancelar, disquete = Guardar) ---
+   En las ventanas de edición cuelgan arriba a la derecha y se quedan pegadas
+   al hacer scroll dentro del modal (sticky). Translúcidas hasta que se les
+   acerca el mouse/teclado, para que no tapen el formulario. El contenedor no
+   captura el clic (pointer-events none); solo los botones, que reanudan la
+   opacidad completa al pasar por encima o al enfocar con teclado. */
+.modal-float-actions{position:sticky;top:0;z-index:6;display:flex;justify-content:flex-end;gap:9px;height:36px;margin-bottom:-36px;pointer-events:none}
+.modal-float-actions .icon-btn{pointer-events:auto;opacity:.55;transition:opacity .15s,background .15s}
+.modal-float-actions:hover .icon-btn,.modal-float-actions .icon-btn:focus-visible{opacity:1}
+.modal-float-actions .float-cancel{color:#a04949;background:rgba(160,73,73,.1)}
+.modal-float-actions .float-cancel:hover{background:rgba(160,73,73,.18)}
+.modal-float-actions .float-save{color:#2f6b33;background:rgba(47,107,51,.12)}
+.modal-float-actions .float-save:hover{background:rgba(47,107,51,.2)}
+.modal-float-actions + h2{padding-right:80px}
+
+/* --- Lista de etiquetas del formulario de producto ---
+   El editor de tags queda como contenedor relativo para que el aviso del
+   límite cuelgue por encima del cuadro de escritura, alineado a la derecha.
+   La nota solo aparece unos segundos al intentar agregar una cuarta etiqueta
+   (ver commitTag en ProductForm). */
+.tag-editor{position:relative}
+.tag-limit-note{position:absolute;right:0;bottom:calc(100% + 6px);margin:0;background:var(--brand);color:var(--surface);border-radius:8px;padding:5px 10px;font-size:12px;font-weight:700;box-shadow:0 4px 12px rgba(24,20,32,.18);white-space:nowrap}
+.cat-suggest .cat-suggest-list .cat-suggest-empty{color:var(--muted);font-weight:600;padding:8px 12px;font-size:13px}
+
+/* --- Botones del Catálogo de lado a lado ---
+   La fila Categoría / Etiqueta / Producto ahora ocupa todo el ancho en
+   escritorio (antes quedaba en ~340px a la izquierda); los tres botones se
+   estiran, pero el de etiqueta es más pequeño que Categoría y Producto, que
+   quedan del mismo tamaño. */
+.cat-actions .cat-actions-row{max-width:none;flex-wrap:wrap}
+.cat-actions .cat-actions-row .button{flex:1 1 118px}
+.cat-actions .cat-actions-row .cat-action-tag{flex:0 0 112px;min-width:0}

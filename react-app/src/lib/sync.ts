@@ -350,6 +350,7 @@ export function createSync(
       const main: Record<string, unknown> = {
         sales,
         categories: s.categories || [],
+        tags: s.tags || [],
         categoryPricing: s.categoryPricing || {},
         events: s.events || [],
         updatedBy: cid(),
@@ -656,6 +657,10 @@ export function applyRemote(getState: () => AppState, mutate: (fn: (d: AppState)
     }
     if (remote.categoryPricing && typeof remote.categoryPricing === 'object') {
       st.categoryPricing = Object.assign({}, st.categoryPricing || {}, JSON.parse(JSON.stringify(remote.categoryPricing)));
+    }
+    if (remote.tags && Array.isArray(remote.tags)) {
+      const remoteTags = (remote.tags as string[]).map((t) => (t || '').trim()).filter(Boolean);
+      st.tags = [...new Set([...remoteTags, ...(st.tags || [])])];
     }
     if (typeof remote.notes === 'string' && remote.notes.length) {
       st.notes = remote.notes;
@@ -1014,7 +1019,7 @@ async function purgeDeletedStore(key: string): Promise<void> {
     const products = await loadProducts(key);
     await Promise.all(products.map((p) => deleteDoc(productDocRef(key, p.id))));
     const purge: Record<string, unknown> = { deleted: true, deletedAt: Date.now() };
-    ['members', 'memberIds', 'pushTokens', 'pushPrefs', 'sales', 'noteBoard', 'noteLog', 'invLog', 'notes', 'inventory', 'categories', 'categoryPricing', 'events', 'image', 'createdBy', 'updatedBy', 'products'].forEach((k) => { purge[k] = deleteField(); });
+    ['members', 'memberIds', 'pushTokens', 'pushPrefs', 'sales', 'noteBoard', 'noteLog', 'invLog', 'notes', 'inventory', 'categories', 'tags', 'categoryPricing', 'events', 'image', 'createdBy', 'updatedBy', 'products'].forEach((k) => { purge[k] = deleteField(); });
     await setDoc(storeDocRef(key), purge, { merge: true });
   } catch (e) { console.warn('Purga de tienda vencida fallida:', e); }
 }

@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useStore } from '../store';
 import { insertCatSorted, storeCats, setCategoryPricing, toEditablePromos, fromEditablePromos } from '../lib/core';
 import type { EditablePromo } from '../lib/core';
-import { Modal } from '../ui';
+import { Modal, CloseIcon, SaveIcon } from '../ui';
 import { PromoEditor } from './PromoEditor';
 
 interface Props {
@@ -74,6 +74,10 @@ export function CategoryModal({ mode, catName, onClose, onSaved }: Props) {
   // crear/configurar, así no hay dos caminos para lo mismo.
   return (
     <Modal onClose={onClose}>
+      <div className="modal-float-actions">
+        <button type="button" className="icon-btn float-cancel" title="Cancelar" aria-label="Cancelar" onClick={onClose}><CloseIcon size={15} /></button>
+        <button type="button" className="icon-btn float-save" title="Guardar" aria-label="Guardar" onClick={save}><SaveIcon size={15} /></button>
+      </div>
       <h2>{mode === 'new' ? 'Nueva categoría' : 'Configurar la categoría'}</h2>
       <div className="field"><label>Nombre de la categoría</label>
         <input
@@ -104,10 +108,6 @@ export function CategoryModal({ mode, catName, onClose, onSaved }: Props) {
       </div>
       <div className="field"><label>Promociones <span className="muted">(se aplican solas al vender)</span></label>
         <PromoEditor promos={promos} onChange={setPromos} priceHint={price} />
-      </div>
-      <div className="modal-actions">
-        <button className="button secondary" onClick={onClose}>Cancelar</button>
-        <button className="button primary" onClick={save}>Guardar</button>
       </div>
     </Modal>
   );

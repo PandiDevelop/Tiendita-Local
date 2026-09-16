@@ -1,9 +1,9 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useStore } from '../store';
-import { DEFAULT_PRODUCT_IMAGE, DEFAULT_PRODUCT_TAG, esc, compressImage, storeCats, adoptInvLog, setCategoryPricing, insertCatSorted, toEditablePromos, fromEditablePromos, uid, syncClientId, syncName, productTags, nextSuppTag, recordSupplierPrice, setSupplierCost, ensureCost } from '../lib/core';
+import { DEFAULT_PRODUCT_IMAGE, DEFAULT_PRODUCT_TAG, esc, compressImage, storeCats, adoptInvLog, setCategoryPricing, insertProductAlphabetically, insertCatSorted, toEditablePromos, fromEditablePromos, uid, syncClientId, syncName, productTags, nextSuppTag, recordSupplierPrice, setSupplierCost, ensureCost } from '../lib/core';
 import { notifyStorePush } from '../lib/push';
 import type { EditablePromo } from '../lib/core';
-import { ImagePicker, Modal, CategorySuggest } from '../ui';
+import { ImagePicker, Modal, CategorySuggest, SaveIcon, CloseIcon } from '../ui';
 import { PromoEditor } from './PromoEditor';
 
 export function ProductForm({ editingId, onClose }: { editingId?: string; onClose: () => void }) {
@@ -25,16 +25,36 @@ export function ProductForm({ editingId, onClose }: { editingId?: string; onClos
   const [tags, setTags] = useState<string[]>(editingId ? productTags(p) : []);
   const [tagDraft, setTagDraft] = useState('');
   const [tagOpen, setTagOpen] = useState(false);
+  // Aviso transitorio "Max. 3 etiquetas por producto." que aparece sobre el
+  // cuadro de tags unos segundos cuando se intenta agregar una cuarta (en
+  // vez de un texto fijo que estorba siempre o una ventana de confirmación).
+  const [tagLimitNote, setTagLimitNote] = useState(false);
+  const tagTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  useEffect(() => () => { if (tagTimer.current) clearTimeout(tagTimer.current); }, []);
 
-  // Tags que ya usan otros productos, para sugerirlos al escribir (se puede
-  // escribir uno nuevo o elegir uno existente con un clic).
-  const existingTags = [...new Set(s.products.flatMap((x) => productTags(x)))];
-  const tagMatches = existingTags.filter((t) => !tags.includes(t) && (!tagDraft.trim() || t.toLowerCase().includes(tagDraft.trim().toLowerCase())));
+  // Tags que ya se usan: los de la lista de la tienda (botón "Etiqueta" del
+  // Catálogo) más los de los productos, para sugerirlos al escribir (se puede
+  // escribir uno nuevo o elegir uno existente con un clic). La lista sale
+  // siempre que el campo tiene el foco, aunque ya se haya elegido un tag, y en
+  // orden alfabetico.
+  const existingTags = [...new Set([...(s.tags || []), ...s.products.flatMap((x) => productTags(x))])];
+  const q = tagDraft.trim().toLowerCase();
+  const tagMatches = existingTags
+    .filter((t) => !tags.includes(t) && (!q || t.toLowerCase().includes(q)))
+    .sort((a, b) => a.localeCompare(b, 'es'));
+
+  function flashTagLimit() {
+    setTagLimitNote(true);
+    if (tagTimer.current) clearTimeout(tagTimer.current);
+    tagTimer.current = setTimeout(() => setTagLimitNote(false), 2500);
+  }
 
   function commitTag(raw: string) {
     const t = raw.trim();
     if (!t) return;
-    setTags((arr) => (arr.includes(t) || arr.length >= 3 ? arr : [...arr, t]));
+    if (tags.includes(t)) { setTagDraft(''); setTagOpen(false); return; }
+    if (tags.length >= 3) { flashTagLimit(); setTagDraft(''); return; }
+    setTags((arr) => [...arr, t]);
     setTagDraft('');
     setTagOpen(false);
   }
@@ -76,7 +96,10 @@ export function ProductForm({ editingId, onClose }: { editingId?: string; onClos
         const t = st.products.find((x) => x.id === editingId);
         if (t) Object.assign(t, { name: nm, price: pr, cost: cst, image: image || DEFAULT_PRODUCT_IMAGE, promos: promoList, category: catVal, tags: tagsVal, tag: tag0 || undefined, supplier: sup || undefined, supplierTag: prodTag });
       } else {
-        st.products.push({ id: uid(), by: syncClientId(), name: nm, price: pr, cost: cst, image: image || DEFAULT_PRODUCT_IMAGE, promos: promoList, category: catVal, tags: tagsVal, tag: tag0 || undefined, supplier: sup || undefined, supplierTag: prodTag });
+        // Un producto nuevo entra en la posicion alfabetica de su categoria
+        // (aun si la categoria ya fue reordenada a mano); ver
+        // insertProductAlphabetically en lib/core.
+        insertProductAlphabetically(st, { id: uid(), by: syncClientId(), name: nm, price: pr, cost: cst, image: image || DEFAULT_PRODUCT_IMAGE, promos: promoList, category: catVal, tags: tagsVal, tag: tag0 || undefined, supplier: sup || undefined, supplierTag: prodTag });
       }
       // Cada costo que se guarda en un producto (con su proveedor) queda en el
       // historial unico de costos: reutiliza el registro si ese costo ya se
@@ -105,6 +128,10 @@ export function ProductForm({ editingId, onClose }: { editingId?: string; onClos
 
   return (
     <Modal onClose={onClose}>
+      <div className="modal-float-actions">
+        <button type="button" className="icon-btn float-cancel" title="Cancelar" aria-label="Cancelar" onClick={onClose}><CloseIcon size={15} /></button>
+        <button type="button" className="icon-btn float-save" title="Guardar" aria-label="Guardar" onClick={save}><SaveIcon size={15} /></button>
+      </div>
       <h2>{editingId ? 'Editar producto' : 'Añadir producto'}</h2>
       <div className="field"><label>Categoría <span className="muted">(opcional)</span></label>
         <CategorySuggest cats={cats} value={cat} onChange={setCat} placeholder="Escribe o elige una categoría" newLabel="Nueva categoría"
@@ -127,18 +154,20 @@ export function ProductForm({ editingId, onClose }: { editingId?: string; onClos
         <div className="tag-editor">
           <div className="cat-suggest tag-suggest">
             <input maxLength={30} placeholder={tags.length ? 'Agregar otro tag…' : (editingId ? 'Ej. general' : 'General')} value={tagDraft}
-              onChange={(e) => setTagDraft(e.target.value)}
+              onChange={(e) => { setTagDraft(e.target.value); setTagOpen(true); }}
               onFocus={() => setTagOpen(true)}
+              onClick={() => setTagOpen(true)}
               onBlur={() => { commitTag(tagDraft); setTagOpen(false); }}
               onKeyDown={(e) => {
                 if (e.key === 'Enter' || e.key === ',') { e.preventDefault(); commitTag(tagDraft); }
                 else if (e.key === 'Backspace' && tagDraft === '' && tags.length) setTags((arr) => arr.slice(0, -1));
               }} />
-            {tagOpen && tagMatches.length > 0 && (
+            {tagOpen && (
               <div className="cat-suggest-list">
                 {tagMatches.map((t) => (
                   <button type="button" key={t} onMouseDown={(e) => { e.preventDefault(); commitTag(t); }}>{esc(t)}</button>
                 ))}
+                {!tagMatches.length && <div className="cat-suggest-empty">No hay más etiquetas disponibles.</div>}
               </div>
             )}
           </div>
@@ -147,9 +176,8 @@ export function ProductForm({ editingId, onClose }: { editingId?: string; onClos
               <span className="tag-chip" key={t}>{esc(t)}<button type="button" title={'Quitar ' + t} aria-label={'Quitar ' + t} onClick={() => setTags((arr) => arr.filter((x) => x !== t))}>×</button></span>
             ))}
           </div>
-          {tags.length === 3 && <p className="muted tag-limit-note">Solo puedes añadir 3 tags por producto.</p>}
+          {tagLimitNote && <p className="tag-limit-note" role="status">Max. 3 etiquetas por producto.</p>}
         </div>
-        <p className="muted">Hasta 3 etiquetas cortas para agrupar productos (si no pones ninguna, se usa "General").</p>
       </div>
       <div className="field"><label>Precio del producto</label>
         <input min={0} type="number" placeholder="0" value={price} onChange={(e) => setPrice(e.target.value)} />
@@ -173,10 +201,6 @@ export function ProductForm({ editingId, onClose }: { editingId?: string; onClos
       )}
       <div className="field"><label>Promociones <span className="muted">(se aplican solas al vender)</span></label>
         <PromoEditor promos={promos} onChange={setPromos} priceHint={price} />
-      </div>
-      <div className="modal-actions">
-        <button className="button secondary" onClick={onClose}>Cancelar</button>
-        <button className="button primary" onClick={save}>Guardar producto</button>
       </div>
     </Modal>
   );

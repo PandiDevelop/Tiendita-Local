@@ -320,6 +320,19 @@ export function EyeOffIcon({ size = 16 }: { size?: number }) {
   );
 }
 
+// Disquete: botón para guardar. Reemplaza el botón de texto "Guardar" en las
+// ventanas de edición, que ahora cuelga arriba a la derecha junto a la X y baja
+// una opacidad para dejar ver el contenido cuando no se le señala.
+export function SaveIcon({ size = 15 }: { size?: number }) {
+  return (
+    <svg viewBox="0 0 24 24" width={size} height={size} fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M5 3.5h9.5L19 8v10a2.5 2.5 0 0 1-2.5 2.5H7.5A2.5 2.5 0 0 1 5 18z" />
+      <path d="M8.2 3.5V8.2h7V3.5" />
+      <path d="M16.2 20.5v-6.7H7.8v6.7" />
+    </svg>
+  );
+}
+
 // Flecha (chevron) izquierda/derecha: navegacion de mes/dia.
 export function ChevronIcon({ size = 14, dir = 'left' }: { size?: number; dir?: 'left' | 'right' }) {
   return (

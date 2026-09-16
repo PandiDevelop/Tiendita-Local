@@ -28,9 +28,11 @@ export const SYNC_DEFAULT_NAME = 'Trabajador';
 export const DEFAULT_PRODUCT_TAG = 'general';
 
 // Muestra un tag acortado cuando es muy largo: p.ej. "Uma musume" se ve como
-// "Uma". Se usa en listas donde el tag compite con el nombre del producto.
+// "UMAMU". Se usa en listas donde el tag compite con el nombre del producto.
+// Los espacios NO cuentan para el límite: primero se quitan (y no se muestran)
+// y luego se recortan los caracteres a `max`.
 export function shortTag(tag: string | undefined, max = 5): string {
-  const t = (tag || '').trim().toUpperCase();
+  const t = (tag || '').trim().toUpperCase().replace(/\s+/g, '');
   if (!t) return '';
   return t.length > max ? t.slice(0, max) : t;
 }
@@ -1089,6 +1091,86 @@ export function insertCatSorted(s: Store, cat: string): void {
   const list = [...(s.categories || []), v];
   list.sort((a, b) => a.localeCompare(b, 'es'));
   s.categories = list;
+}
+
+// --- Etiquetas de la tienda (listadas y editables desde el Catálogo) ---
+// s.tags es un indice de etiquetas conocidas, ordenado siempre alfabeticamente.
+// Igual que storeCats agrega las de los productos, storeTags suma las creadas
+// desde el botón "Etiqueta" con las que ya usan los productos, para que nunca
+// desaparezca una etiqueta que todavía está en uso.
+export function storeTags(s: Store): string[] {
+  const tags: string[] = [];
+  (s.tags || []).forEach((t) => { const v = (t || '').trim(); if (v && !tags.includes(v)) tags.push(v); });
+  s.products.forEach((p) => productTags(p).forEach((t) => { if (t && !tags.includes(t)) tags.push(t); }));
+  tags.sort((a, b) => a.localeCompare(b, 'es'));
+  return tags;
+}
+
+// Agrega una etiqueta nueva a s.tags en su posicion alfabetica. Devuelve false
+// si ya existia o el nombre estaba vacio (no la duplica). Las etiquetas que ya
+// viven solo en productos no se vuelven a agregar a la lista: storeTags las ve
+// igual por la union.
+export function insertTagSorted(s: Store, tag: string): boolean {
+  const v = (tag || '').trim();
+  if (!v || (s.tags || []).includes(v)) return false;
+  const list = [...(s.tags || []), v];
+  list.sort((a, b) => a.localeCompare(b, 'es'));
+  s.tags = list;
+  return true;
+}
+
+// Renombra una etiqueta en todos lados: en la lista de la tienda y en cada
+// producto que la usa (tanto el arreglo `tags` como el campo de legado `tag`).
+export function renameStoreTag(s: Store, from: string, to: string): void {
+  const v = (to || '').trim();
+  const f = (from || '').trim();
+  if (!f || !v || v === f) return;
+  s.tags = (s.tags || []).map((t) => (t === f ? v : t));
+  s.products.forEach((p) => {
+    if (Array.isArray(p.tags)) p.tags = p.tags.map((t) => (t === f ? v : t));
+    if (p.tag === f) p.tag = v;
+  });
+}
+
+// Quita una etiqueta de la lista de la tienda y de los productos que la usan.
+// A diferencia de una categoría (cuyos productos pasarían a "Sin categoría"),
+// aquí el producto simplemente se queda con el resto de sus etiquetas o sin
+// ninguna si era la única.
+export function removeStoreTag(s: Store, tag: string): void {
+  const v = (tag || '').trim();
+  if (!v) return;
+  s.tags = (s.tags || []).filter((t) => t !== v);
+  s.products.forEach((p) => {
+    if (Array.isArray(p.tags)) {
+      p.tags = p.tags.filter((t) => t !== v);
+      if (p.tags.length === 0 && p.tag === v) p.tag = undefined;
+    } else if (p.tag === v) {
+      p.tag = undefined;
+      p.tags = [];
+    }
+  });
+}
+
+// Pone un producto nuevo en su posicion alfabetica DENTRO del orden manual de
+// su categoria (si el usuario ya arrastro alguna vez esa categoria, todos sus
+// productos tienen 'order'). Sin esto, un producto agregado despues caeria al
+// final la lista en vez de a su lugar alfabetico. Se asigna un 'order'
+// fraccionario entre los vecinos; al arrastrar de nuevo reorderCategoryProducts
+// lo reindexa a enteros. Si la categoria todavia no tiene orden manual, no se
+// toca nada: sortProducts ya la deja alfabetica por defecto.
+export function insertProductAlphabetically(s: Store, p: Product, editingId?: string): void {
+  const cat = (p.category || '').trim();
+  const siblings = s.products.filter((x) => (x.category || '').trim() === cat && x.id !== editingId);
+  const manual = siblings.filter((x) => Number.isFinite(x.order));
+  if (!manual.length) { s.products.push(p); return; }
+  const ordered = [...manual].sort((a, b) => ((a.order as number) - (b.order as number)) || (a.name || '').localeCompare(b.name || '', 'es'));
+  const cmp = (x: Product) => (p.name || '').localeCompare(x.name || '', 'es');
+  let idx = ordered.findIndex((x) => cmp(x) < 0);
+  if (idx === -1) idx = ordered.length;
+  if (idx === 0) p.order = (ordered[0].order as number) - 1;
+  else if (idx >= ordered.length) p.order = (ordered[ordered.length - 1].order as number) + 1;
+  else p.order = ((ordered[idx - 1].order as number) + (ordered[idx].order as number)) / 2;
+  s.products.push(p);
 }
 
 // Redimensiona y comprime una foto del dispositivo para que quepa en

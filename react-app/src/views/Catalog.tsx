@@ -1,12 +1,69 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import type { PointerEvent as ReactPointerEvent } from 'react';
+import { createPortal } from 'react-dom';
 import { useStore } from '../store';
-import { money, esc, inventorySold, reorderCategoryProducts, groupedByCategory, storeCats, shortTag, promoText, DEFAULT_PRODUCT_IMAGE, productTags } from '../lib/core';
+import { money, esc, inventorySold, reorderCategoryProducts, groupedByCategory, storeCats, storeTags, shortTag, promoText, DEFAULT_PRODUCT_IMAGE, productTags } from '../lib/core';
 import { customConfirm } from '../lib/dialog';
 import { GearMenu, Image, StorefrontIcon, CaretIcon } from '../ui';
 import { CategoryModal } from './CategoryModal';
+import { TagModal } from './TagModal';
 import { VirtualCatalog } from './VirtualCatalog';
 import type { Product } from '../types';
+
+// Botón con menú desplegable (Categoría / Etiqueta): al tocarlo muestra debajo
+// la opción de crear una nueva y cada una de las existentes para poder
+// editarlas. El menú viaja por portal igual que la tuerca de opciones.
+function ActionDropdown({ label, className, items }: {
+  label: string; className?: string;
+  items: { label: string; danger?: boolean; onClick: () => void }[];
+}) {
+  const [open, setOpen] = useState(false);
+  const btnRef = useRef<HTMLButtonElement>(null);
+  const [pos, setPos] = useState<{ left: number; top: number } | null>(null);
+  const syncPos = () => {
+    const el = btnRef.current;
+    if (!el) return;
+    const r = el.getBoundingClientRect();
+    setPos({ left: Math.min(Math.max(6, r.left), window.innerWidth - 176), top: r.bottom + 5 });
+  };
+  useEffect(() => {
+    if (!open) return;
+    const onDown = (e: PointerEvent) => {
+      const t = e.target as Node;
+      const menu = document.getElementById('cat-action-menu');
+      if (btnRef.current && menu && !btnRef.current.contains(t) && !menu.contains(t)) setOpen(false);
+    };
+    document.addEventListener('pointerdown', onDown);
+    const onScroll = () => syncPos();
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => {
+      document.removeEventListener('pointerdown', onDown);
+      window.removeEventListener('scroll', onScroll);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open]);
+  return (
+    <>
+      <button
+        type="button"
+        ref={btnRef}
+        className={'button primary' + (className ? ' ' + className : '')}
+        onClick={() => { if (!open) syncPos(); setOpen((o) => !o); }}
+        aria-haspopup="menu">
+        {label} <span className="dd-caret"><CaretIcon size={13} deg={open ? 180 : 0} /></span>
+      </button>
+      {open && pos && createPortal(
+        <div id="cat-action-menu" className="action-menu" style={{ left: pos.left, top: pos.top }}>
+          {items.map((it) => (
+            <button key={it.label} type="button" className={it.danger ? 'danger' : ''}
+              onClick={() => { setOpen(false); it.onClick(); }}>{it.label}</button>
+          ))}
+        </div>,
+        document.body
+      )}
+    </>
+  );
+}
 
 export function Catalog() {
   const { store, state, replace, setModal, setModalArg, toast } = useStore();
@@ -15,6 +72,8 @@ export function Catalog() {
   const inv = s.inventory || {};
   // Categoria cuya configuracion se abre con la tuerca del encabezado.
   const [catModal, setCatModal] = useState<{ mode: 'new' | 'edit'; name: string } | null>(null);
+  // Etiqueta cuyo editor se abre desde el boton "Etiqueta" del encabezado.
+  const [tagModal, setTagModal] = useState<{ mode: 'new' | 'edit'; tag?: string } | null>(null);
   // Buscador en vivo: mientras se escribe, solo se ven los productos que
   // coinciden (por nombre o tag), manteniendo las categorías.
   const [query, setQuery] = useState('');
@@ -183,7 +242,14 @@ export function Catalog() {
       <div className="panel-head"><div><h2>Catálogo de productos</h2><p className="muted">Productos por categoría con su precio y existencias. Arrastra ⠿ para ordenar.</p></div></div>
       <div className="cat-actions">
         <div className="cat-actions-row">
-          <button className="button primary" onClick={addCategory}>＋ Categoría</button>
+          <ActionDropdown label="＋ Categoría" items={[
+            { label: '＋ Nueva categoría', onClick: () => addCategory() },
+            ...realNames.map((c) => ({ label: c, onClick: () => editCategoryPrice(c) })),
+          ]} />
+          <ActionDropdown className="cat-action-tag" label="＋ Etiqueta" items={[
+            { label: '＋ Nueva etiqueta', onClick: () => setTagModal({ mode: 'new' }) },
+            ...storeTags(s).map((t) => ({ label: t, onClick: () => setTagModal({ mode: 'edit', tag: t }) })),
+          ]} />
           <button className="button primary" onClick={() => setModal('newProduct')}>＋ Producto</button>
         </div>
         <button className="button outline cat-actions-cta" disabled={!s.products.length} onClick={() => setBookOpen(true)}><StorefrontIcon size={16} /> Ver catálogo</button>
@@ -264,6 +330,13 @@ export function Catalog() {
               d.openCats[s.id]['c:' + n] = true;
             });
           }}
+        />
+      )}
+      {tagModal && (
+        <TagModal
+          mode={tagModal.mode}
+          tagName={tagModal.mode === 'edit' ? tagModal.tag : undefined}
+          onClose={() => setTagModal(null)}
         />
       )}
     {bookOpen && (

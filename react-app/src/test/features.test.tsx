@@ -158,7 +158,7 @@ describe('Tag opcional del producto', () => {
     const { container, stateRef } = setup(makeStore());
     fireEvent.change(fieldControl('Nombre del producto', container), { target: { value: 'Agua' } });
     fireEvent.change(fieldControl('Precio del producto', container), { target: { value: '1000' } });
-    fireEvent.click(screen.getByRole('button', { name: 'Guardar producto' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Guardar' }));
     const saved = stateRef.current.stores[0].products[0];
     expect(saved.name).toBe('Agua');
     expect(saved.tags).toEqual([DEFAULT_PRODUCT_TAG]);
@@ -172,17 +172,41 @@ describe('Tag opcional del producto', () => {
     addTag(container, 'oferta');
     addTag(container, 'vitrina');
     addTag(container, 'nuevo');
-    // El campo se mantiene siempre (sirve para crear/mezclar tags) y avisa el
-    // limite; el cuarto tag no entra.
+    // El campo se mantiene siempre (sirve para crear/mezclar tags); el cuarto
+    // tag no entra y en vez de un texto fijo aparece un aviso transitorio.
     expect(document.querySelectorAll('.tag-editor input').length).toBe(1);
-    expect(screen.getByText('Solo puedes añadir 3 tags por producto.')).toBeInTheDocument();
+    expect(screen.queryByText('Solo puedes añadir 3 tags por producto.')).not.toBeInTheDocument();
     addTag(container, 'cuatro');
-    fireEvent.click(screen.getByRole('button', { name: 'Guardar producto' }));
+    expect(screen.getByText('Max. 3 etiquetas por producto.')).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'Guardar' }));
     const saved = stateRef.current.stores[0].products[0];
     // El cuarto tag no entra: quedan solo 3, y el campo que agrega tags sigue
     // visible pidiendo elegir/crear, con los chips debajo del cuadro.
     expect(saved.tags).toEqual(['oferta', 'vitrina', 'nuevo']);
     expect(saved.tag).toBe('oferta');
+  });
+
+  it('la lista de etiquetas sugeridas sale al hacer clic y va en orden alfabético', () => {
+    const store = makeStore({
+      tags: ['zumo'],
+      products: [
+        makeProduct({ name: 'A', tags: ['verano'] }),
+        makeProduct({ name: 'B', tags: ['promo'] }),
+      ],
+    });
+    const { container } = setup(store);
+    const tagInput = fieldControl(/Etiqueta \/ tag/, container);
+    fireEvent.focus(tagInput);
+    const buttons = Array.from(document.querySelectorAll('.tag-editor .cat-suggest-list button')) as HTMLButtonElement[];
+    const opts = buttons.map((b) => b.textContent);
+    // Sin buscar: todas las etiquetas conocidas, ordenadas alfabéticamente
+    // (las de la tienda más las de los productos).
+    expect(opts).toEqual(['promo', 'verano', 'zumo']);
+    // Al hacer clic de nuevo (tras elegir una, sin que se apague el foco) la
+    // lista sigue saliendo.
+    fireEvent.mouseDown(buttons[1]);
+    fireEvent.click(tagInput);
+    expect(document.querySelectorAll('.tag-editor .cat-suggest-list button').length).toBeGreaterThan(0);
   });
 
   it('al editar, muestra los tags propios del producto (no el default) y permite quitarlos', () => {
@@ -195,7 +219,7 @@ describe('Tag opcional del producto', () => {
     // Quitar el primer tag y agregar uno nuevo.
     fireEvent.click(chips[0].querySelector('button')!);
     addTag(container, 'oferta');
-    fireEvent.click(screen.getByRole('button', { name: 'Guardar producto' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Guardar' }));
     const saved = stateRef.current.stores[0].products[0];
     expect(saved.tags).not.toContain('promo');
     expect(saved.tags).toEqual(['verano', 'oferta']);

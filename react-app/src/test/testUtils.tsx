@@ -61,6 +61,7 @@ export function makeStore(overrides: Partial<Store> = {}): Store {
     products: overrides.products || [],
     sales: overrides.sales || [],
     categories: overrides.categories || [],
+    tags: overrides.tags || [],
     categoryPricing: overrides.categoryPricing || {},
     inventory: overrides.inventory || {},
     notes: '',
