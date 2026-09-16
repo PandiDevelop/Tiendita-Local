@@ -740,3 +740,11 @@ input[type="number"]::-webkit-inner-spin-button,input[type="number"]::-webkit-ou
   .print-catalog .pc-page-head .pc-logo{width:18px;height:18px;border-radius:4px}
   .print-catalog .pc-cover-logo{width:auto;max-height:74px;max-width:70%;object-fit:contain;display:block;margin:0 auto 14px}
 }
+
+/* --- Botones del catálogo virtual ---
+   Solo íconos: la impresora imprime el folleto y la X cierra (antes eran dos
+   botones con texto). Comparten el estilo redondo de los íconos del resto de
+   la app, con el color del tema para que se vean en la cabecera blanca. */
+.vc-actions .icon-btn{width:36px;height:36px;border-radius:11px;background:var(--lav);border:1px solid var(--line);color:var(--brand-deep);display:grid;place-items:center;flex:0 0 auto;transition:background .15s}
+.vc-actions .icon-btn:hover{background:var(--brand-line)}
+.vc-actions .icon-btn:disabled{opacity:.45;cursor:default;background:var(--lav)}

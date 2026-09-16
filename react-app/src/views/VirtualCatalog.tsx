@@ -3,7 +3,7 @@ import { createPortal } from 'react-dom';
 import { useStore } from '../store';
 import { DEFAULT_PRODUCT_IMAGE, DEFAULT_STORE_IMAGE, esc, groupedByCategory, money, shortTag, productTags } from '../lib/core';
 import { pushOverlay } from '../lib/backStack';
-import { Image, PrintIcon, StoreImage } from '../ui';
+import { Image, PrintIcon, StoreImage, CloseIcon } from '../ui';
 import type { Product } from '../types';
 
 function chunks<T>(arr: T[], size: number): T[][] {
@@ -17,7 +17,7 @@ function chunks<T>(arr: T[], size: number): T[][] {
 // pantalla completa desde Catálogo para enseñárselo a un cliente sin
 // distracciones; tocar una foto la abre en grande (Image agranda sola).
 //
-// También se puede imprimir: el botón "Imprimir" llama a window.print() y la
+// También se puede imprimir: el ícono de impresora llama a window.print() y la
 // versión impresa sale como un mini catálogo en papel, con una portada por
 // categoría y 4 productos por página (las categorías vacías se omiten). El
 // bloque .print-catalog está oculto en pantalla y solo aparece en @media
@@ -49,8 +49,8 @@ export function VirtualCatalog({ onClose }: { onClose: () => void }) {
             <StoreImage src={s.image} cls="vc-logo" alt={'Logo de ' + esc(s.name)} enlarge={false} />
             <div className="vc-title">{esc(s.name)}<div className="vc-sub">Catálogo virtual · {s.products.length} producto{s.products.length === 1 ? '' : 's'}</div></div>
             <div className="vc-actions">
-              <button className="button" disabled={!printedGroups.length} onClick={() => { if (typeof window !== 'undefined' && typeof window.print === 'function') window.print(); }}><PrintIcon size={15} /> Imprimir</button>
-              <button className="button secondary" onClick={onClose}>Cerrar</button>
+              <button type="button" className="icon-btn" title="Imprimir" aria-label="Imprimir" disabled={!printedGroups.length} onClick={() => { if (typeof window !== 'undefined' && typeof window.print === 'function') window.print(); }}><PrintIcon size={17} /></button>
+              <button type="button" className="icon-btn" title="Cerrar" aria-label="Cerrar" onClick={onClose}><CloseIcon size={17} /></button>
             </div>
           </div>
           <div className="vc-body">
