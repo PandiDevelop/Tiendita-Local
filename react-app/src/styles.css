@@ -725,3 +725,18 @@ input[type="number"]::-webkit-inner-spin-button,input[type="number"]::-webkit-ou
 .cat-switch-list button.on{background:var(--lav);color:var(--brand-deep);font-weight:700}
 .cat-switch-list .cat-switch-new{color:var(--brand-deep);font-weight:700;border-bottom:1px solid var(--line);border-radius:6px;margin-bottom:2px}
 .cat-switch-head{margin-bottom:6px}
+
+/* --- Logo de la tienda en el catálogo virtual ---
+   El libro de catálogo muestra abajo el logo que la tienda subió (o, si no
+   subió ninguno, el localcito del tema actual, igual que en la portada). En
+   la versión impresa el logo solo sale si hay foto propia, porque el SVG de
+   respaldo usa colores del tema que en papel no pintarían bien. */
+.vc-logo{width:48px;height:48px;border-radius:12px;object-fit:cover;background:var(--peach);flex:0 0 auto}
+@media (max-width:370px){.vc-logo{width:40px;height:40px}}
+@media print{
+  .print-catalog .pc-brand{display:flex;align-items:center;gap:10px}
+  .print-catalog .pc-logo{width:26px;height:26px;object-fit:cover;border-radius:6px;flex:0 0 auto;background:#f2ecfb}
+  .print-catalog .pc-page-head{align-items:center;gap:8px}
+  .print-catalog .pc-page-head .pc-logo{width:18px;height:18px;border-radius:4px}
+  .print-catalog .pc-cover-logo{width:auto;max-height:74px;max-width:70%;object-fit:contain;display:block;margin:0 auto 14px}
+}

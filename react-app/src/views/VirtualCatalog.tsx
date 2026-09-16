@@ -1,9 +1,9 @@
 import { useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { useStore } from '../store';
-import { DEFAULT_PRODUCT_IMAGE, esc, groupedByCategory, money, shortTag, productTags } from '../lib/core';
+import { DEFAULT_PRODUCT_IMAGE, DEFAULT_STORE_IMAGE, esc, groupedByCategory, money, shortTag, productTags } from '../lib/core';
 import { pushOverlay } from '../lib/backStack';
-import { Image, PrintIcon } from '../ui';
+import { Image, PrintIcon, StoreImage } from '../ui';
 import type { Product } from '../types';
 
 function chunks<T>(arr: T[], size: number): T[][] {
@@ -27,6 +27,10 @@ export function VirtualCatalog({ onClose }: { onClose: () => void }) {
   const s = store!;
   const groups = groupedByCategory(s);
   const printedGroups = groups.filter((g) => g.list.length > 0);
+  // La tienda puso su propio logo (no el predeterminado): es el unico caso en
+  // que se imprime, porque el SVG de respaldo usa los colores del tema y en
+  // papel no quedaria bien.
+  const hasLogo = !!s.image && s.image !== DEFAULT_STORE_IMAGE;
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose(); };
@@ -42,6 +46,7 @@ export function VirtualCatalog({ onClose }: { onClose: () => void }) {
       <div className="modal-backdrop vc-backdrop" onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}>
         <div className="modal">
           <div className="vc-head">
+            <StoreImage src={s.image} cls="vc-logo" alt={'Logo de ' + esc(s.name)} enlarge={false} />
             <div className="vc-title">{esc(s.name)}<div className="vc-sub">Catálogo virtual · {s.products.length} producto{s.products.length === 1 ? '' : 's'}</div></div>
             <div className="vc-actions">
               <button className="button" disabled={!printedGroups.length} onClick={() => { if (typeof window !== 'undefined' && typeof window.print === 'function') window.print(); }}><PrintIcon size={15} /> Imprimir</button>
@@ -68,11 +73,12 @@ export function VirtualCatalog({ onClose }: { onClose: () => void }) {
       </div>
       {printedGroups.length > 0 && (
         <div className="print-catalog" aria-hidden="true" data-store={s.name}>
-          <header className="pc-brand">{esc(s.name)}<span> · Catálogo</span></header>
+          <header className="pc-brand">{hasLogo && <img className="pc-logo" src={s.image} alt="" />}{esc(s.name)}<span> · Catálogo</span></header>
           {printedGroups.map((g) => (
             <section className="pc-section" key={g.name}>
               <div className="pc-page pc-cover">
                 <div className="pc-cover-tile">
+                  {hasLogo && <img className="pc-cover-logo" src={s.image} alt={esc(s.name)} />}
                   <p className="pc-kicker">{esc(s.name)} · catálogo virtual</p>
                   <h2>{esc(g.name)}</h2>
                   <p>{g.list.length === 1 ? '1 producto' : g.list.length + ' productos'}</p>
@@ -80,7 +86,7 @@ export function VirtualCatalog({ onClose }: { onClose: () => void }) {
               </div>
               {chunks<Product>(g.list, 4).map((chunk, ci) => (
                 <div className="pc-page" key={ci}>
-                  <div className="pc-page-head"><b>{esc(s.name)}</b><span>{esc(g.name)}</span></div>
+                  <div className="pc-page-head">{hasLogo && <img className="pc-logo" src={s.image} alt="" />}<b>{esc(s.name)}</b><span>{esc(g.name)}</span></div>
                   <div className="pc-grid">
                     {chunk.map((p) => (
                       <div className="pc-card" key={p.id}>
