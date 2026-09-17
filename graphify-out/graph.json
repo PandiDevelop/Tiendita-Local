@@ -4302,7 +4302,7 @@
       "file_type": "code",
       "norm_label": "doregister()",
       "source_file": "react-app/src/views/AuthLanding.tsx",
-      "source_location": "L77"
+      "source_location": "L79"
     },
     {
       "id": "react_app_src_views_authlanding_authlanding_doreset",
@@ -4314,7 +4314,7 @@
       "file_type": "code",
       "norm_label": "doreset()",
       "source_file": "react-app/src/views/AuthLanding.tsx",
-      "source_location": "L95"
+      "source_location": "L97"
     },
     {
       "id": "react_app_src_views_authlanding_authlanding_dosignin",
@@ -4326,7 +4326,7 @@
       "file_type": "code",
       "norm_label": "dosignin()",
       "source_file": "react-app/src/views/AuthLanding.tsx",
-      "source_location": "L48"
+      "source_location": "L50"
     },
     {
       "id": "react_app_src_views_authlanding_authlanding_go",
@@ -13116,7 +13116,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "react-app/src/views/AuthLanding.tsx",
-      "source_location": "L46",
+      "source_location": "L48",
       "weight": 1.0
     },
     {
@@ -13128,7 +13128,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "react-app/src/views/AuthLanding.tsx",
-      "source_location": "L84",
+      "source_location": "L86",
       "weight": 1.0
     },
     {
@@ -13140,7 +13140,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "react-app/src/views/AuthLanding.tsx",
-      "source_location": "L89",
+      "source_location": "L91",
       "weight": 1.0
     },
     {
@@ -13152,7 +13152,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "react-app/src/views/AuthLanding.tsx",
-      "source_location": "L100",
+      "source_location": "L102",
       "weight": 1.0
     },
     {
@@ -13164,7 +13164,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "react-app/src/views/AuthLanding.tsx",
-      "source_location": "L53",
+      "source_location": "L55",
       "weight": 1.0
     },
     {
@@ -13176,7 +13176,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "react-app/src/views/AuthLanding.tsx",
-      "source_location": "L54",
+      "source_location": "L56",
       "weight": 1.0
     },
     {
@@ -13188,7 +13188,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "react-app/src/views/AuthLanding.tsx",
-      "source_location": "L56",
+      "source_location": "L58",
       "weight": 1.0
     },
     {
@@ -13200,7 +13200,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "react-app/src/views/AuthLanding.tsx",
-      "source_location": "L57",
+      "source_location": "L59",
       "weight": 1.0
     },
     {
@@ -13212,7 +13212,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "react-app/src/views/AuthLanding.tsx",
-      "source_location": "L58",
+      "source_location": "L60",
       "weight": 1.0
     },
     {
@@ -13224,7 +13224,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "react-app/src/views/AuthLanding.tsx",
-      "source_location": "L59",
+      "source_location": "L61",
       "weight": 1.0
     },
     {
@@ -13236,7 +13236,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "react-app/src/views/AuthLanding.tsx",
-      "source_location": "L63",
+      "source_location": "L65",
       "weight": 1.0
     },
     {
@@ -13248,7 +13248,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "react-app/src/views/AuthLanding.tsx",
-      "source_location": "L69",
+      "source_location": "L71",
       "weight": 1.0
     },
     {
@@ -31915,7 +31915,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "react-app/src/views/AuthLanding.tsx",
-      "source_location": "L48",
+      "source_location": "L50",
       "weight": 1.0
     },
     {
@@ -31926,7 +31926,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "react-app/src/views/AuthLanding.tsx",
-      "source_location": "L77",
+      "source_location": "L79",
       "weight": 1.0
     },
     {
@@ -31937,7 +31937,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "react-app/src/views/AuthLanding.tsx",
-      "source_location": "L95",
+      "source_location": "L97",
       "weight": 1.0
     },
     {
@@ -33389,7 +33389,7 @@
       "confidence_score": 0.85,
       "context": "argument",
       "source_file": "react-app/src/views/AuthLanding.tsx",
-      "source_location": "L63",
+      "source_location": "L65",
       "weight": 1.0
     },
     {
@@ -33538,5 +33538,5 @@
     }
   ],
   "hyperedges": [],
-  "built_at_commit": "27c8e78e623efc51d6656f2a761fc84f2e53a115"
+  "built_at_commit": "52b0c8663fc8d65e31c581fad5c091d785d8b7b6"
 }
