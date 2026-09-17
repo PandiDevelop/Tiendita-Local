@@ -62,4 +62,19 @@ describe('Bienvenida: la cuenta va primero', () => {
     expect(screen.getByRole('button', { name: 'Crear cuenta' })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Cancelar' })).toBeInTheDocument();
   });
+
+  it('el atrás vuelve a las opciones en vez de cerrar la app', async () => {
+    renderLanding();
+    fireEvent.click(screen.getByRole('button', { name: 'Inicia sesión' }));
+    await screen.findByRole('button', { name: 'Conectarse' });
+    window.dispatchEvent(new PopStateEvent('popstate'));
+    expect(await screen.findByRole('button', { name: 'Inicia sesión' })).toBeInTheDocument();
+  });
+
+  it('en las opciones iniciales, el atrás no cierra la app', () => {
+    renderLanding();
+    window.dispatchEvent(new PopStateEvent('popstate'));
+    expect(screen.getByRole('button', { name: 'Inicia sesión' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Continuar sin registrarme' })).toBeInTheDocument();
+  });
 });

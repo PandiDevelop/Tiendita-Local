@@ -506,7 +506,7 @@ td.cat-bar .product-name .prod-tag{margin-left:auto;flex:0 0 auto}
 .store-picker-list{display:grid;gap:8px;margin-top:4px}
 .store-picker-item{display:flex;align-items:center;gap:12px;width:100%;padding:11px 12px;border-radius:13px;background:var(--surface);border:1px solid var(--line);color:var(--ink);font-weight:700;text-align:left}
 .store-picker-item:hover{background:var(--lav);color:var(--brand-deep)}
-@media (max-width:760px){.auth-actions{flex-direction:column}.auth-actions .button{width:100%}}
+@media (max-width:760px){.auth-actions{flex-direction:column-reverse}.auth-actions .button{width:100%}}
 /* ------------------------------------------------------------------ */
 /* Editor de hasta 3 etiquetas/tags en el formulario de producto. El cuadro
    de escritura/sugerencias va siempre arriba y los chips elegidos debajo. */

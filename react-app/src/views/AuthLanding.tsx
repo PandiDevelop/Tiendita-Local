@@ -42,8 +42,10 @@ export function AuthLanding({ onCreate, onJoin }: { onCreate: () => void; onJoin
 
   useEffect(() => () => { if (fadeTimer.current) window.clearTimeout(fadeTimer.current); }, []);
 
-  // El botón atrás del celular vuelve a las opciones en vez de salir de la app.
-  useEffect(() => (step !== 'choice' ? pushOverlay(() => go('choice')) : undefined), [step]); // eslint-disable-line react-hooks/exhaustive-deps
+  // El botón atrás del celular (o el gesto de volver) NUNCA debe cerrar la app
+  // mientras se ve esta pantalla: si hay un formulario abierto, vuelve a las
+  // opciones; si ya estamos en las opciones, no hace nada.
+  useEffect(() => pushOverlay(() => { if (step !== 'choice') go('choice'); }), [step]); // eslint-disable-line react-hooks/exhaustive-deps
 
   async function doSignIn() {
     if (busy) return;
