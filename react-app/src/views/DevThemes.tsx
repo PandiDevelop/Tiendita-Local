@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Modal } from '../ui';
+import { Modal, CloseIcon } from '../ui';
 import { themePref, setThemePref } from '../lib/theme';
 import type { ThemePref } from '../lib/theme';
 
@@ -57,7 +57,7 @@ export function DevThemesModal({ onClose }: { onClose: () => void }) {
   }, [unlocked]);
 
   function tryPass() {
-    if (pass === DEV_PASS) { unlockDev(); setUnlocked(true); setErr(false); setPass(''); }
+    if (pass === DEV_PASS) { unlockDev(); setUnlocked(true); setStage('icons'); setErr(false); setPass(''); }
     else setErr(true);
   }
 
@@ -88,6 +88,9 @@ export function DevThemesModal({ onClose }: { onClose: () => void }) {
           )}
           {stage === 'menu' && (
             <div className="dev-menu-in">
+              <div className="modal-float-actions">
+                <button type="button" className="icon-btn float-cancel" title="Cerrar" aria-label="Cerrar" onClick={onClose}><CloseIcon size={15} /></button>
+              </div>
               <h2 style={{ marginTop: 0 }}>DevThemes</h2>
               <p className="muted">Temas ocultos que se guardan solo en este dispositivo.</p>
               <div className="team-list" style={{ margin: '0 0 14px' }}>
@@ -100,10 +103,6 @@ export function DevThemesModal({ onClose }: { onClose: () => void }) {
                     </span>
                   </button>
                 ))}
-              </div>
-              <div className="modal-actions">
-                <button className="button secondary" style={{ flex: 1 }} onClick={() => { setActive('light'); setThemePref('light'); }}>Clásico</button>
-                <button className="button primary" style={{ flex: 1 }} onClick={onClose}>Cerrar</button>
               </div>
             </div>
           )}

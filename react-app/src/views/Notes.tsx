@@ -133,6 +133,9 @@ function Composer({ mode, onDone }: { mode: 'text' | 'checklist'; onDone: () => 
 function HistoryModal({ current, history, onClose }: { current: string; history: NoteEditRecord[]; onClose: () => void }) {
   return (
     <Modal onClose={onClose}>
+      <div className="modal-float-actions">
+        <button type="button" className="icon-btn float-cancel" title="Cerrar" aria-label="Cerrar" onClick={onClose}><CloseIcon size={15} /></button>
+      </div>
       <h2>Historial de cambios</h2>
       <div className="note-history-list">
         {history.map((h, i) => (
@@ -146,7 +149,6 @@ function HistoryModal({ current, history, onClose }: { current: string; history:
           <div className="note-history-text">{esc(current)}</div>
         </div>
       </div>
-      <div className="modal-actions"><button className="button primary" onClick={onClose}>Cerrar</button></div>
     </Modal>
   );
 }

@@ -202,6 +202,9 @@ export function SettingsModal({ onClose }: { onClose: () => void }) {
 
   return (
     <Modal onClose={onClose}>
+      <div className="modal-float-actions">
+        <button type="button" className="icon-btn float-cancel" title="Cerrar" aria-label="Cerrar" disabled={busy} onClick={onClose}><CloseIcon size={15} /></button>
+      </div>
       <h2>Opciones</h2>
       <div className="settings-block">
         <div className="label">Ajustes generales</div>
@@ -383,9 +386,6 @@ export function SettingsModal({ onClose }: { onClose: () => void }) {
       </div>
 
       <p className="muted settings-version">Versión {version}</p>
-      <div className="modal-actions">
-        <button className="button primary" onClick={onClose} disabled={busy}>Cerrar</button>
-      </div>
     </Modal>
   );
 }

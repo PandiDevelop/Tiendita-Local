@@ -182,9 +182,11 @@ export function SaleRegistration({ onClose }: { onClose: () => void }) {
   if (!s.products.length) {
     return (
       <Modal onClose={onClose}>
+        <div className="modal-float-actions">
+          <button type="button" className="icon-btn float-cancel" title="Cerrar" aria-label="Cerrar" onClick={onClose}><CloseIcon size={15} /></button>
+        </div>
         <h2>Registrar una venta</h2>
         <div className="empty"><div className="emoji"><ReceiptIcon /></div><b>Aún no hay productos para vender</b><p>Agrega productos para empezar.</p></div>
-        <div className="modal-actions"><span style={{ flex: 1 }}></span><button className="button primary" onClick={onClose}>Cerrar</button></div>
       </Modal>
     );
   }

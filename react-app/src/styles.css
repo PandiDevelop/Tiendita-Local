@@ -646,7 +646,7 @@ td.cat-bar .product-name .prod-tag{margin-left:auto;flex:0 0 auto}
 .dev-stage{margin:6px auto 4px;display:flex;flex-direction:column;align-items:center;justify-content:center;overflow:hidden;background:var(--surface);border:0;box-shadow:var(--shadow);transition:width .5s cubic-bezier(.22,1,.36,1),height .5s cubic-bezier(.22,1,.36,1),border-radius .5s,padding .5s,background .5s,box-shadow .5s}
 .dev-stage.icons{width:132px;height:240px;border-radius:28px;padding:16px 12px;border:0;box-shadow:none}
 .dev-stage.grow{width:min(430px,100%);height:420px;border-radius:22px;padding:18px 16px 14px;box-shadow:none}
-.dev-stage.menu{width:min(430px,100%);height:420px;border-radius:22px;padding:18px 16px 14px;box-shadow:none}
+.dev-stage.menu{width:min(430px,100%);height:auto;min-height:420px;border-radius:22px;padding:18px 16px 14px;box-shadow:none}
 .dev-modal .dev-stage:not(.menu){background:var(--surface)}
 .dev-icons{display:flex;flex-direction:column;align-items:center;gap:8px;transition:opacity .45s ease,transform .45s ease}
 .dev-icons.out{opacity:0;transform:scale(.92) translateY(6px);pointer-events:none}
