@@ -278,6 +278,19 @@ describe('Etiquetas de la tienda: texto completo', () => {
   });
 });
 
+describe('Catálogo e Inventario: tags completos', () => {
+  it('muestra el nombre completo del tag sin acortarlo', () => {
+    const store = makeStore({
+      categories: ['Bebidas'],
+      products: [makeProduct({ name: 'Agua', category: 'Bebidas', tags: ['uma musume'] })],
+    });
+    const { container } = render(<TestProvider initialState={makeState(store)}><Catalog /></TestProvider>);
+    const tag = container.querySelector('.prod-tag') as HTMLElement;
+    expect(tag.textContent).toBe('uma musume');
+    expect(container.textContent).not.toContain('UMAMU');
+  });
+});
+
 describe('Notas: historiales separados por pestaña', () => {
   it('las notas solo se ven en la pestaña Notas y los objetivos en Objetivos', () => {
     const now = Date.now();

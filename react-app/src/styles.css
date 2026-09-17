@@ -282,8 +282,8 @@ th,td{text-align:left;vertical-align:middle}
 .sale-builder-name-row .b-name{flex:1;min-width:0;overflow-wrap:break-word}
 .sale-builder-name-row .sale-tag{margin-left:auto;flex:0 0 auto;max-width:130px}
 /* Tablas de Catalogo/Inventario: el tag de cada producto a la derecha. */
-td.cat-bar .product-name{display:flex;align-items:center;gap:4px;min-width:0}
-td.cat-bar .product-name .prod-tag{margin-left:auto;flex:0 0 auto}
+td.cat-bar .product-name{display:flex;flex-wrap:wrap;align-items:center;gap:4px;min-width:0}
+td.cat-bar .product-name .prod-tag{margin-left:auto;flex:0 1 auto;min-width:0;max-width:100%}
 /* Menú que abre la tuerca de cada producto (Editar / Eliminar). */
 .actions{position:relative}
 .action-menu{position:absolute;right:0;top:calc(100% + 4px);background:var(--surface);border:1px solid var(--line);border-radius:11px;box-shadow:0 6px 18px rgba(24,20,32,.14);z-index:40;min-width:170px;padding:5px;display:grid;gap:2px}

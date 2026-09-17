@@ -1,7 +1,7 @@
 import { useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { useStore } from '../store';
-import { DEFAULT_PRODUCT_IMAGE, DEFAULT_STORE_IMAGE, esc, groupedByCategory, money, shortTag, productTags } from '../lib/core';
+import { DEFAULT_PRODUCT_IMAGE, DEFAULT_STORE_IMAGE, esc, groupedByCategory, money, productTags } from '../lib/core';
 import { pushOverlay } from '../lib/backStack';
 import { Image, PrintIcon, StoreImage, CloseIcon } from '../ui';
 import type { Product } from '../types';
@@ -61,7 +61,7 @@ export function VirtualCatalog({ onClose }: { onClose: () => void }) {
                   {g.list.map((p) => (
                     <div className="vc-card" key={p.id}>
                       <Image src={p.image || DEFAULT_PRODUCT_IMAGE} cls="vc-img" alt={p.name} />
-                      <div className="vc-name">{esc(p.name)}{productTags(p).map((t) => <span className="prod-tag" key={t} title={esc(t)}>{esc(shortTag(t))}</span>)}</div>
+                      <div className="vc-name">{esc(p.name)}{productTags(p).map((t) => <span className="prod-tag" key={t} title={esc(t)}>{esc(t)}</span>)}</div>
                       <div className="vc-price">{money(p.price)}</div>
                     </div>
                   ))}
