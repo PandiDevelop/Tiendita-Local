@@ -486,6 +486,27 @@ td.cat-bar .product-name .prod-tag{margin-left:auto;flex:0 0 auto}
 .landing-actions{display:flex;gap:14px;justify-content:center;flex-wrap:wrap}
 .landing-note{color:var(--muted);font-size:12.5px;line-height:1.55;margin:24px auto 0;max-width:380px}
 @media (max-width:760px){.landing-wrap{padding:36px 20px}.landing-title{font-size:32px}.landing-actions{flex-direction:column;align-items:stretch}.landing-actions .button{width:100%}}
+/* Pantalla de bienvenida con cuenta: las opciones se desvanecen y dan paso a
+   su formulario (iniciar sesión, crear cuenta o continuar sin registrarse).
+   Ver views/AuthLanding.tsx. */
+.auth-step{transition:opacity .19s ease,transform .19s ease}
+.auth-step.out{opacity:0;transform:translateY(6px)}
+.auth-panel{text-align:left;width:100%;max-width:350px;margin:0 auto}
+.auth-panel h2{font:700 22px 'Nunito',sans-serif;margin:0 0 14px;text-align:center}
+.auth-panel .field{margin:12px 0}
+.auth-panel .account-note{margin-top:12px}
+.auth-actions{display:flex;gap:12px;justify-content:center;flex-wrap:wrap;margin-top:16px}
+.auth-actions .button{flex:1;min-width:130px}
+.auth-forgot{display:block;margin:12px auto 0}
+.pw-req{color:var(--muted);font-size:12px;line-height:1.5;margin:6px 0 0}
+.landing-skip{display:block;margin:16px auto 0}
+.auth-done{text-align:center}
+.auth-done-msg{color:var(--muted);font-size:14px;line-height:1.6;margin:0 0 6px}
+/* Ventana de selección de tienda al conectarse a una cuenta con varias. */
+.store-picker-list{display:grid;gap:8px;margin-top:4px}
+.store-picker-item{display:flex;align-items:center;gap:12px;width:100%;padding:11px 12px;border-radius:13px;background:var(--surface);border:1px solid var(--line);color:var(--ink);font-weight:700;text-align:left}
+.store-picker-item:hover{background:var(--lav);color:var(--brand-deep)}
+@media (max-width:760px){.auth-actions{flex-direction:column}.auth-actions .button{width:100%}}
 /* ------------------------------------------------------------------ */
 /* Editor de hasta 3 etiquetas/tags en el formulario de producto. El cuadro
    de escritura/sugerencias va siempre arriba y los chips elegidos debajo. */

@@ -48,6 +48,11 @@ export function TestProvider({ initialState, stateRef, children }: { initialStat
     detach: () => {},
     activate: async () => {},
     join: async () => {},
+    getState: () => ref.current,
+    pickerOpen: false,
+    openPicker: () => {},
+    closePicker: () => {},
+    pickStore: () => {},
   };
 
   return <AppCtx.Provider value={value}>{children}</AppCtx.Provider>;

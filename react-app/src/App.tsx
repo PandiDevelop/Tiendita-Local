@@ -19,6 +19,8 @@ import { Employees } from './views/Employees';
 import { Events } from './views/Events';
 import { StoreModal } from './views/StoreModal';
 import { JoinModal } from './views/Join';
+import { AuthLanding } from './views/AuthLanding';
+import { StorePicker } from './views/StorePicker';
 import { SettingsModal } from './views/SettingsModal';
 import { ProductForm } from './views/ProductForm';
 import { SaleRegistration } from './views/SaleRegistration';
@@ -93,7 +95,7 @@ function MenuClock() {
 }
 
 export function App() {
-  const { state, store, setTab, replace, modal, modalArg, setModal, toastMsg } = useStore();
+  const { state, store, setTab, replace, modal, modalArg, setModal, toastMsg, pickerOpen } = useStore();
   useScrollAxisLock();
   const s = store;
   const version = useAppVersion();
@@ -181,14 +183,12 @@ export function App() {
               <span>Ventas y ganancias</span>
               <span>Notas del equipo</span>
             </div>
-            <div className="landing-actions">
-              <button className="button primary" onClick={() => openModal('newStore')}>Crear mi primera tienda</button>
-              <button className="button secondary" onClick={() => openModal('join')}>Unirme a una tienda</button>
-            </div>
+            <AuthLanding onCreate={() => openModal('newStore')} onJoin={() => openModal('join')} />
             <p className="landing-note">Tus datos se guardan en este dispositivo; si lo deseas, se sincronizan en tiempo real con tu equipo.</p>
           </div>
         </main>
         {modals}
+        {pickerOpen && <StorePicker />}
         <Toast message={toastMsg} />
         <DialogHost />
         <ImageLightboxHost />
@@ -246,6 +246,7 @@ export function App() {
         {state.tab === 'empleados' && <Employees />}
       </main>
       {modals}
+      {pickerOpen && <StorePicker />}
       <Toast message={toastMsg} />
       <DialogHost />
       <ImageLightboxHost />

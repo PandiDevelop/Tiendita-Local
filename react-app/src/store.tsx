@@ -26,6 +26,16 @@ export interface Ctx {
   detach: (id: string) => void;
   activate: (storeId: string, pin: string) => Promise<void>;
   join: (pin: string) => Promise<void>;
+  // Estado fresco (no la instantánea del render): lo usan los flujos que
+  // hacen trabajo asíncrono y luego necesitan decidir con los datos ya
+  // actualizados, como el alta de sesión que recupera las tiendas de la cuenta.
+  getState: () => AppState;
+  // Ventana de selección de tienda: se abre al conectarse a una cuenta con más
+  // de una tienda, para elegir con cuál entrar (ver views/StorePicker.tsx).
+  pickerOpen: boolean;
+  openPicker: () => void;
+  closePicker: () => void;
+  pickStore: (id: string) => void;
 }
 
 export const AppCtx = createContext<Ctx | null>(null);
@@ -43,6 +53,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [modal, setModal] = useState<ModalKind>('none');
   const [modalArg, setModalArg] = useState('');
   const [toastMsg, setToastMsg] = useState('');
+  const [pickerOpen, setPickerOpen] = useState(false);
   const toastTimer = useRef(0);
 
   const replace = useCallback((updater: (draft: AppState) => void) => {
@@ -153,6 +164,16 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const detach = useCallback((id: string) => { sync.current!.detach(id); }, []);
   const activate = useCallback((storeId: string, pin: string) => activateSync(storeId, pin, () => stateRef.current, replace, attach), [replace, attach]);
   const join = useCallback((pin: string) => joinStore(pin, () => stateRef.current, replace, attach), [replace, attach]);
+
+  const getState = useCallback(() => stateRef.current, []);
+  const openPicker = useCallback(() => setPickerOpen(true), []);
+  const closePicker = useCallback(() => setPickerOpen(false), []);
+  // Elegir tienda desde la ventana de selección: deja esa tienda activa y
+  // cierra la ventana; App pasa a mostrar la vista normal.
+  const pickStore = useCallback((id: string) => {
+    replace((d) => { d.activeStoreId = id; d.tab = 'inicio'; });
+    setPickerOpen(false);
+  }, [replace]);
 
   // Cuando la sesión de una cuenta se activa (al iniciar sesión o al
   // restaurarse al arrancar la app), se buscan en la nube las tiendas donde
@@ -303,6 +324,6 @@ export function AppProvider({ children }: { children: ReactNode }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [active]);
 
-  const value: Ctx = { state, store: active, replace, setTab, modal, setModal, modalArg, setModalArg, toastMsg, toast, attach, detach, activate, join };
+  const value: Ctx = { state, store: active, replace, setTab, modal, setModal, modalArg, setModalArg, toastMsg, toast, attach, detach, activate, join, getState, pickerOpen, openPicker, closePicker, pickStore };
   return <AppCtx.Provider value={value}>{children}</AppCtx.Provider>;
 }
