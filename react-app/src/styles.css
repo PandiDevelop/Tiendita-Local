@@ -730,7 +730,7 @@ input[type="number"]::-webkit-inner-spin-button,input[type="number"]::-webkit-ou
 .tag-add-row .button{flex:0 0 auto;white-space:nowrap}
 .tag-manager-chips{gap:8px}
 .tag-manager-chips .tag-chip{max-width:100%;padding:3px 7px 3px 3px}
-.tag-manager-chips .tag-chip-label{max-width:100%;white-space:normal;overflow-wrap:anywhere;text-align:left;background:none;border:none;color:inherit;font:inherit;font-weight:700;padding:5px 8px;border-radius:999px;cursor:pointer}
+.tag-manager-chips .tag-chip-label{width:auto;height:auto;max-width:100%;white-space:normal;overflow-wrap:anywhere;text-align:left;background:none;border:none;color:inherit;font:inherit;font-weight:700;padding:5px 8px;border-radius:999px;cursor:pointer}
 .tag-manager-chips .tag-chip-label:hover{background:rgba(255,255,255,.22)}
 .tag-rename{border:1px solid var(--brand-line);border-radius:999px;padding:5px 11px;font-size:13px;font-weight:700;background:var(--surface);color:var(--ink);min-width:132px;max-width:100%}
 
