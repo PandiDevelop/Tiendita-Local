@@ -38,6 +38,12 @@ export function pushOverlay(close: () => void): () => void {
   return () => popOverlay(id);
 }
 
+// ¿Hay alguna ventana abierta encima de la app? Lo usa el botón atrás del
+// celular (ver lib/nativeBack.ts): si la hay, hay que cerrarla antes de salir.
+export function hasOverlay(): boolean {
+  return stack.length > 0;
+}
+
 function popOverlay(id: string): void {
   const i = stack.findIndex((o) => o.id === id);
   if (i === -1) return;
