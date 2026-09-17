@@ -132,9 +132,9 @@
     "semantic_hash": ""
   },
   "react-app/src/views/SaleRegistration.tsx": {
-    "mtime": 1789606859.8109696,
-    "seen": 1789607031.7218745,
-    "ast_hash": "9856cf2a24bca539b0fcebb9dab9f226",
+    "mtime": 1789615716.8989196,
+    "seen": 1789615847.1049163,
+    "ast_hash": "249d383c04a0d2d88d7e003ecc282526",
     "semantic_hash": ""
   },
   "react-app/src/views/StoreModal.tsx": {
@@ -162,9 +162,9 @@
     "semantic_hash": ""
   },
   "sw.js": {
-    "mtime": 1789606983.5091758,
-    "seen": 1789607031.7218745,
-    "ast_hash": "a27202aa926bf1899761465e9159ceda",
+    "mtime": 1789615827.7767491,
+    "seen": 1789615847.1049163,
+    "ast_hash": "abee302d71be5c768e345361f3afb395",
     "semantic_hash": ""
   },
   "AGENTS.md": {
@@ -180,9 +180,9 @@
     "semantic_hash": ""
   },
   "index.html": {
-    "mtime": 1789606982.7886996,
-    "seen": 1789607031.7218745,
-    "ast_hash": "758cb78eb7fa6cc06640410dbb5c22d2",
+    "mtime": 1789615827.078784,
+    "seen": 1789615847.1049163,
+    "ast_hash": "deadfb8eaff9246e59a62854b76348c2",
     "semantic_hash": ""
   },
   "react-app/index.html": {
@@ -258,9 +258,9 @@
     "semantic_hash": ""
   },
   "react-app/src/test/features.test.tsx": {
-    "mtime": 1789593456.8839784,
-    "seen": 1789593653.684911,
-    "ast_hash": "96092688edc0d72ec7340b51395a9f76",
+    "mtime": 1789615790.6494732,
+    "seen": 1789615847.1049163,
+    "ast_hash": "37bdf1faaf61616bcbea0071964a7897",
     "semantic_hash": ""
   },
   "react-app/src/test/setup.ts": {
@@ -486,9 +486,9 @@
     "semantic_hash": ""
   },
   "react-app/src/lib/version.ts": {
-    "mtime": 1789606969.465199,
-    "seen": 1789607031.7218745,
-    "ast_hash": "c6457e800f730c3320a150ae66b2d2d6",
+    "mtime": 1789615813.7464464,
+    "seen": 1789615847.1049163,
+    "ast_hash": "4b250ffbf4035fde9a028dc8b1da4b40",
     "semantic_hash": ""
   },
   "react-app/src/lib/account.ts": {
@@ -516,9 +516,9 @@
     "semantic_hash": ""
   },
   "react-app/src/views/TagModal.tsx": {
-    "mtime": 1789594990.6282046,
-    "seen": 1789595445.5103815,
-    "ast_hash": "a6a073113986ebee80ad11395969a3ed",
+    "mtime": 1789615739.3355284,
+    "seen": 1789615847.1049163,
+    "ast_hash": "afa7fc9d2a2248c6b9041ff06357e4ac",
     "semantic_hash": ""
   },
   "react-app/src/test/authLanding.test.tsx": {
