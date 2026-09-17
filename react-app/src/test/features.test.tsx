@@ -8,6 +8,8 @@ import { Employees } from '../views/Employees';
 import { Profit } from '../views/Profit';
 import { Notes } from '../views/Notes';
 import { VirtualCatalog } from '../views/VirtualCatalog';
+import { SaleRegistration } from '../views/SaleRegistration';
+import { TagModal } from '../views/TagModal';
 import { CLIENT_KEY, DEFAULT_PRODUCT_TAG } from '../lib/core';
 import { TestProvider, fieldControl, makeProduct, makeState, makeStore } from './testUtils';
 import type { AppState, Store } from '../types';
@@ -232,6 +234,47 @@ describe('Tag opcional del producto', () => {
     const tagInput = fieldControl(/Etiqueta \/ tag/, container);
     expect(tagInput.value).toBe('');
     expect(document.querySelectorAll('.tag-chip')).toHaveLength(0);
+  });
+});
+
+describe('Registro de ventas: orden de la tarjeta de producto', () => {
+  it('muestra el nombre, luego la foto y debajo el costo (y el botón añadir al final)', () => {
+    const store = makeStore({ products: [makeProduct({ name: 'Agua', price: 1500, category: 'Bebidas' })] });
+    const state = makeState(store);
+    render(
+      <TestProvider initialState={state}>
+        <SaleRegistration onClose={() => {}} />
+      </TestProvider>,
+    );
+    const card = document.querySelector('.sale-prod-card')!;
+    const order = Array.from(card.children).map((el) => {
+      if (el.classList.contains('prod-cat')) return 'categoria';
+      if (el.classList.contains('product-name')) return 'nombre';
+      if (el.classList.contains('product-image-sale')) return 'foto';
+      if (el.classList.contains('sale-prod-price')) return 'costo';
+      if (el.classList.contains('sale-add')) return 'añadir';
+      return 'otro';
+    });
+    expect(order).toEqual(['categoria', 'nombre', 'foto', 'costo', 'añadir']);
+  });
+});
+
+describe('Etiquetas de la tienda: texto completo', () => {
+  it('no acorta el nombre del tag y la caja de renombrar se ajusta a su texto', () => {
+    const store = makeStore({ tags: ['uma musume'] });
+    const state = makeState(store);
+    render(
+      <TestProvider initialState={state}>
+        <TagModal onClose={() => {}} />
+      </TestProvider>,
+    );
+    const label = screen.getByRole('button', { name: 'uma musume' });
+    expect(label).toBeInTheDocument();
+    fireEvent.click(label);
+    const input = document.querySelector('.tag-rename') as HTMLInputElement;
+    expect(input.value).toBe('uma musume');
+    // El ancho crece con el texto en vez de quedar fijo en 132px.
+    expect(input.style.width).toBe(`calc(${'uma musume'.length + 2}ch + 26px)`);
   });
 });
 

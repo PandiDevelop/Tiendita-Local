@@ -194,7 +194,9 @@ export function SaleRegistration({ onClose }: { onClose: () => void }) {
   const productCard = (p: Product) => (
     <div className="sale-prod-card" key={p.id}>
       <div className="prod-cat">{(p.category || '').trim() || 'Sin categoría'}</div>
-      <div className="sale-brand"><Image src={p.image || DEFAULT_PRODUCT_IMAGE} cls="product-image-sale" /><div><div className="product-name">{p.name}</div><div className="muted">{money(p.price)}</div></div></div>
+      <div className="product-name">{p.name}</div>
+      <Image src={p.image || DEFAULT_PRODUCT_IMAGE} cls="product-image-sale" />
+      <div className="muted sale-prod-price">{money(p.price)}</div>
       <button type="button" className="icon-btn sale-add" title="Añadir a la venta" onClick={() => addLine(p)}>＋</button>
     </div>
   );

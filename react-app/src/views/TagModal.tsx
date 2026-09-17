@@ -86,6 +86,7 @@ export function TagModal({ onClose }: Props) {
                   className="tag-rename"
                   maxLength={30}
                   autoFocus
+                  style={{ width: `calc(${renameVal.length + 2}ch + 26px)` }}
                   value={renameVal}
                   onChange={(e) => setRenameVal(e.target.value)}
                   onBlur={commitRename}
