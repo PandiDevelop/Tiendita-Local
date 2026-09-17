@@ -48,9 +48,9 @@
     "semantic_hash": ""
   },
   "react-app/src/main.tsx": {
-    "mtime": 1789456119.59767,
-    "seen": 1789456484.6436524,
-    "ast_hash": "4573fb637833f7a5104648a4aabf06ca",
+    "mtime": 1789605527.6230397,
+    "seen": 1789605609.5757942,
+    "ast_hash": "7cc294549f147428b7a5ea77680cf8c7",
     "semantic_hash": ""
   },
   "react-app/src/store.tsx": {
@@ -162,9 +162,9 @@
     "semantic_hash": ""
   },
   "sw.js": {
-    "mtime": 1789604875.6357899,
-    "seen": 1789604894.3860261,
-    "ast_hash": "84bfa3d7d49570c47c4a9f74523a6a36",
+    "mtime": 1789605579.253253,
+    "seen": 1789605609.5757942,
+    "ast_hash": "199d2b3baa2291f65ecc1e4c490c7750",
     "semantic_hash": ""
   },
   "AGENTS.md": {
@@ -180,9 +180,9 @@
     "semantic_hash": ""
   },
   "index.html": {
-    "mtime": 1789604874.8931577,
-    "seen": 1789604894.3860261,
-    "ast_hash": "9860fe7d5e84ed263e4d76d4981e59c2",
+    "mtime": 1789605578.5376966,
+    "seen": 1789605609.5757942,
+    "ast_hash": "2ad06d3f3e53dc8a9a3426474b1c915d",
     "semantic_hash": ""
   },
   "react-app/index.html": {
@@ -354,9 +354,9 @@
     "semantic_hash": ""
   },
   "react-app/src/lib/backStack.ts": {
-    "mtime": 1789021028.1669073,
-    "seen": 1789021743.1832888,
-    "ast_hash": "b51e8a35b44004aa57ee1f1605740195",
+    "mtime": 1789605512.9137168,
+    "seen": 1789605609.5757942,
+    "ast_hash": "e52269533c6516b7f57b5cfa9c13d3e7",
     "semantic_hash": ""
   },
   "react-app/src/lib/deepLink.ts": {
@@ -486,9 +486,9 @@
     "semantic_hash": ""
   },
   "react-app/src/lib/version.ts": {
-    "mtime": 1789604858.970415,
-    "seen": 1789604894.3860261,
-    "ast_hash": "ebf1ab04083e816aa68779ce87a8f8c0",
+    "mtime": 1789605564.3931324,
+    "seen": 1789605609.5757942,
+    "ast_hash": "8e8b8f81f6641db840bfb4cee4669c81",
     "semantic_hash": ""
   },
   "react-app/src/lib/account.ts": {
@@ -537,6 +537,18 @@
     "mtime": 1789604165.2608922,
     "seen": 1789604360.6476493,
     "ast_hash": "c4500200db31aae8a1619cc3c14c069a",
+    "semantic_hash": ""
+  },
+  "react-app/src/lib/nativeBack.ts": {
+    "mtime": 1789605518.4618895,
+    "seen": 1789605609.5757942,
+    "ast_hash": "7cd992f8f65b1c13475c8ffe4be07314",
+    "semantic_hash": ""
+  },
+  "react-app/src/test/nativeBack.test.ts": {
+    "mtime": 1789605546.6031914,
+    "seen": 1789605609.5757942,
+    "ast_hash": "81402a2bce2c2e2f4fe3f47815522d9d",
     "semantic_hash": ""
   }
 }
