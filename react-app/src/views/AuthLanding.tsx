@@ -5,6 +5,7 @@ import { setAccountEmail, setAccountId } from '../lib/accountStore';
 import { resetClientId } from '../lib/core';
 import { pullJoinedStores } from '../lib/sync';
 import { pushOverlay } from '../lib/backStack';
+import { isNativeApp } from '../lib/nativeBack';
 import { EyeIcon, EyeOffIcon } from '../ui';
 
 // Primer pantallazo cuando el dispositivo todavía no tiene ninguna tienda:
@@ -44,8 +45,18 @@ export function AuthLanding({ onCreate, onJoin }: { onCreate: () => void; onJoin
 
   // El botón atrás del celular (o el gesto de volver) NUNCA debe cerrar la app
   // mientras se ve esta pantalla: si hay un formulario abierto, vuelve a las
-  // opciones; si ya estamos en las opciones, no hace nada.
-  useEffect(() => pushOverlay(() => { if (step !== 'choice') go('choice'); }), [step]); // eslint-disable-line react-hooks/exhaustive-deps
+  // opciones; y si ya estamos en las opciones, en la app nativa se vuelve a
+  // registrar la ventana para que el atrás no salga de la app. En el navegador
+  // no se re-arma, para no dejar atrapado el botón atrás del navegador.
+  useEffect(() => {
+    let dispose = () => {};
+    const onBack = () => {
+      if (step !== 'choice') { go('choice'); return; }
+      if (isNativeApp()) dispose = pushOverlay(onBack);
+    };
+    dispose = pushOverlay(onBack);
+    return () => dispose();
+  }, [step]); // eslint-disable-line react-hooks/exhaustive-deps
 
   async function doSignIn() {
     if (busy) return;

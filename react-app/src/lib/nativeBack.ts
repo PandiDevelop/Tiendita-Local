@@ -17,11 +17,15 @@ type CapacitorGlobal = {
   Plugins?: { App?: BackButtonApp };
 };
 
+export function isNativeApp(): boolean {
+  const cap = (globalThis as unknown as { Capacitor?: CapacitorGlobal }).Capacitor;
+  if (!cap) return false;
+  return typeof cap.isNativePlatform === 'function' ? cap.isNativePlatform() : !!cap.isNative;
+}
+
 export function initNativeBack(attempt = 0): void {
   const cap = (globalThis as unknown as { Capacitor?: CapacitorGlobal }).Capacitor;
-  if (!cap) return;
-  const native = typeof cap.isNativePlatform === 'function' ? cap.isNativePlatform() : !!cap.isNative;
-  if (!native) return;
+  if (!cap || !isNativeApp()) return;
 
   const App = cap.Plugins?.App;
   if (!App || typeof App.addListener !== 'function') {

@@ -2,6 +2,7 @@
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { AuthLanding } from '../views/AuthLanding';
+import { hasOverlay } from '../lib/backStack';
 import { TestProvider, makeState, makeStore } from './testUtils';
 
 // Primer pantallazo con cuenta: opciones -> subflujo con desvanecimiento.
@@ -76,5 +77,15 @@ describe('Bienvenida: la cuenta va primero', () => {
     window.dispatchEvent(new PopStateEvent('popstate'));
     expect(screen.getByRole('button', { name: 'Inicia sesión' })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Continuar sin registrarme' })).toBeInTheDocument();
+  });
+
+  it('en la app nativa, el atrás en las opciones se re-arma y no sale', () => {
+    (globalThis as { Capacitor?: unknown }).Capacitor = { isNativePlatform: () => true, Plugins: {} };
+    renderLanding();
+    expect(hasOverlay()).toBe(true);
+    window.dispatchEvent(new PopStateEvent('popstate'));
+    expect(hasOverlay()).toBe(true);
+    expect(screen.getByRole('button', { name: 'Inicia sesión' })).toBeInTheDocument();
+    delete (globalThis as { Capacitor?: unknown }).Capacitor;
   });
 });
