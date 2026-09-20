@@ -264,8 +264,8 @@ export function App() {
                 <button key={id} className={'tab ' + (state.tab === id ? 'active' : '')} onClick={() => setTab(id)}>{TAB_ICONS[id]}{l}</button>
               ))}
           </nav>
-          {tabsScroll.left && <span className="tabs-hint left" aria-hidden="true">‹</span>}
-          {tabsScroll.right && <span className="tabs-hint right" aria-hidden="true">›</span>}
+          {tabsScroll.left && <span className="tabs-hint left" aria-hidden="true" />}
+          {tabsScroll.right && <span className="tabs-hint right" aria-hidden="true" />}
         </div>
         {state.tab === 'inicio' && <Dashboard />}
         {state.tab === 'ganancias' && <Profit />}
