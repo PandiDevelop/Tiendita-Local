@@ -87,8 +87,8 @@ export function showSystemNotification(title: string, body: string, tag = 'mi-ti
   if (document.visibilityState === 'visible') return;
   const opts: NotificationOptions & { vibrate?: number[] } = {
     body,
-    icon: './icon-192.png',
-    badge: './icon-192.png',
+    icon: './design/icon-192.png',
+    badge: './design/icon-192.png',
     tag,
     data: { link: location.href },
     vibrate: [140, 90, 140],

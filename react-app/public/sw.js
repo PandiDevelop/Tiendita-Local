@@ -56,8 +56,8 @@ self.addEventListener('push', event => {
   const link = (data.fcmOptions && data.fcmOptions.link) || (data.data && data.data.link) || './index.html';
   event.waitUntil(self.registration.showNotification(title, {
     body,
-    icon: './icon-192.png',
-    badge: './icon-192.png',
+    icon: './design/icon-192.png',
+    badge: './design/icon-192.png',
     tag: 'mi-tiendita-notas',
     // requireInteraction: que se quede en pantalla (no se autoborre a los
     // pocos segundos como un aviso normal) hasta que la persona la toque o
