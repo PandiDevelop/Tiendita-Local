@@ -65,7 +65,7 @@ const THEME_CHROME: Record<string, string> = {
   dark: '#17131f',
   rosa: '#fff2f9',
   menta: '#f1fbf6',
-  owen: '#fff3ef',
+  owen: '#0d0c0c',
   crisdeku: '#f0e6ff',
   pandi: '#0a1730',
 };

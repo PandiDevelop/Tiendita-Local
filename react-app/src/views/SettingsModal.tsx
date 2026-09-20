@@ -26,9 +26,9 @@ const NOTIF_CAT_LABELS: { cat: NotifCat; label: string }[] = [
 // Los temas ocultos (owen/crisdeku/pandi) no se ofrecen, pero si uno está
 // activo se muestra con su logo junto a los temas normales.
 const DEV_THEME_META: Record<string, { name: string; logo: string }> = {
-  owen: { name: 'Owen-chan', logo: './logo-owen.png' },
-  crisdeku: { name: 'Crisdeku', logo: './logo-crisdeku.png' },
-  pandi: { name: 'Pandi', logo: './logo-pandi.png' },
+  owen: { name: 'Owen-chan', logo: './design/logo-owen.png' },
+  crisdeku: { name: 'Crisdeku', logo: './design/logo-crisdeku.png' },
+  pandi: { name: 'Pandi', logo: './design/logo-pandi.png' },
 };
 
 // Ventana de ajustes de la app, que se abre desde la tuerca del menu lateral

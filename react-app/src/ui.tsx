@@ -159,7 +159,7 @@ export function GearIcon({ size = 19 }: { size?: number }) {
 }
 
 // Logotipo de la app: libreta de notas con su espiral y una lista con casilla
-// marcada (misma pieza de arte que public/logo.svg, usado como favicon e
+// marcada (misma pieza de arte que public/design/logo.svg, usado como favicon e
 // icono de la PWA). Se usa en la portada de inicio y en la barra lateral,
 // para que en pantalla, en la pestana del navegador y en la app instalada se
 // vea siempre el mismo logo.

@@ -4,12 +4,12 @@
 // oculto y el fondo del tema salen siempre sin el cuadrado roto que se ve
 // cuando la imagen aun no ha cargado.
 const ASSETS = [
-  './logo-owen.png',
-  './logo-crisdeku.png',
-  './logo-pandi.png',
-  './pattern-owen.jpg',
-  './pattern-cris.jpg',
-  './pattern-pandi.jpg',
+  './design/logo-owen.png',
+  './design/logo-crisdeku.png',
+  './design/logo-pandi.png',
+  './design/pattern-owen.jpg',
+  './design/pattern-cris.jpg',
+  './design/pattern-pandi.jpg',
 ];
 
 export function preloadDevAssets(): void {

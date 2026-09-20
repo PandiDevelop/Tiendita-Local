@@ -28,9 +28,9 @@ import { SaleRegistration } from './views/SaleRegistration';
 // Logo del tema oculto que se muestra bajo la frase "Mereces lo que sueñas":
 // el de Owen-chan, Crisdeku o Pandi según el tema elegido.
 const DEV_LOGO: Record<string, string> = {
-  owen: './logo-owen.png',
-  crisdeku: './logo-crisdeku.png',
-  pandi: './logo-pandi.png',
+  owen: './design/logo-owen.png',
+  crisdeku: './design/logo-crisdeku.png',
+  pandi: './design/logo-pandi.png',
 };
 
 // Iconos propios (SVG) de cada pestaña, mismo trazo del resto de la app: antes

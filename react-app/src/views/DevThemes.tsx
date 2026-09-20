@@ -20,9 +20,9 @@ function unlockDev(): void {
 }
 
 const DEV_THEMES: { value: ThemePref; label: string; icon: string; quote: string }[] = [
-  { value: 'owen', label: 'Owen-chan', icon: './logo-owen.png', quote: 'Lograrás lo que quieres, nunca pierdas tu voluntad y determinación.' },
-  { value: 'crisdeku', label: 'Crisdeku', icon: './logo-crisdeku.png', quote: 'Afronta las dificultades con creatividad y valentía.' },
-  { value: 'pandi', label: 'Pandi', icon: './logo-pandi.png', quote: 'Analiza, sé paciente, puedes con todo pero no estás solo.' },
+  { value: 'owen', label: 'Owen-chan', icon: './design/logo-owen.png', quote: 'Lograrás lo que quieres, nunca pierdas tu voluntad y determinación.' },
+  { value: 'crisdeku', label: 'Crisdeku', icon: './design/logo-crisdeku.png', quote: 'Afronta las dificultades con creatividad y valentía.' },
+  { value: 'pandi', label: 'Pandi', icon: './design/logo-pandi.png', quote: 'Analiza, sé paciente, puedes con todo pero no estás solo.' },
 ];
 
 type Stage = 'password' | 'icons' | 'menu';
