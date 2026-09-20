@@ -132,7 +132,7 @@ export function App() {
   // no caben todas en una fila): se muestra a la izquierda/derecha solo si
   // de verdad hay más pestañas ocultas de ese lado.
   const [tabsEl, setTabsEl] = useState<HTMLElement | null>(null);
-  const [tabsScroll, setTabsScroll] = useState({ left: false, right: false });
+  const [tabsScroll, setTabsScroll] = useState({ left: false, right: false, over: false });
   useEffect(() => {
     if (!tabsEl) return;
     const el = tabsEl;
@@ -140,6 +140,7 @@ export function App() {
       setTabsScroll({
         left: el.scrollLeft > 4,
         right: el.scrollLeft + el.clientWidth < el.scrollWidth - 4,
+        over: el.scrollWidth > el.clientWidth + 1,
       });
     };
     update();
@@ -256,7 +257,7 @@ export function App() {
           </div>
         </div>
         <div className="tabs-wrap">
-          <nav className="tabs" ref={setTabsEl}>
+          <nav className={'tabs' + (tabsScroll.over ? ' has-scroll' : '')} ref={setTabsEl}>
             {([['inicio', 'Inicio'], ['ganancias', 'Ganancias'], ['eventos', 'Eventos'], ['productos', 'Catálogo'], ['inventario', 'Inventario'], ['empleados', 'Empleados'], ['notas', 'Notas']] as const)
               .filter(([id]) => id !== 'empleados' || owner)
               .filter(([id]) => id !== 'eventos' || owner)
