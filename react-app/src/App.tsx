@@ -128,6 +128,32 @@ export function App() {
   // ven la pestaña de Empleados.
   const owner = !s || canManageTeam(s);
 
+  // Flechita que indica que la barra de pestañas se puede desplazar (cuando
+  // no caben todas en una fila): se muestra a la izquierda/derecha solo si
+  // de verdad hay más pestañas ocultas de ese lado.
+  const [tabsEl, setTabsEl] = useState<HTMLElement | null>(null);
+  const [tabsScroll, setTabsScroll] = useState({ left: false, right: false });
+  useEffect(() => {
+    if (!tabsEl) return;
+    const el = tabsEl;
+    const update = () => {
+      setTabsScroll({
+        left: el.scrollLeft > 4,
+        right: el.scrollLeft + el.clientWidth < el.scrollWidth - 4,
+      });
+    };
+    update();
+    el.addEventListener('scroll', update, { passive: true });
+    window.addEventListener('resize', update);
+    const ro = new ResizeObserver(update);
+    ro.observe(el);
+    return () => {
+      el.removeEventListener('scroll', update);
+      window.removeEventListener('resize', update);
+      ro.disconnect();
+    };
+  }, [tabsEl]);
+
   useEffect(() => {
     document.body.classList.toggle('menu-open', menuOpen);
     return () => { document.body.classList.remove('menu-open'); };
@@ -229,14 +255,18 @@ export function App() {
             </div>
           </div>
         </div>
-        <nav className="tabs">
-          {([['inicio', 'Inicio'], ['ganancias', 'Ganancias'], ['eventos', 'Eventos'], ['productos', 'Catálogo'], ['inventario', 'Inventario'], ['empleados', 'Empleados'], ['notas', 'Notas']] as const)
-            .filter(([id]) => id !== 'empleados' || owner)
-            .filter(([id]) => id !== 'eventos' || owner)
-            .map(([id, l]) => (
-              <button key={id} className={'tab ' + (state.tab === id ? 'active' : '')} onClick={() => setTab(id)}>{TAB_ICONS[id]}{l}</button>
-            ))}
-        </nav>
+        <div className="tabs-wrap">
+          <nav className="tabs" ref={setTabsEl}>
+            {([['inicio', 'Inicio'], ['ganancias', 'Ganancias'], ['eventos', 'Eventos'], ['productos', 'Catálogo'], ['inventario', 'Inventario'], ['empleados', 'Empleados'], ['notas', 'Notas']] as const)
+              .filter(([id]) => id !== 'empleados' || owner)
+              .filter(([id]) => id !== 'eventos' || owner)
+              .map(([id, l]) => (
+                <button key={id} className={'tab ' + (state.tab === id ? 'active' : '')} onClick={() => setTab(id)}>{TAB_ICONS[id]}{l}</button>
+              ))}
+          </nav>
+          {tabsScroll.left && <span className="tabs-hint left" aria-hidden="true">‹</span>}
+          {tabsScroll.right && <span className="tabs-hint right" aria-hidden="true">›</span>}
+        </div>
         {state.tab === 'inicio' && <Dashboard />}
         {state.tab === 'ganancias' && <Profit />}
         {state.tab === 'eventos' && <Events />}
