@@ -1,20 +1,20 @@
 {
   "react-app/package.json": {
-    "mtime": 1789154227.8887305,
-    "seen": 1789155011.952083,
-    "ast_hash": "16d2db91d1e2f6a5758ca2cac99978a8",
+    "mtime": 1790026460.8664236,
+    "seen": 1790026731.911283,
+    "ast_hash": "c6c0f25163bc844cc93b0f91ad26a56d",
     "semantic_hash": ""
   },
   "react-app/public/sw.js": {
-    "mtime": 1789154879.0490272,
-    "seen": 1789155011.952083,
-    "ast_hash": "8f34af14b9240fd16fc2f7a575cd06b8",
+    "mtime": 1790026460.8799348,
+    "seen": 1790026731.911283,
+    "ast_hash": "86ebb78113835a3c6d83cf317f4d47b6",
     "semantic_hash": ""
   },
   "react-app/src/App.tsx": {
-    "mtime": 1789604181.8869977,
-    "seen": 1789604360.6476493,
-    "ast_hash": "f615f1ee6711a03eb2248980733885b3",
+    "mtime": 1790026460.8809464,
+    "seen": 1790026731.911283,
+    "ast_hash": "4ed4c3efa01a547d703abb85d762dfc2",
     "semantic_hash": ""
   },
   "react-app/src/Dropdown.tsx": {
@@ -24,9 +24,9 @@
     "semantic_hash": ""
   },
   "react-app/src/lib/core.ts": {
-    "mtime": 1789593321.5822856,
-    "seen": 1789593653.684911,
-    "ast_hash": "6d46961f7d221605e5e2e6adb6c7f8bd",
+    "mtime": 1790026460.885969,
+    "seen": 1790026731.911283,
+    "ast_hash": "c4bbbeb1951825dc2c04fb32692c84aa",
     "semantic_hash": ""
   },
   "react-app/src/lib/dialog.ts": {
@@ -72,9 +72,9 @@
     "semantic_hash": ""
   },
   "react-app/src/ui.tsx": {
-    "mtime": 1789593336.1580603,
-    "seen": 1789593653.684911,
-    "ast_hash": "3139ad1c1f15a5a6e1d7a165487b99a0",
+    "mtime": 1790026460.8938437,
+    "seen": 1790026731.911283,
+    "ast_hash": "b10d1f19ec1f33f8ff2b2b77074002e1",
     "semantic_hash": ""
   },
   "react-app/src/views/Catalog.tsx": {
@@ -162,9 +162,9 @@
     "semantic_hash": ""
   },
   "sw.js": {
-    "mtime": 1789686103.7929761,
-    "seen": 1789686138.2057693,
-    "ast_hash": "68cc3b25be045f22555a934713f443ce",
+    "mtime": 1790026626.310008,
+    "seen": 1790026731.911283,
+    "ast_hash": "b94a6f48565cafaf29a8b62b50c84bc2",
     "semantic_hash": ""
   },
   "AGENTS.md": {
@@ -180,75 +180,15 @@
     "semantic_hash": ""
   },
   "index.html": {
-    "mtime": 1789686103.0702977,
-    "seen": 1789686138.2057693,
-    "ast_hash": "a5b30efe27af01ccb9693b17d5f7eb97",
+    "mtime": 1790026625.5798025,
+    "seen": 1790026731.911283,
+    "ast_hash": "822afcdadd10c192c1b8ed7083e84261",
     "semantic_hash": ""
   },
   "react-app/index.html": {
-    "mtime": 1789454501.3977282,
-    "seen": 1789454571.2156851,
-    "ast_hash": "7cbb115b913acc2a3c6c4a8a55c38ff5",
-    "semantic_hash": ""
-  },
-  "icon-180.png": {
-    "mtime": 1789055831.503459,
-    "seen": 1789057044.4406006,
-    "ast_hash": "2d7b0dcd38bca5ce5998d6827d39ab41",
-    "semantic_hash": ""
-  },
-  "icon-192.png": {
-    "mtime": 1789055831.5867434,
-    "seen": 1789057044.4406006,
-    "ast_hash": "41fb4e2a9d76355de085fa99f7bfb16a",
-    "semantic_hash": ""
-  },
-  "icon-32.png": {
-    "mtime": 1789055831.4606185,
-    "seen": 1789057044.4406006,
-    "ast_hash": "bcb1e29b7a5ef5dd70b29cc762080ce1",
-    "semantic_hash": ""
-  },
-  "icon-512.png": {
-    "mtime": 1789055831.650392,
-    "seen": 1789057044.4406006,
-    "ast_hash": "fd086d3932db8a9c204e2b8e8dc1bc15",
-    "semantic_hash": ""
-  },
-  "logo.svg": {
-    "mtime": 1789052919.8140302,
-    "seen": 1789053082.2766674,
-    "ast_hash": "fa9c643ad16e647de78fb764414f3600",
-    "semantic_hash": ""
-  },
-  "react-app/public/icon-180.png": {
-    "mtime": 1789055831.503459,
-    "seen": 1789057044.4406006,
-    "ast_hash": "2d7b0dcd38bca5ce5998d6827d39ab41",
-    "semantic_hash": ""
-  },
-  "react-app/public/icon-192.png": {
-    "mtime": 1789055831.5867434,
-    "seen": 1789057044.4406006,
-    "ast_hash": "41fb4e2a9d76355de085fa99f7bfb16a",
-    "semantic_hash": ""
-  },
-  "react-app/public/icon-32.png": {
-    "mtime": 1789055831.4606185,
-    "seen": 1789057044.4406006,
-    "ast_hash": "bcb1e29b7a5ef5dd70b29cc762080ce1",
-    "semantic_hash": ""
-  },
-  "react-app/public/icon-512.png": {
-    "mtime": 1789055831.650392,
-    "seen": 1789057044.4406006,
-    "ast_hash": "fd086d3932db8a9c204e2b8e8dc1bc15",
-    "semantic_hash": ""
-  },
-  "react-app/public/logo.svg": {
-    "mtime": 1789052919.8140302,
-    "seen": 1789053082.2766674,
-    "ast_hash": "fa9c643ad16e647de78fb764414f3600",
+    "mtime": 1790026460.8624296,
+    "seen": 1790026731.911283,
+    "ast_hash": "5269a47516cb3bbb6b997967563ea598",
     "semantic_hash": ""
   },
   "react-app/src/views/CategoryModal.tsx": {
@@ -276,9 +216,9 @@
     "semantic_hash": ""
   },
   "react-app/src/views/Events.tsx": {
-    "mtime": 1788977260.4912448,
-    "seen": 1788977881.6873944,
-    "ast_hash": "8dbc8cf9a33288c5716fb6035fbd0ea7",
+    "mtime": 1790026460.8963606,
+    "seen": 1790026731.911283,
+    "ast_hash": "97a42dfe97ed339e2cfd5aa616fcfa91",
     "semantic_hash": ""
   },
   "react-app/src/views/PromoEditor.tsx": {
@@ -312,9 +252,9 @@
     "semantic_hash": ""
   },
   "react-app/src/lib/sound.ts": {
-    "mtime": 1788981020.7835634,
-    "seen": 1788981671.558426,
-    "ast_hash": "56666c115c4833f73aca12cc2c87d8cc",
+    "mtime": 1790026460.8887274,
+    "seen": 1790026731.911283,
+    "ast_hash": "0edb3af2fadaf1df17fd223a9db993cc",
     "semantic_hash": ""
   },
   "push-worker/README.md": {
@@ -336,9 +276,9 @@
     "semantic_hash": ""
   },
   "react-app/src/views/SettingsModal.tsx": {
-    "mtime": 1789606867.7973497,
-    "seen": 1789607031.7218745,
-    "ast_hash": "a25a0e4a72a0cd35bfcdfc1472fb2bdb",
+    "mtime": 1790026460.8983693,
+    "seen": 1790026731.911283,
+    "ast_hash": "98f4253f8c1fc0d7152fcc54c84b5e90",
     "semantic_hash": ""
   },
   "react-app/src/test/settings.test.ts": {
@@ -366,117 +306,27 @@
     "semantic_hash": ""
   },
   "react-app/src/lib/theme.ts": {
-    "mtime": 1789151788.0893211,
-    "seen": 1789151943.775039,
-    "ast_hash": "800e28d62d76d712099552ed572ae49b",
+    "mtime": 1790026460.8897371,
+    "seen": 1790026731.911283,
+    "ast_hash": "47577b97cf7fc8be6823c1a4b9a52a0a",
     "semantic_hash": ""
   },
   "react-app/src/views/DevThemes.tsx": {
-    "mtime": 1789606842.260642,
-    "seen": 1789607031.7218745,
-    "ast_hash": "2dfb12832670baa0c779339063c23383",
-    "semantic_hash": ""
-  },
-  "logo-crisdeku.png": {
-    "mtime": 1789056755.587937,
-    "seen": 1789057044.4406006,
-    "ast_hash": "190c955c4b7eed580091b5dea75ffd1c",
-    "semantic_hash": ""
-  },
-  "logo-owen.png": {
-    "mtime": 1789056755.4183524,
-    "seen": 1789057044.4406006,
-    "ast_hash": "d378a9be3340acea727ee0a9a24adc63",
-    "semantic_hash": ""
-  },
-  "logo-pandi.png": {
-    "mtime": 1789056755.7117057,
-    "seen": 1789057044.4406006,
-    "ast_hash": "d5a06586e952c4d386025c21b7330154",
-    "semantic_hash": ""
-  },
-  "react-app/public/logo-crisdeku.png": {
-    "mtime": 1789056755.587937,
-    "seen": 1789057044.4406006,
-    "ast_hash": "190c955c4b7eed580091b5dea75ffd1c",
-    "semantic_hash": ""
-  },
-  "react-app/public/logo-owen.png": {
-    "mtime": 1789056755.4183524,
-    "seen": 1789057044.4406006,
-    "ast_hash": "d378a9be3340acea727ee0a9a24adc63",
-    "semantic_hash": ""
-  },
-  "react-app/public/logo-pandi.png": {
-    "mtime": 1789056755.7117057,
-    "seen": 1789057044.4406006,
-    "ast_hash": "d5a06586e952c4d386025c21b7330154",
-    "semantic_hash": ""
-  },
-  "pattern-owen.jpg": {
-    "mtime": 1789065643.5654447,
-    "seen": 1789065830.7006223,
-    "ast_hash": "dd9dd988be3af193a4923112098e1696",
-    "semantic_hash": ""
-  },
-  "react-app/public/pattern-owen.jpg": {
-    "mtime": 1789065643.5654447,
-    "seen": 1789065830.7006223,
-    "ast_hash": "dd9dd988be3af193a4923112098e1696",
+    "mtime": 1790026460.894853,
+    "seen": 1790026731.911283,
+    "ast_hash": "dcc0fc890e2b632d96af82aced3b178b",
     "semantic_hash": ""
   },
   "react-app/src/lib/preload.ts": {
-    "mtime": 1789151729.6017756,
-    "seen": 1789151943.775039,
-    "ast_hash": "c5d3098c00728d92dfa3473c2a6d2988",
-    "semantic_hash": ""
-  },
-  "pattern-crisdeku.svg": {
-    "mtime": 1789095703.9883053,
-    "seen": 1789096488.2397108,
-    "ast_hash": "83cfde5a82a17aafb0b52bdad1e88102",
+    "mtime": 1790026460.8869884,
+    "seen": 1790026731.911283,
+    "ast_hash": "ee21dcf61b6fc1a59bfbc75c86be6234",
     "semantic_hash": ""
   },
   "react-app/src/lib/install.ts": {
     "mtime": 1789151739.3943331,
     "seen": 1789151943.775039,
     "ast_hash": "0e61cb86727663095d4252022c26cba1",
-    "semantic_hash": ""
-  },
-  "pattern-cris.jpg": {
-    "mtime": 1789151667.3871956,
-    "seen": 1789151943.775039,
-    "ast_hash": "aacbc5e64cc376b8dbe2e508ff049b5b",
-    "semantic_hash": ""
-  },
-  "pattern-cris.png": {
-    "mtime": 1789150182.5200088,
-    "seen": 1789151943.775039,
-    "ast_hash": "008ca4c940334a63f5cac7b06a05730b",
-    "semantic_hash": ""
-  },
-  "pattern-pandi.jpg": {
-    "mtime": 1789151667.477884,
-    "seen": 1789151943.775039,
-    "ast_hash": "c8a9b1c7997b0270fcc8936d05050be0",
-    "semantic_hash": ""
-  },
-  "pattern-pandi.png": {
-    "mtime": 1789150235.4297714,
-    "seen": 1789151943.775039,
-    "ast_hash": "2ca5dfb6bf08ceecf72993ce9333819c",
-    "semantic_hash": ""
-  },
-  "react-app/public/pattern-cris.jpg": {
-    "mtime": 1789151667.3871956,
-    "seen": 1789151943.775039,
-    "ast_hash": "aacbc5e64cc376b8dbe2e508ff049b5b",
-    "semantic_hash": ""
-  },
-  "react-app/public/pattern-pandi.jpg": {
-    "mtime": 1789151667.477884,
-    "seen": 1789151943.775039,
-    "ast_hash": "c8a9b1c7997b0270fcc8936d05050be0",
     "semantic_hash": ""
   },
   "react-app/scripts/inject-sw-version.mjs": {
@@ -492,15 +342,15 @@
     "semantic_hash": ""
   },
   "react-app/src/lib/account.ts": {
-    "mtime": 1789532632.336859,
-    "seen": 1789532845.7765865,
-    "ast_hash": "e4f786cb017ce35ad96850a7f48ef2fd",
+    "mtime": 1790026460.8824534,
+    "seen": 1790026731.911283,
+    "ast_hash": "09fb1a57ee21d672c236a3070b7ca8c2",
     "semantic_hash": ""
   },
   "react-app/src/lib/accountStore.ts": {
-    "mtime": 1789532640.613213,
-    "seen": 1789532845.7765865,
-    "ast_hash": "041f40185d6726d53c0938096b89cd61",
+    "mtime": 1790026460.8844628,
+    "seen": 1790026731.911283,
+    "ast_hash": "4d697d620f104cce48eb6133f9ccd91f",
     "semantic_hash": ""
   },
   "react-app/src/lib/identity.ts": {
@@ -555,6 +405,156 @@
     "mtime": 1789606949.8587828,
     "seen": 1789607031.7218745,
     "ast_hash": "85d2025dbb51ae317ef7edf2ea795cef",
+    "semantic_hash": ""
+  },
+  "design/icon-180.png": {
+    "mtime": 1790026460.8674328,
+    "seen": 1790026731.911283,
+    "ast_hash": "2d7b0dcd38bca5ce5998d6827d39ab41",
+    "semantic_hash": ""
+  },
+  "design/icon-192.png": {
+    "mtime": 1790026460.8674328,
+    "seen": 1790026731.911283,
+    "ast_hash": "41fb4e2a9d76355de085fa99f7bfb16a",
+    "semantic_hash": ""
+  },
+  "design/icon-32.png": {
+    "mtime": 1790026460.8684223,
+    "seen": 1790026731.911283,
+    "ast_hash": "bcb1e29b7a5ef5dd70b29cc762080ce1",
+    "semantic_hash": ""
+  },
+  "design/icon-512.png": {
+    "mtime": 1790026460.8694363,
+    "seen": 1790026731.911283,
+    "ast_hash": "fd086d3932db8a9c204e2b8e8dc1bc15",
+    "semantic_hash": ""
+  },
+  "design/logo-crisdeku.png": {
+    "mtime": 1790026460.8694363,
+    "seen": 1790026731.911283,
+    "ast_hash": "190c955c4b7eed580091b5dea75ffd1c",
+    "semantic_hash": ""
+  },
+  "design/logo-owen.png": {
+    "mtime": 1790026460.8714206,
+    "seen": 1790026731.911283,
+    "ast_hash": "d378a9be3340acea727ee0a9a24adc63",
+    "semantic_hash": ""
+  },
+  "design/logo-pandi.png": {
+    "mtime": 1790026460.8714206,
+    "seen": 1790026731.911283,
+    "ast_hash": "d5a06586e952c4d386025c21b7330154",
+    "semantic_hash": ""
+  },
+  "design/logo.svg": {
+    "mtime": 1790026460.872929,
+    "seen": 1790026731.911283,
+    "ast_hash": "c85990fa48f8480de8c6e0072b67f17a",
+    "semantic_hash": ""
+  },
+  "design/pattern-cris.jpg": {
+    "mtime": 1790026460.874446,
+    "seen": 1790026731.911283,
+    "ast_hash": "aacbc5e64cc376b8dbe2e508ff049b5b",
+    "semantic_hash": ""
+  },
+  "design/pattern-cris.png": {
+    "mtime": 1790026460.8269463,
+    "seen": 1790026731.911283,
+    "ast_hash": "008ca4c940334a63f5cac7b06a05730b",
+    "semantic_hash": ""
+  },
+  "design/pattern-crisdeku.svg": {
+    "mtime": 1790026460.8290753,
+    "seen": 1790026731.911283,
+    "ast_hash": "7088fd8bd8003d3556196bfad174c64c",
+    "semantic_hash": ""
+  },
+  "design/pattern-owen.jpg": {
+    "mtime": 1790026460.8759747,
+    "seen": 1790026731.911283,
+    "ast_hash": "42b6d607c3cf1706108d2f596c849228",
+    "semantic_hash": ""
+  },
+  "design/pattern-pandi.jpg": {
+    "mtime": 1790026460.877517,
+    "seen": 1790026731.911283,
+    "ast_hash": "c8a9b1c7997b0270fcc8936d05050be0",
+    "semantic_hash": ""
+  },
+  "design/pattern-pandi.png": {
+    "mtime": 1790026460.8500438,
+    "seen": 1790026731.911283,
+    "ast_hash": "2ca5dfb6bf08ceecf72993ce9333819c",
+    "semantic_hash": ""
+  },
+  "react-app/public/design/icon-180.png": {
+    "mtime": 1790026460.8674328,
+    "seen": 1790026731.911283,
+    "ast_hash": "2d7b0dcd38bca5ce5998d6827d39ab41",
+    "semantic_hash": ""
+  },
+  "react-app/public/design/icon-192.png": {
+    "mtime": 1790026460.8674328,
+    "seen": 1790026731.911283,
+    "ast_hash": "41fb4e2a9d76355de085fa99f7bfb16a",
+    "semantic_hash": ""
+  },
+  "react-app/public/design/icon-32.png": {
+    "mtime": 1790026460.8684223,
+    "seen": 1790026731.911283,
+    "ast_hash": "bcb1e29b7a5ef5dd70b29cc762080ce1",
+    "semantic_hash": ""
+  },
+  "react-app/public/design/icon-512.png": {
+    "mtime": 1790026460.8694363,
+    "seen": 1790026731.911283,
+    "ast_hash": "fd086d3932db8a9c204e2b8e8dc1bc15",
+    "semantic_hash": ""
+  },
+  "react-app/public/design/logo-crisdeku.png": {
+    "mtime": 1790026460.8694363,
+    "seen": 1790026731.911283,
+    "ast_hash": "190c955c4b7eed580091b5dea75ffd1c",
+    "semantic_hash": ""
+  },
+  "react-app/public/design/logo-owen.png": {
+    "mtime": 1790026460.8714206,
+    "seen": 1790026731.911283,
+    "ast_hash": "d378a9be3340acea727ee0a9a24adc63",
+    "semantic_hash": ""
+  },
+  "react-app/public/design/logo-pandi.png": {
+    "mtime": 1790026460.8714206,
+    "seen": 1790026731.911283,
+    "ast_hash": "d5a06586e952c4d386025c21b7330154",
+    "semantic_hash": ""
+  },
+  "react-app/public/design/logo.svg": {
+    "mtime": 1790026460.872929,
+    "seen": 1790026731.911283,
+    "ast_hash": "c85990fa48f8480de8c6e0072b67f17a",
+    "semantic_hash": ""
+  },
+  "react-app/public/design/pattern-cris.jpg": {
+    "mtime": 1790026460.874446,
+    "seen": 1790026731.911283,
+    "ast_hash": "aacbc5e64cc376b8dbe2e508ff049b5b",
+    "semantic_hash": ""
+  },
+  "react-app/public/design/pattern-owen.jpg": {
+    "mtime": 1790026460.8759747,
+    "seen": 1790026731.911283,
+    "ast_hash": "42b6d607c3cf1706108d2f596c849228",
+    "semantic_hash": ""
+  },
+  "react-app/public/design/pattern-pandi.jpg": {
+    "mtime": 1790026460.877517,
+    "seen": 1790026731.911283,
+    "ast_hash": "c8a9b1c7997b0270fcc8936d05050be0",
     "semantic_hash": ""
   }
 }
