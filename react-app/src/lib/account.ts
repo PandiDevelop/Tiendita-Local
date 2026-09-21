@@ -1,5 +1,5 @@
 import type { AppState } from '../types';
-import { accountId, rememberLegacyId, setAccountId, setAccountEmail, setAccountName, sessionActive, setSessionActive } from './accountStore';
+import { accountId, rememberLegacyId, setAccountId, setAccountEmail, setAccountName, setSessionActive } from './accountStore';
 import { buildRekeyedStore } from './identity';
 import { CLIENT_KEY, resetClientId, syncSetName } from './core';
 import { firebaseApp, firestoreDb } from './sync';
@@ -14,10 +14,6 @@ export function onAccountChange(cb: (uid: string | null) => void): () => void {
 
 function emit(uid: string | null) {
   subscribers.forEach((cb) => cb(uid));
-}
-
-export function accountEnabled(): boolean {
-  return sessionActive();
 }
 
 // Id que está usando este dispositivo HOY, antes de que el uid de la cuenta

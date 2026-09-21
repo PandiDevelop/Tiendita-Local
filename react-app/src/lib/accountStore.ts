@@ -66,10 +66,6 @@ export function rememberLegacyId(id: string): void {
   } catch { /* no crítico */ }
 }
 
-export function clearLegacyIds(): void {
-  try { localStorage.removeItem(ACCOUNT_LEGACY_KEY); } catch { /* no crítico */ }
-}
-
 // La "sesión" (Firebase Auth) activa en este navegador, separada de la
 // identidad: accountId() identifica los datos (y se conserva aunque cierres
 // sesión); este flag marca si AHORA hay una sesión de usuario iniciada, que

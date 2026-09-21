@@ -1,12 +1,12 @@
 import { useState } from 'react';
 import { useStore } from '../store';
-import { activeEvent, esc, formatDate, uid } from '../lib/core';
+import { activeEvent, esc, formatDate, today, uid } from '../lib/core';
 import { customConfirm } from '../lib/dialog';
 import type { StoreEvent } from '../types';
 
 // Plantilla de un evento nuevo: por defecto % de descuento activo desde hoy.
 function blankEvent(): StoreEvent {
-  const t = new Date().toISOString().slice(0, 10);
+  const t = today();
   return { id: uid(), name: '', pct: 0, active: true, start: t, end: '' };
 }
 
@@ -187,8 +187,4 @@ export function Events() {
       )}
     </div>
   );
-}
-
-function today(): string {
-  return new Date().toISOString().slice(0, 10);
 }

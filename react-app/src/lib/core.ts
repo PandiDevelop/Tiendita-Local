@@ -744,18 +744,6 @@ export function toggleChecklistItem(s: Store, noteId: string, itemId: string): b
   return true;
 }
 
-// Agregar/quitar objetivos de una lista ya publicada: solo el autor (misma
-// regla que editar el texto de una nota normal).
-export function addChecklistItem(s: Store, noteId: string, text: string): NoteChecklistItem | null {
-  const n = findNote(s, noteId);
-  const t = (text || '').trim();
-  if (!n || n.kind !== 'checklist' || !t || !canEditNote(n)) return null;
-  n.items = n.items || [];
-  const it: NoteChecklistItem = { id: uid(), text: t, done: false };
-  n.items.push(it);
-  return it;
-}
-
 export function removeChecklistItem(s: Store, noteId: string, itemId: string): boolean {
   const n = findNote(s, noteId);
   if (!n || n.kind !== 'checklist' || !canEditNote(n)) return false;
@@ -909,11 +897,6 @@ export function findCostId(s: Store, productId: string, supplierName: string, co
   if (!k) return '';
   const c = Math.round(Number(cost) || 0);
   return (s.costs || []).find((e) => e.productId === productId && e.supplier === k && e.cost === c)?.id || '';
-}
-
-// Devuelve la entrada de costo por su id (si aun existe en el historial).
-export function findCostEntry(s: Store, id: string): CostEntry | undefined {
-  return (s.costs || []).find((e) => e.id === id);
 }
 
 // Registro UNICO del costo usado para un producto + proveedor: si ese combo ya
