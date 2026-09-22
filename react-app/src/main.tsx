@@ -6,6 +6,7 @@ import { AppProvider } from './store';
 import { App } from './App';
 import { initAccountAuth } from './lib/account';
 import { initNativeBack } from './lib/nativeBack';
+import { initCapUpdater } from './lib/capUpdater';
 
 // Se aplica el tema guardado (o el automático del teléfono) antes del primer
 // render, para que no haya un "destello" con el tema por defecto.
@@ -26,3 +27,7 @@ initAccountAuth().catch(() => {});
 // En la app nativa, conecta el botón/gesto atrás con las ventanas abiertas
 // para que no cierre la app a la primera.
 initNativeBack();
+
+// En la app nativa, avisa a Capgo que la versión cargada arrancó bien (para
+// el rollback de updates OTA). En el navegador no hace nada.
+initCapUpdater();

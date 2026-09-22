@@ -48,9 +48,9 @@
     "semantic_hash": ""
   },
   "react-app/src/main.tsx": {
-    "mtime": 1789605527.6230397,
-    "seen": 1789605609.5757942,
-    "ast_hash": "7cc294549f147428b7a5ea77680cf8c7",
+    "mtime": 1790050563.7979746,
+    "seen": 1790050855.1738317,
+    "ast_hash": "11fb2002b488b3186a1fdd63939ba38a",
     "semantic_hash": ""
   },
   "react-app/src/store.tsx": {
@@ -162,8 +162,8 @@
     "semantic_hash": ""
   },
   "sw.js": {
-    "mtime": 1790026626.310008,
-    "seen": 1790026731.911283,
+    "mtime": 1790050595.351226,
+    "seen": 1790050855.1738317,
     "ast_hash": "b94a6f48565cafaf29a8b62b50c84bc2",
     "semantic_hash": ""
   },
@@ -180,9 +180,9 @@
     "semantic_hash": ""
   },
   "index.html": {
-    "mtime": 1790026625.5798025,
-    "seen": 1790026731.911283,
-    "ast_hash": "822afcdadd10c192c1b8ed7083e84261",
+    "mtime": 1790050594.5066233,
+    "seen": 1790050855.1738317,
+    "ast_hash": "ddbabd5f01dd69d0d5c8f5615e289694",
     "semantic_hash": ""
   },
   "react-app/index.html": {
@@ -555,6 +555,12 @@
     "mtime": 1790026460.877517,
     "seen": 1790026731.911283,
     "ast_hash": "c8a9b1c7997b0270fcc8936d05050be0",
+    "semantic_hash": ""
+  },
+  "react-app/src/lib/capUpdater.ts": {
+    "mtime": 1790050559.662121,
+    "seen": 1790050855.1738317,
+    "ast_hash": "803fe5b4428fdec1e4c0925f6cbb1a56",
     "semantic_hash": ""
   }
 }
