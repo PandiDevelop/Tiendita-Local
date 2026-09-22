@@ -17,7 +17,7 @@ type CapgoGlobal = {
   Plugins?: { CapacitorUpdater?: Updater };
 };
 
-const LATEST_URL = 'https://pandi.github.io/Tiendita-Local/bundles/latest.json';
+const LATEST_URL = 'https://pandidevelop.github.io/Tiendita-Local/bundles/latest.json';
 
 type LatestBundle = { version?: string; url?: string };
 
