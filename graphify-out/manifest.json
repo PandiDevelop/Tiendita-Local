@@ -48,9 +48,9 @@
     "semantic_hash": ""
   },
   "react-app/src/main.tsx": {
-    "mtime": 1790050563.7979746,
-    "seen": 1790050855.1738317,
-    "ast_hash": "11fb2002b488b3186a1fdd63939ba38a",
+    "mtime": 1790052240.2856133,
+    "seen": 1790053024.50464,
+    "ast_hash": "ba88ee4bd308b7b9dc3449704304f360",
     "semantic_hash": ""
   },
   "react-app/src/store.tsx": {
@@ -162,8 +162,8 @@
     "semantic_hash": ""
   },
   "sw.js": {
-    "mtime": 1790050595.351226,
-    "seen": 1790050855.1738317,
+    "mtime": 1790052305.8453884,
+    "seen": 1790053024.50464,
     "ast_hash": "b94a6f48565cafaf29a8b62b50c84bc2",
     "semantic_hash": ""
   },
@@ -180,9 +180,9 @@
     "semantic_hash": ""
   },
   "index.html": {
-    "mtime": 1790050594.5066233,
-    "seen": 1790050855.1738317,
-    "ast_hash": "ddbabd5f01dd69d0d5c8f5615e289694",
+    "mtime": 1790052305.067422,
+    "seen": 1790053024.50464,
+    "ast_hash": "35efc41357456e28544b73e69326f7db",
     "semantic_hash": ""
   },
   "react-app/index.html": {
@@ -558,9 +558,21 @@
     "semantic_hash": ""
   },
   "react-app/src/lib/capUpdater.ts": {
-    "mtime": 1790050559.662121,
-    "seen": 1790050855.1738317,
-    "ast_hash": "803fe5b4428fdec1e4c0925f6cbb1a56",
+    "mtime": 1790052238.414302,
+    "seen": 1790053024.50464,
+    "ast_hash": "cc9ed714ba1df5eef523971f4561f061",
+    "semantic_hash": ""
+  },
+  "bundles/latest.json": {
+    "mtime": 1790052363.1329582,
+    "seen": 1790053024.50464,
+    "ast_hash": "974b5fbaa2dccf87e681f1929d20c9b2",
+    "semantic_hash": ""
+  },
+  "react-app/src/lib/otaUpdate.ts": {
+    "mtime": 1790052286.5644958,
+    "seen": 1790053024.50464,
+    "ast_hash": "9b85da1819938673a7494dc30c7a56ca",
     "semantic_hash": ""
   }
 }

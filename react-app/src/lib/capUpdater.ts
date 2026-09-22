@@ -1,6 +1,6 @@
-// En la app nativa (Capacitor) se le avisa a Capgo que la version cargada
-// arranco bien (notifyAppReady). Si este aviso no llega, el plugin capgo
-// revierte al ultimo bundle bueno. En el navegador (PWA) no hace nada.
+// En la app nativa (Capacitor) se le avisa al plugin capacitor-updater que la
+// version cargada arranco bien (notifyAppReady). Si este aviso no llega, el
+// plugin revierte al ultimo bundle bueno. En el navegador (PWA) no hace nada.
 type UpdaterPlugin = {
   notifyAppReady?: () => Promise<void>;
 };
