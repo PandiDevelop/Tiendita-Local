@@ -682,7 +682,9 @@ td.cat-bar .product-name .prod-tag{margin-left:auto;flex:0 1 auto;min-width:0;ma
 .dev-menu-in{width:100%;animation:devFade .4s ease both}
 @keyframes devFade{from{opacity:0;transform:translateY(10px) scale(.98)}to{opacity:1;transform:none}}
 .dev-theme-btn{gap:11px}
-.dev-theme-icon{display:inline-block;width:38px;height:38px;margin:0;padding:0;background:transparent;border:0;box-shadow:none;flex:none}
+.dev-theme-icon{display:inline-block;width:38px;height:38px;object-fit:contain;margin:0;padding:0;background:transparent;border:0;box-shadow:none;flex:none}
+:root[data-theme="dark"] .dev-icons img,:root[data-theme="dark"] .dev-theme-icon{filter:invert(1) brightness(1.06)}
+:root[data-theme="pandi"] .dev-icons img,:root[data-theme="pandi"] .dev-theme-icon{filter:invert(1) brightness(1.06)}
 .sugg{color:var(--muted);font-style:italic}
 
 /* ---- Resumen (Inicio y Ganancias) ----

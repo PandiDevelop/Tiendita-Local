@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Modal, CloseIcon } from '../ui';
-import { themePref, setThemePref } from '../lib/theme';
+import { themePref, setThemePref, resolvedTheme } from '../lib/theme';
 import type { ThemePref } from '../lib/theme';
 
 // Menú oculto de desarrollo: solo se abre con 10 toques en el logo y pide una
@@ -27,36 +27,40 @@ const DEV_THEMES: { value: ThemePref; label: string; icon: string; quote: string
 
 type Stage = 'password' | 'icons' | 'menu';
 
-// Cada logo del totem con su animacion de fade-in. El logo se recorta con
-// mask y se pinta con var(--brand), el color de marca del tema activo (igual
-// que el logo bajo la frase "Mereces lo que sueñas"): asi siempre combina y en
-// Owen queda en su rojo. Si el PNG falla (sin red, cache rara...), se muestra
-// la inicial del tema en su lugar en vez del icono roto del navegador.
+// Cada logo del totem con su animacion de fade-in. SOLO en el tema de Owen el
+// logo se recorta con mask y se pinta con su rojo (var(--brand)), igual que el
+// logo bajo la frase "Mereces lo que sueñas": es el unico cuyo logo oscuro no
+// se lee sobre el fondo del patron. En el resto de temas se muestra el PNG
+// original. Si el PNG falla (sin red, cache rara...), se muestra la inicial.
 function TotemIcon({ t, delay }: { t: { value: ThemePref; label: string; icon: string; quote: string }; delay: string }) {
   const [bad, setBad] = useState(false);
+  if (resolvedTheme() === 'owen') {
+    if (bad) return <span className="dev-icon-fallback" style={{ animationDelay: delay }}>{t.label[0]}</span>;
+    return (
+      <>
+        <span
+          className="dev-icon-mask"
+          role="img"
+          aria-label={t.label}
+          style={{
+            background: 'var(--brand)',
+            WebkitMaskImage: `url(${t.icon})`,
+            WebkitMaskSize: 'contain',
+            WebkitMaskRepeat: 'no-repeat',
+            WebkitMaskPosition: 'center',
+            maskImage: `url(${t.icon})`,
+            maskSize: 'contain',
+            maskRepeat: 'no-repeat',
+            maskPosition: 'center',
+            animationDelay: delay,
+          }}
+        />
+        <img src={t.icon} alt="" style={{ display: 'none' }} onError={() => setBad(true)} />
+      </>
+    );
+  }
   if (bad) return <span className="dev-icon-fallback" style={{ animationDelay: delay }}>{t.label[0]}</span>;
-  return (
-    <>
-      <span
-        className="dev-icon-mask"
-        role="img"
-        aria-label={t.label}
-        style={{
-          background: 'var(--brand)',
-          WebkitMaskImage: `url(${t.icon})`,
-          WebkitMaskSize: 'contain',
-          WebkitMaskRepeat: 'no-repeat',
-          WebkitMaskPosition: 'center',
-          maskImage: `url(${t.icon})`,
-          maskSize: 'contain',
-          maskRepeat: 'no-repeat',
-          maskPosition: 'center',
-          animationDelay: delay,
-        }}
-      />
-      <img src={t.icon} alt="" style={{ display: 'none' }} onError={() => setBad(true)} />
-    </>
-  );
+  return <img src={t.icon} alt={t.label} onError={() => setBad(true)} style={{ animationDelay: delay }} />;
 }
 
 export function DevThemesModal({ onClose }: { onClose: () => void }) {
@@ -119,22 +123,28 @@ export function DevThemesModal({ onClose }: { onClose: () => void }) {
               <div className="team-list" style={{ margin: '0 0 14px' }}>
                 {DEV_THEMES.map((t) => (
                   <button key={t.value} type="button" className={'button outline dev-theme-btn' + (active === t.value ? ' armed' : '')} onClick={() => { setActive(t.value); setThemePref(t.value); }}>
-                    <span
-                      className="dev-theme-icon"
-                      role="img"
-                      aria-label={t.label}
-                      style={{
-                        background: 'var(--brand)',
-                        WebkitMaskImage: `url(${t.icon})`,
-                        WebkitMaskSize: 'contain',
-                        WebkitMaskRepeat: 'no-repeat',
-                        WebkitMaskPosition: 'center',
-                        maskImage: `url(${t.icon})`,
-                        maskSize: 'contain',
-                        maskRepeat: 'no-repeat',
-                        maskPosition: 'center',
-                      }}
-                    />
+                    {resolvedTheme() === 'owen' ? (
+                      // Solo en Owen el logo del selector va en su rojo (mask,
+                      // igual que el del tótem); el resto usa el PNG original.
+                      <span
+                        className="dev-theme-icon"
+                        role="img"
+                        aria-label={t.label}
+                        style={{
+                          background: 'var(--brand)',
+                          WebkitMaskImage: `url(${t.icon})`,
+                          WebkitMaskSize: 'contain',
+                          WebkitMaskRepeat: 'no-repeat',
+                          WebkitMaskPosition: 'center',
+                          maskImage: `url(${t.icon})`,
+                          maskSize: 'contain',
+                          maskRepeat: 'no-repeat',
+                          maskPosition: 'center',
+                        }}
+                      />
+                    ) : (
+                      <img src={t.icon} alt="" className="dev-theme-icon" />
+                    )}
                     <span style={{ display: 'grid', gap: 2 }}>
                       <b>{t.label}</b>
                       <span className="muted" style={{ fontSize: 12, fontWeight: 600 }}>{t.quote}</span>
