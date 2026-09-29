@@ -27,13 +27,36 @@ const DEV_THEMES: { value: ThemePref; label: string; icon: string; quote: string
 
 type Stage = 'password' | 'icons' | 'menu';
 
-// Cada logo del totem con su animacion de fade-in. Si por lo que sea una
-// imagen falla (sin red, cache rara...), se muestra la inicial del tema en su
-// lugar en vez del icono roto del navegador.
+// Cada logo del totem con su animacion de fade-in. El logo se recorta con
+// mask y se pinta con var(--brand), el color de marca del tema activo (igual
+// que el logo bajo la frase "Mereces lo que sueñas"): asi siempre combina y en
+// Owen queda en su rojo. Si el PNG falla (sin red, cache rara...), se muestra
+// la inicial del tema en su lugar en vez del icono roto del navegador.
 function TotemIcon({ t, delay }: { t: { value: ThemePref; label: string; icon: string; quote: string }; delay: string }) {
   const [bad, setBad] = useState(false);
   if (bad) return <span className="dev-icon-fallback" style={{ animationDelay: delay }}>{t.label[0]}</span>;
-  return <img src={t.icon} alt={t.label} onError={() => setBad(true)} style={{ animationDelay: delay }} />;
+  return (
+    <>
+      <span
+        className="dev-icon-mask"
+        role="img"
+        aria-label={t.label}
+        style={{
+          background: 'var(--brand)',
+          WebkitMaskImage: `url(${t.icon})`,
+          WebkitMaskSize: 'contain',
+          WebkitMaskRepeat: 'no-repeat',
+          WebkitMaskPosition: 'center',
+          maskImage: `url(${t.icon})`,
+          maskSize: 'contain',
+          maskRepeat: 'no-repeat',
+          maskPosition: 'center',
+          animationDelay: delay,
+        }}
+      />
+      <img src={t.icon} alt="" style={{ display: 'none' }} onError={() => setBad(true)} />
+    </>
+  );
 }
 
 export function DevThemesModal({ onClose }: { onClose: () => void }) {

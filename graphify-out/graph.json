@@ -5991,7 +5991,7 @@
       "file_type": "code",
       "norm_label": "devthemesmodal()",
       "source_file": "react-app/src/views/DevThemes.tsx",
-      "source_location": "L39"
+      "source_location": "L62"
     },
     {
       "id": "react_app_src_views_devthemes_devthemesmodal_trypass",
@@ -6003,7 +6003,7 @@
       "file_type": "code",
       "norm_label": "trypass()",
       "source_file": "react-app/src/views/DevThemes.tsx",
-      "source_location": "L59"
+      "source_location": "L82"
     },
     {
       "id": "react_app_src_views_devthemes_devunlocked",
@@ -6027,7 +6027,7 @@
       "file_type": "code",
       "norm_label": "totemicon()",
       "source_file": "react-app/src/views/DevThemes.tsx",
-      "source_location": "L33"
+      "source_location": "L35"
     },
     {
       "id": "react_app_src_views_devthemes_unlockdev",
@@ -13847,6 +13847,18 @@
     },
     {
       "source": "react_app_src_views_devthemes_devthemesmodal",
+      "target": "react_app_src_lib_theme_setthemepref",
+      "relation": "calls",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "call",
+      "source_file": "react-app/src/views/DevThemes.tsx",
+      "source_location": "L121",
+      "weight": 1.0
+    },
+    {
+      "source": "react_app_src_views_devthemes_devthemesmodal",
       "target": "react_app_src_views_devthemes_devunlocked",
       "relation": "calls",
       "_origin": "ast",
@@ -13854,7 +13866,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "react-app/src/views/DevThemes.tsx",
-      "source_location": "L40",
+      "source_location": "L63",
       "weight": 1.0
     },
     {
@@ -13866,19 +13878,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "react-app/src/views/DevThemes.tsx",
-      "source_location": "L43",
-      "weight": 1.0
-    },
-    {
-      "source": "react_app_src_views_devthemes_devthemesmodal",
-      "target": "react_app_src_lib_theme_setthemepref",
-      "relation": "calls",
-      "_origin": "ast",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "context": "call",
-      "source_file": "react-app/src/views/DevThemes.tsx",
-      "source_location": "L98",
+      "source_location": "L66",
       "weight": 1.0
     },
     {
@@ -13890,7 +13890,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "react-app/src/views/DevThemes.tsx",
-      "source_location": "L60",
+      "source_location": "L83",
       "weight": 1.0
     },
     {
@@ -17286,7 +17286,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "react-app/src/views/DevThemes.tsx",
-      "source_location": "L59",
+      "source_location": "L82",
       "weight": 1.0
     },
     {
@@ -32694,7 +32694,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "react-app/src/views/DevThemes.tsx",
-      "source_location": "L33",
+      "source_location": "L35",
       "weight": 1.0
     },
     {
@@ -32705,7 +32705,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "react-app/src/views/DevThemes.tsx",
-      "source_location": "L39",
+      "source_location": "L62",
       "weight": 1.0
     },
     {
@@ -34086,5 +34086,5 @@
     }
   ],
   "hyperedges": [],
-  "built_at_commit": "6083b2e177e2eab180d6c65ad6bb8ad6418081e2"
+  "built_at_commit": "8df20110d545a2271ba9a487b7e34e79c9741863"
 }

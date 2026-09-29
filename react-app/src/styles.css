@@ -675,7 +675,7 @@ td.cat-bar .product-name .prod-tag{margin-left:auto;flex:0 1 auto;min-width:0;ma
 .dev-modal .dev-stage:not(.menu){background:var(--surface)}
 .dev-icons{display:flex;flex-direction:column;align-items:center;gap:8px;transition:opacity .45s ease,transform .45s ease}
 .dev-icons.out{opacity:0;transform:scale(.92) translateY(6px);pointer-events:none}
-.dev-icons img,.dev-icon-fallback{width:64px;height:64px;object-fit:contain;margin:0;background:transparent;border:0;box-shadow:none;animation:devTotem .7s ease both;flex:none}
+.dev-icons img,.dev-icon-fallback,.dev-icon-mask{width:64px;height:64px;object-fit:contain;margin:0;background:transparent;border:0;box-shadow:none;animation:devTotem .7s ease both;flex:none}
 .dev-icons>:first-child{margin-top:0}
 .dev-icon-fallback{display:grid;place-items:center;font-weight:800;font-size:22px;color:var(--brand-deep)}
 @keyframes devTotem{from{opacity:0;transform:translateY(16px) scale(.9)}to{opacity:1;transform:none}}
@@ -683,8 +683,8 @@ td.cat-bar .product-name .prod-tag{margin-left:auto;flex:0 1 auto;min-width:0;ma
 @keyframes devFade{from{opacity:0;transform:translateY(10px) scale(.98)}to{opacity:1;transform:none}}
 .dev-theme-btn{gap:11px}
 .dev-theme-icon{width:38px;height:38px;object-fit:contain;padding:0;background:transparent;border:0;flex:none}
-:root[data-theme="dark"] .dev-icons img,:root[data-theme="dark"] .dev-theme-icon{filter:invert(1) brightness(1.06)}
-:root[data-theme="pandi"] .dev-icons img,:root[data-theme="pandi"] .dev-theme-icon{filter:invert(1) brightness(1.06)}
+:root[data-theme="dark"] .dev-theme-icon{filter:invert(1) brightness(1.06)}
+:root[data-theme="pandi"] .dev-theme-icon{filter:invert(1) brightness(1.06)}
 .sugg{color:var(--muted);font-style:italic}
 
 /* ---- Resumen (Inicio y Ganancias) ----
