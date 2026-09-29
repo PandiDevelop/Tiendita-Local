@@ -119,7 +119,22 @@ export function DevThemesModal({ onClose }: { onClose: () => void }) {
               <div className="team-list" style={{ margin: '0 0 14px' }}>
                 {DEV_THEMES.map((t) => (
                   <button key={t.value} type="button" className={'button outline dev-theme-btn' + (active === t.value ? ' armed' : '')} onClick={() => { setActive(t.value); setThemePref(t.value); }}>
-                    <img src={t.icon} alt="" className="dev-theme-icon" />
+                    <span
+                      className="dev-theme-icon"
+                      role="img"
+                      aria-label={t.label}
+                      style={{
+                        background: 'var(--brand)',
+                        WebkitMaskImage: `url(${t.icon})`,
+                        WebkitMaskSize: 'contain',
+                        WebkitMaskRepeat: 'no-repeat',
+                        WebkitMaskPosition: 'center',
+                        maskImage: `url(${t.icon})`,
+                        maskSize: 'contain',
+                        maskRepeat: 'no-repeat',
+                        maskPosition: 'center',
+                      }}
+                    />
                     <span style={{ display: 'grid', gap: 2 }}>
                       <b>{t.label}</b>
                       <span className="muted" style={{ fontSize: 12, fontWeight: 600 }}>{t.quote}</span>
