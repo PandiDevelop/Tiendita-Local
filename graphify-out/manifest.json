@@ -42,9 +42,9 @@
     "semantic_hash": ""
   },
   "react-app/src/lib/sync.ts": {
-    "mtime": 1791319551.12323,
-    "seen": 1791319602.629404,
-    "ast_hash": "fc56e16841f0dd73d55c047695016597",
+    "mtime": 1791320581.9436815,
+    "seen": 1791320658.2412076,
+    "ast_hash": "4c02aa6d606c2f80d8479815fbcc2d71",
     "semantic_hash": ""
   },
   "react-app/src/main.tsx": {
@@ -54,9 +54,9 @@
     "semantic_hash": ""
   },
   "react-app/src/store.tsx": {
-    "mtime": 1791319263.7987945,
-    "seen": 1791319602.629404,
-    "ast_hash": "ffd8e3225256d3674130989c29f8fc16",
+    "mtime": 1791320586.3325837,
+    "seen": 1791320658.2412076,
+    "ast_hash": "2c234c62993c6c063c30b1ae10a85593",
     "semantic_hash": ""
   },
   "react-app/src/test/sync.test.ts": {
@@ -138,9 +138,9 @@
     "semantic_hash": ""
   },
   "react-app/src/views/StoreModal.tsx": {
-    "mtime": 1791319214.4710596,
-    "seen": 1791319602.629404,
-    "ast_hash": "db5a402d893cfc83d27c68be3c794aaf",
+    "mtime": 1791320597.0514815,
+    "seen": 1791320658.2412076,
+    "ast_hash": "e174527aa9bc24b8d26ca3fd78d62c84",
     "semantic_hash": ""
   },
   "react-app/src/vite-env.d.ts": {
@@ -162,8 +162,8 @@
     "semantic_hash": ""
   },
   "sw.js": {
-    "mtime": 1791320248.7591898,
-    "seen": 1791320264.088281,
+    "mtime": 1791320636.8094802,
+    "seen": 1791320658.2412076,
     "ast_hash": "41696215b42347d018b9607a529a777d",
     "semantic_hash": ""
   },
@@ -180,9 +180,9 @@
     "semantic_hash": ""
   },
   "index.html": {
-    "mtime": 1791320248.0455246,
-    "seen": 1791320264.088281,
-    "ast_hash": "2531f43bbf820c5bb963cad1850917b4",
+    "mtime": 1791320636.0702696,
+    "seen": 1791320658.2412076,
+    "ast_hash": "6a8c3eb3eb6023f7bc835469691cd6d8",
     "semantic_hash": ""
   },
   "react-app/index.html": {
@@ -564,9 +564,9 @@
     "semantic_hash": ""
   },
   "bundles/latest.json": {
-    "mtime": 1791320252.6447341,
-    "seen": 1791320264.088281,
-    "ast_hash": "0d06718c26d49bb82c0666325786c054",
+    "mtime": 1791320641.2012308,
+    "seen": 1791320658.2412076,
+    "ast_hash": "fdc883370a117c11df1c080a66444d24",
     "semantic_hash": ""
   },
   "react-app/src/lib/otaUpdate.ts": {

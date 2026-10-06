@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useStore } from '../store';
 import { DEFAULT_STORE_IMAGE, compressImage, esc, myRole, syncClientId, syncGenPin, syncName, syncSetName, uid } from '../lib/core';
-import { deactivateSyncFn, leaveStoreFn, deleteStoreFn, removeMemberFn, setMemberRoleFn } from '../lib/sync';
+import { deactivateSyncFn, leaveStoreFn, deleteStoreFn, removeMemberFn, setMemberRoleFn, isValidStorePin } from '../lib/sync';
 import { CloseIcon, ImagePicker, Modal } from '../ui';
 import type { Member, Role } from '../types';
 
@@ -129,6 +129,9 @@ export function StoreModal({ editing, onClose }: { editing?: boolean; onClose: (
               </div>
               <div><div className="label" style={{ margin: '0 0 6px' }}>Código de sincronización</div>
                 <div className="pin-box"><strong style={{ letterSpacing: '1.5px' }}>{esc(s.syncPin || s.syncKey)}</strong></div>
+                {!isValidStorePin(s.syncPin) && (
+                  <p className="muted" style={{ color: 'var(--brand)', marginTop: 6 }}>Cuidado: este código es viejo y no sirve para vincular dispositivos. Se generará uno nuevo automáticamente en cuanto haya conexión.</p>
+                )}
                 <p className="muted">Los que tengan este código ven la tienda.</p>
               </div>
               {canManage && <>

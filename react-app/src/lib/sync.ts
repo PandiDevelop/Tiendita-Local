@@ -787,34 +787,35 @@ export function isValidStorePin(pin: string | null | undefined): boolean {
 // dispositivo la vuelve a traer) y actualiza la copia local. Esto pasa por
 // ejemplo en tiendas viejas creadas antes de los pines, que mostraban el
 // syncKey ("stXXXXXXXX") como código y nadie podía unirse escribiéndolo.
-// Devuelve true si el código cambió. Best-effort: si no hay conexión o
-// algo falla devuelve false y el arranque siguiente lo vuelve a intentar.
-export async function ensureStoreCode(s: Store, mutate: (fn: (d: AppState) => void) => void): Promise<boolean> {
-  if (!s.syncKey) return false;
+// Devuelve el pin nuevo (string) si el código cambió, o null si quedó igual
+// (ya era válido) o no se pudo (sin conexión: se reintenta en el próximo
+// arranque). El caller usa el resultado para avisarle al usuario.
+export async function ensureStoreCode(s: Store, mutate: (fn: (d: AppState) => void) => void): Promise<string | null> {
+  if (!s.syncKey) return null;
   const cur = (s.syncPin || '').trim();
-  if (isValidStorePin(cur) && syncKeyOf(cur) === s.syncKey) return false;
-  if (!syncReady() || !DB) return false;
+  if (isValidStorePin(cur) && syncKeyOf(cur) === s.syncKey) return null;
+  if (!syncReady() || !DB) return null;
   const newPin = syncGenPin();
   const newKey = syncKeyOf(newPin);
   try {
     const oldRef = storeDocRef(s.syncKey);
     const snap = await getDoc(oldRef);
-    if (!snap.exists()) return false;
+    if (!snap.exists()) return null;
     const main = snap.data();
-    if (main.deleted) return false;
+    if (main.deleted) return null;
     const prods = await getDocs(collection(oldRef, 'products'));
     await setDoc(storeDocRef(newKey), main, { merge: true });
     await Promise.all(prods.docs.map((pd) => setDoc(productDocRef(newKey, pd.id), pd.data(), { merge: true })));
     await setDoc(oldRef, { deleted: true, deletedAt: Date.now(), updatedBy: syncClientId() }, { merge: true });
   } catch (e) {
     console.warn('No se pudo reasignar el código de la tienda:', e);
-    return false;
+    return null;
   }
   mutate((d) => {
     const st = d.stores.find((x) => x.id === s.id);
     if (st) { st.syncKey = newKey; st.syncPin = newPin; }
   });
-  return true;
+  return newPin;
 }
 
 export async function joinStore(pin: string, getState: () => AppState, mutate: (fn: (d: AppState) => void) => void, attach: (id: string) => void) {

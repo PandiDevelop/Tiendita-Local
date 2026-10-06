@@ -116,7 +116,11 @@ export function AppProvider({ children }: { children: ReactNode }) {
         if (!s.syncKey) continue;
         const isOwnerHere = !s.createdBy || s.createdBy === syncClientId();
         if (isOwnerHere) {
-          try { await ensureStoreCode(s, replace); } catch { /* sin conexión */ }
+          try {
+            // Devuelve el pin nuevo si regeneró el código (tienda vieja).
+            const newPin = await ensureStoreCode(s, replace);
+            if (newPin) toast('Tu código de sincronización cambió a "' + newPin + '". Compártelo con tu equipo.');
+          } catch { /* sin conexión: se reintenta en el próximo arranque */ }
         }
         if (s.syncKey) sync.current!.attach(s.id);
       }
