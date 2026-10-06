@@ -214,8 +214,7 @@ export function Catalog() {
               )}
               <button className="cat-head-toggle" onClick={() => toggleCat(g.name)}>
                 <span className="cat-caret"><CaretIcon size={15} deg={open ? 0 : -90} /></span><b>{esc(g.name)}</b>
-                <span className="muted">· {g.list.length} producto{g.list.length === 1 ? '' : 's'}</span>
-                <span className="muted">· {catUnits} Unidades</span>
+                <span className="cat-head-counts muted">· {g.list.length} producto{g.list.length === 1 ? '' : 's'} · {catUnits} Unidades</span>
               </button>
               {editable && (
                 <GearMenu items={[

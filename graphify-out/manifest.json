@@ -78,9 +78,9 @@
     "semantic_hash": ""
   },
   "react-app/src/views/Catalog.tsx": {
-    "mtime": 1791316371.570246,
-    "seen": 1791317482.589011,
-    "ast_hash": "12fdd03d0de0a61edc8eac5a5d97dc70",
+    "mtime": 1791317869.9497676,
+    "seen": 1791317905.4020567,
+    "ast_hash": "5d770457049b05c9cd0d84c97969a60a",
     "semantic_hash": ""
   },
   "react-app/src/views/Dashboard.tsx": {
@@ -102,9 +102,9 @@
     "semantic_hash": ""
   },
   "react-app/src/views/Inventory.tsx": {
-    "mtime": 1791316379.2087264,
-    "seen": 1791317482.589011,
-    "ast_hash": "879b139572caa8bcd7ac43ec3789f421",
+    "mtime": 1791317875.0866878,
+    "seen": 1791317905.4020567,
+    "ast_hash": "97536e038dbfee65ad66c06c9e54c121",
     "semantic_hash": ""
   },
   "react-app/src/views/Join.tsx": {

@@ -13482,7 +13482,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "react-app/src/views/Catalog.tsx",
-      "source_location": "L238",
+      "source_location": "L237",
       "weight": 1.0
     },
     {
@@ -13494,7 +13494,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "react-app/src/views/Catalog.tsx",
-      "source_location": "L239",
+      "source_location": "L238",
       "weight": 1.0
     },
     {
@@ -14418,7 +14418,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "react-app/src/views/Inventory.tsx",
-      "source_location": "L345",
+      "source_location": "L344",
       "weight": 1.0
     },
     {
@@ -34123,5 +34123,5 @@
     }
   ],
   "hyperedges": [],
-  "built_at_commit": "84508edbfae6ce6d0d7f7e453de428a2c275f5cb"
+  "built_at_commit": "cce3a5f6375ee6f852dd1ed2727aa72d6151e489"
 }
