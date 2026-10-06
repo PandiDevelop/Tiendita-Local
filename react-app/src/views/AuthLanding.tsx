@@ -61,6 +61,8 @@ export function AuthLanding({ onCreate, onJoin }: { onCreate: () => void; onJoin
 
   async function doSignIn() {
     if (busy) return;
+    setNote(null);
+    setNoteKind(null);
     if (!email.trim() || !pass) { setNote('Escribe tu correo y tu contraseña.'); setNoteKind('error'); return; }
     setBusy(true);
     try {
@@ -92,6 +94,8 @@ export function AuthLanding({ onCreate, onJoin }: { onCreate: () => void; onJoin
 
   async function doRegister() {
     if (busy) return;
+    setNote(null);
+    setNoteKind(null);
     if (!user.trim()) { setNote('Escribe tu nombre de usuario.'); setNoteKind('error'); return; }
     if (!email.trim()) { setNote('Escribe tu correo.'); setNoteKind('error'); return; }
     if (pass.length < 6) { setNote('La contraseña debe tener al menos 6 caracteres.'); setNoteKind('error'); return; }
@@ -110,6 +114,8 @@ export function AuthLanding({ onCreate, onJoin }: { onCreate: () => void; onJoin
 
   async function doReset() {
     if (busy) return;
+    setNote(null);
+    setNoteKind(null);
     if (!email.trim()) { setNote('Escribe tu correo primero.'); setNoteKind('error'); return; }
     setBusy(true);
     try {

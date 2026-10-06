@@ -97,10 +97,12 @@ export function SettingsModal({ onClose }: { onClose: () => void }) {
   // que se recupera al arrancar), el estado de "conectado" se refresca solo.
   useEffect(() => onAccountChange(() => setAcct(sessionActive())), []);
 
-  async function doSignIn() {
+async function doSignIn() {
     if (accBusy) return;
-    if (!aemail.trim() || !apass) { flashAccNote('Escribe tu correo y contraseña.'); return; }
+    if (!aemail.trim() || !apass) { showAccError('Escribe tu correo y contraseña.'); return; }
     setAccBusy(true);
+    setAccNote(null);
+    setAccErr(null);
     try {
       const from = currentIdentity();
       const r = await signInAccount(aemail, apass);
@@ -119,11 +121,13 @@ export function SettingsModal({ onClose }: { onClose: () => void }) {
     }
   }
 
-  async function doRegister() {
+async function doRegister() {
     if (accBusy) return;
-    if (!aemail.trim() || !apass) { flashAccNote('Escribe tu correo y una contraseña.'); return; }
-    if (!auser.trim()) { flashAccNote('Escribe tu nombre de usuario: será con el que firmes notas, ventas e inventario.'); return; }
+    if (!aemail.trim() || !apass) { showAccError('Escribe tu correo y una contraseña.'); return; }
+    if (!auser.trim()) { showAccError('Escribe tu nombre de usuario: será con el que firmes notas, ventas e inventario.'); return; }
     setAccBusy(true);
+    setAccNote(null);
+    setAccErr(null);
     try {
       const r = await registerAccount(aemail, apass, auser);
       if (r.ok) {
@@ -138,10 +142,12 @@ export function SettingsModal({ onClose }: { onClose: () => void }) {
     }
   }
 
-  async function doResetPass() {
+async function doResetPass() {
     if (accBusy) return;
-    if (!aemail.trim()) { flashAccNote('Escribe tu correo primero.'); return; }
+    if (!aemail.trim()) { showAccError('Escribe tu correo primero.'); return; }
     setAccBusy(true);
+    setAccNote(null);
+    setAccErr(null);
     try {
       const r = await sendPasswordReset(aemail);
       if (r.ok) flashAccNote(r.message);

@@ -1659,7 +1659,7 @@
       "file_type": "code",
       "norm_label": "restoreone()",
       "source_file": "react-app/src/views/SettingsModal.tsx",
-      "source_location": "L169"
+      "source_location": "L175"
     },
     {
       "id": "react_app_src_views_storemodal_storemodal",
@@ -4947,7 +4947,7 @@
       "file_type": "code",
       "norm_label": "doregister()",
       "source_file": "react-app/src/views/AuthLanding.tsx",
-      "source_location": "L93"
+      "source_location": "L95"
     },
     {
       "id": "react_app_src_views_authlanding_authlanding_doreset",
@@ -4959,7 +4959,7 @@
       "file_type": "code",
       "norm_label": "doreset()",
       "source_file": "react-app/src/views/AuthLanding.tsx",
-      "source_location": "L111"
+      "source_location": "L115"
     },
     {
       "id": "react_app_src_views_authlanding_authlanding_dosignin",
@@ -4995,7 +4995,7 @@
       "file_type": "code",
       "norm_label": "noteclass()",
       "source_file": "react-app/src/views/AuthLanding.tsx",
-      "source_location": "L124"
+      "source_location": "L130"
     },
     {
       "id": "react_app_src_views_notes_notes_enablesystemnotify",
@@ -5067,7 +5067,7 @@
       "file_type": "code",
       "norm_label": "dologout()",
       "source_file": "react-app/src/views/SettingsModal.tsx",
-      "source_location": "L155"
+      "source_location": "L161"
     },
     {
       "id": "react_app_src_views_settingsmodal_settingsmodal_doregister",
@@ -5079,7 +5079,7 @@
       "file_type": "code",
       "norm_label": "doregister()",
       "source_file": "react-app/src/views/SettingsModal.tsx",
-      "source_location": "L122"
+      "source_location": "L124"
     },
     {
       "id": "react_app_src_views_settingsmodal_settingsmodal_doresetpass",
@@ -5091,7 +5091,7 @@
       "file_type": "code",
       "norm_label": "doresetpass()",
       "source_file": "react-app/src/views/SettingsModal.tsx",
-      "source_location": "L141"
+      "source_location": "L145"
     },
     {
       "id": "react_app_src_views_settingsmodal_settingsmodal_dosignin",
@@ -5127,7 +5127,7 @@
       "file_type": "code",
       "norm_label": "savename()",
       "source_file": "react-app/src/views/SettingsModal.tsx",
-      "source_location": "L180"
+      "source_location": "L186"
     },
     {
       "id": "react_app_src_views_settingsmodal_settingsmodal_showaccerror",
@@ -5151,7 +5151,7 @@
       "file_type": "code",
       "norm_label": "togglenotifications()",
       "source_file": "react-app/src/views/SettingsModal.tsx",
-      "source_location": "L185"
+      "source_location": "L191"
     },
     {
       "id": "react_app_src_lib_account_onaccountchange",
@@ -5595,7 +5595,7 @@
       "file_type": "code",
       "norm_label": "togglecat()",
       "source_file": "react-app/src/views/SettingsModal.tsx",
-      "source_location": "L217"
+      "source_location": "L223"
     },
     {
       "id": "react_app_src_lib_core_getsupplierinfo",
@@ -13584,7 +13584,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "react-app/src/views/AuthLanding.tsx",
-      "source_location": "L100",
+      "source_location": "L104",
       "weight": 1.0
     },
     {
@@ -13596,7 +13596,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "react-app/src/views/AuthLanding.tsx",
-      "source_location": "L105",
+      "source_location": "L109",
       "weight": 1.0
     },
     {
@@ -13608,7 +13608,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "react-app/src/views/AuthLanding.tsx",
-      "source_location": "L116",
+      "source_location": "L122",
       "weight": 1.0
     },
     {
@@ -13620,7 +13620,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "react-app/src/views/AuthLanding.tsx",
-      "source_location": "L67",
+      "source_location": "L69",
       "weight": 1.0
     },
     {
@@ -13632,7 +13632,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "react-app/src/views/AuthLanding.tsx",
-      "source_location": "L68",
+      "source_location": "L70",
       "weight": 1.0
     },
     {
@@ -13644,7 +13644,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "react-app/src/views/AuthLanding.tsx",
-      "source_location": "L70",
+      "source_location": "L72",
       "weight": 1.0
     },
     {
@@ -13656,7 +13656,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "react-app/src/views/AuthLanding.tsx",
-      "source_location": "L71",
+      "source_location": "L73",
       "weight": 1.0
     },
     {
@@ -13668,7 +13668,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "react-app/src/views/AuthLanding.tsx",
-      "source_location": "L72",
+      "source_location": "L74",
       "weight": 1.0
     },
     {
@@ -13680,7 +13680,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "react-app/src/views/AuthLanding.tsx",
-      "source_location": "L73",
+      "source_location": "L75",
       "weight": 1.0
     },
     {
@@ -13692,7 +13692,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "react-app/src/views/AuthLanding.tsx",
-      "source_location": "L77",
+      "source_location": "L79",
       "weight": 1.0
     },
     {
@@ -13704,7 +13704,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "react-app/src/views/AuthLanding.tsx",
-      "source_location": "L84",
+      "source_location": "L86",
       "weight": 1.0
     },
     {
@@ -16452,7 +16452,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "react-app/src/views/SettingsModal.tsx",
-      "source_location": "L315",
+      "source_location": "L321",
       "weight": 1.0
     },
     {
@@ -16464,7 +16464,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "react-app/src/views/SettingsModal.tsx",
-      "source_location": "L316",
+      "source_location": "L322",
       "weight": 1.0
     },
     {
@@ -16476,7 +16476,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "react-app/src/views/SettingsModal.tsx",
-      "source_location": "L362",
+      "source_location": "L368",
       "weight": 1.0
     },
     {
@@ -16488,7 +16488,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "react-app/src/views/SettingsModal.tsx",
-      "source_location": "L365",
+      "source_location": "L371",
       "weight": 1.0
     },
     {
@@ -16500,7 +16500,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "react-app/src/views/SettingsModal.tsx",
-      "source_location": "L366",
+      "source_location": "L372",
       "weight": 1.0
     },
     {
@@ -16644,7 +16644,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "react-app/src/views/SettingsModal.tsx",
-      "source_location": "L159",
+      "source_location": "L165",
       "weight": 1.0
     },
     {
@@ -16656,19 +16656,19 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "react-app/src/views/SettingsModal.tsx",
-      "source_location": "L160",
+      "source_location": "L166",
       "weight": 1.0
     },
     {
       "source": "react_app_src_views_settingsmodal_settingsmodal_doregister",
-      "target": "react_app_src_views_settingsmodal_settingsmodal_flashaccnote",
+      "target": "react_app_src_views_settingsmodal_settingsmodal_showaccerror",
       "relation": "calls",
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "react-app/src/views/SettingsModal.tsx",
-      "source_location": "L124",
+      "source_location": "L126",
       "weight": 1.0
     },
     {
@@ -16680,23 +16680,11 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "react-app/src/views/SettingsModal.tsx",
-      "source_location": "L128",
+      "source_location": "L132",
       "weight": 1.0
     },
     {
       "source": "react_app_src_views_settingsmodal_settingsmodal_doregister",
-      "target": "react_app_src_views_settingsmodal_settingsmodal_showaccerror",
-      "relation": "calls",
-      "_origin": "ast",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "context": "call",
-      "source_file": "react-app/src/views/SettingsModal.tsx",
-      "source_location": "L133",
-      "weight": 1.0
-    },
-    {
-      "source": "react_app_src_views_settingsmodal_settingsmodal_doresetpass",
       "target": "react_app_src_views_settingsmodal_settingsmodal_flashaccnote",
       "relation": "calls",
       "_origin": "ast",
@@ -16704,7 +16692,19 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "react-app/src/views/SettingsModal.tsx",
-      "source_location": "L143",
+      "source_location": "L135",
+      "weight": 1.0
+    },
+    {
+      "source": "react_app_src_views_settingsmodal_settingsmodal_doresetpass",
+      "target": "react_app_src_views_settingsmodal_settingsmodal_showaccerror",
+      "relation": "calls",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "call",
+      "source_file": "react-app/src/views/SettingsModal.tsx",
+      "source_location": "L147",
       "weight": 1.0
     },
     {
@@ -16716,24 +16716,24 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "react-app/src/views/SettingsModal.tsx",
-      "source_location": "L146",
+      "source_location": "L152",
       "weight": 1.0
     },
     {
       "source": "react_app_src_views_settingsmodal_settingsmodal_doresetpass",
-      "target": "react_app_src_views_settingsmodal_settingsmodal_showaccerror",
+      "target": "react_app_src_views_settingsmodal_settingsmodal_flashaccnote",
       "relation": "calls",
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "react-app/src/views/SettingsModal.tsx",
-      "source_location": "L148",
+      "source_location": "L153",
       "weight": 1.0
     },
     {
       "source": "react_app_src_views_settingsmodal_settingsmodal_dosignin",
-      "target": "react_app_src_views_settingsmodal_settingsmodal_flashaccnote",
+      "target": "react_app_src_views_settingsmodal_settingsmodal_showaccerror",
       "relation": "calls",
       "_origin": "ast",
       "confidence": "EXTRACTED",
@@ -16752,7 +16752,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "react-app/src/views/SettingsModal.tsx",
-      "source_location": "L105",
+      "source_location": "L107",
       "weight": 1.0
     },
     {
@@ -16764,19 +16764,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "react-app/src/views/SettingsModal.tsx",
-      "source_location": "L106",
-      "weight": 1.0
-    },
-    {
-      "source": "react_app_src_views_settingsmodal_settingsmodal_dosignin",
-      "target": "react_app_src_views_settingsmodal_settingsmodal_showaccerror",
-      "relation": "calls",
-      "_origin": "ast",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "context": "call",
-      "source_file": "react-app/src/views/SettingsModal.tsx",
-      "source_location": "L107",
+      "source_location": "L108",
       "weight": 1.0
     },
     {
@@ -16788,7 +16776,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "react-app/src/views/SettingsModal.tsx",
-      "source_location": "L108",
+      "source_location": "L110",
       "weight": 1.0
     },
     {
@@ -16800,7 +16788,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "react-app/src/views/SettingsModal.tsx",
-      "source_location": "L109",
+      "source_location": "L111",
       "weight": 1.0
     },
     {
@@ -16812,7 +16800,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "react-app/src/views/SettingsModal.tsx",
-      "source_location": "L110",
+      "source_location": "L112",
       "weight": 1.0
     },
     {
@@ -16824,7 +16812,19 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "react-app/src/views/SettingsModal.tsx",
-      "source_location": "L111",
+      "source_location": "L113",
+      "weight": 1.0
+    },
+    {
+      "source": "react_app_src_views_settingsmodal_settingsmodal_dosignin",
+      "target": "react_app_src_views_settingsmodal_settingsmodal_flashaccnote",
+      "relation": "calls",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "call",
+      "source_file": "react-app/src/views/SettingsModal.tsx",
+      "source_location": "L116",
       "weight": 1.0
     },
     {
@@ -16836,7 +16836,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "react-app/src/views/SettingsModal.tsx",
-      "source_location": "L173",
+      "source_location": "L179",
       "weight": 1.0
     },
     {
@@ -16848,7 +16848,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "react-app/src/views/SettingsModal.tsx",
-      "source_location": "L174",
+      "source_location": "L180",
       "weight": 1.0
     },
     {
@@ -16860,7 +16860,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "react-app/src/views/SettingsModal.tsx",
-      "source_location": "L181",
+      "source_location": "L187",
       "weight": 1.0
     },
     {
@@ -16872,7 +16872,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "react-app/src/views/SettingsModal.tsx",
-      "source_location": "L220",
+      "source_location": "L226",
       "weight": 1.0
     },
     {
@@ -16884,7 +16884,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "react-app/src/views/SettingsModal.tsx",
-      "source_location": "L221",
+      "source_location": "L227",
       "weight": 1.0
     },
     {
@@ -16896,7 +16896,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "react-app/src/views/SettingsModal.tsx",
-      "source_location": "L223",
+      "source_location": "L229",
       "weight": 1.0
     },
     {
@@ -16908,7 +16908,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "react-app/src/views/SettingsModal.tsx",
-      "source_location": "L189",
+      "source_location": "L195",
       "weight": 1.0
     },
     {
@@ -16920,7 +16920,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "react-app/src/views/SettingsModal.tsx",
-      "source_location": "L192",
+      "source_location": "L198",
       "weight": 1.0
     },
     {
@@ -16932,7 +16932,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "react-app/src/views/SettingsModal.tsx",
-      "source_location": "L199",
+      "source_location": "L205",
       "weight": 1.0
     },
     {
@@ -16944,7 +16944,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "react-app/src/views/SettingsModal.tsx",
-      "source_location": "L199",
+      "source_location": "L205",
       "weight": 1.0
     },
     {
@@ -16956,7 +16956,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "react-app/src/views/SettingsModal.tsx",
-      "source_location": "L200",
+      "source_location": "L206",
       "weight": 1.0
     },
     {
@@ -16968,7 +16968,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "react-app/src/views/SettingsModal.tsx",
-      "source_location": "L201",
+      "source_location": "L207",
       "weight": 1.0
     },
     {
@@ -16980,7 +16980,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "react-app/src/views/SettingsModal.tsx",
-      "source_location": "L207",
+      "source_location": "L213",
       "weight": 1.0
     },
     {
@@ -17520,7 +17520,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "react-app/src/views/AuthLanding.tsx",
-      "source_location": "L124",
+      "source_location": "L130",
       "weight": 1.0
     },
     {
@@ -18072,7 +18072,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "react-app/src/views/SettingsModal.tsx",
-      "source_location": "L169",
+      "source_location": "L175",
       "weight": 1.0
     },
     {
@@ -18084,7 +18084,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "react-app/src/views/SettingsModal.tsx",
-      "source_location": "L185",
+      "source_location": "L191",
       "weight": 1.0
     },
     {
@@ -18096,7 +18096,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "react-app/src/views/SettingsModal.tsx",
-      "source_location": "L217",
+      "source_location": "L223",
       "weight": 1.0
     },
     {
@@ -33011,7 +33011,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "react-app/src/views/AuthLanding.tsx",
-      "source_location": "L111",
+      "source_location": "L115",
       "weight": 1.0
     },
     {
@@ -33033,7 +33033,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "react-app/src/views/AuthLanding.tsx",
-      "source_location": "L93",
+      "source_location": "L95",
       "weight": 1.0
     },
     {
@@ -33825,7 +33825,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "react-app/src/views/SettingsModal.tsx",
-      "source_location": "L122",
+      "source_location": "L124",
       "weight": 1.0
     },
     {
@@ -33836,7 +33836,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "react-app/src/views/SettingsModal.tsx",
-      "source_location": "L141",
+      "source_location": "L145",
       "weight": 1.0
     },
     {
@@ -33847,7 +33847,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "react-app/src/views/SettingsModal.tsx",
-      "source_location": "L155",
+      "source_location": "L161",
       "weight": 1.0
     },
     {
@@ -33858,7 +33858,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "react-app/src/views/SettingsModal.tsx",
-      "source_location": "L180",
+      "source_location": "L186",
       "weight": 1.0
     },
     {
@@ -34474,7 +34474,7 @@
       "confidence_score": 0.85,
       "context": "argument",
       "source_file": "react-app/src/views/AuthLanding.tsx",
-      "source_location": "L77",
+      "source_location": "L79",
       "weight": 1.0
     },
     {
@@ -34522,7 +34522,7 @@
       "confidence_score": 0.85,
       "context": "argument",
       "source_file": "react-app/src/views/SettingsModal.tsx",
-      "source_location": "L173",
+      "source_location": "L179",
       "weight": 1.0
     },
     {
@@ -34623,5 +34623,5 @@
     }
   ],
   "hyperedges": [],
-  "built_at_commit": "eeaba181748d09a27671e16ee1721c33613b935b"
+  "built_at_commit": "28a5f1942b72eb4d8ac2b2d353ee59b90afa408d"
 }
