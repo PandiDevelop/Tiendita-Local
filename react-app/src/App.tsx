@@ -79,6 +79,10 @@ function useScrollAxisLock() {
   }, []);
 }
 
+function capFirst(t: string): string {
+  return t ? t.charAt(0).toUpperCase() + t.slice(1) : t;
+}
+
 function MenuClock() {
   const [now, setNow] = useState(() => new Date());
   useEffect(() => {
@@ -87,7 +91,7 @@ function MenuClock() {
   }, []);
   return (
     <>
-      <span className="clock-date">{now.toLocaleDateString('es', { weekday: 'long', day: 'numeric', month: 'long' })}</span>
+      <span className="clock-date">{capFirst(now.toLocaleDateString('es', { weekday: 'long', day: 'numeric', month: 'long' }))}</span>
       <span className="clock-sep" aria-hidden="true" />
       <span className="clock-time">{now.toLocaleTimeString('es', { hour: '2-digit', minute: '2-digit' })}</span>
     </>
