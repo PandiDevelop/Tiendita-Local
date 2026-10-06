@@ -134,9 +134,9 @@ th,td{text-align:left;vertical-align:middle}
 .cat-head b{white-space:nowrap;overflow-wrap:break-word}
 .cat-head .cat-caret{color:var(--brand);display:flex;align-items:center}
 .cat-head .muted{font-weight:600}
-.cat-head-counts{flex:1 1 100%;padding-left:24px;line-height:1.3}
+.cat-head-counts{line-height:1.3}
 .cat-body{padding:0 0 4px;overflow:auto;overflow-x:auto;overflow-y:auto;max-height:272px;overscroll-behavior:contain}.cat-body table{margin:0}
-@media (max-width:760px){.cat-actions{max-width:none}.cat-head{padding:12px 13px}}
+@media (max-width:760px){.cat-actions{max-width:none}.cat-head{padding:12px 13px}.cat-head-counts{flex:1 1 100%;padding-left:24px}}
 .inv-modes{display:flex;gap:4px;padding:3px;background:var(--lav);border-radius:12px}.panel-head .inv-modes{flex:1 0 100%;width:100%;margin-top:2px}
 .inv-mode{flex:1;display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:8px 14px;border-radius:9px;background:transparent;border:0;color:var(--brand-deep);font-weight:700;font-size:14px;white-space:nowrap;min-width:0}
 .inv-mode.on{background:var(--surface);box-shadow:0 2px 8px var(--brand-line);color:var(--ink)}

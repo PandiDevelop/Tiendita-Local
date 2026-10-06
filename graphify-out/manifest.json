@@ -162,8 +162,8 @@
     "semantic_hash": ""
   },
   "sw.js": {
-    "mtime": 1791319565.996457,
-    "seen": 1791320016.361792,
+    "mtime": 1791320248.7591898,
+    "seen": 1791320264.088281,
     "ast_hash": "41696215b42347d018b9607a529a777d",
     "semantic_hash": ""
   },
@@ -180,9 +180,9 @@
     "semantic_hash": ""
   },
   "index.html": {
-    "mtime": 1791319565.1245725,
-    "seen": 1791320016.361792,
-    "ast_hash": "cb8a4c79e71cd6be8afe529bd5f88882",
+    "mtime": 1791320248.0455246,
+    "seen": 1791320264.088281,
+    "ast_hash": "2531f43bbf820c5bb963cad1850917b4",
     "semantic_hash": ""
   },
   "react-app/index.html": {
@@ -564,9 +564,9 @@
     "semantic_hash": ""
   },
   "bundles/latest.json": {
-    "mtime": 1791319570.316077,
-    "seen": 1791319602.629404,
-    "ast_hash": "bd91089b6f117a204c41594ee36b555f",
+    "mtime": 1791320252.6447341,
+    "seen": 1791320264.088281,
+    "ast_hash": "0d06718c26d49bb82c0666325786c054",
     "semantic_hash": ""
   },
   "react-app/src/lib/otaUpdate.ts": {
