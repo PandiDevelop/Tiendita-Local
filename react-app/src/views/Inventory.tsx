@@ -272,12 +272,14 @@ export function Inventory() {
             visibleGroups.map((g) => {
               const open = searching ? true : catOpen(g.name);
               const editable = g.name !== 'Sin categoría';
+              const catUnits = g.list.reduce((n, p) => n + Math.max(0, cur(p) - (sold[p.id] || 0)), 0);
               return (
                 <div className="cat-group" key={g.name}>
                   <div className="cat-head">
                     <button className="cat-head-toggle" onClick={() => toggleCat(g.name)}>
                       <span className="cat-caret"><CaretIcon size={15} deg={open ? 0 : -90} /></span><b>{esc(g.name)}</b>
                       <span className="muted">· {g.list.length} producto{g.list.length === 1 ? '' : 's'}</span>
+                      <span className="muted">· {catUnits} Unidades</span>
                     </button>
                     {editable && (
                       <GearMenu items={[

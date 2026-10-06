@@ -205,6 +205,7 @@ export function Catalog() {
         const list = prodDrag && prodDrag.cat === g.name
           ? prodDrag.order.map((id) => g.list.find((p) => p.id === id)).filter((p): p is Product => !!p)
           : g.list;
+        const catUnits = g.list.reduce((n, p) => n + Math.max(0, (inv[p.id] ?? 0) - (sold[p.id] || 0)), 0);
         return (
           <div className={'cat-group' + (draggingCat === g.name ? ' dragging' : '')} key={g.name} data-cat={g.name}>
             <div className="cat-head">
@@ -214,6 +215,7 @@ export function Catalog() {
               <button className="cat-head-toggle" onClick={() => toggleCat(g.name)}>
                 <span className="cat-caret"><CaretIcon size={15} deg={open ? 0 : -90} /></span><b>{esc(g.name)}</b>
                 <span className="muted">· {g.list.length} producto{g.list.length === 1 ? '' : 's'}</span>
+                <span className="muted">· {catUnits} Unidades</span>
               </button>
               {editable && (
                 <GearMenu items={[
