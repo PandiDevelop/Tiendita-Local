@@ -173,7 +173,7 @@ export function StoreModal({ editing, onClose }: { editing?: boolean; onClose: (
                 <input id="sync-name" maxLength={30} placeholder="Tu nombre" value={myName} onChange={(e) => setMyName(e.target.value)} />
               </div>
               <div><div className="label" style={{ margin: '0 0 6px' }}>Código de vinculación</div>
-                <input id="sync-pin" maxLength={30} placeholder="Código de vinculación" value={pin} onChange={(e) => setPin(e.target.value)} />
+                <input id="sync-pin" maxLength={6} autoCapitalize="characters" autoCorrect="off" spellCheck={false} placeholder="Código de 6 caracteres" value={pin} onChange={(e) => setPin(e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 6))} />
               </div>
               <p className="muted" style={{ marginTop: 4 }}>Los del mismo código ven y editan la tienda.</p>
             </div>

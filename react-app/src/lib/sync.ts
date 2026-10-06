@@ -1,7 +1,7 @@
 import { initializeApp, FirebaseApp } from 'firebase/app';
 import { initializeFirestore, Firestore, collection, doc, query, onSnapshot, setDoc, getDoc, getDocs, deleteDoc, deleteField } from 'firebase/firestore';
 import type { AppState, Member, NotifCat, Product, Role, Sale, Store } from '../types';
-import { toProductsArr, toSalesArr, toInvLogArr, toNoteLogArr, toNoteBoardArr, mergeItems, mergeInvLog, mergeNoteLog, syncKeyOf, syncClientId, syncName, normalizeStore, DEFAULT_STORE_IMAGE, uid, isNoteDeleted, markNoteDeleted, deletedNoteIdsOf, clearDeletedNotes, rememberDeletedStore, deletedStores, forgetDeletedStore, toCostArr, mergeCostEntries } from './core';
+import { toProductsArr, toSalesArr, toInvLogArr, toNoteLogArr, toNoteBoardArr, mergeItems, mergeInvLog, mergeNoteLog, syncKeyOf, syncGenPin, syncClientId, syncName, normalizeStore, DEFAULT_STORE_IMAGE, uid, isNoteDeleted, markNoteDeleted, deletedNoteIdsOf, clearDeletedNotes, rememberDeletedStore, deletedStores, forgetDeletedStore, toCostArr, mergeCostEntries } from './core';
 import type { DeletedStoreRecord } from './core';
 import { customAlert, customConfirm } from './dialog';
 
@@ -771,6 +771,50 @@ export async function storeNameTaken(name: string, excludeKey?: string): Promise
     console.warn('No se pudo validar el nombre de la tienda:', e);
     return false;
   }
+}
+
+// Los códigos de tienda son siempre de 6 caracteres, mezcla de letras y
+// números, todo en mayúsculas (ver syncGenPin en core.ts). Este helper dice si
+// un código tiene ese formato.
+export function isValidStorePin(pin: string | null | undefined): boolean {
+  return !!pin && /^[A-Z0-9]{6}$/.test(pin.trim());
+}
+
+// Reasigna el código de una tienda local cuyo pin no es un pin válido de 6
+// caracteres (o no corresponde a su syncKey): genera un pin nuevo, COPIA el
+// documento de la nube (con su subcolección de productos) a la nueva key
+// derivada del pin, deja la key vieja con la lápida deleted (así ningún
+// dispositivo la vuelve a traer) y actualiza la copia local. Esto pasa por
+// ejemplo en tiendas viejas creadas antes de los pines, que mostraban el
+// syncKey ("stXXXXXXXX") como código y nadie podía unirse escribiéndolo.
+// Devuelve true si el código cambió. Best-effort: si no hay conexión o
+// algo falla devuelve false y el arranque siguiente lo vuelve a intentar.
+export async function ensureStoreCode(s: Store, mutate: (fn: (d: AppState) => void) => void): Promise<boolean> {
+  if (!s.syncKey) return false;
+  const cur = (s.syncPin || '').trim();
+  if (isValidStorePin(cur) && syncKeyOf(cur) === s.syncKey) return false;
+  if (!syncReady() || !DB) return false;
+  const newPin = syncGenPin();
+  const newKey = syncKeyOf(newPin);
+  try {
+    const oldRef = storeDocRef(s.syncKey);
+    const snap = await getDoc(oldRef);
+    if (!snap.exists()) return false;
+    const main = snap.data();
+    if (main.deleted) return false;
+    const prods = await getDocs(collection(oldRef, 'products'));
+    await setDoc(storeDocRef(newKey), main, { merge: true });
+    await Promise.all(prods.docs.map((pd) => setDoc(productDocRef(newKey, pd.id), pd.data(), { merge: true })));
+    await setDoc(oldRef, { deleted: true, deletedAt: Date.now(), updatedBy: syncClientId() }, { merge: true });
+  } catch (e) {
+    console.warn('No se pudo reasignar el código de la tienda:', e);
+    return false;
+  }
+  mutate((d) => {
+    const st = d.stores.find((x) => x.id === s.id);
+    if (st) { st.syncKey = newKey; st.syncPin = newPin; }
+  });
+  return true;
 }
 
 export async function joinStore(pin: string, getState: () => AppState, mutate: (fn: (d: AppState) => void) => void, attach: (id: string) => void) {

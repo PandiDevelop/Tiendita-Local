@@ -30,7 +30,7 @@ export function JoinModal({ onClose }: { onClose: () => void }) {
         <input id="sync-name" maxLength={30} placeholder="Cómo te llaman tus compañeros" value={name} onChange={(e) => setName(e.target.value)} />
       </div>
       <div className="field"><label>¿Tienes el código de tu tienda?</label>
-        <input id="sync-pin" maxLength={30} placeholder="Código compartido" value={pin} onChange={(e) => setPin(e.target.value)} />
+        <input id="sync-pin" maxLength={6} autoCapitalize="characters" autoCorrect="off" spellCheck={false} placeholder="Código de 6 caracteres" value={pin} onChange={(e) => setPin(e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 6))} />
       </div>
       <p className="muted">Pega el código que te dieron y verás la tienda aquí.</p>
       <div className="modal-actions">

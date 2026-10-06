@@ -1,7 +1,7 @@
 import { createContext, useCallback, useContext, useEffect, useRef, ReactNode, useState } from 'react';
 import type { AppState, InventoryLogEntry, Product, Sale, Store, Tab } from './types';
 import { loadState, saveState, samePerson, syncClientId, NOTE_TTL_MS, deletedStores } from './lib/core';
-import { createSync, applyRemote, activateSync, joinStore, pullJoinedStores, SyncHandle, pruneDeletedStores } from './lib/sync';
+import { createSync, applyRemote, activateSync, joinStore, pullJoinedStores, SyncHandle, pruneDeletedStores, ensureStoreCode } from './lib/sync';
 import { onAccountChange } from './lib/account';
 import { archiveUpsert, archiveMarkGone, noteToArchiveEntry, replyToArchiveEntry } from './lib/notesArchive';
 import { playNoteChime, showSystemNotification } from './lib/sound';
@@ -105,7 +105,22 @@ export function AppProvider({ children }: { children: ReactNode }) {
   }
 
   useEffect(() => {
-    state.stores.forEach((s) => { if (s.syncKey) sync.current!.attach(s.id); });
+    // Arranque: a las tiendas viejas (creadas antes de existir los pines) les
+    // falta syncPin y mostraban el syncKey como código, así nadie podía
+    // unirse escribiéndolo. Se les reasigna un pin de 6 caracteres (y se mueve
+    // el documento en la nube) ANTES de suscribirse; solo el dueño del
+    // dispositivo las tiene así, un trabajador siempre entra con un pin. Si no
+    // hay conexión se reintenta en el próximo arranque.
+    (async () => {
+      for (const s of state.stores) {
+        if (!s.syncKey) continue;
+        const isOwnerHere = !s.createdBy || s.createdBy === syncClientId();
+        if (isOwnerHere) {
+          try { await ensureStoreCode(s, replace); } catch { /* sin conexión */ }
+        }
+        if (s.syncKey) sync.current!.attach(s.id);
+      }
+    })();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
