@@ -427,6 +427,7 @@ td.cat-bar .product-name .prod-tag{margin-left:auto;flex:0 1 auto;min-width:0;ma
 .settings-account input{flex:1;width:100%;padding:11px 12px;border:1px solid var(--line);border-radius:10px;color:var(--ink);background:var(--surface)}
 .link-btn{background:none;border:0;color:var(--brand-deep);font-weight:700;cursor:pointer;padding:6px 0;text-decoration:underline}
 .account-note{background:var(--lav);color:var(--brand-deep);padding:10px 12px;border-radius:10px;font-weight:700;margin:10px 0 0}
+.account-note-error{background:var(--pink);color:var(--red);border:1px solid var(--red)}
 .settings-account-head{display:flex;align-items:center;justify-content:space-between;gap:10px}
 .settings-account-head h2{margin:0}
 .settings-account-head .account-close{flex:0 0 auto;height:32px;width:32px;border-radius:9px;background:var(--lav);border:1px solid var(--line);color:var(--brand-deep);display:inline-flex;align-items:center;justify-content:center}

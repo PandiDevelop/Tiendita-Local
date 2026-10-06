@@ -162,8 +162,8 @@
     "semantic_hash": ""
   },
   "sw.js": {
-    "mtime": 1791320636.8094802,
-    "seen": 1791320658.2412076,
+    "mtime": 1791321042.307914,
+    "seen": 1791321067.2892573,
     "ast_hash": "41696215b42347d018b9607a529a777d",
     "semantic_hash": ""
   },
@@ -180,9 +180,9 @@
     "semantic_hash": ""
   },
   "index.html": {
-    "mtime": 1791320636.0702696,
-    "seen": 1791320658.2412076,
-    "ast_hash": "6a8c3eb3eb6023f7bc835469691cd6d8",
+    "mtime": 1791321041.5808384,
+    "seen": 1791321067.2892573,
+    "ast_hash": "f09e35e4b7d27b85e35681f6484fee13",
     "semantic_hash": ""
   },
   "react-app/index.html": {
@@ -276,9 +276,9 @@
     "semantic_hash": ""
   },
   "react-app/src/views/SettingsModal.tsx": {
-    "mtime": 1790026460.8983693,
-    "seen": 1790026731.911283,
-    "ast_hash": "98f4253f8c1fc0d7152fcc54c84b5e90",
+    "mtime": 1791321015.0148544,
+    "seen": 1791321067.2892573,
+    "ast_hash": "0786a4e397292a81bb4c47b7c1a70eba",
     "semantic_hash": ""
   },
   "react-app/src/test/settings.test.ts": {
@@ -378,9 +378,9 @@
     "semantic_hash": ""
   },
   "react-app/src/views/AuthLanding.tsx": {
-    "mtime": 1789605833.2601497,
-    "seen": 1789605944.3449762,
-    "ast_hash": "159b7c51d418cf79a763d0405a12a951",
+    "mtime": 1791320986.4662855,
+    "seen": 1791321067.2892573,
+    "ast_hash": "a0711090f3838f8ddf0dc08b44b6e3f2",
     "semantic_hash": ""
   },
   "react-app/src/views/StorePicker.tsx": {
@@ -564,9 +564,9 @@
     "semantic_hash": ""
   },
   "bundles/latest.json": {
-    "mtime": 1791320641.2012308,
-    "seen": 1791320658.2412076,
-    "ast_hash": "fdc883370a117c11df1c080a66444d24",
+    "mtime": 1791321052.5961754,
+    "seen": 1791321067.2892573,
+    "ast_hash": "e5a8e1091bb2572921de6c21632405c0",
     "semantic_hash": ""
   },
   "react-app/src/lib/otaUpdate.ts": {

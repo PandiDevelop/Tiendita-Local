@@ -57,13 +57,30 @@ export function SettingsModal({ onClose }: { onClose: () => void }) {
   const [auser, setAuser] = useState('');
   const [showPass, setShowPass] = useState(false);
   const [accNote, setAccNote] = useState<string | null>(null);
+  const [accErr, setAccErr] = useState<string | null>(null);
   const accNoteTimer = useRef<number | null>(null);
 
   // Mensaje temporal de la popup de cuenta (se ve durante unos segundos).
+  // Los errores NO se ocultan solos: se quedan visibles hasta que el usuario
+  // corrija/corrija el intento, para que quede claro que la contraseña (o el
+  // correo) quedó mal y no parece que no pasara nada.
   function flashAccNote(msg: string) {
     setAccNote(msg);
     if (accNoteTimer.current) window.clearTimeout(accNoteTimer.current);
     accNoteTimer.current = window.setTimeout(() => setAccNote(null), 4000);
+  }
+
+  function showAccError(msg: string) {
+    setAccErr(msg);
+    setAccNote(msg);
+  }
+
+  function clearAccError() {
+    if (accErr) setAccErr(null);
+  }
+
+  function accNoteClass(): string {
+    return accErr ? 'account-note account-note-error' : 'account-note';
   }
 
   function closeAccountPopup() {
@@ -72,6 +89,7 @@ export function SettingsModal({ onClose }: { onClose: () => void }) {
     setAuser('');
     setShowPass(false);
     setAccNote(null);
+    setAccErr(null);
     setShowAccount(false);
   }
 
@@ -86,7 +104,7 @@ export function SettingsModal({ onClose }: { onClose: () => void }) {
     try {
       const from = currentIdentity();
       const r = await signInAccount(aemail, apass);
-      if (!r.ok || !r.uid) { flashAccNote(r.message); toast(r.message); return; }
+      if (!r.ok || !r.uid) { showAccError(r.message); toast(r.message); return; }
       setAccountEmail(r.email || null);
       const link = await linkStoresToAccount(r.uid, from, () => state, replace);
       setAccountId(r.uid);
@@ -108,8 +126,12 @@ export function SettingsModal({ onClose }: { onClose: () => void }) {
     setAccBusy(true);
     try {
       const r = await registerAccount(aemail, apass, auser);
-      if (r.ok) setApass('');
-      flashAccNote(r.message);
+      if (r.ok) {
+        setApass('');
+        flashAccNote(r.message);
+      } else {
+        showAccError(r.message);
+      }
       toast(r.message);
     } finally {
       setAccBusy(false);
@@ -122,7 +144,8 @@ export function SettingsModal({ onClose }: { onClose: () => void }) {
     setAccBusy(true);
     try {
       const r = await sendPasswordReset(aemail);
-      flashAccNote(r.message);
+      if (r.ok) flashAccNote(r.message);
+      else showAccError(r.message);
       toast(r.message);
     } finally {
       setAccBusy(false);
@@ -251,12 +274,12 @@ export function SettingsModal({ onClose }: { onClose: () => void }) {
               <>
                 <div className="field settings-account">
                   <label htmlFor="account-email">Correo</label>
-                  <input id="account-email" type="email" maxLength={120} autoComplete="email" placeholder="tucorreo@ejemplo.com" value={aemail} onChange={(e) => setAemail(e.target.value)} />
+                  <input id="account-email" type="email" maxLength={120} autoComplete="email" placeholder="tucorreo@ejemplo.com" value={aemail} onChange={(e) => { setAemail(e.target.value); clearAccError(); }} />
                 </div>
                 <div className="field settings-account">
                   <label htmlFor="account-pass">Contraseña</label>
                   <div className="password-wrap">
-                    <input id="account-pass" type={showPass ? 'text' : 'password'} maxLength={120} autoComplete="current-password" placeholder="Mínimo 6 caracteres" value={apass} onChange={(e) => setApass(e.target.value)} />
+                    <input id="account-pass" type={showPass ? 'text' : 'password'} maxLength={120} autoComplete="current-password" placeholder="Tu contraseña" value={apass} onChange={(e) => { setApass(e.target.value); clearAccError(); }} />
                     <button type="button" className="password-toggle" onClick={() => setShowPass(!showPass)} title={showPass ? 'Ocultar contraseña' : 'Ver contraseña'} aria-label={showPass ? 'Ocultar contraseña' : 'Ver contraseña'}>
                       {showPass ? <EyeOffIcon size={16} /> : <EyeIcon size={16} />}
                     </button>
@@ -264,7 +287,7 @@ export function SettingsModal({ onClose }: { onClose: () => void }) {
                 </div>
                 <div className="field settings-account">
                   <label htmlFor="account-name">Nombre de usuario</label>
-                  <input id="account-name" type="text" maxLength={30} autoComplete="nickname" placeholder="Cómo te llamarán tus compañeros" value={auser} onChange={(e) => setAuser(e.target.value)} />
+                  <input id="account-name" type="text" maxLength={30} autoComplete="nickname" placeholder="Cómo te llamarán tus compañeros" value={auser} onChange={(e) => { setAuser(e.target.value); clearAccError(); }} />
                 </div>
                 <div className="settings-row account-actions" style={{ flexWrap: 'wrap' }}>
                   <button className="button secondary" disabled={accBusy} onClick={doSignIn}>Iniciar sesión</button>
@@ -275,7 +298,7 @@ export function SettingsModal({ onClose }: { onClose: () => void }) {
                 <p className="muted">Te enviaremos un correo para confirmar tu cuenta antes de usarla.</p>
               </>
             )}
-            {accNote && <p className="account-note" role="status">{accNote}</p>}
+            {accNote && <p className={accNoteClass()} role="status">{accNote}</p>}
             {accBusy && (
               <div className="account-loading" role="status" aria-label="Cargando">
                 <span className="spinner" />

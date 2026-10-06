@@ -26,6 +26,7 @@ export function AuthLanding({ onCreate, onJoin }: { onCreate: () => void; onJoin
   const [showPass, setShowPass] = useState(false);
   const [busy, setBusy] = useState(false);
   const [note, setNote] = useState<string | null>(null);
+  const [noteKind, setNoteKind] = useState<'ok' | 'error' | null>(null);
   const [doneMsg, setDoneMsg] = useState('');
 
   // Transición suave entre pasos: primero se desvanece lo actual y, al
@@ -35,7 +36,7 @@ export function AuthLanding({ onCreate, onJoin }: { onCreate: () => void; onJoin
     if (fadeTimer.current) window.clearTimeout(fadeTimer.current);
     setVisible(false);
     fadeTimer.current = window.setTimeout(() => {
-      if (!keepNote) setNote(null);
+      if (!keepNote) { setNote(null); setNoteKind(null); }
       setStep(next);
       setVisible(true);
     }, 190);
@@ -60,12 +61,12 @@ export function AuthLanding({ onCreate, onJoin }: { onCreate: () => void; onJoin
 
   async function doSignIn() {
     if (busy) return;
-    if (!email.trim() || !pass) { setNote('Escribe tu correo y tu contraseña.'); return; }
+    if (!email.trim() || !pass) { setNote('Escribe tu correo y tu contraseña.'); setNoteKind('error'); return; }
     setBusy(true);
     try {
       const from = currentIdentity();
       const r = await signInAccount(email, pass);
-      if (!r.ok || !r.uid) { setNote(r.message); return; }
+      if (!r.ok || !r.uid) { setNote(r.message); setNoteKind('error'); return; }
       setAccountEmail(r.email || null);
       await linkStoresToAccount(r.uid, from, getState, replace);
       setAccountId(r.uid);
@@ -78,10 +79,12 @@ export function AuthLanding({ onCreate, onJoin }: { onCreate: () => void; onJoin
       if (stores.length === 1) { pickStore(stores[0].id); return; }
       if (stores.length > 1) { openPicker(); return; }
       setNote('Sesión iniciada, pero tu cuenta todavía no tiene tiendas: crea una o únete con un código.');
+      setNoteKind('ok');
       toast('Sesión iniciada.');
       go('local', true);
     } catch {
       setNote('No se pudo iniciar sesión. Revisa tu conexión.');
+      setNoteKind('error');
     } finally {
       setBusy(false);
     }
@@ -89,13 +92,13 @@ export function AuthLanding({ onCreate, onJoin }: { onCreate: () => void; onJoin
 
   async function doRegister() {
     if (busy) return;
-    if (!user.trim()) { setNote('Escribe tu nombre de usuario.'); return; }
-    if (!email.trim()) { setNote('Escribe tu correo.'); return; }
-    if (pass.length < 6) { setNote('La contraseña debe tener al menos 6 caracteres.'); return; }
+    if (!user.trim()) { setNote('Escribe tu nombre de usuario.'); setNoteKind('error'); return; }
+    if (!email.trim()) { setNote('Escribe tu correo.'); setNoteKind('error'); return; }
+    if (pass.length < 6) { setNote('La contraseña debe tener al menos 6 caracteres.'); setNoteKind('error'); return; }
     setBusy(true);
     try {
       const r = await registerAccount(email, pass, user);
-      if (!r.uid) { setNote(r.message); return; }
+      if (!r.uid) { setNote(r.message); setNoteKind('error'); return; }
       setDoneMsg(r.ok
         ? `Te enviamos un correo a ${email.trim()} para activar tu cuenta. Ábrelo (revisa también el spam) y luego vuelve a iniciar sesión.`
         : r.message);
@@ -107,14 +110,19 @@ export function AuthLanding({ onCreate, onJoin }: { onCreate: () => void; onJoin
 
   async function doReset() {
     if (busy) return;
-    if (!email.trim()) { setNote('Escribe tu correo primero.'); return; }
+    if (!email.trim()) { setNote('Escribe tu correo primero.'); setNoteKind('error'); return; }
     setBusy(true);
     try {
       const r = await sendPasswordReset(email);
       setNote(r.message);
+      setNoteKind(r.ok ? 'ok' : 'error');
     } finally {
       setBusy(false);
     }
+  }
+
+  function noteClass(): string {
+    return noteKind === 'error' ? 'account-note account-note-error' : 'account-note';
   }
 
   const body = () => {
@@ -124,18 +132,18 @@ export function AuthLanding({ onCreate, onJoin }: { onCreate: () => void; onJoin
           <h2>Inicia sesión</h2>
           <div className="field">
             <label htmlFor="auth-email">Correo</label>
-            <input id="auth-email" type="email" maxLength={120} autoComplete="email" placeholder="tucorreo@ejemplo.com" value={email} onChange={(e) => setEmail(e.target.value)} />
+            <input id="auth-email" type="email" maxLength={120} autoComplete="email" placeholder="tucorreo@ejemplo.com" value={email} onChange={(e) => { setEmail(e.target.value); setNote(null); setNoteKind(null); }} />
           </div>
           <div className="field">
             <label htmlFor="auth-pass">Contraseña</label>
             <div className="password-wrap">
-              <input id="auth-pass" type={showPass ? 'text' : 'password'} maxLength={120} autoComplete="current-password" placeholder="Tu contraseña" value={pass} onChange={(e) => setPass(e.target.value)} />
+              <input id="auth-pass" type={showPass ? 'text' : 'password'} maxLength={120} autoComplete="current-password" placeholder="Tu contraseña" value={pass} onChange={(e) => { setPass(e.target.value); setNote(null); setNoteKind(null); }} />
               <button type="button" className="password-toggle" onClick={() => setShowPass(!showPass)} title={showPass ? 'Ocultar contraseña' : 'Ver contraseña'} aria-label={showPass ? 'Ocultar contraseña' : 'Ver contraseña'}>
                 {showPass ? <EyeOffIcon size={16} /> : <EyeIcon size={16} />}
               </button>
             </div>
           </div>
-          {note && <p className="account-note" role="status">{note}</p>}
+          {note && <p className={noteClass()} role="status">{note}</p>}
           <div className="auth-actions">
             <button className="button secondary" disabled={busy} onClick={() => go('choice')}>Cancelar</button>
             <button className="button primary" disabled={busy} onClick={doSignIn}>Conectarse</button>
@@ -150,23 +158,23 @@ export function AuthLanding({ onCreate, onJoin }: { onCreate: () => void; onJoin
           <h2>Crear cuenta</h2>
           <div className="field">
             <label htmlFor="reg-user">Nombre de usuario</label>
-            <input id="reg-user" type="text" maxLength={30} autoComplete="nickname" placeholder="Cómo te llamarán tus compañeros" value={user} onChange={(e) => setUser(e.target.value)} />
+            <input id="reg-user" type="text" maxLength={30} autoComplete="nickname" placeholder="Cómo te llamarán tus compañeros" value={user} onChange={(e) => { setUser(e.target.value); setNote(null); setNoteKind(null); }} />
           </div>
           <div className="field">
             <label htmlFor="reg-email">Correo</label>
-            <input id="reg-email" type="email" maxLength={120} autoComplete="email" placeholder="tucorreo@ejemplo.com" value={email} onChange={(e) => setEmail(e.target.value)} />
+            <input id="reg-email" type="email" maxLength={120} autoComplete="email" placeholder="tucorreo@ejemplo.com" value={email} onChange={(e) => { setEmail(e.target.value); setNote(null); setNoteKind(null); }} />
           </div>
           <div className="field">
             <label htmlFor="reg-pass">Contraseña</label>
             <div className="password-wrap">
-              <input id="reg-pass" type={showPass ? 'text' : 'password'} maxLength={120} autoComplete="new-password" placeholder="Mínimo 6 caracteres" value={pass} onChange={(e) => setPass(e.target.value)} />
+              <input id="reg-pass" type={showPass ? 'text' : 'password'} maxLength={120} autoComplete="new-password" placeholder="Mínimo 6 caracteres" value={pass} onChange={(e) => { setPass(e.target.value); setNote(null); setNoteKind(null); }} />
               <button type="button" className="password-toggle" onClick={() => setShowPass(!showPass)} title={showPass ? 'Ocultar contraseña' : 'Ver contraseña'} aria-label={showPass ? 'Ocultar contraseña' : 'Ver contraseña'}>
                 {showPass ? <EyeOffIcon size={16} /> : <EyeIcon size={16} />}
               </button>
             </div>
             <p className="pw-req">La contraseña debe tener al menos 6 caracteres.</p>
           </div>
-          {note && <p className="account-note" role="status">{note}</p>}
+          {note && <p className={noteClass()} role="status">{note}</p>}
           <div className="auth-actions">
             <button className="button secondary" disabled={busy} onClick={() => go('choice')}>Cancelar</button>
             <button className="button primary" disabled={busy} onClick={doRegister}>Crear cuenta</button>
@@ -188,7 +196,7 @@ export function AuthLanding({ onCreate, onJoin }: { onCreate: () => void; onJoin
     if (step === 'local') {
       return (
         <>
-          {note && <p className="account-note" role="status">{note}</p>}
+          {note && <p className={noteClass()} role="status">{note}</p>}
           <div className="landing-actions">
             <button className="button primary" onClick={onCreate}>Crear mi primera tienda</button>
             <button className="button secondary" onClick={onJoin}>Unirme a una tienda</button>
