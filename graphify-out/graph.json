@@ -13482,7 +13482,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "react-app/src/views/Catalog.tsx",
-      "source_location": "L236",
+      "source_location": "L238",
       "weight": 1.0
     },
     {
@@ -13494,7 +13494,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "react-app/src/views/Catalog.tsx",
-      "source_location": "L237",
+      "source_location": "L239",
       "weight": 1.0
     },
     {
@@ -14418,7 +14418,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "react-app/src/views/Inventory.tsx",
-      "source_location": "L343",
+      "source_location": "L345",
       "weight": 1.0
     },
     {
@@ -17419,6 +17419,18 @@
       "context": "call",
       "source_file": "react-app/src/views/Inventory.tsx",
       "source_location": "L59",
+      "weight": 1.0
+    },
+    {
+      "source": "react_app_src_views_inventory_inventory",
+      "target": "react_app_src_views_inventory_inventory_cur",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "call",
+      "source_file": "react-app/src/views/Inventory.tsx",
+      "source_location": "L68",
       "weight": 1.0
     },
     {
@@ -32921,17 +32933,6 @@
       "weight": 1.0
     },
     {
-      "source": "react_app_src_views_inventory_inventory",
-      "target": "react_app_src_views_inventory_inventory_cur",
-      "relation": "contains",
-      "_origin": "ast",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "react-app/src/views/Inventory.tsx",
-      "source_location": "L68",
-      "weight": 1.0
-    },
-    {
       "source": "react_app_src_views_join",
       "target": "react_app_src_views_join_joinmodal",
       "relation": "contains",
@@ -34122,5 +34123,5 @@
     }
   ],
   "hyperedges": [],
-  "built_at_commit": "0d11efcfecbd905bad0b214ec37757f561417b0a"
+  "built_at_commit": "84508edbfae6ce6d0d7f7e453de428a2c275f5cb"
 }
