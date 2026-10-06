@@ -6,6 +6,7 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc && vite build && node scripts/inject-sw-version.mjs",
+    "deploy": "node scripts/deploy-web.mjs",
     "preview": "vite preview",
     "test": "vitest run"
   },
