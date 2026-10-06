@@ -101,6 +101,9 @@ export function AppProvider({ children }: { children: ReactNode }) {
             : 'No se pudo sincronizar con la nube. Revisa tu conexión.'
         );
       },
+      (storeId, pin) => {
+        replace((d) => { const st = d.stores.find((x) => x.id === storeId); if (st) st.syncPin = pin; });
+      },
     );
   }
 

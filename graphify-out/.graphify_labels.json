@@ -1,9 +1,10 @@
 {
   "0": "sync.ts",
   "1": "setup.ts",
-  "2": "ProductForm.tsx",
+  "2": "syncClientId",
   "3": "SettingsModal.tsx",
   "4": "react-app/package.json",
+  "5": "core.ts",
   "7": "compilerOptions",
   "8": "ui.tsx",
   "9": "vite-env.d.ts",
@@ -14,11 +15,10 @@
   "16": "index.js",
   "17": "push-worker/package.json",
   "18": "Avisos push reales para Mi Tiendita (con la app cerrada del todo)",
-  "19": "core.ts",
+  "19": "Notes.tsx",
   "22": "deploy-web.mjs",
-  "23": "DevThemes.tsx",
+  "23": "testUtils.tsx",
   "24": "inject-sw-version.mjs",
   "27": "useStore",
-  "30": "store.tsx",
-  "31": "Inventory"
+  "30": "store.tsx"
 }

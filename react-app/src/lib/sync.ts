@@ -198,6 +198,7 @@ export function createSync(
   applyRemote: (storeId: string, remote: Record<string, unknown>) => void,
   removeStore: (storeId: string, msg: string) => void,
   onPushFailing?: (storeId: string, code?: string) => void,
+  setStorePin?: (storeId: string, pin: string) => void,
 ): SyncHandle {
   const subs = new Map<string, () => void>();
   const timers = new Map<string, ReturnType<typeof setTimeout>>();
@@ -501,6 +502,19 @@ export function createSync(
         removeStore(storeId, 'Esta tienda fue borrada por otro dispositivo.');
         return;
       }
+      // Convergencia del código: el documento guarda el código vigente en el
+      // campo "code", para que CUALQUIER dispositivo del equipo muestre el
+      // mismo código (aunque el pin solo lo conozca el que lo generó). Si este
+      // dispositivo tiene un pin válido que corresponde a esta key y el doc
+      // todavía no lo guarda, lo publica (best-effort); y si el doc ya tiene
+      // uno vigente, lo adopta en la copia local.
+      const docCode = (typeof d.code === 'string' ? d.code : '').trim();
+      const localPin = (getState().stores.find((x) => x.id === storeId)?.syncPin || '').trim();
+      if (isValidStorePin(docCode) && syncKeyOf(docCode) === s.syncKey) {
+        if (docCode !== localPin) setStorePin?.(storeId, docCode);
+      } else if (isValidStorePin(localPin) && syncKeyOf(localPin) === s.syncKey && localPin !== docCode) {
+        setDoc(storeDocRef(s.syncKey), { code: localPin, updatedBy: cid() }, { merge: true }).catch((e) => console.warn('Publicar código:', e));
+      }
       if (d.updatedBy !== cid()) applyRemote(storeId, d);
       if (Array.isArray(d.noteLog) || Array.isArray(d.invLog)) repairDoc(storeId, d);
       // Tiendas creadas con el modelo viejo llevan los productos embebidos en
@@ -803,8 +817,18 @@ export async function ensureStoreCode(s: Store, mutate: (fn: (d: AppState) => vo
     if (!snap.exists()) return null;
     const main = snap.data();
     if (main.deleted) return null;
+    // Si la nube ya guarda el código vigente de esta tienda (ver "code" en
+    // attach/join/activate), se adopta tal cual en lugar de generar uno nuevo:
+    // así un segundo dispositivo del dueño muestra el MISMO código que el
+    // resto del equipo, sin rekeyear y sin separar a nadie.
+    const remoteCode = (typeof main.code === 'string' ? main.code : '').trim();
+    if (isValidStorePin(remoteCode) && syncKeyOf(remoteCode) === s.syncKey) {
+      mutate((d) => { const st = d.stores.find((x) => x.id === s.id); if (st && st.syncPin !== remoteCode) st.syncPin = remoteCode; });
+      return null;
+    }
     const prods = await getDocs(collection(oldRef, 'products'));
     await setDoc(storeDocRef(newKey), main, { merge: true });
+    await setDoc(storeDocRef(newKey), { code: newPin, updatedBy: syncClientId() }, { merge: true });
     await Promise.all(prods.docs.map((pd) => setDoc(productDocRef(newKey, pd.id), pd.data(), { merge: true })));
     await setDoc(oldRef, { deleted: true, deletedAt: Date.now(), updatedBy: syncClientId() }, { merge: true });
   } catch (e) {
@@ -852,7 +876,7 @@ export async function joinStore(pin: string, getState: () => AppState, mutate: (
     const members: Record<string, Member> = {};
     members[syncClientId()] = { name: syncName(), role: meIsOwner ? 'owner' : 'worker', joinedAt: Date.now(), eid: (remote[syncClientId()] && remote[syncClientId()].eid) || uid() };
     const memberIds = Array.from(new Set([...Object.keys(remote), ...Object.keys(members)]));
-    await setDoc(ref, { members, memberIds }, { merge: true });
+    await setDoc(ref, { members, memberIds, code: pin }, { merge: true });
     // Productos: se combinan los que aun puedan vivir embebidos en el
     // documento principal (modelo viejo) con los de la subcoleccion (modelo
     // nuevo), ganando la subcoleccion en caso de conflicto.
@@ -926,7 +950,7 @@ export async function activateSync(storeId: string, pin: string, getState: () =>
         categoryPricing: s.categoryPricing || {},
         notes: s.notes || '', noteLog, invLog, inventory: s.inventory || {},
         events: s.events || [],
-        createdBy: syncClientId(), members, memberIds: Object.keys(members), updatedBy: syncClientId(),
+        createdBy: syncClientId(), members, memberIds: Object.keys(members), updatedBy: syncClientId(), code: pin,
       }, { merge: true });
       mutate((d) => { const st = d.stores.find((x) => x.id === storeId); if (st) { st.localRole = 'owner'; st.syncKey = key; st.syncPin = pin; } });
       // Conectar el listener YA, antes del aviso: si se espera a que el
@@ -1089,7 +1113,7 @@ function buildStoreFromRemote(r: Record<string, unknown>, key: string, code: str
     noteBoard: toNoteBoardArr(r.noteBoard),
     invLog: toInvLogArr(r.invLog),
     syncKey: key,
-    syncPin: code,
+    syncPin: code || (typeof r.code === 'string' ? r.code : ''),
     createdBy: `${r.createdBy || syncClientId()}`,
     members: Object.assign({}, JSON.parse(JSON.stringify((r.members || {}))), membersLocal),
     localRole: r.createdBy === syncClientId() ? 'owner' : 'worker',
@@ -1145,6 +1169,7 @@ export async function pullJoinedStores(accountUid: string, getState: () => AppSt
         noteBoard: toNoteBoardArr(r.noteBoard),
         invLog: toInvLogArr(r.invLog),
         syncKey: key,
+        syncPin: (typeof r.code === 'string' && r.code.trim()) || undefined,
         createdBy: r.createdBy ? `${r.createdBy}` : null,
         members: JSON.parse(JSON.stringify(members)),
         localRole: owner ? 'owner' : me && (me.role === 'owner' || me.role === 'admin') ? me.role : 'worker',
