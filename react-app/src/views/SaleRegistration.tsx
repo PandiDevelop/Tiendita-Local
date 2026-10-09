@@ -245,8 +245,10 @@ export function SaleRegistration({ onClose }: { onClose: () => void }) {
           </div>
           <div className="sale-cart-qty">
             <input className="qty-input" type="number" min={0} step={1} inputMode="numeric" value={qtyDraft[n] !== undefined ? qtyDraft[n] : String(l.qty)} onChange={(e) => setQtyText(n, e.target.value)} onBlur={() => clearQtyDraft(n)} />
-            <button type="button" className="qty-mini" title="Restar 1" aria-label="Restar 1" onClick={() => { clearQtyDraft(n); setLine(n, { qty: Math.max(0, l.qty - 1) }, true); }}>−</button>
-            <button type="button" className="qty-mini" title="Sumar 1" aria-label="Sumar 1" onClick={() => { clearQtyDraft(n); setLine(n, { qty: l.qty + 1 }, true); }}>+</button>
+            <div className="sale-cart-steppers">
+              <button type="button" className="qty-mini" title="Sumar 1" aria-label="Sumar 1" onClick={() => { clearQtyDraft(n); setLine(n, { qty: l.qty + 1 }, true); }}>+</button>
+              <button type="button" className="qty-mini" title="Restar 1" aria-label="Restar 1" onClick={() => { clearQtyDraft(n); setLine(n, { qty: Math.max(0, l.qty - 1) }, true); }}>−</button>
+            </div>
           </div>
         </div>
       </div>
