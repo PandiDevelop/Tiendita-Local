@@ -608,7 +608,7 @@ export function SuggestInput({ options, value, onChange, onPick, placeholder, ma
   const [open, setOpen] = useState(false);
   const wrapRef = useRef<HTMLDivElement>(null);
   const q = ((value || '').trim()).toLowerCase();
-  const shown = options.filter((c) => c.trim().toLowerCase() !== q && c.trim().toLowerCase().includes(q)).slice(0, 6);
+  const shown = options.filter((c) => c.trim().toLowerCase() !== q && c.trim().toLowerCase().includes(q));
   // Si lo que se escribe ya está registrado exactamente, no hace falta
   // sugerir "Nueva…": lo normal es que quiera elegir el que ya existe.
   const isExisting = !!q && options.some((c) => c.trim().toLowerCase() === q);

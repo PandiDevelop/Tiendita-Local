@@ -863,6 +863,7 @@ input[type="number"]::-webkit-inner-spin-button,input[type="number"]::-webkit-ou
   .sidebar{padding-top:calc(28px + env(safe-area-inset-top,0px));padding-bottom:calc(28px + env(safe-area-inset-bottom,0px))}
 }
 .sale-employee{opacity:.55;cursor:default;background:var(--lav)!important}
+:root[data-theme="pandi"] .sale-employee{opacity:1;color:var(--red)}
 .cat-group .cat-head{cursor:pointer}
 .cat-head .sale-caret{color:var(--brand);display:flex;align-items:center}
 .cat-group .cat-head .sale-caret svg{transition:transform .15s}
