@@ -192,16 +192,20 @@ export function Catalog() {
     <div className="panel">
       <div className="panel-head"><div><h2>Productos</h2><p className="muted">Catálogo con unidades, precios y promociones por categoría. Arrastra ⠿ para ordenar.</p></div></div>
       <div className="cat-actions">
-        <div className="cat-actions-row">
-          <button type="button" className="button primary cat-action-cat" onClick={addCategory}>＋ Categoría</button>
-          <button type="button" className="button primary cat-action-tag" onClick={() => setTagOpen(true)}>＋ Etiqueta</button>
-          <button type="button" className="button primary cat-action-prod" onClick={() => setModal('newProduct')}>＋ Producto</button>
-          <button className="button outline cat-actions-cta" disabled={!s.products.length} onClick={() => setBookOpen(true)}><StorefrontIcon size={16} /> Catálogo virtual</button>
+        <div className="cat-box-row">
+          <div className="cat-action-box">
+            <button type="button" className="button primary" onClick={() => setModal('newProduct')}>＋ Producto</button>
+            <div className="cat-action-box-row">
+              <button type="button" className="button primary" onClick={addCategory}>＋ Categoría</button>
+              <button type="button" className="button primary" onClick={() => setTagOpen(true)}>＋ Etiqueta</button>
+            </div>
+          </div>
+          <div className="cat-action-box">
+            <button type="button" className="button primary" onClick={() => setCargoOpen(true)}><CargoIcon size={15} /> Nuevo cargamento</button>
+            <button type="button" className="button outline" disabled={!s.invLog || !s.invLog.length} onClick={() => setLogOpen(true)}>Historial de inventario</button>
+          </div>
         </div>
-        <div className="cat-actions-row">
-          <button type="button" className="button primary" onClick={() => setCargoOpen(true)}><CargoIcon size={15} /> Nuevo cargamento</button>
-          <button type="button" className="button outline" disabled={!s.invLog || !s.invLog.length} onClick={() => setLogOpen(true)}>Historial de cambios</button>
-        </div>
+        <button className="button outline cat-actions-cta" disabled={!s.products.length} onClick={() => setBookOpen(true)}><StorefrontIcon size={16} /> Catálogo virtual</button>
         <div className="panel-search cat-actions-search">
           <input type="search" inputMode="search" placeholder="Buscar producto…" value={query} onChange={(e) => setQuery(e.target.value)} />
           {searching && <button type="button" className="panel-search-clear" title="Limpiar búsqueda" onClick={() => setQuery('')}>×</button>}
@@ -238,19 +242,15 @@ export function Catalog() {
               <div className="cat-body">
                 {list.length ? (
                   <HScroll ariaLabel={'Productos de ' + g.name}>
-                    <table><thead><tr><th></th><th>Producto</th><th>Vendido</th><th>Adquirido</th><th>Disponible</th><th>Coste</th><th>Ingreso</th><th>Ganancia</th><th>Promociones</th><th></th></tr></thead><tbody>
+                    <table><thead><tr><th></th><th>Producto</th><th>Disponible</th><th>Precio</th><th>Promociones</th><th></th></tr></thead><tbody>
                       {list.map((p) => {
                         const l = ledger[p.id] || { sold: 0, acquired: 0, available: 0, revenue: 0, cost: 0, profit: 0 };
                         return (
                           <tr key={p.id} data-pid={p.id} className={prodDrag?.pid === p.id ? 'dragging' : ''}>
                             <td className="drag-cell">{!searching && <button type="button" className="icon-btn drag-handle" title="Arrastrar para reordenar" onPointerDown={(e) => startProdDrag(e, g.name, p.id, g.list)}>⠿</button>}</td>
                             <td className="cat-bar"><div className="product-cell"><Image src={p.image || DEFAULT_PRODUCT_IMAGE} cls="product-image-cell" /><div className="product-name">{esc(p.name)}{productTags(p).map((t) => <span className="prod-tag" key={t} title={esc(t)}>{esc(t)}</span>)}</div></div></td>
-                            <td className="inv-qty">{l.sold || '—'}</td>
-                            <td className="inv-qty">{l.acquired || '—'}</td>
                             <td className="inv-qty"><b>{l.available}</b></td>
-                            <td className="muted">{l.cost ? money(l.cost) : '—'}</td>
-                            <td>{l.revenue ? money(l.revenue) : '—'}</td>
-                            <td className={l.profit > 0 ? 'profit-pos' : l.profit < 0 ? 'profit-neg' : 'muted'}>{l.profit ? money(l.profit) : '—'}</td>
+                            <td>{money(p.price)}</td>
                             <td>{productPromos(s, p).length ? <div className="promo-stack">{productPromos(s, p).map((x) => <span className="promotion" key={x.id}>{promoText(x)}</span>)}</div> : <span className="muted">—</span>}</td>
                             <td><div className="actions">
                             <GearMenu items={[
@@ -304,7 +304,7 @@ export function Catalog() {
           <div className="modal-float-actions">
             <button type="button" className="icon-btn float-cancel" title="Cerrar" aria-label="Cerrar" onClick={() => setLogOpen(false)}><CloseIcon size={15} /></button>
           </div>
-          <h2>Historial de cambios</h2>
+          <h2>Historial de inventario</h2>
           <p className="muted">Compras, ajustes y correcciones del inventario.</p>
           {(s.invLog || []).length ? (
             <div className="log-scroll">

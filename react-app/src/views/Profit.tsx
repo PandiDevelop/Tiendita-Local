@@ -1,9 +1,9 @@
 import { useState } from 'react';
 import { useStore } from '../store';
-import { costFor, esc, money, priceFor, today, DEFAULT_PRODUCT_IMAGE, inventorySold, groupedByCategory, productTags } from '../lib/core';
-import { Image } from '../ui';
+import { costFor, esc, money, priceFor, today, DEFAULT_PRODUCT_IMAGE, inventorySold, groupedByCategory, productTags, productLedger } from '../lib/core';
+import { Image, HScroll } from '../ui';
 import { History } from './History';
-import type { Sale, Store as IStore, Product } from '../types';
+import type { Sale, Store as IStore } from '../types';
 
 type RangeMode = 'todo' | 'hoy' | 'mes' | 'rango';
 type ViewMode = 'resumen' | 'historial' | 'bodega';
@@ -61,15 +61,6 @@ export function Profit() {
   const sold = inventorySold(s);
   const inv = s.inventory || {};
   const stockTotal = s.products.reduce((a, p) => a + Math.max(0, (inv[p.id] || 0) - (sold[p.id] || 0)), 0);
-
-  // Costo unitario actual de un producto: el propio o, si no tiene, el de su
-  // categoría (misma fuente que usa el registro de venta).
-  function unitCostOf(p: Product): number {
-    if (p.cost != null) return p.cost;
-    const cat = (p.category || '').trim();
-    const cp = cat && s.categoryPricing ? s.categoryPricing[cat] : undefined;
-    return cp?.cost ?? 0;
-  }
 
   return (
     <>
@@ -130,39 +121,42 @@ export function Profit() {
 
       {view === 'historial' ? <History /> : view === 'bodega' ? (
         <div className="panel">
-          <div className="panel-head"><div><h2>Bodega</h2><p className="muted">Lo adquirido por producto y categoría, lo vendido y la ganancia estimada.</p></div></div>
+          <div className="panel-head"><div><h2>Bodega</h2><p className="muted">Lo adquirido por producto y categoría, lo vendido, el coste, el ingreso y la ganancia.</p></div></div>
           {s.products.length ? (
-            groupedByCategory(s).map((g) => {
-              const catBought = g.list.reduce((a, p) => a + Math.round(inv[p.id] || 0), 0);
-              const catSold = g.list.reduce((a, p) => a + (sold[p.id] || 0), 0);
-              return (
-                <div className="cat-group" key={g.name}>
-                  <div className="cat-head">
-                    <b>{esc(g.name)}</b>
-                    <span className="cat-head-counts muted">· {g.list.length} producto{g.list.length === 1 ? '' : 's'} · {catBought} adquirido{catBought === 1 ? '' : 's'} · {catSold} vendido{catSold === 1 ? '' : 's'}</span>
+            (() => {
+              const ledger = productLedger(s);
+              return groupedByCategory(s).map((g) => {
+                const catBought = g.list.reduce((a, p) => a + (ledger[p.id]?.acquired || 0), 0);
+                const catSold = g.list.reduce((a, p) => a + (ledger[p.id]?.sold || 0), 0);
+                return (
+                  <div className="cat-group" key={g.name}>
+                    <div className="cat-head">
+                      <b>{esc(g.name)}</b>
+                      <span className="cat-head-counts muted">· {g.list.length} producto{g.list.length === 1 ? '' : 's'} · {catBought} adquirido{catBought === 1 ? '' : 's'} · {catSold} vendido{catSold === 1 ? '' : 's'} · {money(g.list.reduce((a, p) => a + (ledger[p.id]?.revenue || 0), 0))} ingresos · {money(g.list.reduce((a, p) => a + (ledger[p.id]?.profit || 0), 0))} ganancia</span>
+                    </div>
+                    <div className="cat-body">
+                      <HScroll ariaLabel={'Bodega de ' + g.name}>
+                        <table><thead><tr><th>Producto</th><th>Vendido</th><th>Adquirido</th><th>Coste</th><th>Ingreso</th><th>Ganancia</th></tr></thead><tbody>
+                          {g.list.map((p) => {
+                            const l = ledger[p.id] || { sold: 0, acquired: 0, available: 0, revenue: 0, cost: 0, profit: 0 };
+                            return (
+                              <tr key={p.id}>
+                                <td className="cat-bar"><div className="product-cell"><Image src={p.image || DEFAULT_PRODUCT_IMAGE} cls="product-image-cell" /><div className="product-name">{esc(p.name)}{productTags(p).map((t) => <span className="prod-tag" key={t} title={esc(t)}>{esc(t)}</span>)}</div></div></td>
+                                <td>{l.sold || '—'}</td>
+                                <td>{l.acquired || '—'}</td>
+                                <td className="muted">{l.cost ? money(l.cost) : '—'}</td>
+                                <td>{l.revenue ? money(l.revenue) : '—'}</td>
+                                <td className={l.profit > 0 ? 'profit-pos' : l.profit < 0 ? 'profit-neg' : 'muted'}>{l.profit ? money(l.profit) : '—'}</td>
+                              </tr>
+                            );
+                          })}
+                        </tbody></table>
+                      </HScroll>
+                    </div>
                   </div>
-                  <div className="cat-body">
-                    <table><thead><tr><th>Producto</th><th>Adquirido</th><th>Vendido</th><th>Costo</th><th>Ganancia</th></tr></thead><tbody>
-                      {g.list.map((p) => {
-                        const bought = Math.round(inv[p.id] || 0);
-                        const soldQty = sold[p.id] || 0;
-                        const unitCost = unitCostOf(p);
-                        const gain = soldQty > 0 ? (p.price - unitCost) * soldQty : 0;
-                        return (
-                          <tr key={p.id}>
-                            <td className="cat-bar"><div className="product-cell"><Image src={p.image || DEFAULT_PRODUCT_IMAGE} cls="product-image-cell" /><div className="product-name">{esc(p.name)}{productTags(p).map((t) => <span className="prod-tag" key={t} title={esc(t)}>{esc(t)}</span>)}</div></div></td>
-                            <td>{bought || '—'}</td>
-                            <td>{soldQty}</td>
-                            <td className="muted">{unitCost ? money(unitCost) : '—'}</td>
-                            <td>{soldQty ? <b>{money(gain)}</b> : <span className="muted">—</span>}</td>
-                          </tr>
-                        );
-                      })}
-                    </tbody></table>
-                  </div>
-                </div>
-              );
-            })
+                );
+              });
+            })()
           ) : <div className="notice">No hay productos todavía.</div>}
         </div>
       ) : (
