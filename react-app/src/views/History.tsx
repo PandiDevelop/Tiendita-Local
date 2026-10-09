@@ -1,13 +1,55 @@
 import { Fragment, ReactNode, useState } from 'react';
-import { DownloadIcon, CaretIcon } from '../ui';
+import { CaretIcon, CloseIcon, DownloadIcon, PencilIcon, confirmDialog } from '../ui';
 import { useStore } from '../store';
-import { money, esc, total, shortDate, saleUnits, priceFor, formatDate, catLabel, findActivePromo } from '../lib/core';
+import { money, esc, total, shortDate, saleUnits, priceFor, formatDate, catLabel, findActivePromo, productPromos, canManageTeam, saleUnitPrice, syncName } from '../lib/core';
 import type { Sale } from '../types';
 
+// Linea editable: mismos campos que usa el registro de venta (SaleRegistration).
+interface EditLine { pid: string; price: number; cost: number; qty: number; manual?: boolean; supplierTag?: string; }
+
 export function History() {
-  const { store } = useStore();
+  const { store, replace, setModal } = useStore();
   const s = store!;
   const [open, setOpen] = useState<Record<string, boolean>>({});
+  const manage = canManageTeam(s);
+
+  // Abre la venta en el registro (modal 'sale') precargada para corregirla.
+  // Se marca en editingSaleId para que SaleRegistration reemplace esa venta
+  // en vez de crear una nueva.
+  function startEdit(x: Sale) {
+    const lines: EditLine[] = x.items.map((i): EditLine | null => {
+      const p = s.products.find((pp) => pp.id === i.productId);
+      if (!p) return null;
+      const auto = saleUnitPrice(s, p, i.qty);
+      return {
+        pid: p.id,
+        price: i.price ?? auto,
+        cost: i.cost ?? p.cost ?? 0,
+        qty: i.qty,
+        manual: Math.abs((i.price ?? auto) - auto) > 0.001,
+        supplierTag: i.supplierTag,
+      };
+    }).filter((l): l is EditLine => l !== null);
+    const cats = Array.from(new Set(lines.map((l) => {
+      const p = s.products.find((pp) => pp.id === l.pid);
+      return p ? catLabel(p) : '';
+    }).filter(Boolean)));
+    replace((d) => {
+      d.saleDraft = { storeId: s.id, employee: x.employee || syncName(), categories: cats, lines: JSON.parse(JSON.stringify(lines)) };
+      d.editingSaleId = x.id;
+    });
+    setModal('sale');
+  }
+
+  function deleteSale(x: Sale) {
+    confirmDialog('¿Borrar esta venta?\nNo se puede deshacer.', () => {
+      replace((d) => {
+        const st = d.stores.find((y) => y.id === s.id);
+        if (!st) return;
+        st.sales = st.sales.filter((z) => z.id !== x.id);
+      });
+    });
+  }
 
   function exportTxt(sales: Sale[]) {
     const lines: string[] = [];
@@ -60,7 +102,7 @@ export function History() {
       const pcat = esc(p ? catLabel(p) : 'Sin categoría');
       // Solo el paquete que aplica (un solo tag), no la descomposición en
       // todos los bloques de promoción de la condición.
-      const pr = p ? findActivePromo(p, catQty.get(catLabel(p)) || 0) : undefined;
+      const pr = p ? findActivePromo(p, catQty.get(catLabel(p)) || 0, productPromos(s, p)) : undefined;
       const pack = pr && pr.cond === 'qtyeq' ? pr : undefined;
       const pr2 = p && p.promos.find((z) => z.id === i.promotionId);
       out.push(
@@ -102,7 +144,11 @@ export function History() {
                 <Fragment key={x.id}>
                   <tr>
                     <td>{shortDate(x.date)}</td><td>{esc(x.time || '—')}{x.event ? <span className="prod-tag ev-tag" title={esc(x.event)}>Evento: {esc(x.event)}</span> : null}</td><td>{saleUnits(x)}</td><td><b>{money(total(x, s))}</b></td><td>{esc(x.employee || '—')}</td>
-                    <td><button className="icon-btn sale-details-btn" title="Ver detalles" onClick={() => setOpen((o) => ({ ...o, [x.id]: !o[x.id] }))}><span className="sale-caret"><CaretIcon size={14} /></span></button></td>
+                    <td><div className="sale-actions">
+                      {manage && <button type="button" className="icon-btn sale-details-btn" title="Editar venta" aria-label="Editar venta" onClick={() => startEdit(x)}><PencilIcon size={13} /></button>}
+                      {manage && <button type="button" className="icon-btn sale-details-btn danger" title="Borrar venta" aria-label="Borrar venta" onClick={() => deleteSale(x)}><CloseIcon size={13} /></button>}
+                      <button className="icon-btn sale-details-btn" title="Ver detalles" onClick={() => setOpen((o) => ({ ...o, [x.id]: !o[x.id] }))}><span className="sale-caret"><CaretIcon size={14} /></span></button>
+                    </div></td>
                   </tr>
                   {open[x.id] && <tr className="sale-detail-row"><td colSpan={6}><div className="sale-detail"><div className="sale-detail-title">Detalles de la venta</div>{details(x).length ? details(x) : <p className="muted" style={{ margin: 0 }}>Sin productos en esta venta.</p>}</div></td></tr>}
                 </Fragment>

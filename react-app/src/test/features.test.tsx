@@ -8,6 +8,7 @@ import { Employees } from '../views/Employees';
 import { Profit } from '../views/Profit';
 import { Notes } from '../views/Notes';
 import { VirtualCatalog } from '../views/VirtualCatalog';
+import { CargoModal } from '../views/CargoModal';
 import { SaleRegistration } from '../views/SaleRegistration';
 import { TagModal } from '../views/TagModal';
 import { CLIENT_KEY, DEFAULT_PRODUCT_TAG } from '../lib/core';
@@ -465,11 +466,11 @@ describe('Libro de catálogo virtual', () => {
     expect(card.querySelector('img.vc-img')).toBeTruthy();
   });
 
-  it('se abre desde el botón "Ver catálogo" de Catálogo', () => {
+  it('se abre desde el botón "Catálogo virtual" de Productos', () => {
     const store = makeStore({ products: [makeProduct({ id: 'p1', name: 'Agua', price: 1000, category: 'Bebidas' })] });
     render(<TestProvider initialState={makeState(store)}><Catalog /></TestProvider>);
-    fireEvent.click(screen.getByRole('button', { name: /Ver catálogo/ }));
-    expect(screen.getByText(/Catálogo virtual/)).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: /Catálogo virtual/ }));
+    expect(screen.getAllByText(/Catálogo virtual/).length).toBeGreaterThan(1);
     expect(screen.getAllByText('Agua').length).toBeGreaterThan(0);
   });
 
@@ -515,5 +516,65 @@ describe('Libro de catálogo virtual', () => {
     render(<TestProvider initialState={makeState(empty)}><VirtualCatalog onClose={() => {}} /></TestProvider>);
     expect(screen.getByRole('button', { name: /Imprimir/ })).toBeDisabled();
     expect(document.body.querySelector('.print-catalog')).toBeNull();
+  });
+});
+
+describe('Cargamento multi-producto (Productos)', () => {
+  function cardOf(name: string): HTMLElement {
+    const card = Array.from(document.querySelectorAll<HTMLElement>('.sale-prod-card')).find((c) => c.textContent?.includes(name));
+    expect(card).toBeTruthy();
+    return card!;
+  }
+  function lineOf(name: string): HTMLElement {
+    const line = Array.from(document.querySelectorAll<HTMLElement>('.sale-builder-line')).find((l) => l.textContent?.includes(name));
+    expect(line).toBeTruthy();
+    return line!;
+  }
+
+  it('agrega varios productos con cantidad, distribuidor y costo en un solo cargamento', () => {
+    const store = makeStore({
+      categories: ['Bebidas', 'Snacks'],
+      products: [
+        makeProduct({ id: 'p1', name: 'Agua', price: 1000, category: 'Bebidas' }),
+        makeProduct({ id: 'p2', name: 'Papas', price: 2000, category: 'Snacks' }),
+      ],
+      inventory: { p1: 0 },
+    });
+    const state = makeState(store);
+    const stateRef = { current: state };
+    render(<TestProvider initialState={state} stateRef={stateRef}><CargoModal onClose={() => {}} /></TestProvider>);
+
+    fireEvent.click(cardOf('Agua').querySelector('.sale-add') as HTMLButtonElement);
+    fireEvent.click(cardOf('Papas').querySelector('.sale-add') as HTMLButtonElement);
+    expect(document.querySelectorAll('.sale-builder-line').length).toBe(2);
+
+    const agua = lineOf('Agua');
+    const qtyInputs = Array.from(agua.querySelectorAll('input.qty-input'));
+    fireEvent.change(qtyInputs[0], { target: { value: '2' } });
+    fireEvent.change(agua.querySelector('input[placeholder="Distribuidor / proveedor"]') as HTMLInputElement, { target: { value: 'Distribuidor A' } });
+    fireEvent.change(agua.querySelector('input[placeholder="0"]') as HTMLInputElement, { target: { value: '500' } });
+
+    fireEvent.change(screen.getByPlaceholderText('Tu nombre'), { target: { value: 'Juan' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Registrar cargamento' }));
+
+    const saved = stateRef.current.stores[0];
+    expect(saved.inventory).toEqual({ p1: 2, p2: 1 });
+    expect(saved.invLog.length).toBe(2);
+    const aguaEntry = saved.invLog.find((e) => e.productId === 'p1')!;
+    expect(aguaEntry.qty).toBe(2);
+    expect(aguaEntry.supplier).toBe('Distribuidor A');
+    expect(aguaEntry.byName).toBe('Juan');
+    expect(aguaEntry.cost).toBe(500);
+    expect(aguaEntry.costId).toBeTruthy();
+    const p1 = saved.products.find((x) => x.id === 'p1')!;
+    expect(p1.supplier).toBe('Distribuidor A');
+    expect(p1.cost).toBe(500);
+  });
+
+  it('preselecciona el producto del botón de cargamento de una fila', () => {
+    const store = makeStore({ products: [makeProduct({ id: 'p1', name: 'Agua' })] });
+    render(<TestProvider initialState={makeState(store)}><CargoModal preselect="p1" onClose={() => {}} /></TestProvider>);
+    expect(document.querySelectorAll('.sale-builder-line').length).toBe(1);
+    expect(lineOf('Agua')).toBeTruthy();
   });
 });

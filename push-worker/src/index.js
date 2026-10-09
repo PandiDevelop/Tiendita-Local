@@ -155,9 +155,13 @@ async function readStorePushData(projectId, storeKey) {
 
 // El destinatario quiere esta categoria? Una preferencia ausente equivale a
 // "si": solo saltea el aviso cuando el dispositivo apago explicitamente esa
-// categoria en Opciones (pushPrefs en sync.ts).
+// categoria en Opciones (pushPrefs en sync.ts). Las preferencias son de la
+// CUENTA (se guardan por syncClientId), mientras que los tokens son POR
+// DISPOSITIVO (clave writerId "syncClientId@deviceId", ver savePushToken en
+// sync.ts): por eso se compara con la parte de la cuenta de la clave.
 function wantsCat(prefs, clientId, cat) {
-  const p = prefs && prefs[clientId];
+  const accountId = String(clientId).split('@')[0];
+  const p = prefs && prefs[clientId.includes('@') ? accountId : clientId];
   return !p || p[cat] !== false;
 }
 
@@ -165,6 +169,11 @@ async function sendToToken(accessToken, projectId, token, title, body, link) {
   const message = {
     token,
     notification: { title, body },
+    // "data" es lo que lee el push NATIVO de la app (Capacitor) al tocar el
+    // aviso para navegar al destino (ver initNativePush en push.ts); para el
+    // navegador el destino va en webpush.fcmOptions.link, que es lo que lee
+    // sw.js. Los dos viajan juntos y cada quien usa el suyo.
+    data: link ? { link } : undefined,
     webpush: {
       // requireInteraction/renotify van en el payload de sw.js (quien de
       // verdad muestra el aviso); aca solo hace falta el link a abrir.
@@ -207,10 +216,22 @@ export default {
     try {
       const storeData = await readStorePushData(env.FIREBASE_PROJECT_ID, storeKey);
       const tokensByClient = storeData.tokens;
-      const targets = Object.entries(tokensByClient).filter(function (e) {
-        const clientId = e[0];
-        return clientId !== excludeClientId && wantsCat(storeData.prefs, clientId, cat);
-      });
+      // Los tokens son POR DISPOSITIVO (clave writerId "syncClientId@device",
+      // ver savePushToken en sync.ts). Puede haber claves viejas de cuando el
+      // mapa era por cuenta (solo el uid) que apuntan al MISMO token que la
+      // clave nueva de ese dispositivo: se dedupe por valor para no mandar el
+      // aviso dos veces al mismo telefono mientras se migra.
+      const seenTokens = new Set();
+      const targets = [];
+      for (const entry of Object.entries(tokensByClient)) {
+        const clientId = entry[0];
+        if (clientId === excludeClientId) continue;
+        const token = entry[1];
+        if (seenTokens.has(token)) continue;
+        if (!wantsCat(storeData.prefs, clientId, cat)) continue;
+        seenTokens.add(token);
+        targets.push([clientId, token]);
+      }
       if (!targets.length) return jsonResponse({ ok: true, sent: 0, failed: 0, total: 0 });
 
       const accessToken = await getAccessToken(env);

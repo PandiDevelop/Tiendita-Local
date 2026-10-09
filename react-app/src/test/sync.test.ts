@@ -185,6 +185,24 @@ describe('sync de inventario y notas entre dos dispositivos', () => {
     expect(b.st.inventory[pid]).toBe(3);
   });
 
+  it('un cambio de OTRO dispositivo de la MISMA cuenta ya no se auto-supreme', () => {
+    // Antes el doc principal llevaba updatedBy = uid de cuenta: si dos
+    // aparatos iniciaban sesión con la misma cuenta, attach/applyRemote
+    // comparaban contra ese uid y AMBOS se saltaban los cambios del otro
+    // (las ventas de uno no llegaban al otro). Ahora updatedBy incluye el
+    // dispositivo (cuenta@dispositivo), así que un payload con updatedBy
+    // igual solo al uid de cuenta (los viejos, o de otro aparato) SÍ aplica.
+    const a = device('A');
+    const b = device('B');
+    const pid = addProduct(b.st, 'Cereal', 5000);
+    adoptInvLog(b.st, pid, 20, 'Distribuidora X');
+    const payload = makePayload(b.st);
+    payload.updatedBy = syncClientId();
+    applyRemote(() => a.ref, (up) => up(a.ref), a.st.id, payload);
+    expect(a.st.inventory[pid]).toBe(20);
+    expect(a.st.invLog.length).toBe(1);
+  });
+
   it('el orden de categorias que reordena A (arrastrar) se refleja en B', () => {
     const a = device('A');
     const b = device('B');

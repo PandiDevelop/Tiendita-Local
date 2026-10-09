@@ -16,7 +16,7 @@
 // plano) sigue funcionando exactamente igual que antes, sin depender de
 // esto.
 import { getToken, deleteToken, getMessaging, isSupported, type Messaging } from 'firebase/messaging';
-import { syncClientId } from './core';
+import { writerId } from './core';
 import { firebaseApp, savePushToken, removePushToken, syncReady } from './sync';
 import type { NotifCat } from '../types';
 
@@ -35,6 +35,43 @@ export function pushConfigured(): boolean {
 }
 
 let messaging: Messaging | null | undefined;
+
+// Push NATIVO (app de Android, Capacitor): el WebView no dispara eventos
+// 'push' de service workers, asi que los avisos reales con la app cerrada
+// van por el plugin @capacitor/push-notifications (que registra un token de
+// Firebase y deja que FCM lo muestre como notificacion del sistema). En
+// navegador esto devuelve null y sigue el camino de siempre (firebase/
+// messaging + sw.js).
+interface NativePush {
+  requestPermissions?: () => Promise<{ receive?: string }>;
+  register?: () => Promise<void>;
+  unregister?: () => Promise<void>;
+  addListener?: (event: string, cb: (d: unknown) => void) => Promise<unknown>;
+}
+function nativePushPlugin(): NativePush | null {
+  const cap = (globalThis as { Capacitor?: { isNativePlatform?: () => boolean; Plugins?: Record<string, NativePush> } }).Capacitor;
+  if (!cap || !cap.isNativePlatform || cap.isNativePlatform() !== true) return null;
+  return (cap.Plugins && cap.Plugins.PushNotifications) || null;
+}
+
+// Espera el token que el plugin nativo emite en el evento 'registration'
+// despues de register(). Resuelve '' si no llega (permiso negado, red, etc.).
+function nextNativeToken(p: NativePush, timeoutMs = 20000): Promise<string> {
+  return new Promise((resolve) => {
+    let handled = false;
+    const timer = setTimeout(() => {
+      if (handled) return;
+      handled = true;
+      resolve('');
+    }, timeoutMs);
+    p.addListener?.('registration', (d) => {
+      if (handled) return;
+      handled = true;
+      clearTimeout(timer);
+      resolve(((d as { value?: string }) || {}).value || '');
+    });
+  });
+}
 
 async function getMessagingInstance(): Promise<Messaging | null> {
   if (messaging !== undefined) return messaging;
@@ -61,6 +98,28 @@ async function getMessagingInstance(): Promise<Messaging | null> {
 // token si sigue siendo valido).
 export async function enablePushForStore(storeKey: string): Promise<'ok' | 'unsupported' | 'denied' | 'error'> {
   if (!pushConfigured() || !storeKey || !syncReady()) return 'unsupported';
+  const np = nativePushPlugin();
+  if (np) {
+    try {
+      if (np.requestPermissions) {
+        try {
+          const r = await np.requestPermissions();
+          if (r && r.receive === 'denied') return 'denied';
+        } catch (e) {
+          console.warn('No se pudo pedir permiso de push nativo:', e);
+          return 'error';
+        }
+      }
+      await np.register?.();
+      const token = await nextNativeToken(np);
+      if (!token) return 'error';
+      await savePushToken(storeKey, token);
+      return 'ok';
+    } catch (e) {
+      console.warn('No se pudo activar el aviso push nativo:', e);
+      return 'error';
+    }
+  }
   const m = await getMessagingInstance();
   if (!m) return 'unsupported';
   try {
@@ -90,6 +149,19 @@ export async function enablePushForStore(storeKey: string): Promise<'ok' | 'unsu
 // siempre aunque tuviera el interruptor encendido.
 export async function ensurePushToken(storeKey: string): Promise<'ok' | 'unsupported' | 'denied' | 'error'> {
   if (!pushConfigured() || !storeKey || !syncReady()) return 'unsupported';
+  const np = nativePushPlugin();
+  if (np) {
+    try {
+      await np.register?.();
+      const token = await nextNativeToken(np);
+      if (!token) return 'error';
+      await savePushToken(storeKey, token);
+      return 'ok';
+    } catch (e) {
+      console.warn('No se pudo re-registrar el aviso push nativo:', e);
+      return 'error';
+    }
+  }
   if (typeof Notification === 'undefined' || !('serviceWorker' in navigator) || Notification.permission !== 'granted') return 'denied';
   const m = await getMessagingInstance();
   if (!m) return 'unsupported';
@@ -112,10 +184,31 @@ export async function ensurePushToken(storeKey: string): Promise<'ok' | 'unsuppo
 export async function disablePushForStore(storeKey: string): Promise<void> {
   if (!storeKey) return;
   try {
+    const np = nativePushPlugin();
+    if (np && np.unregister) { try { await np.unregister(); } catch { /* token local irrelevante */ } }
     const m = await getMessagingInstance();
     if (m) { try { await deleteToken(m); } catch { /* token local irrelevante */ } }
   } catch { /* no se pudo ni mirar messaging */ }
   try { await removePushToken(storeKey); } catch { /* si la red falla, el peor caso es un push de mas */ }
+}
+
+// En la app nativa (Capacitor) el push llega por el plugin, no por el service
+// worker, asi que tocar el aviso lo maneja esto y no sw.js: se registra UNA
+// vez al arrancar (lo llama App.tsx) para que, al tocar una notificacion, la
+// app navegue al destino que trae en su data (p.ej. ?tab=notas&n=<id>, el
+// mismo deep link que arman pushLinkFor y el Worker). En navegador no hace
+// nada: ahi el click ya lo maneja sw.js.
+let nativeTapHooked = false;
+export function initNativePush(): void {
+  const np = nativePushPlugin();
+  if (!np || !np.addListener || nativeTapHooked) return;
+  nativeTapHooked = true;
+  np.addListener('notificationActionPerformed', (d: unknown) => {
+    const nd = (d as { notification?: { data?: { link?: string } } })?.notification;
+    const link = nd?.data?.link;
+    if (!link || link === location.href) return;
+    try { window.location.href = link; } catch { /* sin navegacion, la app abre igual */ }
+  }).catch(() => { /* el listener no debe romper el arranque */ });
 }
 
 // URL a la que la notificación debe llevar a quien la toca (ver notificationclick
@@ -148,7 +241,7 @@ export function notifyStorePush(storeKey: string, title: string, body: string, c
     fetch(PUSH_WORKER_URL + '/notify', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ storeKey, title, body, cat, excludeClientId: syncClientId(), link: link || location.href }),
+      body: JSON.stringify({ storeKey, title, body, cat, excludeClientId: writerId(), link: link || location.href }),
       keepalive: true,
     }).catch(() => { /* sin conexion o Worker caido: se ignora, no es critico */ });
   } catch {

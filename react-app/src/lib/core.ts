@@ -48,8 +48,14 @@ export function productTags(p: Pick<Product, 'tags' | 'tag'> | undefined | null)
   return solo ? [solo] : [];
 }
 
+// Fecha local (YYYY-MM-DD) del dispositivo, NO la de UTC. Usar toISOString
+// aqui fechaba las ventas un dia adelante cuando (p.ej. en Mexico a las ~7pm)
+// UTC ya habia pasado a la manana siguiente: la venta se grababa con la fecha
+// de mañana. Todo lo que se agenda con `today()` (ventas, costos, eventos)
+// debe usar el calendario local de quien registra.
 export function today(): string {
-  return new Date().toISOString().slice(0, 10);
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
 }
 
 export function timeNow(): string {
@@ -272,6 +278,35 @@ export function syncClientId(): string {
 // Se usa tras iniciar o cerrar sesión: la identidad cambió en localStorage y
 // hay que dejar que la próxima llamada la vuelva a leer.
 export function resetClientId(): void { _cid = null; }
+
+// Identificador ESTABLE por dispositivo físico (localStorage CLIENT_KEY),
+// independiente de si hay una cuenta logueada: dos aparatos de la MISMA
+// cuenta comparten syncClientId() pero tienen "deviceId()" distinto. Sirve
+// para saber de qué equipo vino cada cambio.
+let _devId: string | null = null;
+export function deviceId(): string {
+  if (_devId) return _devId;
+  let v = localStorage.getItem(CLIENT_KEY);
+  if (!v) {
+    v = Math.random().toString(36).slice(2) + Date.now().toString(36);
+    localStorage.setItem(CLIENT_KEY, v);
+  }
+  _devId = v;
+  return v;
+}
+
+// Identificador de ESCRITOR: cuenta@dispositivo. Es el que se guarda en el
+// documento principal de cada tienda (updatedBy) para que los snapshots sepan
+// de dónde vino cada cambio. Es DISTINTO del uid de cuenta a propósito:
+// antes updatedBy era el uid de cuenta, así que dos dispositivos logueados con
+// la MISMA cuenta se auto-supremían los cambios el uno al otro (attach y
+// applyRemote descartan updatedBy === identidad local) y las ventas de uno no
+// llegaban al otro hasta (quizá) forzar un nuevo ciclo de escrituras. Con el
+// escritor incluyendo el dispositivo, cada aparato aplica lo que escribió el
+// otro y solo se ignora lo que escribió él mismo (el eco de su propio push).
+export function writerId(): string {
+  return syncClientId() + '@' + deviceId();
+}
 
 // true si el id dado pertenece a ESTA persona: la identidad actual (cuenta o
 // dispositivo) o cualquiera de los ids que esa persona tuvo antes de vincular
@@ -1254,6 +1289,19 @@ export function fixedPackageTotal(pr: Promo, base: number): number {
   return Math.max(0, pr.price);
 }
 
+// Promos efectivas de un producto para la venta: las PROPIAS del producto si
+// tiene, y si no, las de su categoría. Asi un producto creado despues de
+// definir promos en la categoria (o al que se le quitaron las propias) ya
+// hereda y aplica la promo base de su categoria sin copiarlas manualmente.
+// Las propias SIEMPRE ganan sobre las de la categoria.
+export function productPromos(s: Store, p: Product | undefined | null): Promo[] {
+  if (!p) return [];
+  if (p.promos && p.promos.length) return p.promos;
+  const cat = (p.category || '').trim();
+  const cp = cat ? s?.categoryPricing?.[cat] : undefined;
+  return cp && cp.promos && cp.promos.length ? cp.promos : [];
+}
+
 // Precio por unidad con las promos del producto aplicadas. La cantidad es el
 // total de unidades de la MISMA CATEGORIA en la venta.
 //  - "Cantidad mayor a" (qtygt): el price es POR UNIDAD. La primera en
@@ -1266,9 +1314,9 @@ export function fixedPackageTotal(pr: Promo, base: number): number {
 //    unidad). Ej: fija 1 = 5.000, fija 2 = 8.000 y fija 3 = 10.000 da
 //    3 unidades = 10.000 y 4 unidades = 15.000: la cuarta unidad vuelve a
 //    costar 5.000 (bloque de 3 + 1).
-export function promoPrice(p: Product, qty: number): number {
+export function promoPrice(p: Product, qty: number, inheritedPromos?: Promo[]): number {
   if (!p || qty <= 0) return p ? p.price : 0;
-  const promos = p.promos || [];
+  const promos = (p.promos && p.promos.length) ? p.promos : (inheritedPromos || []);
   const n = (pr: Promo) => Math.max(1, pr.min || 1);
   const gt = promos.find((pr) => pr.cond === 'qtygt' && qty > Math.max(0, pr.min || 0));
   if (gt) return round2(promoUnitReward(gt, p.price));
@@ -1288,9 +1336,9 @@ export function promoPrice(p: Product, qty: number): number {
 
 // Primera promo (en su orden = prioridad) que se aplica a este producto con
 // esa cantidad: se muestra como la "Promo aplicada" en la linea de venta.
-export function findActivePromo(p: Product | undefined, qty: number): Promo | undefined {
+export function findActivePromo(p: Product | undefined, qty: number, inheritedPromos?: Promo[]): Promo | undefined {
   if (!p || qty <= 0) return undefined;
-  const promos = p.promos || [];
+  const promos = (p.promos && p.promos.length) ? p.promos : (inheritedPromos || []);
   const n = (pr: Promo) => Math.max(1, pr.min || 1);
   const gt = promos.find((pr) => pr.cond === 'qtygt' && qty > Math.max(0, pr.min || 0));
   if (gt) return gt;
@@ -1307,7 +1355,7 @@ export function findActivePromo(p: Product | undefined, qty: number): Promo | un
 // Precio final por unidad: promos del producto y, encima de eso, el descuento
 // del evento activo (que aplica a todo durante el evento).
 export function saleUnitPrice(s: Store, p: Product, qty: number): number {
-  let price = promoPrice(p, qty);
+  let price = promoPrice(p, qty, productPromos(s, p));
   const ev = activeEvent(s);
   if (ev && ev.pct) price = price * (1 - (ev.pct || 0) / 100);
   return Math.max(0, round2(price));

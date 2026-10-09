@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { useStore } from '../store';
-import { DEFAULT_PRODUCT_IMAGE, activeEvent, catLabel, findActivePromo, money, saleCatsOf, saleUnitPrice, shortTag, sortProducts, syncClientId, syncName, today, uid, productTags, ensureCost } from '../lib/core';
+import { DEFAULT_PRODUCT_IMAGE, activeEvent, catLabel, findActivePromo, money, productPromos, saleCatsOf, saleUnitPrice, shortTag, sortProducts, syncClientId, syncName, today, uid, productTags, ensureCost } from '../lib/core';
 import { notifyStorePush } from '../lib/push';
 import { Dropdown } from '../Dropdown';
 import { CloseIcon, Image, Modal, ReceiptIcon, UndoIcon } from '../ui';
@@ -30,6 +30,11 @@ export function SaleRegistration({ onClose }: { onClose: () => void }) {
   // Evento activo: su descuento se aplica solo (saleUnitPrice) y las ventas
   // registradas en el quedan marcadas con su nombre en el historial.
   const ev = activeEvent(s);
+
+  // Modo "editar venta": History abre este modal con state.editingSaleId.
+  // En ese modo el registro REEMPLAZA la venta existente en vez de crear una.
+  const editingSaleId = state.editingSaleId || null;
+  const editingSale = editingSaleId ? s.sales.find((z) => z.id === editingSaleId) : undefined;
 
   const cats = saleCatsOf(s).map((c) => ({ v: c, label: c, count: s.products.filter((p) => catLabel(p) === c).length }));
   // Categorias visibles en el selector: TODAS menos las ya elegidas (para no
@@ -170,13 +175,23 @@ export function SaleRegistration({ onClose }: { onClose: () => void }) {
         return { productId: l.pid, promotionId: null, qty: l.qty, price: l.price, cost: l.cost, supplierTag: l.supplierTag, costId: cid };
       });
       if (!items.length) return;
-      st.sales.push({ id: uid(), by: syncClientId(), date: today(), time: now.toTimeString().slice(0, 5), employee: emp, items: JSON.parse(JSON.stringify(items)), closed: false, event: ev ? ev.name : undefined });
+      if (editingSale) {
+        // Corrige la venta existente: conserva fecha y hora originales (y su
+        // evento), solo actualiza productos/precios y quién registró el cambio.
+        const idx = st.sales.findIndex((z) => z.id === editingSaleId);
+        if (idx >= 0) {
+          st.sales[idx] = { ...st.sales[idx], employee: emp, items: JSON.parse(JSON.stringify(items)) };
+        }
+        x.editingSaleId = null;
+      } else {
+        st.sales.push({ id: uid(), by: syncClientId(), date: today(), time: now.toTimeString().slice(0, 5), employee: emp, items: JSON.parse(JSON.stringify(items)), closed: false, event: ev ? ev.name : undefined });
+      }
       x.saleDraft = null;
     });
     if (!items.length) return toast('Añade al menos un producto con cantidad mayor a cero.');
-    if (s.syncKey) notifyStorePush(s.syncKey, syncName() + ' registró una venta', items.length + (items.length === 1 ? ' producto' : ' productos') + ' · ' + money(total), 'venta');
+    if (s.syncKey) notifyStorePush(s.syncKey, editingSale ? syncName() + ' corrigió una venta' : syncName() + ' registró una venta', items.length + (items.length === 1 ? ' producto' : ' productos') + ' · ' + money(total), 'venta');
     onClose();
-    toast('Venta registrada.');
+    toast(editingSale ? 'Venta corregida.' : 'Venta registrada.');
   }
 
   if (!s.products.length) {
@@ -204,7 +219,7 @@ export function SaleRegistration({ onClose }: { onClose: () => void }) {
   const lineRow = (l: Line, n: number) => {
     const p = s.products.find((x) => x.id === l.pid);
     if (!p) return null;
-    const promo = findActivePromo(p, catUnits(lines, p));
+    const promo = findActivePromo(p, catUnits(lines, p), productPromos(s, p));
     return (
       <div className="sale-builder-line" data-pid={p.id} data-price={l.price} key={n}>
         <div className="sale-builder-head">

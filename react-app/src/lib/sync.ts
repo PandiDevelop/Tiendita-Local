@@ -1,7 +1,7 @@
 import { initializeApp, FirebaseApp } from 'firebase/app';
 import { initializeFirestore, Firestore, collection, doc, query, onSnapshot, setDoc, getDoc, getDocs, deleteDoc, deleteField } from 'firebase/firestore';
 import type { AppState, Member, NotifCat, Product, Role, Sale, Store } from '../types';
-import { toProductsArr, toSalesArr, toInvLogArr, toNoteLogArr, toNoteBoardArr, mergeItems, mergeInvLog, mergeNoteLog, syncKeyOf, syncGenPin, syncClientId, syncName, normalizeStore, DEFAULT_STORE_IMAGE, uid, isNoteDeleted, markNoteDeleted, deletedNoteIdsOf, clearDeletedNotes, rememberDeletedStore, deletedStores, forgetDeletedStore, toCostArr, mergeCostEntries } from './core';
+import { toProductsArr, toSalesArr, toInvLogArr, toNoteLogArr, toNoteBoardArr, mergeItems, mergeInvLog, mergeNoteLog, syncKeyOf, syncGenPin, syncClientId, syncName, normalizeStore, DEFAULT_STORE_IMAGE, uid, isNoteDeleted, markNoteDeleted, deletedNoteIdsOf, clearDeletedNotes, rememberDeletedStore, deletedStores, forgetDeletedStore, toCostArr, mergeCostEntries, writerId } from './core';
 import type { DeletedStoreRecord } from './core';
 import { customAlert, customConfirm } from './dialog';
 
@@ -114,17 +114,18 @@ export function firestoreDb(): Firestore | null {
 }
 
 // Guarda (o reemplaza) el token de FCM de ESTE dispositivo para la tienda
-// dada, en el documento principal de Firestore (mapa por syncClientId,
-// igual que "members": si el dispositivo ya tenia un token guardado antes,
-// este simplemente lo pisa en vez de duplicar). El Worker de Cloudflare
-// (ver push-worker/ en la raiz del repo) lee este mapa para saber a quien
-// avisar cuando alguien publica una nota. No hace falta borrar el token
-// nunca a mano: si deja de ser valido, FCM lo dice al mandar y ahi se
-// podria limpiar (el Worker ya lo contempla).
+// dada, en el documento principal de Firestore. El mapa es POR DISPOSITIVO
+// (clave writerId = syncClientId@deviceId, igual que el "updatedBy" con el
+// que la sincronizacion sabe quien cambio que): asi dos celulares con la MISMA
+// cuenta no se pisan el token de avisos (cada quien deja el suyo y el Worker
+// le ruthea a cada uno). El Worker de Cloudflare (ver push-worker/) lee este
+// mapa para saber a quien avisar cuando alguien publica una nota. No hace
+// falta borrar el token nunca a mano: si deja de ser valido, FCM lo dice al
+// mandar y ahi se podria limpiar (el Worker ya lo contempla).
 export async function savePushToken(storeKey: string, token: string): Promise<void> {
   if (!syncReady() || !DB) return;
   await setDoc(storeDocRef(storeKey), {
-    pushTokens: { [syncClientId()]: { token, updatedAt: Date.now(), name: syncName() } },
+    pushTokens: { [writerId()]: { token, updatedAt: Date.now(), name: syncName() } },
   }, { merge: true });
 }
 
@@ -133,22 +134,20 @@ export async function savePushToken(storeKey: string, token: string): Promise<vo
 // fuera, el Worker de Cloudflare (ver push-worker/) deja de rutearle avisos
 // a este dispositivo, y ademas el token se borra de la instalacion local de
 // Firebase. Es best-effort: si la red falla a mitad, el peor caso es que un
-// push viejo llegue una vez mas.
+// push viejo llegue una vez mas. Las preferencias por categoria (pushPrefs)
+// son de la CUENTA, no del dispositivo, y se quitan por syncClientId.
 export async function removePushToken(storeKey: string): Promise<void> {
   if (!syncReady() || !DB || !storeKey) return;
   await setDoc(storeDocRef(storeKey), {
-    pushTokens: { [syncClientId()]: deleteField() },
+    pushTokens: { [writerId()]: deleteField() },
     pushPrefs: { [syncClientId()]: deleteField() },
   }, { merge: true });
 }
 
 // Guarda en el documento de la tienda que TIPOS de aviso quiere este
-// dispositivo (mapa por syncClientId, igual que pushTokens/members). El
-// Worker de Cloudflare (push-worker/) lo lee antes de mandarle un aviso FCM:
-// apagar una categoria en Opciones hace que el Worker le saltee ese aviso,
-// de modo que el silencio aplica incluso con la app cerrada - no solo al
-// sonido local de adentro. Best-effort: si la red falla, el peor caso es que
-// un aviso de una categoria apagada llegue una vez de mas.
+// dispositivo (mapa por syncClientId: son preferencias de la CUENTA, que se
+// comparten entre los dispositivos que la usan). El Worker de Cloudflare
+// (push-worker/) lo lee antes de mandarle un aviso FCM: apagar una categoria
 export async function setPushPrefs(storeKey: string, prefs: Partial<Record<NotifCat, boolean>>): Promise<void> {
   if (!syncReady() || !DB || !storeKey) return;
   await setDoc(storeDocRef(storeKey), {
@@ -354,7 +353,7 @@ export function createSync(
         tags: s.tags || [],
         categoryPricing: s.categoryPricing || {},
         events: s.events || [],
-        updatedBy: cid(),
+        updatedBy: writerId(),
       };
       if (typeof s.notes === 'string' && s.notes) main.notes = s.notes;
       // OJO: setDoc(..., {merge:true}) NO interpreta claves con puntos como
@@ -513,9 +512,9 @@ export function createSync(
       if (isValidStorePin(docCode) && syncKeyOf(docCode) === s.syncKey) {
         if (docCode !== localPin) setStorePin?.(storeId, docCode);
       } else if (isValidStorePin(localPin) && syncKeyOf(localPin) === s.syncKey && localPin !== docCode) {
-        setDoc(storeDocRef(s.syncKey), { code: localPin, updatedBy: cid() }, { merge: true }).catch((e) => console.warn('Publicar código:', e));
+        setDoc(storeDocRef(s.syncKey), { code: localPin, updatedBy: writerId() }, { merge: true }).catch((e) => console.warn('Publicar código:', e));
       }
-      if (d.updatedBy !== cid()) applyRemote(storeId, d);
+      if (d.updatedBy !== writerId()) applyRemote(storeId, d);
       if (Array.isArray(d.noteLog) || Array.isArray(d.invLog)) repairDoc(storeId, d);
       // Tiendas creadas con el modelo viejo llevan los productos embebidos en
       // el documento principal: se migran una sola vez a la subcoleccion.
@@ -572,7 +571,7 @@ export function createSync(
       // Se quita "products" del documento principal para no duplicar datos:
       // con deleteField la clave se elimina del documento remoto.
       if (writes.length) {
-        writes.push(setDoc(storeDocRef(s.syncKey!), { products: deleteField(), updatedBy: cid() }, { merge: true }));
+        writes.push(setDoc(storeDocRef(s.syncKey!), { products: deleteField(), updatedBy: writerId() }, { merge: true }));
       }
       await Promise.all(writes);
     })().catch((e) => console.warn('Migración de productos fallida:', e));
@@ -618,7 +617,7 @@ export function createSync(
 }
 
 export function applyRemote(getState: () => AppState, mutate: (fn: (d: AppState) => void) => void, storeId: string, remote: Record<string, unknown>) {
-  if (!remote || remote.updatedBy === syncClientId()) return;
+  if (!remote || remote.updatedBy === writerId()) return;
   const s = getState().stores.find((x) => x.id === storeId);
   if (!s) return;
   const members = remote.members ? JSON.parse(JSON.stringify(remote.members)) : null;
@@ -733,7 +732,7 @@ export function applyRemote(getState: () => AppState, mutate: (fn: (d: AppState)
         st.inventory![pid] = st.inventory![pid] == null || n > st.inventory![pid] ? n : st.inventory![pid];
       });
     }
-    const metaOk = !remote.createdBy || (remote.updatedBy && remote.updatedBy === remote.createdBy);
+    const metaOk = !remote.createdBy || (remote.updatedBy && String(remote.updatedBy).indexOf(remote.createdBy as string) === 0);
     if (metaOk && remote.name && remote.name !== st.name) st.name = remote.name as string;
     if (metaOk && remote.image && remote.image !== st.image) st.image = remote.image as string;
     normalizeStore(st);
@@ -828,9 +827,9 @@ export async function ensureStoreCode(s: Store, mutate: (fn: (d: AppState) => vo
     }
     const prods = await getDocs(collection(oldRef, 'products'));
     await setDoc(storeDocRef(newKey), main, { merge: true });
-    await setDoc(storeDocRef(newKey), { code: newPin, updatedBy: syncClientId() }, { merge: true });
+    await setDoc(storeDocRef(newKey), { code: newPin, updatedBy: writerId() }, { merge: true });
     await Promise.all(prods.docs.map((pd) => setDoc(productDocRef(newKey, pd.id), pd.data(), { merge: true })));
-    await setDoc(oldRef, { deleted: true, deletedAt: Date.now(), updatedBy: syncClientId() }, { merge: true });
+    await setDoc(oldRef, { deleted: true, deletedAt: Date.now(), updatedBy: writerId() }, { merge: true });
   } catch (e) {
     console.warn('No se pudo reasignar el código de la tienda:', e);
     return null;
@@ -950,7 +949,7 @@ export async function activateSync(storeId: string, pin: string, getState: () =>
         categoryPricing: s.categoryPricing || {},
         notes: s.notes || '', noteLog, invLog, inventory: s.inventory || {},
         events: s.events || [],
-        createdBy: syncClientId(), members, memberIds: Object.keys(members), updatedBy: syncClientId(), code: pin,
+        createdBy: syncClientId(), members, memberIds: Object.keys(members), updatedBy: writerId(), code: pin,
       }, { merge: true });
       mutate((d) => { const st = d.stores.find((x) => x.id === storeId); if (st) { st.localRole = 'owner'; st.syncKey = key; st.syncPin = pin; } });
       // Conectar el listener YA, antes del aviso: si se espera a que el
@@ -1211,7 +1210,7 @@ export async function restoreStoreFn(key: string, _getState: () => AppState, mut
     s.products.forEach((p) => merged.set(p.id, p));
     sub.forEach((p) => merged.set(p.id, p));
     s.products = Array.from(merged.values());
-    await setDoc(ref, { deleted: deleteField(), deletedAt: deleteField(), updatedBy: syncClientId() }, { merge: true });
+    await setDoc(ref, { deleted: deleteField(), deletedAt: deleteField(), updatedBy: writerId() }, { merge: true });
     forgetDeletedStore(key);
     mutate((d) => {
       if (d.stores.some((x) => x.syncKey === key)) return;

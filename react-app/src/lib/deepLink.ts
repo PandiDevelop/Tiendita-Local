@@ -6,7 +6,7 @@
 
 import type { Tab } from '../types';
 
-const TABS: Tab[] = ['inicio', 'ganancias', 'eventos', 'productos', 'inventario', 'empleados', 'notas'];
+const TABS: Tab[] = ['inicio', 'ganancias', 'eventos', 'productos', 'empleados', 'notas'];
 
 let pendingNoteId: string | null = null;
 

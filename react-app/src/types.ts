@@ -288,7 +288,7 @@ export interface Store {
   events?: StoreEvent[];
 }
 
-export type Tab = 'inicio' | 'productos' | 'inventario' | 'ganancias' | 'notas' | 'empleados' | 'eventos';
+export type Tab = 'inicio' | 'productos' | 'ganancias' | 'notas' | 'empleados' | 'eventos';
 
 export interface SaleDraft {
   storeId: string;

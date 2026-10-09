@@ -196,8 +196,19 @@ export async function linkStoresToAccount(to: string, from: string, getState: ()
       // re-vincula: se quita el id viejo y se agrega el de la cuenta, para
       // que un teléfono nuevo que inicie sesión encuentre la tienda sola.
       if (data) {
+        // Los tokens de push son POR DISPOSITIVO (clave writerId =
+        // "from@device", ver savePushToken en sync.ts): al re-vincular la
+        // cuenta se mueven todos los de este usuario, sea la clave vieja
+        // (solo el uid) o con su sufijo de dispositivo.
         const pt = (data.pushTokens || {}) as Record<string, unknown>;
-        if (Object.prototype.hasOwnProperty.call(pt, from)) upd.pushTokens = { [to]: pt[from], [from]: del };
+        const ptUpd: Record<string, unknown> = {};
+        for (const k of Object.keys(pt)) {
+          if (k === from || k.startsWith(from + '@')) {
+            ptUpd[k] = del;
+            ptUpd[k === from ? to : to + '@' + k.slice(from.length + 1)] = pt[k];
+          }
+        }
+        if (Object.keys(ptUpd).length) upd.pushTokens = ptUpd;
         const pp = (data.pushPrefs || {}) as Record<string, unknown>;
         if (Object.prototype.hasOwnProperty.call(pp, from)) upd.pushPrefs = { [to]: pp[from], [from]: del };
         if (data.createdBy === from) upd.createdBy = to;

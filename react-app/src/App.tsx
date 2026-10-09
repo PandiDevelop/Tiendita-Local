@@ -6,13 +6,13 @@ import { initDeepLink, readDeepTab } from './lib/deepLink';
 import { pushOverlay } from './lib/backStack';
 import { preloadDevAssets } from './lib/preload';
 import { resolvedTheme } from './lib/theme';
+import { initNativePush } from './lib/push';
 
 preloadDevAssets();
-import { BoxIcon, CalendarIcon, CatalogIcon, ChartIcon, DialogHost, GearIcon, HomeIcon, ImageLightboxHost, Logo, MenuIcon, NoteTextIcon, StoreImage, TeamIcon, Toast } from './ui';
+import { CalendarIcon, CatalogIcon, ChartIcon, DialogHost, GearIcon, HomeIcon, ImageLightboxHost, Logo, MenuIcon, NoteTextIcon, StoreImage, TeamIcon, Toast } from './ui';
 import { DevThemesModal } from './views/DevThemes';
 import { Dashboard } from './views/Dashboard';
 import { Catalog } from './views/Catalog';
-import { Inventory } from './views/Inventory';
 import { Profit } from './views/Profit';
 import { Notes } from './views/Notes';
 import { Employees } from './views/Employees';
@@ -40,7 +40,6 @@ const TAB_ICONS: Record<string, ReactNode> = {
   ganancias: <ChartIcon size={15} />,
   eventos: <CalendarIcon size={15} />,
   productos: <CatalogIcon size={15} />,
-  inventario: <BoxIcon size={15} />,
   empleados: <TeamIcon size={15} />,
   notas: <NoteTextIcon size={15} />,
 };
@@ -170,6 +169,9 @@ export function App() {
   // pedida, limpia la URL y deja la nota pendiente para que Notes la abra.
   useEffect(() => {
     initDeepLink();
+    // En la app nativa el toque de un aviso lo maneja el plugin (no sw.js):
+    // se registra el listener una vez al arrancar (ver initNativePush).
+    initNativePush();
     const t = readDeepTab();
     if (t) replace((d) => { d.tab = t; });
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -195,7 +197,7 @@ export function App() {
       {modal === 'settings' && <SettingsModal onClose={() => setModal('none')} />}
       {modal === 'newProduct' && <ProductForm onClose={() => setModal('none')} />}
       {modal === 'editProduct' && <ProductForm editingId={modalArg} onClose={() => setModal('none')} />}
-      {modal === 'sale' && <SaleRegistration onClose={() => setModal('none')} />}
+      {modal === 'sale' && <SaleRegistration onClose={() => { replace((d) => { d.editingSaleId = null; }); setModal('none'); }} />}
       {devOpen && <DevThemesModal onClose={() => setDevOpen(false)} />}
     </>
   );
@@ -262,7 +264,7 @@ export function App() {
         </div>
         <div className="tabs-wrap">
           <nav className={'tabs' + (tabsScroll.over ? ' has-scroll' : '')} ref={setTabsEl}>
-            {([['inicio', 'Inicio'], ['ganancias', 'Ganancias'], ['eventos', 'Eventos'], ['productos', 'Catálogo'], ['inventario', 'Inventario'], ['empleados', 'Empleados'], ['notas', 'Notas']] as const)
+            {([['inicio', 'Inicio'], ['ganancias', 'Ganancias'], ['eventos', 'Eventos'], ['productos', 'Productos'], ['empleados', 'Empleados'], ['notas', 'Notas']] as const)
               .filter(([id]) => id !== 'empleados' || owner)
               .filter(([id]) => id !== 'eventos' || owner)
               .map(([id, l]) => (
@@ -276,7 +278,6 @@ export function App() {
         {state.tab === 'ganancias' && <Profit />}
         {state.tab === 'eventos' && <Events />}
         {state.tab === 'productos' && <Catalog />}
-        {state.tab === 'inventario' && <Inventory />}
         {state.tab === 'notas' && <Notes />}
         {state.tab === 'empleados' && <Employees />}
       </main>
