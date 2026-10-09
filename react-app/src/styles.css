@@ -95,7 +95,7 @@ th,td{text-align:left;vertical-align:middle}
 .sale-dot{width:8px;height:8px;border-radius:999px;background:var(--brand-line);padding:0;transition:background .15s}
 .sale-dot.on{background:var(--brand)}
 .sale-modal-head{display:flex;justify-content:space-between;align-items:center;gap:10px}
-.sale-window{display:flex;flex-direction:column;max-height:calc(100dvh - 44px)}
+.sale-window{display:flex;flex-direction:column;max-height:calc(100dvh - 92px)}
 .sale-scroll{overflow-y:auto;min-height:0;margin:0 -3px;padding:0 3px}
 .sale-foot{display:flex;align-items:center;gap:10px;margin-top:16px;padding-top:16px;border-top:1px solid var(--line)}
 .sale-foot .button{flex:1}
@@ -118,6 +118,38 @@ th,td{text-align:left;vertical-align:middle}
 .sale-total b{color:var(--brand);font-size:22px}
 .sale-save{width:100%}
 .sale-del{flex:0 0 auto}
+/* Línea del carrito en Registrar venta: categoría arriba, foto a la izquierda,
+   nombre (que llena el ancho y envuelve si hace falta) con la X pequeña arriba
+   a la derecha, tags debajo, promo centrada, y abajo el precio c/u a la
+   izquierda con las unidades y los botones +/− chicos (flechitas) a la derecha. */
+.sale-cart-line{display:grid;gap:8px;padding:10px}
+.sale-cart-cat{margin-bottom:0}
+.sale-cart-row{display:flex;align-items:flex-start;gap:10px;min-width:0}
+.sale-cart-img{width:42px;height:42px;border-radius:10px}
+.sale-cart-info{flex:1;min-width:0;display:grid;gap:5px;padding-right:2px}
+.sale-cart-info .b-name{font-weight:700;line-height:1.3;overflow-wrap:break-word;hyphens:auto}
+.sale-cart-tags{display:flex;flex-wrap:wrap;gap:4px}
+.sale-cart-tags .prod-tag{margin:0}
+.sale-del.sale-cart-del{height:28px;min-width:28px;width:28px;border-radius:8px;font-size:13px;box-shadow:none}
+.sale-del.sale-cart-del:hover{background:var(--lav)}
+.sale-cart-line .sale-promo-note{width:100%;text-align:center;margin:0;white-space:normal;overflow-wrap:anywhere}
+.sale-cart-bottom{display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:nowrap}
+.sale-cart-price{display:flex;align-items:center;gap:6px;flex:1 1 auto;min-width:0}
+.sale-cart-price .price-input{width:88px;padding:7px 8px}
+.sale-cart-qty{display:flex;align-items:center;gap:6px;flex:0 0 auto}
+.sale-cart-qty .qty-input{flex:0 0 auto;width:52px;text-align:center;border:1px solid var(--line);border-radius:9px;font:700 16px 'Nunito',sans-serif;color:var(--ink);padding:6px 4px;appearance:textfield}
+.sale-cart-qty .qty-input::-webkit-outer-spin-button,.sale-cart-qty .qty-input::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
+.sale-cart-qty .qty-input{-moz-appearance:textfield}
+.qty-mini{width:28px;height:28px;border-radius:8px;background:var(--lav);border:1px solid var(--line);color:var(--brand-deep);font-size:16px;font-weight:800;display:inline-flex;align-items:center;justify-content:center;padding:0;line-height:1;flex:0 0 auto}
+.qty-mini:hover{background:var(--brand-line)}
+/* Botones flotantes de X/Guardar dentro del encabezado de las ventanas grandes
+   (Registrar venta / Nuevo cargamento), mismo estilo que el modal-float-actions. */
+.sale-head-floats{display:flex;align-items:center;gap:8px;flex:0 0 auto}
+.sale-head-floats .icon-btn{height:34px;width:34px;border-radius:10px;box-shadow:0 2px 8px rgba(0,0,0,.15)}
+.sale-head-floats .float-cancel{color:#fff;background:rgba(160,73,73,.85)}
+.sale-head-floats .float-cancel:hover{background:#a04949}
+.sale-head-floats .float-save{color:#fff;background:rgba(47,107,51,.87)}
+.sale-head-floats .float-save:hover{background:#2f6b33}
 .product-image-cell{width:38px;height:38px;object-fit:cover;border-radius:9px;background:var(--peach);flex:0 0 auto}
 .product-cell{display:flex;flex-direction:row;align-items:center;gap:10px;min-width:0}
 .product-cell .product-name{white-space:normal;overflow-wrap:break-word;line-height:1.35}.prod-tag{display:inline-block;margin:2px 6px 0 0;padding:2px 7px;border-radius:999px;background:var(--brand);color:var(--surface);font-size:10px;font-weight:700;line-height:1.5;vertical-align:middle;max-width:100%;overflow-wrap:break-word}
@@ -337,7 +369,7 @@ td.cat-bar .product-name .prod-tag{margin-left:auto;flex:0 1 auto;min-width:0;ma
 
 /* Ventanas de edicion: que quepan en la pantalla sin desbordes ni scroll
    largo; el contenido sobrante si acaso usa el scroll interno del modal. */
-.modal{max-height:calc(100dvh - 26px);overflow-x:hidden;overflow-y:auto}
+.modal{max-height:calc(100dvh - 40px);overflow-x:hidden;overflow-y:auto}
 .modal > h2{margin:0 0 14px}
 .modal .field{margin:12px 0}
 .modal .modal-actions{margin-top:16px}

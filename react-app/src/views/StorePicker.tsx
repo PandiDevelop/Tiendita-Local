@@ -1,6 +1,6 @@
 import { useStore } from '../store';
 import { esc } from '../lib/core';
-import { Modal, StoreImage } from '../ui';
+import { Modal, StoreImage, CloseIcon } from '../ui';
 
 // Ventana de selección de tienda: aparece al conectarse a una cuenta que tiene
 // más de una tienda, para elegir con cuál entrar. Si la cuenta solo tiene una,
@@ -9,6 +9,9 @@ export function StorePicker() {
   const { state, pickStore, closePicker } = useStore();
   return (
     <Modal onClose={closePicker} modalClassName="store-picker-modal">
+      <div className="modal-float-actions">
+        <button type="button" className="icon-btn float-cancel" title="Cerrar" aria-label="Cerrar" onClick={closePicker}><CloseIcon size={15} /></button>
+      </div>
       <h2>Elige una tienda</h2>
       <p className="muted">Tu cuenta tiene varias tiendas. Elige con cuál quieres entrar.</p>
       <div className="store-picker-list">

@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useStore } from '../store';
 import { syncName, syncSetName } from '../lib/sync';
-import { Modal } from '../ui';
+import { Modal, CloseIcon } from '../ui';
 
 export function JoinModal({ onClose }: { onClose: () => void }) {
   const { join, toast } = useStore();
@@ -25,6 +25,9 @@ export function JoinModal({ onClose }: { onClose: () => void }) {
 
   return (
     <Modal onClose={onClose}>
+      <div className="modal-float-actions">
+        <button type="button" className="icon-btn float-cancel" title="Cerrar" aria-label="Cerrar" onClick={onClose}><CloseIcon size={15} /></button>
+      </div>
       <h2>Unirme a una tienda</h2>
       <div className="field"><label>Tu nombre</label>
         <input id="sync-name" maxLength={30} placeholder="Cómo te llaman tus compañeros" value={name} onChange={(e) => setName(e.target.value)} />
@@ -34,7 +37,6 @@ export function JoinModal({ onClose }: { onClose: () => void }) {
       </div>
       <p className="muted">Pega el código que te dieron y verás la tienda aquí.</p>
       <div className="modal-actions">
-        <button className="button secondary" onClick={onClose}>Cancelar</button>
         <button className="button primary" onClick={submit} disabled={busy}>{busy ? 'Vinculando…' : 'Vincular'}</button>
       </div>
     </Modal>

@@ -220,42 +220,47 @@ export function SaleRegistration({ onClose }: { onClose: () => void }) {
     const p = s.products.find((x) => x.id === l.pid);
     if (!p) return null;
     const promo = findActivePromo(p, catUnits(lines, p), productPromos(s, p));
+    const tags = productTags(p);
     return (
-      <div className="sale-builder-line" data-pid={p.id} data-price={l.price} key={n}>
-        <div className="sale-builder-head">
-          <Image src={p.image || DEFAULT_PRODUCT_IMAGE} cls="product-image-sale" />
-          <div className="sale-builder-name">
-            <div className="prod-cat">{(p.category || '').trim() || 'Sin categoría'}</div>
-            <div className="sale-builder-name-row">
-              <span className="b-name">{p.name}</span>
-              {productTags(p).map((t) => <span className="prod-tag sale-tag" key={t}>{shortTag(t)}</span>)}
-            </div>
+      <div className="sale-builder-line sale-cart-line" data-pid={p.id} data-price={l.price} key={n}>
+        <div className="prod-cat sale-cart-cat">{(p.category || '').trim() || 'Sin categoría'}</div>
+        <div className="sale-cart-row">
+          <Image src={p.image || DEFAULT_PRODUCT_IMAGE} cls="product-image-sale sale-cart-img" />
+          <div className="sale-cart-info">
+            <div className="b-name">{p.name}</div>
+            {tags.length > 0 && (
+              <div className="sale-cart-tags">{tags.map((t) => <span className="prod-tag" key={t}>{shortTag(t)}</span>)}</div>
+            )}
           </div>
-          <button className="sale-del" title="Quitar este producto de la venta" onClick={() => removeLine(n)}><CloseIcon size={13} /></button>
+          <button type="button" className="sale-del sale-cart-del" title="Quitar este producto de la venta" onClick={() => removeLine(n)}><CloseIcon size={11} /></button>
         </div>
         {promo && <div className="sale-promo-note">Promo aplicada: {promo.label}</div>}
-        <div className="sale-builder-price">
-          <input className="price-input" type="number" min={0} step="any" inputMode="decimal" value={String(l.price)} onChange={(e) => setManualPrice(n, e.target.value)} title="Puedes cambiar el precio a mano" />
-          <span className="muted">c/u</span>
-          {l.manual && (
-            <button type="button" className="icon-remove reset-price" title="Volver al precio automático" onClick={() => setLine(n, { manual: false }, true)}><UndoIcon size={13} /></button>
-          )}
-        </div>
-        <div className="sale-builder-qty">
-          <button type="button" className="qty-btn" onClick={() => { clearQtyDraft(n); setLine(n, { qty: Math.max(0, l.qty - 1) }, true); }}>−</button>
-          <input className="qty-input" type="number" min={0} step={1} inputMode="numeric" value={qtyDraft[n] !== undefined ? qtyDraft[n] : String(l.qty)} onChange={(e) => setQtyText(n, e.target.value)} onBlur={() => clearQtyDraft(n)} />
-          <button type="button" className="qty-btn" onClick={() => { clearQtyDraft(n); setLine(n, { qty: l.qty + 1 }, true); }}>+</button>
+        <div className="sale-cart-bottom">
+          <div className="sale-cart-price">
+            <input className="price-input" type="number" min={0} step="any" inputMode="decimal" value={String(l.price)} onChange={(e) => setManualPrice(n, e.target.value)} title="Puedes cambiar el precio a mano" />
+            <span className="muted">c/u</span>
+            {l.manual && (
+              <button type="button" className="icon-remove reset-price" title="Volver al precio automático" onClick={() => setLine(n, { manual: false }, true)}><UndoIcon size={13} /></button>
+            )}
+          </div>
+          <div className="sale-cart-qty">
+            <input className="qty-input" type="number" min={0} step={1} inputMode="numeric" value={qtyDraft[n] !== undefined ? qtyDraft[n] : String(l.qty)} onChange={(e) => setQtyText(n, e.target.value)} onBlur={() => clearQtyDraft(n)} />
+            <button type="button" className="qty-mini" title="Restar 1" aria-label="Restar 1" onClick={() => { clearQtyDraft(n); setLine(n, { qty: Math.max(0, l.qty - 1) }, true); }}>−</button>
+            <button type="button" className="qty-mini" title="Sumar 1" aria-label="Sumar 1" onClick={() => { clearQtyDraft(n); setLine(n, { qty: l.qty + 1 }, true); }}>+</button>
+          </div>
         </div>
       </div>
     );
   };
 
   return (
-    <Modal onClose={onClose}>
+    <Modal onClose={onClose} modalClassName="sale-modal">
       <div className="sale-window">
         <div className="sale-modal-head">
           <h2 style={{ margin: 0 }}>Registrar una venta</h2>
-          <button type="button" className="x-close" title="Salir sin guardar" onClick={onClose}><CloseIcon size={15} /></button>
+          <div className="sale-head-floats">
+            <button type="button" className="icon-btn float-cancel" title="Salir sin guardar" aria-label="Salir sin guardar" onClick={onClose}><CloseIcon size={15} /></button>
+          </div>
         </div>
         <div className="sale-scroll">
           <div className="sale-builder">

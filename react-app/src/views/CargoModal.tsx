@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useStore } from '../store';
 import { esc, productTags, DEFAULT_PRODUCT_IMAGE, syncName, getSupplierCost, getSupplierInfo, setSupplierCost, ensureCost, recordSupplierPrice, adoptInvLog, inventorySold } from '../lib/core';
 import { notifyStorePush } from '../lib/push';
-import { Modal, CloseIcon, Image } from '../ui';
+import { Modal, CloseIcon, SaveIcon, Image } from '../ui';
 import type { Product, Store as IStore } from '../types';
 
 // Línea de un cargamento: un producto con sus unidades y, por lote, la info
@@ -124,7 +124,10 @@ export function CargoModal({ preselect, onClose }: { preselect?: string | null; 
       <div className="sale-window">
         <div className="sale-modal-head">
           <h2 style={{ margin: 0 }}>Nuevo cargamento</h2>
-          <button type="button" className="x-close" title="Salir sin guardar" onClick={onClose}><CloseIcon size={15} /></button>
+          <div className="sale-head-floats">
+            <button type="button" className="icon-btn float-cancel" title="Salir sin guardar" aria-label="Salir sin guardar" onClick={onClose}><CloseIcon size={15} /></button>
+            <button type="button" className="icon-btn float-save" title="Registrar cargamento" aria-label="Guardar cargamento" onClick={saveCargo}><SaveIcon size={15} /></button>
+          </div>
         </div>
         <div className="sale-scroll">
           <div className="sale-builder">

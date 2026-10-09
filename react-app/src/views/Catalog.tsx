@@ -3,7 +3,7 @@ import type { PointerEvent as ReactPointerEvent } from 'react';
 import { useStore } from '../store';
 import { money, esc, inventorySold, reorderCategoryProducts, groupedByCategory, storeCats, promoText, DEFAULT_PRODUCT_IMAGE, productTags, adoptInvLog, syncName } from '../lib/core';
 import { customConfirm } from '../lib/dialog';
-import { GearMenu, Image, StorefrontIcon, CaretIcon, Modal, PencilIcon, CargoIcon } from '../ui';
+import { GearMenu, Image, StorefrontIcon, CaretIcon, Modal, PencilIcon, CargoIcon, CloseIcon, SaveIcon } from '../ui';
 import { CategoryModal } from './CategoryModal';
 import { TagModal } from './TagModal';
 import { VirtualCatalog } from './VirtualCatalog';
@@ -344,6 +344,10 @@ export function Catalog() {
 
       {edit && (
         <Modal onClose={() => setEdit(null)}>
+          <div className="modal-float-actions">
+            <button type="button" className="icon-btn float-cancel" title="Cancelar" aria-label="Cancelar" onClick={() => setEdit(null)}><CloseIcon size={15} /></button>
+            <button type="button" className="icon-btn float-save" title="Guardar" aria-label="Guardar" onClick={saveEdit}><SaveIcon size={15} /></button>
+          </div>
           <h2>Editar existencias</h2>
           <div className="field"><label>Producto</label>
             <div className="product-name" style={{ fontWeight: 700 }}>{esc(edit.p.name)}</div>
@@ -359,15 +363,14 @@ export function Catalog() {
           <div className="field"><label>Quién hace el ajuste</label>
             <input maxLength={40} placeholder="Tu nombre" value={edit.who} onChange={(e) => setEdit({ ...edit, who: e.target.value })} />
           </div>
-          <div className="modal-actions">
-            <button className="button secondary" onClick={() => setEdit(null)}>Cancelar</button>
-            <button className="button primary" onClick={saveEdit}>Guardar</button>
-          </div>
         </Modal>
       )}
 
       {logOpen && (
         <Modal onClose={() => setLogOpen(false)}>
+          <div className="modal-float-actions">
+            <button type="button" className="icon-btn float-cancel" title="Cerrar" aria-label="Cerrar" onClick={() => setLogOpen(false)}><CloseIcon size={15} /></button>
+          </div>
           <h2>Historial de cambios</h2>
           <p className="muted">Compras, ajustes y correcciones del inventario.</p>
           {(s.invLog || []).length ? (

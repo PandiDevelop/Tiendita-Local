@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useStore } from '../store';
 import { DEFAULT_STORE_IMAGE, compressImage, esc, myRole, syncClientId, syncGenPin, syncName, syncSetName, uid } from '../lib/core';
 import { deactivateSyncFn, leaveStoreFn, deleteStoreFn, removeMemberFn, setMemberRoleFn, isValidStorePin } from '../lib/sync';
-import { CloseIcon, ImagePicker, Modal } from '../ui';
+import { CloseIcon, ImagePicker, Modal, SaveIcon } from '../ui';
 import type { Member, Role } from '../types';
 
 export function StoreModal({ editing, onClose }: { editing?: boolean; onClose: () => void }) {
@@ -112,6 +112,10 @@ export function StoreModal({ editing, onClose }: { editing?: boolean; onClose: (
 
   return (
     <Modal onClose={onClose}>
+      <div className="modal-float-actions">
+        <button type="button" className="icon-btn float-cancel" title="Cancelar" aria-label="Cancelar" onClick={onClose}><CloseIcon size={15} /></button>
+        <button type="button" className="icon-btn float-save" title="Guardar tienda" aria-label="Guardar tienda" onClick={save}><SaveIcon size={15} /></button>
+      </div>
       <h2>{editing ? 'Editar tienda' : 'Nueva tienda'}</h2>
       <div className="field"><label>Nombre de la tienda</label>
         <input id="store-name" maxLength={40} placeholder="Ej. Dulces Aurora" value={name} onChange={(e) => setName(e.target.value)} disabled={isEmployee} />
@@ -192,10 +196,6 @@ export function StoreModal({ editing, onClose }: { editing?: boolean; onClose: (
           </div>
         </div>
       ) : null}
-      <div className="modal-actions">
-        <button className="button secondary" onClick={onClose}>Cancelar</button>
-        <button className="button primary" onClick={save}>Guardar tienda</button>
-      </div>
     </Modal>
   );
 }

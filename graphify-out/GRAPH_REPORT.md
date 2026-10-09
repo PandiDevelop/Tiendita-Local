@@ -1,102 +1,121 @@
-# Graph Report - Web  (2026-10-06)
+# Graph Report - Web  (2026-10-09)
 
 ## Corpus Check
-- 70 files · ~356,960 words
+- 71 files · ~361,144 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
-- 718 nodes · 2223 edges · 22 communities (17 shown, 4 thin omitted)
+- 749 nodes · 2360 edges · 29 communities (24 shown, 4 thin omitted)
 - Extraction: 99% EXTRACTED · 1% INFERRED · 0% AMBIGUOUS · INFERRED: 18 edges (avg confidence: 0.85)
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `35c1ecd2`
+- Built from commit: `f41d617c`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
 ## Community Hubs (Navigation)
 - sync.ts
-- syncClientId
+- core.ts
 - SettingsModal.tsx
 - react-app/package.json
-- core.ts
+- History.tsx
+- features.test.tsx
 - compilerOptions
 - ui.tsx
 - vite-env.d.ts
 - public/sw.js
 - sw.js
+- Catalog.tsx
 - Mi Tiendita
 - AGENTS.md
+- dialog.ts
 - index.js
 - push-worker/package.json
 - Avisos push reales para Mi Tiendita (con la app cerrada del todo)
 - Notes.tsx
-- deploy-web.mjs
-- testUtils.tsx
-- inject-sw-version.mjs
+- Catalog
 - useStore
+- deploy-web.mjs
+- App
+- inject-sw-version.mjs
+- Dashboard.tsx
+- ProductForm
+- SaleRegistration.tsx
 - store.tsx
 
 ## God Nodes (most connected - your core abstractions)
-1. `syncClientId()` - 44 edges
-2. `useStore()` - 41 edges
-3. `esc()` - 34 edges
-4. `syncName()` - 34 edges
+1. `useStore()` - 43 edges
+2. `syncName()` - 41 edges
+3. `syncClientId()` - 40 edges
+4. `esc()` - 36 edges
 5. `SettingsModal()` - 31 edges
 6. `uid()` - 30 edges
-7. `react` - 26 edges
-8. `Notes()` - 26 edges
-9. `SaleRegistration()` - 26 edges
+7. `react` - 27 edges
+8. `SaleRegistration()` - 27 edges
+9. `Notes()` - 26 edges
 10. `AppProvider()` - 25 edges
 
 ## Surprising Connections (you probably didn't know these)
-- `addProduct()` --calls--> `uid()`  [EXTRACTED]
-  react-app/src/test/sync.test.ts → react-app/src/lib/core.ts
-- `submit()` --calls--> `syncSetName()`  [EXTRACTED]
-  react-app/src/views/Join.tsx → react-app/src/lib/core.ts
+- `Dashboard()` --indirect_call--> `esc()`  [INFERRED]
+  react-app/src/views/Dashboard.tsx → react-app/src/lib/core.ts
+- `openCargo()` --calls--> `syncName()`  [EXTRACTED]
+  react-app/src/views/Inventory.tsx → react-app/src/lib/core.ts
 - `register()` --indirect_call--> `total()`  [INFERRED]
   react-app/src/views/SaleRegistration.tsx → react-app/src/lib/core.ts
-- `CategoryGroup` --references--> `Product`  [EXTRACTED]
-  react-app/src/lib/core.ts → react-app/src/types.ts
-- `removeCategory()` --calls--> `customConfirm()`  [EXTRACTED]
-  react-app/src/views/Inventory.tsx → react-app/src/lib/dialog.ts
+- `bump()` --calls--> `adoptInvLog()`  [EXTRACTED]
+  react-app/src/views/Catalog.tsx → react-app/src/lib/core.ts
+- `bump()` --calls--> `adoptInvLog()`  [EXTRACTED]
+  react-app/src/views/Inventory.tsx → react-app/src/lib/core.ts
 
 ## Import Cycles
 - None detected.
 
-## Communities (22 total, 4 thin omitted)
+## Communities (29 total, 4 thin omitted)
 
 ### Community 0 - "sync.ts"
-Cohesion: 0.07
-Nodes (86): clearDeletedNotes(), compressImage(), DEFAULT_STORE_IMAGE, deletedNoteIdsOf(), deletedNotesKey(), deletedStores(), forgetDeletedStore(), getDeletedNoteIds() (+78 more)
+Cohesion: 0.06
+Nodes (96): clearDeletedNotes(), costEntryKey(), dedupeCosts(), deletedNoteIdsOf(), deletedNotesKey(), DeletedStoreRecord, deletedStores(), deviceId() (+88 more)
 
-### Community 2 - "syncClientId"
-Cohesion: 0.08
-Nodes (58): addChecklistNote(), addNote(), addNoteMsg(), addNoteReply(), adoptInvLog(), DEFAULT_PRODUCT_TAG, EditablePromo, ensureCost() (+50 more)
+### Community 2 - "core.ts"
+Cohesion: 0.06
+Nodes (75): activeEvent(), addChecklistNote(), addNote(), addNoteMsg(), addNoteReply(), adoptInvLog(), canManageTeam(), CategoryGroup (+67 more)
 
 ### Community 3 - "SettingsModal.tsx"
-Cohesion: 0.07
-Nodes (63): authMessage(), currentIdentity(), emit(), initAccountAuth(), LinkResult, linkStoresToAccount(), registerAccount(), sendPasswordReset() (+55 more)
+Cohesion: 0.08
+Nodes (52): authMessage(), currentIdentity(), emit(), initAccountAuth(), LinkResult, linkStoresToAccount(), registerAccount(), sendPasswordReset() (+44 more)
 
 ### Community 4 - "react-app/package.json"
 Cohesion: 0.06
-Nodes (35): dependencies, firebase, react, react-dom, devDependencies, jsdom, @testing-library/jest-dom, @testing-library/react (+27 more)
+Nodes (34): dependencies, firebase, react, react-dom, devDependencies, jsdom, @testing-library/jest-dom, @testing-library/react (+26 more)
 
-### Community 5 - "core.ts"
-Cohesion: 0.06
-Nodes (49): activeEvent(), canManageTeam(), CategoryGroup, costEntryKey(), costTotal(), dedupeCosts(), DEFAULT_PROD_SVG, DEFAULT_STORE_SVG (+41 more)
+### Community 5 - "History.tsx"
+Cohesion: 0.14
+Nodes (22): catLabel(), findActivePromo(), priceFor(), productPromos(), saleUnitPrice(), saleUnits(), total(), Sale (+14 more)
+
+### Community 6 - "features.test.tsx"
+Cohesion: 0.09
+Nodes (29): insertTagSorted(), makeDraft(), removeStoreTag(), renameStoreTag(), storeTags(), AppCtx, ModalKind, renderLanding() (+21 more)
 
 ### Community 7 - "compilerOptions"
 Cohesion: 0.11
 Nodes (17): compilerOptions, allowImportingTsExtensions, isolatedModules, jsx, lib, module, moduleResolution, noEmit (+9 more)
 
 ### Community 8 - "ui.tsx"
-Cohesion: 0.05
-Nodes (57): App(), selectStore(), setMenu(), DEV_LOGO, TAB_ICONS, useScrollAxisLock(), ENTRY, popOverlay() (+49 more)
+Cohesion: 0.10
+Nodes (27): capFirst(), DEV_LOGO, MenuClock(), TAB_ICONS, closeLightbox(), emit(), Listener, listeners (+19 more)
+
+### Community 12 - "Catalog.tsx"
+Cohesion: 0.18
+Nodes (24): DEFAULT_PRODUCT_IMAGE, esc(), groupedByCategory(), inventorySold(), money(), productTags(), promoText(), storeCats() (+16 more)
 
 ### Community 13 - "Mi Tiendita"
 Cohesion: 0.17
 Nodes (11): Configurar Firebase (una sola vez, 5 minutos), Cómo se usa, Cómo usarla, Decisiones tomadas, Generar un APK, Incluye, Inventario (opcional), Mi Tiendita (+3 more)
+
+### Community 15 - "dialog.ts"
+Cohesion: 0.11
+Nodes (23): ENTRY, hasOverlay(), popOverlay(), pushOverlay(), realUrl(), stack, syncHistory(), customAlert() (+15 more)
 
 ### Community 16 - "index.js"
 Cohesion: 0.36
@@ -111,48 +130,64 @@ Cohesion: 0.25
 Nodes (7): Avisos push reales para Mi Tiendita (con la app cerrada del todo), Costos, ¿Cómo sé si quedó bien?, Paso 1 — Generar la clave VAPID en Firebase, Paso 2 — Descargar la cuenta de servicio, Paso 3 — Crear la cuenta de Cloudflare y desplegar el Worker, Paso 4 — Conectar la URL del Worker con la app
 
 ### Community 19 - "Notes.tsx"
-Cohesion: 0.10
-Nodes (40): canDeleteNote(), canEditNote(), canManageNotes(), deleteNoteMsg(), deleteNoteReply(), editChecklistNote(), editNoteMsg(), editNoteReply() (+32 more)
+Cohesion: 0.08
+Nodes (44): canDeleteNote(), canEditNote(), canManageNotes(), deleteNoteMsg(), deleteNoteReply(), editChecklistNote(), editNoteMsg(), editNoteReply() (+36 more)
+
+### Community 20 - "Catalog"
+Cohesion: 0.11
+Nodes (23): reorderCategoryProducts(), Catalog(), bump(), catKey(), catOpen(), cur(), openEdit(), saveEdit() (+15 more)
+
+### Community 21 - "useStore"
+Cohesion: 0.23
+Nodes (10): DEFAULT_STORE_IMAGE, itemLabel(), useStore(), Member, Role, ImagePicker(), EmpAcc, Employees() (+2 more)
 
 ### Community 22 - "deploy-web.mjs"
 Cohesion: 0.40
 Nodes (4): dist, entries, here, root
 
-### Community 23 - "testUtils.tsx"
-Cohesion: 0.06
-Nodes (45): hasOverlay(), CapgoGlobal, initCapUpdater(), UpdaterPlugin, makeDraft(), BackButtonApp, CapacitorGlobal, initNativeBack() (+37 more)
+### Community 23 - "App"
+Cohesion: 0.07
+Nodes (36): App(), selectStore(), setMenu(), useScrollAxisLock(), CapgoGlobal, initCapUpdater(), UpdaterPlugin, consumeDeepNote() (+28 more)
 
 ### Community 24 - "inject-sw-version.mjs"
 Cohesion: 0.40
 Nodes (3): p, root, versionSrc
 
-### Community 27 - "useStore"
-Cohesion: 0.05
-Nodes (83): Dropdown(), DropdownItem, catLabel(), costFor(), DEFAULT_PRODUCT_IMAGE, esc(), findActivePromo(), formatDate() (+75 more)
+### Community 25 - "Dashboard.tsx"
+Cohesion: 0.22
+Nodes (12): formatDate(), pad2(), BoxIcon(), CartIcon(), CashIcon(), ChevronIcon(), Dashboard(), Line (+4 more)
+
+### Community 26 - "ProductForm"
+Cohesion: 0.32
+Nodes (7): numText(), toEditablePromos(), CategoryModal(), loadCat(), ProductForm(), commitTag(), flashTagLimit()
+
+### Community 27 - "SaleRegistration.tsx"
+Cohesion: 0.13
+Nodes (17): Dropdown(), DropdownItem, saleCatsOf(), shortTag(), sortProducts(), ReceiptIcon(), UndoIcon(), Line (+9 more)
 
 ### Community 30 - "store.tsx"
-Cohesion: 0.11
-Nodes (34): onAccountChange(), loadState(), NOTE_TTL_MS, saveState(), archiveMarkGone(), archiveRows(), archiveUpsert(), buildTxt() (+26 more)
+Cohesion: 0.08
+Nodes (46): onAccountChange(), InvLogRow, loadState(), NOTE_TTL_MS, samePerson(), saveState(), archiveMarkGone(), archiveRows() (+38 more)
 
 ## Knowledge Gaps
-- **130 isolated node(s):** `name`, `private`, `dev`, `deploy`, `wrangler` (+125 more)
-  These have ≤1 connection - possible missing edges or undocumented components. (Counts symbols only; 169 node(s) total have ≤1 connection when file, concept and rationale nodes are included.)
+- **133 isolated node(s):** `name`, `private`, `dev`, `deploy`, `wrangler` (+128 more)
+  These have ≤1 connection - possible missing edges or undocumented components. (Counts symbols only; 175 node(s) total have ≤1 connection when file, concept and rationale nodes are included.)
 - **4 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
 
 ## Suggested Questions
 _Questions this graph is uniquely positioned to answer:_
 
-- **Why does `react` connect `useStore` to `sync.ts`, `syncClientId`, `SettingsModal.tsx`, `react-app/package.json`, `core.ts`, `ui.tsx`, `Notes.tsx`, `testUtils.tsx`, `store.tsx`?**
-  _High betweenness centrality (0.071) - this node is a cross-community bridge._
-- **Why does `useStore()` connect `useStore` to `sync.ts`, `syncClientId`, `SettingsModal.tsx`, `core.ts`, `ui.tsx`, `Notes.tsx`, `store.tsx`?**
-  _High betweenness centrality (0.033) - this node is a cross-community bridge._
-- **Why does `SaleRegistration()` connect `useStore` to `ui.tsx`, `syncClientId`, `core.ts`?**
-  _High betweenness centrality (0.029) - this node is a cross-community bridge._
+- **Why does `react` connect `Catalog.tsx` to `core.ts`, `SettingsModal.tsx`, `react-app/package.json`, `History.tsx`, `features.test.tsx`, `ui.tsx`, `Notes.tsx`, `useStore`, `App`, `SaleRegistration.tsx`, `store.tsx`?**
+  _High betweenness centrality (0.070) - this node is a cross-community bridge._
+- **Why does `useStore()` connect `useStore` to `sync.ts`, `core.ts`, `SettingsModal.tsx`, `History.tsx`, `features.test.tsx`, `ui.tsx`, `Catalog.tsx`, `Notes.tsx`, `Catalog`, `App`, `Dashboard.tsx`, `ProductForm`, `SaleRegistration.tsx`, `store.tsx`?**
+  _High betweenness centrality (0.037) - this node is a cross-community bridge._
+- **Why does `syncName()` connect `core.ts` to `sync.ts`, `SettingsModal.tsx`, `History.tsx`, `features.test.tsx`, `Catalog.tsx`, `Notes.tsx`, `Catalog`, `useStore`, `SaleRegistration.tsx`?**
+  _High betweenness centrality (0.031) - this node is a cross-community bridge._
 - **What connects `name`, `private`, `dev` to the rest of the system?**
-  _130 weakly-connected nodes found - possible documentation gaps or missing edges._
+  _133 weakly-connected nodes found - possible documentation gaps or missing edges._
 - **Should `sync.ts` be split into smaller, more focused modules?**
-  _Cohesion score 0.06530825496342738 - nodes in this community are weakly interconnected._
-- **Should `syncClientId` be split into smaller, more focused modules?**
-  _Cohesion score 0.07972027972027972 - nodes in this community are weakly interconnected._
+  _Cohesion score 0.0586997685672207 - nodes in this community are weakly interconnected._
+- **Should `core.ts` be split into smaller, more focused modules?**
+  _Cohesion score 0.06308473670141673 - nodes in this community are weakly interconnected._
 - **Should `SettingsModal.tsx` be split into smaller, more focused modules?**
-  _Cohesion score 0.07026307026307026 - nodes in this community are weakly interconnected._
+  _Cohesion score 0.08438228438228439 - nodes in this community are weakly interconnected._
