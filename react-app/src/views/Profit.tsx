@@ -1,12 +1,12 @@
 import { useState } from 'react';
 import { useStore } from '../store';
 import { costFor, esc, money, priceFor, today, DEFAULT_PRODUCT_IMAGE, inventorySold, groupedByCategory, productTags, productLedger } from '../lib/core';
-import { Image, HScroll } from '../ui';
+import { CaretIcon, Image, HScroll } from '../ui';
 import { History } from './History';
 import type { Sale, Store as IStore } from '../types';
 
 type RangeMode = 'todo' | 'hoy' | 'mes' | 'rango';
-type ViewMode = 'resumen' | 'historial' | 'bodega';
+type ViewMode = 'resumen' | 'historial';
 
 interface PLine { pid: string; name: string; image: string; qty: number; revenue: number; cost: number; profit: number; }
 
@@ -37,6 +37,9 @@ export function Profit() {
   const [mode, setMode] = useState<RangeMode>('todo');
   const [from, setFrom] = useState(today());
   const [to, setTo] = useState(today());
+  // Categorias plegables: por defecto abiertas; tocar la cabecera las
+  // despliega/pliega y la fila ordena por la ganancia del periodo.
+  const [folded, setFolded] = useState<Record<string, boolean>>({});
 
   const filtered = s.sales.filter((x) => {
     if (mode === 'todo') return true;
@@ -77,7 +80,7 @@ export function Profit() {
             <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><rect x="3" y="7" width="18" height="13" rx="2" /><path d="M3 7l9 6 9-6" /><path d="M9 20h6" /></svg>
           </div>
           <div className="captioned-stat"><div>Coste de producción</div><div className="value">{money(cost)}</div></div>
-          <div className="small">{stockTotal} producto{stockTotal === 1 ? '' : 's'} en bodega</div>
+          <div className="small">{stockTotal} producto{stockTotal === 1 ? '' : 's'} en existencias</div>
         </div>
         <div className="card stat stat-h stat-panel">
           <div className="stat-icon">
@@ -93,7 +96,6 @@ export function Profit() {
           <div><h2>Ganancias</h2><p className="muted">Ingresos, costo y ganancia.</p></div>
           <div className="inv-modes">
             <button type="button" className={'inv-mode' + (view === 'resumen' ? ' on' : '')} onClick={() => setView('resumen')}>Resumen</button>
-            <button type="button" className={'inv-mode' + (view === 'bodega' ? ' on' : '')} onClick={() => setView('bodega')}>Bodega</button>
             <button type="button" className={'inv-mode' + (view === 'historial' ? ' on' : '')} onClick={() => setView('historial')}>Historial de ventas</button>
           </div>
         </div>
@@ -119,67 +121,71 @@ export function Profit() {
         )}
       </div>
 
-      {view === 'historial' ? <History /> : view === 'bodega' ? (
+      {view === 'historial' ? <History /> : (
         <div className="panel">
-          <div className="panel-head"><div><h2>Bodega</h2><p className="muted">Lo adquirido por producto y categoría, lo vendido, el coste, el ingreso y la ganancia.</p></div></div>
+          <div className="panel-head"><div><h2>Ganancia por producto</h2><p className="muted">De mayor a menor ganancia: la categoría que más gana arriba y, dentro de cada una, el producto que más gana primero. “Vendido” y “Adquirido” son el total histórico.</p></div></div>
           {s.products.length ? (
             (() => {
               const ledger = productLedger(s);
-              return groupedByCategory(s).map((g) => {
-                const catBought = g.list.reduce((a, p) => a + (ledger[p.id]?.acquired || 0), 0);
-                const catSold = g.list.reduce((a, p) => a + (ledger[p.id]?.sold || 0), 0);
-                return (
-                  <div className="cat-group" key={g.name}>
-                    <div className="cat-head">
-                      <b>{esc(g.name)}</b>
-                      <span className="cat-head-counts muted">· {g.list.length} producto{g.list.length === 1 ? '' : 's'} · {catBought} adquirido{catBought === 1 ? '' : 's'} · {catSold} vendido{catSold === 1 ? '' : 's'} · {money(g.list.reduce((a, p) => a + (ledger[p.id]?.revenue || 0), 0))} ingresos · {money(g.list.reduce((a, p) => a + (ledger[p.id]?.profit || 0), 0))} ganancia</span>
-                    </div>
-                    <div className="cat-body">
-                      <HScroll ariaLabel={'Bodega de ' + g.name}>
-                        <table><thead><tr><th>Producto</th><th>Vendido</th><th>Adquirido</th><th>Coste</th><th>Ingreso</th><th>Ganancia</th></tr></thead><tbody>
-                          {g.list.map((p) => {
-                            const l = ledger[p.id] || { sold: 0, acquired: 0, available: 0, revenue: 0, cost: 0, profit: 0 };
-                            return (
-                              <tr key={p.id}>
-                                <td className="cat-bar"><div className="product-cell"><Image src={p.image || DEFAULT_PRODUCT_IMAGE} cls="product-image-cell" /><div className="product-name">{esc(p.name)}{productTags(p).map((t) => <span className="prod-tag" key={t} title={esc(t)}>{esc(t)}</span>)}</div></div></td>
-                                <td>{l.sold || '—'}</td>
-                                <td>{l.acquired || '—'}</td>
-                                <td className="muted">{l.cost ? money(l.cost) : '—'}</td>
-                                <td>{l.revenue ? money(l.revenue) : '—'}</td>
-                                <td className={l.profit > 0 ? 'profit-pos' : l.profit < 0 ? 'profit-neg' : 'muted'}>{l.profit ? money(l.profit) : '—'}</td>
-                              </tr>
-                            );
-                          })}
-                        </tbody></table>
-                      </HScroll>
-                    </div>
-                  </div>
-                );
-              });
+              const period = new Map(lines.map((x) => [x.pid, x]));
+              const pf = (pid: string) => period.get(pid)?.profit || 0;
+              const cats = groupedByCategory(s)
+                .map((g) => ({
+                  name: g.name,
+                  rows: [...g.list].sort((a, b) => pf(b.id) - pf(a.id) || (a.name || '').localeCompare(b.name || '', 'es')),
+                  profit: g.list.reduce((n, p) => n + pf(p.id), 0),
+                }))
+                .sort((a, b) => b.profit - a.profit)
+                .filter((c) => c.rows.length > 0);
+              return (
+                <div className="cat-list">
+                  {cats.map((c) => {
+                    const closed = folded[c.name] === true;
+                    const catBought = c.rows.reduce((a, p) => a + (ledger[p.id]?.acquired || 0), 0);
+                    const catSold = c.rows.reduce((a, p) => a + (ledger[p.id]?.sold || 0), 0);
+                    const catRev = c.rows.reduce((a, p) => a + (period.get(p.id)?.revenue || 0), 0);
+                    return (
+                      <div className="cat-group" key={c.name}>
+                        <div className={'cat-head' + (closed ? ' closed' : '')} onClick={() => setFolded((f) => ({ ...f, [c.name]: !closed }))}>
+                          <b>{esc(c.name)}</b>
+                          <span className="cat-head-counts muted">· {c.rows.length} producto{c.rows.length === 1 ? '' : 's'} · {catBought} adquirido{catBought === 1 ? '' : 's'} · {catSold} vendido{catSold === 1 ? '' : 's'} · {money(catRev)} ingresos · {money(c.profit)} ganancia</span>
+                          <span className="sale-caret"><CaretIcon size={13} /></span>
+                        </div>
+                        {!closed && (
+                          <div className="cat-body">
+                            <HScroll ariaLabel={'Ganancias de ' + c.name}>
+                              <table><thead><tr><th>Producto</th><th>Vendido</th><th>Adquirido</th><th>Coste</th><th>Ingreso</th><th>Ganancia</th></tr></thead><tbody>
+                                {c.rows.map((p) => {
+                                  const l = ledger[p.id] || { sold: 0, acquired: 0, available: 0, revenue: 0, cost: 0, profit: 0 };
+                                  const pl = period.get(p.id);
+                                  const revenue = pl?.revenue || 0;
+                                  const cost = pl?.cost || 0;
+                                  const profit = pl?.profit || 0;
+                                  const pct = topProfit > 0 ? Math.max(0, profit / topProfit) * 100 : 0;
+                                  return (
+                                    <tr key={p.id}>
+                                      <td className="cat-bar"><div className="product-cell"><Image src={p.image || DEFAULT_PRODUCT_IMAGE} cls="product-image-cell" /><div className="product-name">{esc(p.name)}{productTags(p).map((t) => <span className="prod-tag" key={t} title={esc(t)}>{esc(t)}</span>)}</div></div></td>
+                                      <td>{l.sold || '—'}</td>
+                                      <td>{l.acquired || '—'}</td>
+                                      <td className="muted">{cost ? money(cost) : '—'}</td>
+                                      <td>{revenue ? money(revenue) : '—'}</td>
+                                      <td>
+                                        <div className="profit-cell">{profit !== 0 ? <b className={profit > 0 ? 'profit-pos' : 'profit-neg'}>{money(profit)}</b> : <span className="muted">—</span>}<div className="profit-bar"><span style={{ width: pct + '%' }}></span></div></div>
+                                      </td>
+                                    </tr>
+                                  );
+                                })}
+                              </tbody></table>
+                            </HScroll>
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              );
             })()
           ) : <div className="notice">No hay productos todavía.</div>}
-        </div>
-      ) : (
-        <div className="panel">
-          <div className="panel-head"><div><h2>Ganancia por producto</h2><p className="muted">De mayor a menor ganancia.</p></div></div>
-          {lines.length ? (
-            <table><thead><tr><th>Producto</th><th>Unidades</th><th>Ingresos</th><th>Costo</th><th>Ganancia</th></tr></thead><tbody>
-              {lines.map((x) => {
-                const pct = topProfit > 0 ? Math.max(0, x.profit / topProfit) * 100 : 0;
-                return (
-                  <tr key={x.pid}>
-                    <td className="cat-bar"><div className="product-cell"><Image src={x.image || DEFAULT_PRODUCT_IMAGE} cls="product-image-cell" /><div className="product-name">{esc(x.name)}</div></div></td>
-                    <td>{x.qty}</td>
-                    <td>{money(x.revenue)}</td>
-                    <td>{money(x.cost)}</td>
-                    <td>
-                      <div className="profit-cell"><b>{money(x.profit)}</b><div className="profit-bar"><span style={{ width: pct + '%' }}></span></div></div>
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody></table>
-          ) : <div className="notice">No hay ventas registradas en este periodo.</div>}
         </div>
       )}
     </>

@@ -1,11 +1,8 @@
 import { Fragment, ReactNode, useState } from 'react';
 import { CaretIcon, CloseIcon, DownloadIcon, PencilIcon, confirmDialog } from '../ui';
 import { useStore } from '../store';
-import { money, esc, total, shortDate, saleUnits, priceFor, formatDate, catLabel, findActivePromo, productPromos, canManageTeam, saleUnitPrice, syncName } from '../lib/core';
+import { money, esc, total, shortDate, saleUnits, priceFor, formatDate, catLabel, findActivePromo, productPromos, canManageTeam } from '../lib/core';
 import type { Sale } from '../types';
-
-// Linea editable: mismos campos que usa el registro de venta (SaleRegistration).
-interface EditLine { pid: string; price: number; cost: number; qty: number; manual?: boolean; supplierTag?: string; }
 
 export function History() {
   const { store, replace, setModal } = useStore();
@@ -15,29 +12,10 @@ export function History() {
 
   // Abre la venta en el registro (modal 'sale') precargada para corregirla.
   // Se marca en editingSaleId para que SaleRegistration reemplace esa venta
-  // en vez de crear una nueva.
+  // en vez de crear una nueva. No se toca el saleDraft: ese solo guarda la
+  // venta nueva en curso, la edición se reconstruye desde la propia venta.
   function startEdit(x: Sale) {
-    const lines: EditLine[] = x.items.map((i): EditLine | null => {
-      const p = s.products.find((pp) => pp.id === i.productId);
-      if (!p) return null;
-      const auto = saleUnitPrice(s, p, i.qty);
-      return {
-        pid: p.id,
-        price: i.price ?? auto,
-        cost: i.cost ?? p.cost ?? 0,
-        qty: i.qty,
-        manual: Math.abs((i.price ?? auto) - auto) > 0.001,
-        supplierTag: i.supplierTag,
-      };
-    }).filter((l): l is EditLine => l !== null);
-    const cats = Array.from(new Set(lines.map((l) => {
-      const p = s.products.find((pp) => pp.id === l.pid);
-      return p ? catLabel(p) : '';
-    }).filter(Boolean)));
-    replace((d) => {
-      d.saleDraft = { storeId: s.id, employee: x.employee || syncName(), categories: cats, lines: JSON.parse(JSON.stringify(lines)) };
-      d.editingSaleId = x.id;
-    });
+    replace((d) => { d.editingSaleId = x.id; });
     setModal('sale');
   }
 

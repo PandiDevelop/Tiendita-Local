@@ -250,6 +250,7 @@ export function loadState(): AppState {
     merged.saleDraft = { ...merged.saleDraft, categories: d.category && d.category.trim() ? [d.category.trim()] : [] };
   }
   if (merged.saleDraft && !Array.isArray(merged.saleDraft.categories)) merged.saleDraft.categories = [];
+  if (merged.saleDraft && !Array.isArray(merged.saleDraft.tags)) merged.saleDraft.tags = [];
   return merged;
 }
 

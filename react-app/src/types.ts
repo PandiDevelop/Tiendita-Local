@@ -299,6 +299,7 @@ export interface SaleDraft {
   storeId: string;
   employee: string;
   categories: string[];
+  tags: string[];
   lines: { pid: string; price: number; qty: number; cost?: number; supplierTag?: string }[];
 }
 

@@ -4,19 +4,53 @@ import { DEFAULT_PRODUCT_IMAGE, activeEvent, catLabel, findActivePromo, money, p
 import { notifyStorePush } from '../lib/push';
 import { Dropdown } from '../Dropdown';
 import { CloseIcon, Image, Modal, ReceiptIcon, UndoIcon } from '../ui';
-import type { Product, SaleItem } from '../types';
+import type { Product, Sale, SaleItem, Store } from '../types';
 
 interface Line { pid: string; price: number; cost: number; qty: number; manual?: boolean; supplierTag?: string; }
 
 const SALE_PAGE_SIZE = 4;
 
+// Reconstruye las lineas de la venta tal como las muestra el registro (misma
+// logica que usaba History) para poder corregirla en el modal.
+function editLinesForSale(x: Sale, s: Store): Line[] {
+  return x.items.map((i): Line | null => {
+    const p = s.products.find((pp) => pp.id === i.productId);
+    if (!p) return null;
+    const auto = saleUnitPrice(s, p, i.qty);
+    return {
+      pid: p.id,
+      price: i.price ?? auto,
+      cost: i.cost ?? p.cost ?? 0,
+      qty: i.qty,
+      manual: Math.abs((i.price ?? auto) - auto) > 0.001,
+      supplierTag: i.supplierTag,
+    };
+  }).filter((l): l is Line => l !== null);
+}
+
+// Categorias presentes en una venta guardada (para precargarlas al corregirla).
+function saleCatNames(x: Sale, s: Store): string[] {
+  return Array.from(new Set(x.items.map((i) => {
+    const p = s.products.find((pp) => pp.id === i.productId);
+    return p ? catLabel(p) : '';
+  }).filter(Boolean)));
+}
+
 export function SaleRegistration({ onClose }: { onClose: () => void }) {
   const { store, state, replace, toast } = useStore();
   const s = store!;
-  const draft = state.saleDraft && state.saleDraft.storeId === s.id ? state.saleDraft : null;
-  const [employee, setEmployee] = useState(draft?.employee ?? syncName());
-  const [categories, setCategories] = useState<string[]>(draft?.categories && Array.isArray(draft.categories) ? draft.categories.slice() : []);
-  const [lines, setLines] = useState<Line[]>(draft ? JSON.parse(JSON.stringify(draft.lines)) : []);
+  // Modo "editar venta": History abre este modal con state.editingSaleId. En
+  // ese modo el registro REEMPLAZA la venta existente en vez de crear una y el
+  // borrador (saleDraft) de una venta nueva en curso no se toca.
+  const editingSaleId = state.editingSaleId || null;
+  const editingSale = editingSaleId ? s.sales.find((z) => z.id === editingSaleId) : undefined;
+  const draft = editingSale ? null : (state.saleDraft && state.saleDraft.storeId === s.id ? state.saleDraft : null);
+  const [categories, setCategories] = useState<string[]>(editingSale ? saleCatNames(editingSale, s) : draft && Array.isArray(draft.categories) ? draft.categories.slice() : []);
+  const [tags, setTags] = useState<string[]>(draft && Array.isArray(draft.tags) ? draft.tags.slice() : []);
+  const [lines, setLines] = useState<Line[]>(editingSale ? editLinesForSale(editingSale, s) : draft ? JSON.parse(JSON.stringify(draft.lines)) : []);
+  // El empleado que registra es el nombre que la persona puso en su perfil.
+  // No se puede editar aquí.
+  const employee = syncName();
   // Texto que se esta escribiendo en el input de cantidad de cada linea,
   // separado del numero confirmado: asi se puede borrar un '0' y escribir
   // otra cosa sin que el campo se reponga solo en cada tecla.
@@ -31,17 +65,22 @@ export function SaleRegistration({ onClose }: { onClose: () => void }) {
   // registradas en el quedan marcadas con su nombre en el historial.
   const ev = activeEvent(s);
 
-  // Modo "editar venta": History abre este modal con state.editingSaleId.
-  // En ese modo el registro REEMPLAZA la venta existente en vez de crear una.
-  const editingSaleId = state.editingSaleId || null;
-  const editingSale = editingSaleId ? s.sales.find((z) => z.id === editingSaleId) : undefined;
-
   const cats = saleCatsOf(s).map((c) => ({ v: c, label: c, count: s.products.filter((p) => catLabel(p) === c).length }));
   // Categorias visibles en el selector: TODAS menos las ya elegidas (para no
   // poder repetirlas); sin ninguna elegida se muestran todos los productos.
   const catsOpen = cats.length;
   const selectableCats = cats.filter((c) => !categories.includes(c.v));
-  const list = sortProducts(categories.length ? s.products.filter((p) => categories.includes(catLabel(p))) : s.products);
+  // Tags disponibles en los productos, para el filtro "＋ Añadir tag".
+  const allTags = Array.from(new Set(s.products.flatMap((p) => productTags(p)))).sort((a, b) => a.localeCompare(b, 'es'));
+  const selectableTags = allTags.filter((t) => !tags.includes(t)).map((t) => ({ v: t, label: t, count: s.products.filter((p) => productTags(p).includes(t)).length }));
+  const showFilters = catsOpen > 0 || allTags.length > 0;
+  // Los filtros se combinan: cualquier categoria elegida O cualquiera de los
+  // tags elegidos hacen match (un producto basta con cumplir uno de cada caja).
+  const list = sortProducts(categories.length || tags.length
+    ? s.products.filter((p) =>
+        (!categories.length || categories.includes(catLabel(p))) &&
+        (!tags.length || productTags(p).some((t) => tags.includes(t))))
+    : s.products);
   const q = query.trim().toLowerCase();
   const filtered = q
     ? list.filter((p) => p.name.toLowerCase().includes(q) || productTags(p).some((t) => t.toLowerCase().includes(q)))
@@ -77,7 +116,7 @@ export function SaleRegistration({ onClose }: { onClose: () => void }) {
     });
   }
 
-  useEffect(() => { setPage(0); if (pagerRef.current) pagerRef.current.scrollLeft = 0; }, [categories.join('|'), query]);
+  useEffect(() => { setPage(0); if (pagerRef.current) pagerRef.current.scrollLeft = 0; }, [categories.join('|'), tags.join('|'), query]);
 
   function goPage(n: number) {
     const next = Math.max(0, Math.min(maxPage, n));
@@ -96,21 +135,24 @@ export function SaleRegistration({ onClose }: { onClose: () => void }) {
     if (i !== page && i >= 0 && i <= maxPage) setPage(i);
   }
 
-  function persist(next: Partial<{ employee: string; categories: string[]; lines: Line[] }>, immediate = false) {
+  function persist(next: Partial<{ categories: string[]; tags: string[]; lines: Line[] }>, immediate = false) {
+    // En modo "corregir venta" nada se guarda en el borrador de la venta nueva:
+    // el borrador solo guarda una venta nueva en curso.
+    if (editingSale) return;
     const d = {
-      employee: next.employee !== undefined ? next.employee : employee,
       categories: next.categories !== undefined ? next.categories : categories,
+      tags: next.tags !== undefined ? next.tags : tags,
       lines: next.lines !== undefined ? next.lines : lines,
     };
-    if (immediate) setEmployee(d.employee);
     if (immediate) setCategories(d.categories);
+    if (immediate) setTags(d.tags);
     if (immediate) setLines(d.lines);
-    replace((x) => { x.saleDraft = { storeId: s.id, employee: d.employee, categories: d.categories.slice(), lines: JSON.parse(JSON.stringify(d.lines)) }; });
+    replace((x) => { x.saleDraft = { storeId: s.id, employee: syncName(), categories: d.categories.slice(), tags: d.tags.slice(), lines: JSON.parse(JSON.stringify(d.lines)) }; });
   }
 
   function clearDraft() {
     replace((x) => { x.saleDraft = null; });
-    setEmployee(''); setCategories([]); setLines([]); setQuery('');
+    setCategories([]); setTags([]); setLines([]); setQuery('');
     toast('Venta en curso borrada.');
   }
 
@@ -178,6 +220,7 @@ export function SaleRegistration({ onClose }: { onClose: () => void }) {
       if (editingSale) {
         // Corrige la venta existente: conserva fecha y hora originales (y su
         // evento), solo actualiza productos/precios y quién registró el cambio.
+        // El borrador de una venta nueva en curso queda intacto.
         const idx = st.sales.findIndex((z) => z.id === editingSaleId);
         if (idx >= 0) {
           st.sales[idx] = { ...st.sales[idx], employee: emp, items: JSON.parse(JSON.stringify(items)) };
@@ -185,8 +228,8 @@ export function SaleRegistration({ onClose }: { onClose: () => void }) {
         x.editingSaleId = null;
       } else {
         st.sales.push({ id: uid(), by: syncClientId(), date: today(), time: now.toTimeString().slice(0, 5), employee: emp, items: JSON.parse(JSON.stringify(items)), closed: false, event: ev ? ev.name : undefined });
+        x.saleDraft = null;
       }
-      x.saleDraft = null;
     });
     if (!items.length) return toast('Añade al menos un producto con cantidad mayor a cero.');
     if (s.syncKey) notifyStorePush(s.syncKey, editingSale ? syncName() + ' corrigió una venta' : syncName() + ' registró una venta', items.length + (items.length === 1 ? ' producto' : ' productos') + ' · ' + money(total), 'venta');
@@ -257,7 +300,7 @@ export function SaleRegistration({ onClose }: { onClose: () => void }) {
     <Modal onClose={onClose} modalClassName="sale-modal">
       <div className="sale-window">
         <div className="sale-modal-head">
-          <h2 style={{ margin: 0 }}>Registrar una venta</h2>
+          <h2 style={{ margin: 0 }}>{editingSale ? 'Corregir venta' : 'Registrar una venta'}</h2>
           <div className="sale-head-floats">
             <button type="button" className="icon-btn float-cancel" title="Salir sin guardar" aria-label="Salir sin guardar" onClick={onClose}><CloseIcon size={15} /></button>
           </div>
@@ -265,20 +308,26 @@ export function SaleRegistration({ onClose }: { onClose: () => void }) {
         <div className="sale-scroll">
           <div className="sale-builder">
             <div className="field"><label>Empleado que registra</label>
-              <input maxLength={40} placeholder="Tu nombre" value={employee} onChange={(e) => { setEmployee(e.target.value); persist({ employee: e.target.value }); }} />
+              <input className="sale-employee" readOnly tabIndex={-1} value={employee} title="El nombre sale de tu perfil y no se puede cambiar aquí" />
             </div>
-            {catsOpen ? (
+            {showFilters ? (
               <div className="sale-cats">
-                <span className="sale-pick-label">Categorías</span>
+                <span className="sale-pick-label">Filtros</span>
                 {selectableCats.length > 0 && (
                   <Dropdown value="" ph="＋ Añadir categoría" items={selectableCats} onPick={(v) => { const next = [...categories, v]; setCategories(next); persist({ categories: next }); }} />
                 )}
+                {selectableTags.length > 0 && (
+                  <Dropdown value="" ph="＋ Añadir tag" items={selectableTags} onPick={(v) => { const next = [...tags, v]; setTags(next); persist({ tags: next }); }} />
+                )}
                 {categories.map((c) => (
-                  <div className="cat-chip" key={c}>{c}<button type="button" title={`Quitar ${c}`} onClick={() => { const next = categories.filter((x) => x !== c); setCategories(next); persist({ categories: next }); }}>×</button></div>
+                  <div className="cat-chip" key={'cat-' + c}>{c}<button type="button" title={`Quitar ${c}`} onClick={() => { const next = categories.filter((x) => x !== c); setCategories(next); persist({ categories: next }); }}>×</button></div>
+                ))}
+                {tags.map((t) => (
+                  <div className="cat-chip" key={'tag-' + t}>{t}<button type="button" title={`Quitar tag ${t}`} onClick={() => { const next = tags.filter((x) => x !== t); setTags(next); persist({ tags: next }); }}>×</button></div>
                 ))}
               </div>
             ) : null}
-            <label className="sale-pick-label">{categories.length ? 'Productos de las categorías · ' + filtered.length : 'Todos los productos' + (filtered.length ? ' · ' + filtered.length : '')}</label>
+            <label className="sale-pick-label">{categories.length || tags.length ? 'Productos filtrados · ' + filtered.length : 'Todos los productos' + (filtered.length ? ' · ' + filtered.length : '')}</label>
             <div className="sale-search">
               <input type="search" inputMode="search" placeholder="Buscar producto…" value={query} onChange={(e) => setQuery(e.target.value)} />
             </div>
@@ -310,11 +359,13 @@ export function SaleRegistration({ onClose }: { onClose: () => void }) {
           </div>
         </div>
         <div className="sale-foot">
-          <button type="button" className="trash-btn" title="Borrar la venta en curso" onClick={clearDraft}>
-            <svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3" /></svg>
-          </button>
+          {!editingSale && (
+            <button type="button" className="trash-btn" title="Borrar la venta en curso" onClick={clearDraft}>
+              <svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3" /></svg>
+            </button>
+          )}
           <span style={{ flex: 1 }}></span>
-          <button className="button primary" onClick={register}>Guardar venta</button>
+          <button className="button primary" onClick={register}>{editingSale ? 'Guardar cambios' : 'Guardar venta'}</button>
         </div>
       </div>
     </Modal>

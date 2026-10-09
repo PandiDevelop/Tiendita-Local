@@ -862,3 +862,8 @@ input[type="number"]::-webkit-inner-spin-button,input[type="number"]::-webkit-ou
   .content{padding-top:calc(20px + env(safe-area-inset-top,0px));padding-right:calc(14px + env(safe-area-inset-right,0px));padding-bottom:calc(42px + env(safe-area-inset-bottom,0px));padding-left:calc(14px + env(safe-area-inset-left,0px))}
   .sidebar{padding-top:calc(28px + env(safe-area-inset-top,0px));padding-bottom:calc(28px + env(safe-area-inset-bottom,0px))}
 }
+.sale-employee{opacity:.55;cursor:default;background:var(--lav)!important}
+.cat-group .cat-head{cursor:pointer}
+.cat-head .sale-caret{color:var(--brand);display:flex;align-items:center}
+.cat-group .cat-head .sale-caret svg{transition:transform .15s}
+.cat-group .cat-head.closed .sale-caret svg{transform:rotate(-90deg)}
