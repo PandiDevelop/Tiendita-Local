@@ -1,29 +1,19 @@
 import { useState } from 'react';
 import type { PointerEvent as ReactPointerEvent } from 'react';
 import { useStore } from '../store';
-import { money, esc, inventorySold, reorderCategoryProducts, groupedByCategory, storeCats, promoText, DEFAULT_PRODUCT_IMAGE, productTags, adoptInvLog, syncName } from '../lib/core';
+import { money, esc, reorderCategoryProducts, groupedByCategory, storeCats, promoText, DEFAULT_PRODUCT_IMAGE, productTags, productPromos, productLedger } from '../lib/core';
 import { customConfirm } from '../lib/dialog';
-import { GearMenu, Image, StorefrontIcon, CaretIcon, Modal, PencilIcon, CargoIcon, CloseIcon, SaveIcon } from '../ui';
+import { GearMenu, Image, StorefrontIcon, CaretIcon, Modal, CargoIcon, CloseIcon, HScroll } from '../ui';
 import { CategoryModal } from './CategoryModal';
 import { TagModal } from './TagModal';
 import { VirtualCatalog } from './VirtualCatalog';
 import { CargoModal } from './CargoModal';
 import type { Product } from '../types';
 
-// Cantidad exacta mientras se edita (texto para no forzar un '0' que no se
-// pueda borrar); quien hace el ajuste arranca con el nombre del dispositivo.
-interface QtyPopup { p: Product; qty: string; who: string; }
-
-function parseQty(v: string): number {
-  const n = Math.round(Number(v));
-  return Number.isFinite(n) && n >= 0 ? n : 0;
-}
-
 export function Catalog() {
   const { store, state, replace, setModal, setModalArg, toast } = useStore();
   const s = store!;
-  const sold = inventorySold(s);
-  const inv = s.inventory || {};
+  const ledger = productLedger(s);
   // Categoria cuya configuracion se abre con la tuerca del encabezado.
   const [catModal, setCatModal] = useState<{ mode: 'new' | 'edit'; name: string } | null>(null);
   // La ventana de etiquetas se abre desde el boton "Etiqueta" del encabezado.
@@ -34,14 +24,12 @@ export function Catalog() {
   // Libro de catálogo virtual a pantalla completa (todos los productos con
   // su foto, separados por categoría).
   const [bookOpen, setBookOpen] = useState(false);
-  // Cargamento: modal multi-producto, global o desde el botón de una fila
-  // (en ese caso arranca con ese producto preseleccionado en el lote).
+  // Cargamento: modal multi-producto desde el botón del encabezado. La
+  // preselección por fila se quitó junto con los steppers: las existencias se
+  // ajustan desde "Editar producto" (las unidades viven en el formulario).
   const [cargoOpen, setCargoOpen] = useState(false);
-  const [cargoPreselect, setCargoPreselect] = useState<string | null>(null);
   // Historial de cambios del inventario en ventana emergente.
   const [logOpen, setLogOpen] = useState(false);
-  // Editar la cantidad exacta de un producto (lápiz).
-  const [edit, setEdit] = useState<QtyPopup | null>(null);
 
   // Orden de categorias/productos mientras se arrastran (solo visual hasta
   // soltar); se limpia al terminar el arrastre, momento en el que se guarda
@@ -52,36 +40,6 @@ export function Catalog() {
 
   const groups = groupedByCategory(s);
   const byId = new Map(s.products.map((p) => [p.id, p]));
-
-  function cur(p: Product): number {
-    return Math.round(inv[p.id] || 0);
-  }
-
-  // Ajuste rápido: restar/sumar 1 a las existencias (sin proveedor).
-  function bump(p: Product, delta: number) {
-    replace((x) => {
-      const st = x.stores.find((y) => y.id === s.id)!;
-      adoptInvLog(st, p.id, delta, '');
-    });
-  }
-
-  // Lápiz: fijar la cantidad exacta (sin proveedor).
-  function openEdit(p: Product) {
-    setEdit({ p, qty: String(cur(p)), who: syncName() });
-  }
-  function saveEdit() {
-    if (!edit) return;
-    const q = parseQty(edit.qty);
-    const delta = q - cur(edit.p);
-    if (delta !== 0) {
-      replace((x) => {
-        const st = x.stores.find((y) => y.id === s.id)!;
-        adoptInvLog(st, edit.p.id, delta, '', edit.who);
-      });
-    }
-    toast('Cantidad actualizada.');
-    setEdit(null);
-  }
 
   // Orden de categorias a mostrar: el de siempre, salvo que haya un arrastre
   // en curso, en cuyo caso se usa el orden temporal (Sin categoría siempre
@@ -241,7 +199,7 @@ export function Catalog() {
           <button className="button outline cat-actions-cta" disabled={!s.products.length} onClick={() => setBookOpen(true)}><StorefrontIcon size={16} /> Catálogo virtual</button>
         </div>
         <div className="cat-actions-row">
-          <button type="button" className="button primary" onClick={() => { setCargoPreselect(null); setCargoOpen(true); }}><CargoIcon size={15} /> Nuevo cargamento</button>
+          <button type="button" className="button primary" onClick={() => setCargoOpen(true)}><CargoIcon size={15} /> Nuevo cargamento</button>
           <button type="button" className="button outline" disabled={!s.invLog || !s.invLog.length} onClick={() => setLogOpen(true)}>Historial de cambios</button>
         </div>
         <div className="panel-search cat-actions-search">
@@ -258,7 +216,7 @@ export function Catalog() {
         const list = prodDrag && prodDrag.cat === g.name
           ? prodDrag.order.map((id) => g.list.find((p) => p.id === id)).filter((p): p is Product => !!p)
           : g.list;
-        const catUnits = g.list.reduce((n, p) => n + Math.max(0, (inv[p.id] ?? 0) - (sold[p.id] || 0)), 0);
+        const catUnits = g.list.reduce((n, p) => n + (ledger[p.id]?.available || 0), 0);
         return (
           <div className={'cat-group' + (draggingCat === g.name ? ' dragging' : '')} key={g.name} data-cat={g.name}>
             <div className="cat-head">
@@ -279,33 +237,32 @@ export function Catalog() {
             {open && (
               <div className="cat-body">
                 {list.length ? (
-                  <table><thead><tr><th></th><th>Producto</th><th>Unidades</th><th>Precio</th><th>Promociones</th><th>Ajustar</th></tr></thead><tbody>
-                    {list.map((p) => {
-                      const base = inv[p.id];
-                      const avail = base == null ? '—' : Math.max(0, base - (sold[p.id] || 0));
-                      return (
-                        <tr key={p.id} data-pid={p.id} className={prodDrag?.pid === p.id ? 'dragging' : ''}>
-                          <td className="drag-cell">{!searching && <button type="button" className="icon-btn drag-handle" title="Arrastrar para reordenar" onPointerDown={(e) => startProdDrag(e, g.name, p.id, g.list)}>⠿</button>}</td>
-                          <td className="cat-bar"><div className="product-cell"><Image src={p.image || DEFAULT_PRODUCT_IMAGE} cls="product-image-cell" /><div className="product-name">{esc(p.name)}{productTags(p).map((t) => <span className="prod-tag" key={t} title={esc(t)}>{esc(t)}</span>)}</div></div></td>
-                          <td className="inv-qty">{avail}</td>
-                          <td>{money(p.price)}</td>
-                          <td>{p.promos.length ? <div className="promo-stack">{p.promos.map((x) => <span className="promotion" key={x.id}>{promoText(x)}</span>)}</div> : <span className="muted">—</span>}</td>
-                          <td><div className="actions">
-                          <div className="inv-stepper">
-                            <button className="qty-btn" title="Restar 1" onClick={() => bump(p, -1)}>−</button>
-                            <button className="icon-btn" title="Editar cantidad exacta" onClick={() => openEdit(p)}><PencilIcon size={14} /></button>
-                            <button className="qty-btn" title="Sumar 1" onClick={() => bump(p, 1)}>+</button>
-                            <button className="inv-cargo" title="Nuevo cargamento de este producto" onClick={() => { setCargoPreselect(p.id); setCargoOpen(true); }}><CargoIcon size={16} /></button>
-                          </div>
-                          <GearMenu items={[
-                            { label: 'Editar producto', onClick: () => { setModalArg(p.id); setModal('editProduct'); } },
-                            { label: 'Eliminar producto', danger: true, onClick: () => void removeProduct(p) },
-                          ]} />
-                        </div></td>
-                        </tr>
-                      );
-                    })}
-                  </tbody></table>
+                  <HScroll ariaLabel={'Productos de ' + g.name}>
+                    <table><thead><tr><th></th><th>Producto</th><th>Vendido</th><th>Adquirido</th><th>Disponible</th><th>Coste</th><th>Ingreso</th><th>Ganancia</th><th>Promociones</th><th></th></tr></thead><tbody>
+                      {list.map((p) => {
+                        const l = ledger[p.id] || { sold: 0, acquired: 0, available: 0, revenue: 0, cost: 0, profit: 0 };
+                        return (
+                          <tr key={p.id} data-pid={p.id} className={prodDrag?.pid === p.id ? 'dragging' : ''}>
+                            <td className="drag-cell">{!searching && <button type="button" className="icon-btn drag-handle" title="Arrastrar para reordenar" onPointerDown={(e) => startProdDrag(e, g.name, p.id, g.list)}>⠿</button>}</td>
+                            <td className="cat-bar"><div className="product-cell"><Image src={p.image || DEFAULT_PRODUCT_IMAGE} cls="product-image-cell" /><div className="product-name">{esc(p.name)}{productTags(p).map((t) => <span className="prod-tag" key={t} title={esc(t)}>{esc(t)}</span>)}</div></div></td>
+                            <td className="inv-qty">{l.sold || '—'}</td>
+                            <td className="inv-qty">{l.acquired || '—'}</td>
+                            <td className="inv-qty"><b>{l.available}</b></td>
+                            <td className="muted">{l.cost ? money(l.cost) : '—'}</td>
+                            <td>{l.revenue ? money(l.revenue) : '—'}</td>
+                            <td className={l.profit > 0 ? 'profit-pos' : l.profit < 0 ? 'profit-neg' : 'muted'}>{l.profit ? money(l.profit) : '—'}</td>
+                            <td>{productPromos(s, p).length ? <div className="promo-stack">{productPromos(s, p).map((x) => <span className="promotion" key={x.id}>{promoText(x)}</span>)}</div> : <span className="muted">—</span>}</td>
+                            <td><div className="actions">
+                            <GearMenu items={[
+                              { label: 'Editar producto', onClick: () => { setModalArg(p.id); setModal('editProduct'); } },
+                              { label: 'Eliminar producto', danger: true, onClick: () => void removeProduct(p) },
+                            ]} />
+                          </div></td>
+                          </tr>
+                        );
+                      })}
+                    </tbody></table>
+                  </HScroll>
                 ) : <div className="notice">Sin productos en esta categoría todavía.</div>}
               </div>
             )}
@@ -339,31 +296,7 @@ export function Catalog() {
       )}
 
       {cargoOpen && (
-        <CargoModal preselect={cargoPreselect} onClose={() => { setCargoOpen(false); setCargoPreselect(null); }} />
-      )}
-
-      {edit && (
-        <Modal onClose={() => setEdit(null)}>
-          <div className="modal-float-actions">
-            <button type="button" className="icon-btn float-cancel" title="Cancelar" aria-label="Cancelar" onClick={() => setEdit(null)}><CloseIcon size={15} /></button>
-            <button type="button" className="icon-btn float-save" title="Guardar" aria-label="Guardar" onClick={saveEdit}><SaveIcon size={15} /></button>
-          </div>
-          <h2>Editar existencias</h2>
-          <div className="field"><label>Producto</label>
-            <div className="product-name" style={{ fontWeight: 700 }}>{esc(edit.p.name)}</div>
-          </div>
-          <div className="field"><label>Cantidad que tiene el producto</label>
-            <div className="sale-builder-qty">
-              <button type="button" className="qty-btn" onClick={() => setEdit({ ...edit, qty: String(Math.max(0, parseQty(edit.qty) - 1)) })}>−</button>
-              <input className="qty-input" type="number" min={0} step={1} inputMode="numeric" value={edit.qty} onChange={(e) => setEdit({ ...edit, qty: e.target.value })} />
-              <button type="button" className="qty-btn" onClick={() => setEdit({ ...edit, qty: String(parseQty(edit.qty) + 1) })}>+</button>
-            </div>
-            <p className="muted">El total que compraste o produjiste.</p>
-          </div>
-          <div className="field"><label>Quién hace el ajuste</label>
-            <input maxLength={40} placeholder="Tu nombre" value={edit.who} onChange={(e) => setEdit({ ...edit, who: e.target.value })} />
-          </div>
-        </Modal>
+        <CargoModal onClose={() => setCargoOpen(false)} />
       )}
 
       {logOpen && (
@@ -375,7 +308,7 @@ export function Catalog() {
           <p className="muted">Compras, ajustes y correcciones del inventario.</p>
           {(s.invLog || []).length ? (
             <div className="log-scroll">
-              <div className="notes-list inv-list">
+              <HScroll ariaLabel="Historial de cambios del inventario">
                 <table><thead><tr><th>Fecha</th><th>Hora</th><th>Producto</th><th>Cantidad</th><th>Costo</th><th>Quién</th><th>Proveedor</th></tr></thead><tbody>
                   {(s.invLog || []).slice().map((e) => (
                     <tr key={e.id}>
@@ -389,7 +322,7 @@ export function Catalog() {
                     </tr>
                   ))}
                 </tbody></table>
-              </div>
+              </HScroll>
             </div>
           ) : <div className="notice">Aún no hay cambios registrados en el inventario.</div>}
         </Modal>

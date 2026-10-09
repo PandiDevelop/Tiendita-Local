@@ -286,6 +286,11 @@ export interface Store {
   localRole?: Role;
   members?: Record<string, Member>;
   events?: StoreEvent[];
+  // Banderas de migracion one-shot (no viajan en el documento de sync, cada
+  // dispositivo corre la suya al arrancar): las promos viven solo en la
+  // categoria y las fechas de la noche ya se corrigieron.
+  promosCategoryOnly?: boolean;
+  datesFixed?: boolean;
 }
 
 export type Tab = 'inicio' | 'productos' | 'ganancias' | 'notas' | 'empleados' | 'eventos';

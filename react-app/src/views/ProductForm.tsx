@@ -1,10 +1,8 @@
 import { useEffect, useRef, useState } from 'react';
 import { useStore } from '../store';
-import { DEFAULT_PRODUCT_IMAGE, DEFAULT_PRODUCT_TAG, esc, compressImage, storeCats, adoptInvLog, setCategoryPricing, insertProductAlphabetically, insertCatSorted, toEditablePromos, fromEditablePromos, uid, syncClientId, syncName, productTags, nextSuppTag, recordSupplierPrice, setSupplierCost, ensureCost } from '../lib/core';
+import { DEFAULT_PRODUCT_IMAGE, DEFAULT_PRODUCT_TAG, esc, compressImage, storeCats, adoptInvLog, setCategoryPricing, insertProductAlphabetically, insertCatSorted, uid, syncClientId, syncName, productTags, nextSuppTag, recordSupplierPrice, setSupplierCost, ensureCost, promoText } from '../lib/core';
 import { notifyStorePush } from '../lib/push';
-import type { EditablePromo } from '../lib/core';
 import { ImagePicker, Modal, CategorySuggest, SaveIcon, CloseIcon } from '../ui';
-import { PromoEditor } from './PromoEditor';
 
 export function ProductForm({ editingId, onClose }: { editingId?: string; onClose: () => void }) {
   const { store, replace, toast } = useStore();
@@ -17,8 +15,9 @@ export function ProductForm({ editingId, onClose }: { editingId?: string; onClos
   const [cost, setCost] = useState(p?.cost != null ? String(p.cost) : '');
   const [supplier, setSupplier] = useState(p?.supplier || '');
   const [image, setImage] = useState(p?.image || '');
-  const [qty, setQty] = useState('');
-  const [promos, setPromos] = useState<EditablePromo[]>(toEditablePromos(p?.promos));
+  // Unidades en existencias: en un producto nuevo es lo que se recibe hoy; al
+  // editar arranca con lo que hay y guardar ajusta la diferencia (delta).
+  const [qty, setQty] = useState(editingId ? String(Math.round((s.inventory || {})[editingId] || 0)) : '');
   // Los tags son opcionales y editables (hasta 3). En un producto nuevo el
   // area arranca vacia con "General" como texto fantasma; si se guarda sin
   // ninguno se agrega automaticamente el tag por defecto.
@@ -74,7 +73,6 @@ export function ProductForm({ editingId, onClose }: { editingId?: string; onClos
     if (!Number.isFinite(pr) || pr < 0) return toast('Añade un precio válido.');
     if (!Number.isFinite(cst) || cst < 0) return toast('Añade un costo válido.');
     const catVal = cat.trim();
-    const promoList = fromEditablePromos(promos);
     replace((d) => {
       const st = d.stores.find((x) => x.id === s.id)!;
       st.categories = st.categories || [];
@@ -83,23 +81,24 @@ export function ProductForm({ editingId, onClose }: { editingId?: string; onClos
       // una categoria tambien puede existir sin precio todavia (p.ej.
       // creada desde Catalogo dejando el precio en blanco, o vacia): en ese
       // caso el primer producto que se le agregue debe fijar la base igual.
+      // Las promos quedan SOLO en la categoria (se heredan al vender).
       const catHasNoPricing = !!catVal && !(st.categoryPricing && st.categoryPricing[catVal]);
       const catHasNoOtherProducts = !!catVal && !st.products.some((x) => (x.category || '').trim() === catVal && x.id !== editingId);
       const shouldSeedPricing = catHasNoPricing && catHasNoOtherProducts;
       if (catVal) insertCatSorted(st, catVal);
-      if (shouldSeedPricing) setCategoryPricing(st, catVal, pr, cst, promoList, sup || undefined);
+      if (shouldSeedPricing) setCategoryPricing(st, catVal, pr, cst, [], sup || undefined);
       const tagList = tags.map((t) => t.trim()).filter(Boolean).slice(0, 3);
       const tagsVal = tagList.length ? tagList : !editingId ? [DEFAULT_PRODUCT_TAG] : [];
       const tag0 = tagsVal[0];
       const prodTag = sup ? (cst > 0 ? setSupplierCost(st, sup, cst) : nextSuppTag(st, sup)) : undefined;
       if (editingId) {
         const t = st.products.find((x) => x.id === editingId);
-        if (t) Object.assign(t, { name: nm, price: pr, cost: cst, image: image || DEFAULT_PRODUCT_IMAGE, promos: promoList, category: catVal, tags: tagsVal, tag: tag0 || undefined, supplier: sup || undefined, supplierTag: prodTag });
+        if (t) Object.assign(t, { name: nm, price: pr, cost: cst, image: image || DEFAULT_PRODUCT_IMAGE, category: catVal, tags: tagsVal, tag: tag0 || undefined, supplier: sup || undefined, supplierTag: prodTag });
       } else {
         // Un producto nuevo entra en la posicion alfabetica de su categoria
         // (aun si la categoria ya fue reordenada a mano); ver
         // insertProductAlphabetically en lib/core.
-        insertProductAlphabetically(st, { id: uid(), by: syncClientId(), name: nm, price: pr, cost: cst, image: image || DEFAULT_PRODUCT_IMAGE, promos: promoList, category: catVal, tags: tagsVal, tag: tag0 || undefined, supplier: sup || undefined, supplierTag: prodTag });
+        insertProductAlphabetically(st, { id: uid(), by: syncClientId(), name: nm, price: pr, cost: cst, image: image || DEFAULT_PRODUCT_IMAGE, promos: [], category: catVal, tags: tagsVal, tag: tag0 || undefined, supplier: sup || undefined, supplierTag: prodTag });
       }
       // Cada costo que se guarda en un producto (con su proveedor) queda en el
       // historial unico de costos: reutiliza el registro si ese costo ya se
@@ -110,12 +109,20 @@ export function ProductForm({ editingId, onClose }: { editingId?: string; onClos
       if (sup && catVal && !shouldSeedPricing && st.categoryPricing && st.categoryPricing[catVal]) {
         recordSupplierPrice(st, catVal, sup, cst);
       }
-      if (!editingId && qty.trim() !== '') {
+      if (qty.trim() !== '') {
         const q = Math.round(Number(qty));
         if (Number.isFinite(q) && q >= 0) {
           st.inventory = st.inventory || {};
-          const pid = st.products[st.products.length - 1].id;
-          adoptInvLog(st, pid, q, 'Catálogo', undefined, undefined, cst > 0 ? cst : undefined, cid);
+          if (!editingId) {
+            const pid = st.products[st.products.length - 1].id;
+            adoptInvLog(st, pid, q, 'Catálogo', undefined, undefined, cst > 0 ? cst : undefined, cid);
+          } else {
+            // Editar: ajusta las existencias por la diferencia con lo que
+            // había al abrir el formulario (adoptInvLog con el delta).
+            const cur = Math.round(st.inventory[editingId] || 0);
+            const delta = q - cur;
+            if (delta !== 0) adoptInvLog(st, editingId, delta, sup, syncName());
+          }
         }
       }
     });
@@ -142,7 +149,6 @@ export function ProductForm({ editingId, onClose }: { editingId?: string; onClos
               setPrice(String(cp.price));
               setCost(cp.cost != null ? String(cp.cost) : '');
               setSupplier(cp.supplier || '');
-              setPromos(toEditablePromos(cp.promos));
             }
           }}
           onNewPick={() => undefined} />
@@ -191,13 +197,16 @@ export function ProductForm({ editingId, onClose }: { editingId?: string; onClos
       <div className="field"><label>Imagen del producto</label>
         <ImagePicker id="product-image" src={image || DEFAULT_PRODUCT_IMAGE} cls="image-preview product-preview" hint="Foto o logo opcional del producto." onFile={onFile} />
       </div>
-      {!editingId && (
-        <div className="field"><label>Cantidad en inventario</label>
-          <input min={0} step={1} type="number" inputMode="numeric" placeholder="0" value={qty} onChange={(e) => setQty(e.target.value)} />
-        </div>
-      )}
-      <div className="field"><label>Promociones <span className="muted">(se aplican solas al vender)</span></label>
-        <PromoEditor promos={promos} onChange={setPromos} priceHint={price} />
+      <div className="field"><label>Unidades en existencias</label>
+        <input min={0} step={1} type="number" inputMode="numeric" placeholder="0" value={qty} onChange={(e) => setQty(e.target.value)} />
+        <p className="muted">{editingId ? 'Lo que hay hoy. Al guardar se ajustan las existencias por la diferencia.' : 'Lo que recibes al crear el producto.'}</p>
+      </div>
+      <div className="field"><label>Promociones <span className="muted">(se configuran en la categoría)</span></label>
+        {(cat && s.categoryPricing && s.categoryPricing[cat] && s.categoryPricing[cat].promos && s.categoryPricing[cat].promos.length) ? (
+          <div className="promo-stack">{(s.categoryPricing![cat].promos || []).map((x) => <span className="promotion" key={x.id}>{promoText(x)}</span>)}</div>
+        ) : (
+          <p className="muted" style={{ margin: '2px 0' }}>{cat ? 'Este producto hereda las promos de su categoría. Por ahora su categoría no tiene ninguna.' : 'Asigna una categoría con promos y este producto las heredará automáticamente.'}</p>
+        )}
       </div>
     </Modal>
   );

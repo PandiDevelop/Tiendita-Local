@@ -645,3 +645,39 @@ export function CategorySuggest({ cats, value, onChange, onPick, placeholder, ma
 }) {
   return <SuggestInput options={cats} value={value} onChange={onChange} onPick={onPick} placeholder={placeholder} maxLength={maxLength} newLabel={newLabel} onNewPick={onNewPick} />;
 }
+
+// Contenedor con scroll horizontal que avisa "Desliza →" cuando hay contenido
+// cortado a la derecha (tablas anchas de inventario e historial). El aviso se
+// oculta en cuanto el usuario desliza y aparecen pilares tipicos de una tabla.
+export function HScroll({ children, className, ariaLabel }: { children: ReactNode; className?: string; ariaLabel?: string }) {
+  const ref = useRef<HTMLDivElement>(null);
+  const timer = useRef<number>(0);
+  const [overflowing, setOverflowing] = useState(false);
+  const [visible, setVisible] = useState(true);
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const measure = () => setOverflowing(el.scrollWidth - el.clientWidth > 8);
+    measure();
+    const onScroll = () => {
+      setVisible(false);
+      clearTimeout(timer.current);
+      timer.current = window.setTimeout(() => setVisible(true), 1200);
+    };
+    el.addEventListener('scroll', onScroll);
+    if (typeof ResizeObserver !== 'undefined') {
+      const ro = new ResizeObserver(measure);
+      ro.observe(el);
+      return () => { el.removeEventListener('scroll', onScroll); ro.disconnect(); clearTimeout(timer.current); };
+    }
+    return () => { el.removeEventListener('scroll', onScroll); clearTimeout(timer.current); };
+  }, []);
+  return (
+    <div className={'hscroll' + (className ? ' ' + className : '')}>
+      <div className="hscroll-inner" ref={ref} tabIndex={0} role={ariaLabel ? 'region' : undefined} aria-label={ariaLabel}>
+        {children}
+      </div>
+      {overflowing && visible && <span className="hscroll-hint" aria-hidden="true">Desliza →</span>}
+    </div>
+  );
+}

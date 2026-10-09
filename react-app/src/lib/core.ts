@@ -846,6 +846,8 @@ export function sweepExpiredNotes(s: Store): Note[] {
 // copia a todos los productos que ya tengan esa categoria (asi la mayoria de
 // un grupo comparte el mismo precio/costo). Cada producto se puede editar
 // despues para tener un precio o costo distinto sin afectar a los demas.
+// Las promos se guardan SOLO en la categoria: los productos las heredan de
+// ahi en momentos de lectura (productPromos), sin copiarlas al producto.
 // cost es opcional (igual que en el producto): si no se define, queda en 0.
 export function setCategoryPricing(s: Store, cat: string, price: number, cost: number, promos: Promo[], supplier?: string): CategoryPricing | null {
   const v = (cat || '').trim();
@@ -870,7 +872,6 @@ export function setCategoryPricing(s: Store, cat: string, price: number, cost: n
     if ((p.category || '').trim() === v) {
       p.price = price;
       p.cost = cst;
-      p.promos = JSON.parse(JSON.stringify(clean));
       if (supplier !== undefined) p.supplier = entry.supplier;
     }
   });
@@ -1289,14 +1290,11 @@ export function fixedPackageTotal(pr: Promo, base: number): number {
   return Math.max(0, pr.price);
 }
 
-// Promos efectivas de un producto para la venta: las PROPIAS del producto si
-// tiene, y si no, las de su categoría. Asi un producto creado despues de
-// definir promos en la categoria (o al que se le quitaron las propias) ya
-// hereda y aplica la promo base de su categoria sin copiarlas manualmente.
-// Las propias SIEMPRE ganan sobre las de la categoria.
+// Promos efectivas de un producto para la venta: SIEMPRE las de su categoría
+// (las propias del producto ya no se usan: la promo es cosa de la categoría,
+// se edita desde la config de la categoría y todos sus productos la heredan).
 export function productPromos(s: Store, p: Product | undefined | null): Promo[] {
   if (!p) return [];
-  if (p.promos && p.promos.length) return p.promos;
   const cat = (p.category || '').trim();
   const cp = cat ? s?.categoryPricing?.[cat] : undefined;
   return cp && cp.promos && cp.promos.length ? cp.promos : [];
@@ -1316,7 +1314,7 @@ export function productPromos(s: Store, p: Product | undefined | null): Promo[] 
 //    costar 5.000 (bloque de 3 + 1).
 export function promoPrice(p: Product, qty: number, inheritedPromos?: Promo[]): number {
   if (!p || qty <= 0) return p ? p.price : 0;
-  const promos = (p.promos && p.promos.length) ? p.promos : (inheritedPromos || []);
+  const promos = inheritedPromos || [];
   const n = (pr: Promo) => Math.max(1, pr.min || 1);
   const gt = promos.find((pr) => pr.cond === 'qtygt' && qty > Math.max(0, pr.min || 0));
   if (gt) return round2(promoUnitReward(gt, p.price));
@@ -1338,7 +1336,7 @@ export function promoPrice(p: Product, qty: number, inheritedPromos?: Promo[]): 
 // esa cantidad: se muestra como la "Promo aplicada" en la linea de venta.
 export function findActivePromo(p: Product | undefined, qty: number, inheritedPromos?: Promo[]): Promo | undefined {
   if (!p || qty <= 0) return undefined;
-  const promos = (p.promos && p.promos.length) ? p.promos : (inheritedPromos || []);
+  const promos = inheritedPromos || [];
   const n = (pr: Promo) => Math.max(1, pr.min || 1);
   const gt = promos.find((pr) => pr.cond === 'qtygt' && qty > Math.max(0, pr.min || 0));
   if (gt) return gt;
@@ -1359,4 +1357,108 @@ export function saleUnitPrice(s: Store, p: Product, qty: number): number {
   const ev = activeEvent(s);
   if (ev && ev.pct) price = price * (1 - (ev.pct || 0) / 100);
   return Math.max(0, round2(price));
+}
+
+// Desplaza una fecha local (YYYY-MM-DD) n dias (negativo = hacia atras).
+export function shiftDay(d: string, delta: number): string {
+  const dt = new Date(d + 'T12:00:00');
+  dt.setDate(dt.getDate() + delta);
+  return `${dt.getFullYear()}-${String(dt.getMonth() + 1).padStart(2, '0')}-${String(dt.getDate()).padStart(2, '0')}`;
+}
+
+// Costo unitario actual de un producto: el propio o, si no tiene, el de su
+// categoria (misma fuente que usa el registro de venta).
+export function unitCost(s: Store, p: Product): number {
+  if (p.cost != null) return p.cost;
+  const cat = (p.category || '').trim();
+  const cp = cat && s.categoryPricing ? s.categoryPricing[cat] : undefined;
+  return cp?.cost ?? 0;
+}
+
+// Cuadro por producto para la vista de inventario (tipo Bodega): lo vendido,
+// lo adquirido acumulado, lo disponible en existencias, y el total en pesos
+// (ingreso, coste y ganancia) calculado sobre las ventas registradas.
+export interface ProductLedgerRow {
+  sold: number;
+  acquired: number;
+  available: number;
+  revenue: number;
+  cost: number;
+  profit: number;
+}
+export function productLedger(s: Store): Record<string, ProductLedgerRow> {
+  const sold = inventorySold(s);
+  const inv = s.inventory || {};
+  const acquired: Record<string, number> = {};
+  const log = s.invLog || [];
+  if (log.some((e) => e && e.qty && e.qty > 0)) {
+    log.forEach((e) => { if (e && e.qty && e.qty > 0) acquired[e.productId] = (acquired[e.productId] || 0) + Math.round(e.qty); });
+  } else {
+    Object.keys(inv).forEach((id) => { acquired[id] = Math.round(inv[id] || 0) + (sold[id] || 0); });
+    s.products.forEach((p) => { if (acquired[p.id] == null) acquired[p.id] = sold[p.id] || 0; });
+  }
+  const revenue: Record<string, number> = {};
+  const cost: Record<string, number> = {};
+  s.sales.forEach((x) => x.items.forEach((i) => {
+    revenue[i.productId] = (revenue[i.productId] || 0) + priceFor(i, s) * i.qty;
+    cost[i.productId] = (cost[i.productId] || 0) + costFor(i, s) * i.qty;
+  }));
+  const out: Record<string, ProductLedgerRow> = {};
+  const ids = new Set<string>([...s.products.map((p) => p.id), ...Object.keys(inv), ...Object.keys(sold)]);
+  ids.forEach((id) => {
+    const rev = revenue[id] || 0;
+    const cst = cost[id] || 0;
+    out[id] = {
+      sold: sold[id] || 0,
+      acquired: acquired[id] || 0,
+      available: Math.max(0, Math.round(inv[id] || 0)),
+      revenue: rev,
+      cost: cst,
+      profit: rev - cst,
+    };
+  });
+  return out;
+}
+
+// Migracion unica por tienda (se corre al arrancar, una sola vez):
+//  1) promosCategoryOnly: saca las promos propias de los productos. Las promos
+//     ahora viven SOLO en la categoria y de ahi se heredan (productPromos);
+//     limpiar p.promos quita las que se hayan metido por producto (como las de
+//     la categoria "posters" de Sakoco) sin tocar las de la categoria.
+//  2) datesFixed: corrige registros mal fechados de la noche. El bug anterior
+//     de `today()` (que usaba UTC) grababa ventas/cargamentos/costos con la
+//     fecha de la manana siguiente cuando eran de noche. Regla: un registro
+//     con fecha de hoy y hora >= 19:00, o con fecha estrictamente futura,
+//     en realidad era de ayer. NUNCA toca eventos: sus fechas futuras son
+//     legitimas.
+export function runMigrations(s: Store): boolean {
+  let changed = false;
+  if (!s.promosCategoryOnly) {
+    s.products.forEach((p) => { if (p.promos && p.promos.length) { p.promos = []; changed = true; } });
+    s.promosCategoryOnly = true;
+    changed = true;
+  }
+  if (!s.datesFixed) {
+    const t = today();
+    const y = shiftDay(t, -1);
+    const lateNight = (time?: string): boolean => {
+      const h = Number(String(time || '').slice(0, 2));
+      return Number.isFinite(h) && h >= 19;
+    };
+    const movedCosts = new Set<string>();
+    (s.invLog || []).forEach((e) => {
+      if (!e) return;
+      const wrong = e.date === t ? lateNight(e.time) : (!!e.date && e.date > t);
+      if (wrong) { e.date = y; if (e.costId) movedCosts.add(e.costId); changed = true; }
+    });
+    (s.sales || []).forEach((x) => {
+      if (!x) return;
+      const wrong = x.date === t ? lateNight(x.time) : (!!x.date && x.date > t);
+      if (wrong) { x.date = y; changed = true; }
+    });
+    (s.costs || []).forEach((c) => { if (c && c.at === t && movedCosts.has(c.id)) { c.at = y; } });
+    s.datesFixed = true;
+    changed = true;
+  }
+  return changed;
 }

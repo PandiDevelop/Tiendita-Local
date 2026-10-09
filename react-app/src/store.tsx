@@ -1,6 +1,6 @@
 import { createContext, useCallback, useContext, useEffect, useRef, ReactNode, useState } from 'react';
 import type { AppState, InventoryLogEntry, Product, Sale, Store, Tab } from './types';
-import { loadState, saveState, samePerson, syncClientId, NOTE_TTL_MS, deletedStores } from './lib/core';
+import { loadState, runMigrations, saveState, samePerson, syncClientId, NOTE_TTL_MS, deletedStores } from './lib/core';
 import { createSync, applyRemote, activateSync, joinStore, pullJoinedStores, SyncHandle, pruneDeletedStores, ensureStoreCode } from './lib/sync';
 import { onAccountChange } from './lib/account';
 import { archiveUpsert, archiveMarkGone, noteToArchiveEntry, replyToArchiveEntry } from './lib/notesArchive';
@@ -115,6 +115,14 @@ export function AppProvider({ children }: { children: ReactNode }) {
     // dispositivo las tiene así, un trabajador siempre entra con un pin. Si no
     // hay conexión se reintenta en el próximo arranque.
     (async () => {
+      // Migraciones one-shot (ver lib/core.ts runMigrations): sacar promos de
+      // producto y corregir la fecha de los registros de la noche. Corren
+      // ANTES de sincronizar para que el dato corregido suba a la nube.
+      let migrated = false;
+      for (const s of state.stores) {
+        if (runMigrations(s)) migrated = true;
+      }
+      if (migrated) replace(() => {});
       for (const s of state.stores) {
         if (!s.syncKey) continue;
         const isOwnerHere = !s.createdBy || s.createdBy === syncClientId();
