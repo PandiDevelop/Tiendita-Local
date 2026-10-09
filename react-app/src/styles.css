@@ -136,12 +136,11 @@ th,td{text-align:left;vertical-align:middle}
 .sale-cart-bottom{display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:nowrap}
 .sale-cart-price{display:flex;align-items:center;gap:6px;flex:1 1 auto;min-width:0}
 .sale-cart-price .price-input{width:88px;padding:7px 8px}
-.sale-cart-qty{display:flex;align-items:center;gap:8px;flex:0 0 auto}
-.sale-cart-steppers{display:grid;gap:4px;grid-template-rows:auto auto;flex:0 0 auto}
+.sale-cart-qty{display:flex;align-items:center;gap:6px;flex:0 0 auto}
 .sale-cart-qty .qty-input{flex:0 0 auto;width:52px;text-align:center;border:1px solid var(--line);border-radius:9px;font:700 16px 'Nunito',sans-serif;color:var(--ink);padding:6px 4px;appearance:textfield}
 .sale-cart-qty .qty-input::-webkit-outer-spin-button,.sale-cart-qty .qty-input::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
 .sale-cart-qty .qty-input{-moz-appearance:textfield}
-.qty-mini{width:26px;height:26px;border-radius:8px;background:var(--lav);border:1px solid var(--line);color:var(--brand-deep);font-size:15px;font-weight:800;display:inline-flex;align-items:center;justify-content:center;padding:0;line-height:1;flex:0 0 auto}
+.qty-mini{width:28px;height:28px;border-radius:8px;background:var(--lav);border:1px solid var(--line);color:var(--brand-deep);font-size:16px;font-weight:800;display:inline-flex;align-items:center;justify-content:center;padding:0;line-height:1;flex:0 0 auto}
 .qty-mini:hover{background:var(--brand-line)}
 /* Botones flotantes de X/Guardar dentro del encabezado de las ventanas grandes
    (Registrar venta / Nuevo cargamento), mismo estilo que el modal-float-actions. */
