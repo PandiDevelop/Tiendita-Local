@@ -77,6 +77,52 @@ function clearSeenNoteIds(storeId: string): void {
   try { localStorage.removeItem(SEEN_NOTES_KEY + storeId); } catch { /* ignorar */ }
 }
 
+// Reconciliacion de PRODUCTOS y VENTAS al recibir snapshots. Mismo espiritu que
+// seenNoteIds (ver arriba), pero sin depender de que Firestore sepa borrar
+// entradas de un mapa:
+//  - productIdSet / saleIdSet: ids que este cliente YA conocio (los subio o
+//    los vio llegar en un snapshot). Sirven para distinguir, al recibir un
+//    snapshot, un elemento que este dispositivo creo y AUN no subio (no estaba
+//    en el set: se conserva) de uno que otro dispositivo BORRO (estaba en el
+//    set y ya no viene en el remoto: se quita aqui tambien en vez de quedarse
+//    pegado y volver a subirlo). Se persiste en localStorage para que el
+//    borrado sobreviva a una recarga (mismo motivo que seenNoteIds).
+//  - remoteProducts: ultimo contenido de cada producto que SI vino de la nube.
+//    Si la copia local difiere de ese valor, es porque el usuario acaba de
+//    editarla y ese cambio todavia no se ha subido: entonces un snapshot
+//    remoto NO debe pisarla (antes si lo hacia, y por eso una edicion de la
+//    categoria de un producto "se revertia al momento").
+function idSetStore(prefix: string) {
+  const mem = new Map<string, Set<string>>();
+  return {
+    get(storeId: string): Set<string> {
+      let cur = mem.get(storeId);
+      if (!cur) {
+        try {
+          const raw = localStorage.getItem(prefix + storeId);
+          const arr = raw ? JSON.parse(raw) : null;
+          cur = new Set(Array.isArray(arr) ? arr : []);
+        } catch { cur = new Set(); }
+        mem.set(storeId, cur);
+      }
+      return cur;
+    },
+    set(storeId: string, ids: Set<string>): void {
+      mem.set(storeId, ids);
+      try { localStorage.setItem(prefix + storeId, JSON.stringify(Array.from(ids))); } catch { /* cuota llena: no es critico */ }
+    },
+    clear(storeId: string): void {
+      mem.delete(storeId);
+      try { localStorage.removeItem(prefix + storeId); } catch { /* ignorar */ }
+    },
+  };
+}
+const productIdSet = idSetStore('mt_seen_products_');
+const saleIdSet = idSetStore('mt_seen_sales_');
+const tagIdSet = idSetStore('mt_seen_tags_');
+// storeId -> (productId -> JSON del ultimo valor confirmado en la nube).
+const remoteProducts = new Map<string, Map<string, string>>();
+
 export function syncReady(): boolean {
   if (DB) return true;
   if (!FIREBASE_CONFIG?.projectId) return false;
@@ -347,8 +393,18 @@ export function createSync(
 
       const sales: Record<string, Sale> = {};
       s.sales.forEach((x) => (sales[x.id] = x));
+      // Las ventas viajan como mapa con merge, y merge NUNCA borra una clave
+      // que no venga en el nuevo valor. Por eso, cuando una venta se elimina
+      // en este dispositivo, hay que mandarla explicitamente con deleteField()
+      // usando el set de ids ya conocidos (saleIdSet). Sin esto la venta
+      // quedaba viva en Firestore y reaparecia aqui y en los demas
+      // dispositivos.
+      const prevSeenSales = saleIdSet.get(storeId);
+      let removedSales = 0;
+      const salesPatch: Record<string, unknown> = { ...sales };
+      prevSeenSales.forEach((id) => { if (!sales[id]) { salesPatch[id] = deleteField(); removedSales++; } });
       const main: Record<string, unknown> = {
-        sales,
+        sales: removedSales ? salesPatch : sales,
         categories: s.categories || [],
         tags: s.tags || [],
         categoryPricing: s.categoryPricing || {},
@@ -428,6 +484,26 @@ export function createSync(
       lastPushedProducts.set(storeId, nextProd);
       lastPushedNotes.set(storeId, nextNotes);
       setSeenNoteIds(storeId, currentNoteIds);
+      // Ya confirmado en la nube: se recuerda que estos productos y ventas
+      // existen (para distinguir despues un borrado remoto de un elemento
+      // local todavia sin subir) y se fija el ultimo valor confirmado de cada
+      // producto (para saber si la copia local tiene una edicion sin subir).
+      // Se UNE con lo ya visto (no se reemplaza): un id borrado y ya subido
+      // como deleteField debe seguir recordandose para que un snapshot viejo
+      // de OTRO dispositivo (que todavia lo trae) no lo resucite aqui.
+      const seenProductsPrev = productIdSet.get(storeId);
+      seenNow.forEach((id) => seenProductsPrev.add(id));
+      productIdSet.set(storeId, seenProductsPrev);
+      const nextSeenSales = new Set(prevSeenSales);
+      Object.keys(sales).forEach((id) => nextSeenSales.add(id));
+      saleIdSet.set(storeId, nextSeenSales);
+      // Igual que con productos/ventas: se recuerda que estas etiquetas ya
+      // estuvieron en la nube. Se UNE con lo ya visto (no se reemplaza) para
+      // que una etiqueta borrada localmente y luego subida no vuelva a
+      // aparecer si llega un snapshot viejo que todavia la trae.
+      const seenTagsPrev = tagIdSet.get(storeId);
+      (s.tags || []).forEach((t) => seenTagsPrev.add(t));
+      tagIdSet.set(storeId, seenTagsPrev);
       failCount.delete(storeId);
     } catch (e) {
       console.warn('Push fallido:', e);
@@ -593,6 +669,10 @@ export function createSync(
     // desactiva la sincronizacion), no en cada re-suscripcion normal - ver
     // el comentario junto a getSeenNoteIds/setSeenNoteIds.
     clearSeenNoteIds(storeId);
+    productIdSet.clear(storeId);
+    saleIdSet.clear(storeId);
+    tagIdSet.clear(storeId);
+    remoteProducts.delete(storeId);
     const s = getState().stores.find((x) => x.id === storeId);
     if (s) clearDeletedNotes(s);
   }
@@ -629,6 +709,12 @@ export function applyRemote(getState: () => AppState, mutate: (fn: (d: AppState)
     });
     return;
   }
+  // Ids de producto que este snapshot aplico desde la nube (no se saltaron por
+  // tener una edicion local sin subir). Se usa despues de normalizeStore para
+  // fijar la linea base de esos productos (ver mas abajo): normalizeStore los
+  // deja en su forma final, asi que la comparacion de "edicion sin subir" con
+  // el siguiente snapshot es exacta.
+  let remoteProductsApplied: Set<string> | null = null;
   mutate((d) => {
     const st = d.stores.find((x) => x.id === storeId);
     if (!st) return;
@@ -638,24 +724,85 @@ export function applyRemote(getState: () => AppState, mutate: (fn: (d: AppState)
       st.events = JSON.parse(JSON.stringify(remote.events)) as Store['events'];
     }
 
-    const products = new Map(st.products.map((p) => [p.id, p]));
-    toProductsArr(remote.products).forEach((p) => products.set(p.id, p));
-    st.products = Array.from(products.values());
+    // Productos: solo se reconcilia cuando el snapshot de verdad trae el
+    // catalogo (el listener de la subcoleccion). Un snapshot del documento
+    // principal (que ya no lleva "products") deja el catalogo intacto. Se
+    // conservan las ediciones locales que AUN no se suben (comparando con el
+    // ultimo valor recibido de la nube, remoteProducts) y se quitan los
+    // productos que otro dispositivo borro de verdad (estaban en productIdSet
+    // y ya no vienen).
+    if (remote.products !== undefined) {
+      const remoteArr = toProductsArr(remote.products);
+      const seen = productIdSet.get(storeId);
+      const lastRemote = remoteProducts.get(storeId) || new Map<string, string>();
+      const localById = new Map(st.products.map((p) => [p.id, p]));
+      const result = new Map(st.products.map((p) => [p.id, p]));
+      const remoteIds = new Set<string>();
+      const applied = new Set<string>();
+      remoteArr.forEach((p) => {
+        if (!p || !p.id) return;
+        remoteIds.add(p.id);
+        const local = localById.get(p.id);
+        const prev = lastRemote.get(p.id);
+        const localJson = local ? JSON.stringify(local) : null;
+        const same = localJson !== null && localJson === JSON.stringify(p);
+        // "locallyDeleted": la nube ya lo tenia antes (lo vimos en productIdSet
+        // o en el ultimo snapshot) y ahora no esta local: lo borro este
+        // dispositivo y aun no se subio, asi que no hay que resucitarlo.
+        const locallyDeleted = !local && (seen.has(p.id) || prev !== undefined);
+        // Edicion local sin subir: la copia local cambio desde el ultimo valor
+        // recibido de la nube. Si el remoto ya alcanzo ese mismo valor (same),
+        // no hay conflicto: se acepta y se limpia el estado "sucio".
+        const dirtyEdit = !!local && !same && prev !== undefined && localJson !== prev;
+        if (!locallyDeleted && !dirtyEdit) { result.set(p.id, p); applied.add(p.id); }
+      });
+      lastRemote.forEach((prev, id) => {
+        if (remoteIds.has(id)) return;
+        const local = localById.get(id);
+        // Se borro en otro dispositivo: si aqui no habia una edicion sin subir,
+        // se quita tambien; si la habia, se conserva (y este push la re-sube).
+        if (local && JSON.stringify(local) === prev) result.delete(id);
+      });
+      st.products = Array.from(result.values());
+      remoteProductsApplied = applied;
+      // Se recuerdan los ids vistos en la nube (igual que hace push() al
+      // confirmar): asi un snapshot viejo que todavia traiga un producto ya
+      // borrado aqui no lo resucita (ver "locallyDeleted" arriba).
+      const nextSeen = new Set(seen);
+      remoteIds.forEach((id) => nextSeen.add(id));
+      productIdSet.set(storeId, nextSeen);
+    }
 
-    const sales = new Map(st.sales.map((x) => [x.id, x]));
-    toSalesArr(remote.sales).forEach((rs) => {
-      const ls = sales.get(rs.id);
-      if (ls) {
-        sales.set(rs.id, Object.assign({}, ls, {
+    // Ventas: tambien se reconcilian los borrados (estaban en saleIdSet y ya no
+    // vienen en el remoto) para que una venta borrada en otro dispositivo no
+    // quede pegada aqui y se vuelva a subir. Solo cuando el snapshot trae
+    // "sales" (documento principal); los snapshots de productos no lo tocan.
+    if (remote.sales !== undefined) {
+      const remoteArr = toSalesArr(remote.sales);
+      const remoteIds = new Set(remoteArr.map((x) => x.id));
+      const seen = saleIdSet.get(storeId);
+      const localById = new Map(st.sales.map((x) => [x.id, x]));
+      const result = new Map(st.sales.filter((x) => remoteIds.has(x.id) || !seen.has(x.id)).map((x) => [x.id, x]));
+      remoteArr.forEach((rs) => {
+        const ls = localById.get(rs.id);
+        if (!ls) {
+          // Si ya lo conocia y no esta local, lo borraron aqui a proposito:
+          // no resucitarlo con una copia vieja del remoto.
+          if (seen.has(rs.id)) return;
+          result.set(rs.id, JSON.parse(JSON.stringify(rs)));
+          return;
+        }
+        result.set(rs.id, Object.assign({}, ls, {
           items: mergeItems(ls.items, rs.items),
           closed: ls.closed || !!rs.closed,
           by: rs.by || ls.by,
         }));
-      } else {
-        sales.set(rs.id, JSON.parse(JSON.stringify(rs)));
-      }
-    });
-    st.sales = Array.from(sales.values());
+      });
+      st.sales = Array.from(result.values());
+      const nextSeen = new Set(seen);
+      remoteIds.forEach((id) => nextSeen.add(id));
+      saleIdSet.set(storeId, nextSeen);
+    }
 
     // El orden de las categorias ahora importa (se puede arrastrar en el
     // Catalogo). Firestore SI conserva el orden de un arreglo, asi que se
@@ -673,7 +820,22 @@ export function applyRemote(getState: () => AppState, mutate: (fn: (d: AppState)
     }
     if (remote.tags && Array.isArray(remote.tags)) {
       const remoteTags = (remote.tags as string[]).map((t) => (t || '').trim()).filter(Boolean);
-      st.tags = [...new Set([...remoteTags, ...(st.tags || [])])];
+      // Como las categorias, s.tags es un arreglo que Firestore reemplaza
+      // entero, asi que el remoto es autoritativo: una etiqueta borrada en
+      // otro dispositivo debe desaparecer aqui. Pero una union pura (lo que
+      // habia antes) NUNCA propagaba el borrado y ademas resucitaba la
+      // etiqueta borrada localmente. Se reconcilia con tagIdSet (ids ya vistos
+      // en la nube) para distinguir una etiqueta creada aqui y aun sin subir
+      // (se conserva) de una borrada (no se resucita).
+      const seen = tagIdSet.get(storeId);
+      const localTags = (st.tags || []).map((t) => (t || '').trim()).filter(Boolean);
+      const result = new Set<string>();
+      remoteTags.forEach((t) => { if (!(seen.has(t) && !localTags.includes(t))) result.add(t); });
+      localTags.forEach((t) => { if (!(seen.has(t) && !remoteTags.includes(t))) result.add(t); });
+      st.tags = Array.from(result).sort((a, b) => a.localeCompare(b, 'es'));
+      const nextSeen = new Set(seen);
+      remoteTags.forEach((t) => nextSeen.add(t));
+      tagIdSet.set(storeId, nextSeen);
     }
     if (typeof remote.notes === 'string' && remote.notes.length) {
       st.notes = remote.notes;
@@ -736,6 +898,18 @@ export function applyRemote(getState: () => AppState, mutate: (fn: (d: AppState)
     if (metaOk && remote.name && remote.name !== st.name) st.name = remote.name as string;
     if (metaOk && remote.image && remote.image !== st.image) st.image = remote.image as string;
     normalizeStore(st);
+    // Con los productos ya normalizados, se fija la linea base del ultimo
+    // valor recibido de la nube (solo para los que aplicamos; los que se
+    // conservaron por tener una edicion local sin subir mantienen su linea
+    // base vieja y siguen considerandose "sucios"). Se descartan los ids que
+    // ya no existen localmente (borrados).
+    if (remoteProductsApplied) {
+      const present = new Set(st.products.map((p) => p.id));
+      const cur = new Map(remoteProducts.get(storeId) || []);
+      for (const id of Array.from(cur.keys())) if (!present.has(id)) cur.delete(id);
+      st.products.forEach((p) => { if (remoteProductsApplied!.has(p.id)) cur.set(p.id, JSON.stringify(p)); });
+      remoteProducts.set(storeId, cur);
+    }
   });
 }
 

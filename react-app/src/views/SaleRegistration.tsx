@@ -307,17 +307,20 @@ export function SaleRegistration({ onClose }: { onClose: () => void }) {
         </div>
         <div className="sale-scroll">
           <div className="sale-builder">
-            <div className="field"><label>Empleado que registra</label>
-              <input className="sale-employee" readOnly tabIndex={-1} value={employee} title="El nombre sale de tu perfil y no se puede cambiar aquí" />
-            </div>
+            <div className="sale-employee">Registrado por: <b>{employee}</b></div>
             {showFilters ? (
               <div className="sale-cats">
                 <span className="sale-pick-label">Filtros</span>
-                {selectableCats.length > 0 && (
-                  <Dropdown value="" ph="＋ Añadir categoría" items={selectableCats} onPick={(v) => { const next = [...categories, v]; setCategories(next); persist({ categories: next }); }} />
-                )}
-                {selectableTags.length > 0 && (
-                  <Dropdown value="" ph="＋ Añadir tag" items={selectableTags} onPick={(v) => { const next = [...tags, v]; setTags(next); persist({ tags: next }); }} />
+                {(selectableCats.length > 0 || selectableTags.length > 0) && (
+                  <div className="sale-filter-btns">
+                    {selectableCats.length > 0 && (
+                      <Dropdown value="" ph="Categoría" items={selectableCats} onPick={(v) => { const next = [...categories, v]; setCategories(next); persist({ categories: next }); }} />
+                    )}
+                    {selectableCats.length > 0 && selectableTags.length > 0 && <span className="sale-filter-sep" aria-hidden="true" />}
+                    {selectableTags.length > 0 && (
+                      <Dropdown value="" ph="Tag" items={selectableTags} onPick={(v) => { const next = [...tags, v]; setTags(next); persist({ tags: next }); }} />
+                    )}
+                  </div>
                 )}
                 {categories.map((c) => (
                   <div className="cat-chip" key={'cat-' + c}>{c}<button type="button" title={`Quitar ${c}`} onClick={() => { const next = categories.filter((x) => x !== c); setCategories(next); persist({ categories: next }); }}>×</button></div>

@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
-import type { AppState, Product, Store, CostEntry, SaleItem } from '../types';
+import type { AppState, Product, Store, CostEntry, SaleItem, Sale } from '../types';
 import { makeDraft, normalizeStore, addNote, addNoteMsg, deleteNoteMsg, adoptInvLog, sortByOrder, uid, costFor, priceFor, total, costTotal, profitTotal, setCategoryPricing, groupedByCategory, syncClientId, toggleNotePin, ensureCost, findCostId, mergeCostEntries } from '../lib/core';
 import { applyRemote } from '../lib/sync';
 
@@ -90,7 +90,9 @@ function makePayload(st: Store) {
     noteBoard,
     notes: st.notes || '',
     products,
+    sales: st.sales || [],
     categories: st.categories || [],
+    tags: st.tags || [],
     categoryPricing: st.categoryPricing || {},
     updatedBy: 'device-' + st.id,
     members: st.members || {},
@@ -675,5 +677,153 @@ describe('fijar una nota guarda cuando se fijo (pinnedAt)', () => {
     toggleNotePin(dev.st, note.id);
     expect(note.pinned).toBe(false);
     expect(note.pinnedAt).toBe(undefined);
+  });
+});
+
+describe('el borrado y las ediciones locales no se revierten al sincronizar', () => {
+  function addSale(s: Store, id: string): Sale {
+    const sale: Sale = { id, date: '01/01/2026', time: '10:00', employee: 'Ana', closed: true, items: [] };
+    s.sales.push(sale);
+    return sale;
+  }
+
+  it('una venta borrada en A desaparece en B y un snapshot viejo no la resucita', () => {
+    const a = device('S1A');
+    const b = device('S1B');
+    addSale(a.st, 'va');
+    addSale(a.st, 'vb');
+    apply(a.st, b);
+    expect(b.st.sales.map((x) => x.id).sort()).toEqual(['va', 'vb']);
+
+    // A borra "va" y empuja: el payload ya no la trae y B la quita.
+    a.st.sales = a.st.sales.filter((x) => x.id !== 'va');
+    apply(a.st, b);
+    expect(b.st.sales.map((x) => x.id)).toEqual(['vb']);
+
+    // Un snapshot viejo COMPLETO (como los del documento principal, que
+    // siempre traen todas las ventas) que todavia incluye la venta borrada no
+    // la devuelve a B.
+    applyRemote(() => b.ref, (up) => up(b.ref), b.st.id, {
+      sales: [
+        { id: 'va', date: '01/01/2026', time: '10:00', employee: 'Ana', closed: true, items: [] },
+        { id: 'vb', date: '01/01/2026', time: '10:00', employee: 'Ana', closed: true, items: [] },
+      ],
+      updatedBy: 'viejo',
+    });
+    expect(b.st.sales.map((x) => x.id)).toEqual(['vb']);
+  });
+
+  it('una venta creada solo en B no se pierde al recibir el snapshot de A', () => {
+    const a = device('S2A');
+    const b = device('S2B');
+    addSale(a.st, 'va');
+    addSale(b.st, 'vb'); // local en B, aun sin subir
+    apply(a.st, b);
+    expect(b.st.sales.map((x) => x.id).sort()).toEqual(['va', 'vb']);
+  });
+
+  it('un producto editado localmente y sin subir no lo pisa un snapshot remoto viejo', () => {
+    const a = device('S3A');
+    const b = device('S3B');
+    const pid = addProduct(a.st, 'Agua', 2000);
+    apply(a.st, b);
+    const remote1500 = { [pid]: { id: pid, name: 'Agua', price: 1500, image: '', promos: [], category: '', cost: 0 } };
+
+    // B edita el precio a mano sin subirlo (aun).
+    b.st.products.find((p) => p.id === pid)!.price = 2500;
+
+    // Llega un snapshot con el valor viejo: NO debe revertir la edicion local.
+    applyRemote(() => b.ref, (up) => up(b.ref), b.st.id, { products: remote1500, updatedBy: 'viejo' });
+    expect(b.st.products.find((p) => p.id === pid)!.price).toBe(2500);
+
+    // La nube confirma el valor local (mismo contenido): se acepta y se limpia
+    // el estado "sucio".
+    applyRemote(() => b.ref, (up) => up(b.ref), b.st.id, {
+      products: { [pid]: { id: pid, name: 'Agua', price: 2500, image: '', promos: [], category: '', cost: 0 } },
+      updatedBy: 'otro',
+    });
+    // Y a partir de ahi, un cambio remoto nuevo SI se adopta.
+    applyRemote(() => b.ref, (up) => up(b.ref), b.st.id, {
+      products: { [pid]: { id: pid, name: 'Agua', price: 3000, image: '', promos: [], category: '', cost: 0 } },
+      updatedBy: 'otro',
+    });
+    expect(b.st.products.find((p) => p.id === pid)!.price).toBe(3000);
+  });
+
+  it('un producto borrado en A desaparece en B y no se resucita', () => {
+    const a = device('S4A');
+    const b = device('S4B');
+    const pid = addProduct(a.st, 'Agua', 2000);
+    apply(a.st, b);
+    expect(b.st.products.length).toBe(1);
+
+    a.st.products = [];
+    apply(a.st, b);
+    expect(b.st.products.length).toBe(0);
+
+    applyRemote(() => b.ref, (up) => up(b.ref), b.st.id, {
+      products: { [pid]: { id: pid, name: 'Agua', price: 2000, image: '', promos: [], category: '', cost: 0 } },
+      updatedBy: 'viejo',
+    });
+    expect(b.st.products.length).toBe(0);
+  });
+
+  it('el orden de las categorias se adopta del remoto sin perder las locales nuevas', () => {
+    const a = device('S5A');
+    const b = device('S5B');
+    a.st.categories = ['Bebidas', 'Snacks'];
+    b.st.categories = ['Snacks', 'Bebidas'];
+    apply(a.st, b);
+    expect(b.st.categories).toEqual(['Bebidas', 'Snacks']);
+  });
+
+  it('una etiqueta borrada en A desaparece en B y un snapshot viejo no la resucita', () => {
+    const a = device('S6A');
+    const b = device('S6B');
+    a.st.tags = ['bebida', 'uma'];
+    apply(a.st, b);
+    expect([...(b.st.tags || [])].sort()).toEqual(['bebida', 'uma']);
+
+    a.st.tags = ['bebida'];
+    apply(a.st, b);
+    expect(b.st.tags).toEqual(['bebida']);
+
+    applyRemote(() => b.ref, (up) => up(b.ref), b.st.id, { tags: ['bebida', 'uma'], updatedBy: 'viejo' });
+    expect(b.st.tags).toEqual(['bebida']);
+  });
+
+  it('una etiqueta creada en B y aun sin subir no se pierde al llegar el snapshot de A', () => {
+    const a = device('S7A');
+    const b = device('S7B');
+    a.st.tags = ['bebida'];
+    b.st.tags = ['bebida', 'nueva'];
+    apply(a.st, b);
+    expect([...(b.st.tags || [])].sort()).toEqual(['bebida', 'nueva']);
+  });
+
+  it('una venta borrada y ya subida no la resucita un snapshot viejo de otro dispositivo', async () => {
+    const { createSync } = await import('../lib/sync');
+    const { setDoc } = await import('firebase/firestore');
+    const setDocMock = setDoc as unknown as ReturnType<typeof vi.fn>;
+    setDocMock.mockClear();
+    setDocMock.mockImplementation(() => Promise.resolve());
+
+    const dev = device('S8A');
+    dev.st.syncKey = 'clave-borrado-venta';
+    addSale(dev.st, 'vs');
+
+    const sync = createSync(() => dev.ref, () => {}, () => {});
+    sync.attach(dev.st.id);
+    await sync.push(dev.st.id); // sube la venta (saleIdSet recuerda "vs")
+
+    dev.st.sales = [];
+    await sync.push(dev.st.id); // manda deleteField para "vs"
+
+    // Snapshot viejo de OTRO dispositivo que todavia trae la venta borrada.
+    applyRemote(() => dev.ref, (up) => up(dev.ref), dev.st.id, {
+      sales: [{ id: 'vs', date: '01/01/2026', time: '10:00', employee: 'Ana', closed: true, items: [] }],
+      updatedBy: 'otro-dispositivo',
+    });
+    expect(dev.st.sales.length).toBe(0);
   });
 });
