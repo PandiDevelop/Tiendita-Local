@@ -1,7 +1,7 @@
 import { Fragment, ReactNode, useState } from 'react';
 import { CaretIcon, CloseIcon, DownloadIcon, PencilIcon, confirmDialog } from '../ui';
 import { useStore } from '../store';
-import { money, esc, total, shortDate, saleUnits, priceFor, formatDate, catLabel, findActivePromo, productPromos, canManageTeam } from '../lib/core';
+import { money, esc, total, shortDate, saleUnits, priceFor, formatDate, catLabel, findActivePromo, productPromos, canManageTeam, markSaleDeleted } from '../lib/core';
 import type { Sale } from '../types';
 
 export function History() {
@@ -24,6 +24,8 @@ export function History() {
       replace((d) => {
         const st = d.stores.find((y) => y.id === s.id);
         if (!st) return;
+        // Unica via que borra una venta tambien en la nube (ver markSaleDeleted).
+        markSaleDeleted(st, x.id);
         st.sales = st.sales.filter((z) => z.id !== x.id);
       });
     });

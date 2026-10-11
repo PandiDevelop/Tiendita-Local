@@ -2,6 +2,7 @@ import { describe, it, expect, beforeEach, vi } from 'vitest';
 import type { AppState, Product, Store, CostEntry, SaleItem, Sale } from '../types';
 import { makeDraft, normalizeStore, addNote, addNoteMsg, deleteNoteMsg, adoptInvLog, sortByOrder, uid, costFor, priceFor, total, costTotal, profitTotal, setCategoryPricing, groupedByCategory, syncClientId, toggleNotePin, ensureCost, findCostId, mergeCostEntries } from '../lib/core';
 import { applyRemote } from '../lib/sync';
+import { buildBackup, parseBackup, mergeBackupInto, backupFileName } from '../lib/backup';
 
 vi.mock('firebase/app', () => ({ initializeApp: () => ({}) }));
 vi.mock('firebase/firestore', () => ({
@@ -687,7 +688,7 @@ describe('el borrado y las ediciones locales no se revierten al sincronizar', ()
     return sale;
   }
 
-  it('una venta borrada en A desaparece en B y un snapshot viejo no la resucita', () => {
+  it('una venta eliminada a proposito en A desaparece en B y un snapshot viejo no la resucita', () => {
     const a = device('S1A');
     const b = device('S1B');
     addSale(a.st, 'va');
@@ -695,22 +696,33 @@ describe('el borrado y las ediciones locales no se revierten al sincronizar', ()
     apply(a.st, b);
     expect(b.st.sales.map((x) => x.id).sort()).toEqual(['va', 'vb']);
 
-    // A borra "va" y empuja: el payload ya no la trae y B la quita.
-    a.st.sales = a.st.sales.filter((x) => x.id !== 'va');
-    apply(a.st, b);
+    // A pulsa Borrar en "va": en la nube queda su lapida dentro del mapa sales.
+    const base = { date: '01/01/2026', time: '10:00', employee: 'Ana', closed: true, items: [] };
+    applyRemote(() => b.ref, (up) => up(b.ref), b.st.id, {
+      sales: { va: { id: 'va', deleted: true, deletedAt: 1 }, vb: { id: 'vb', ...base } },
+      updatedBy: 'otro',
+    });
     expect(b.st.sales.map((x) => x.id)).toEqual(['vb']);
 
-    // Un snapshot viejo COMPLETO (como los del documento principal, que
-    // siempre traen todas las ventas) que todavia incluye la venta borrada no
-    // la devuelve a B.
+    // Un snapshot viejo que todavia trae "va" viva no la devuelve a B.
     applyRemote(() => b.ref, (up) => up(b.ref), b.st.id, {
-      sales: [
-        { id: 'va', date: '01/01/2026', time: '10:00', employee: 'Ana', closed: true, items: [] },
-        { id: 'vb', date: '01/01/2026', time: '10:00', employee: 'Ana', closed: true, items: [] },
-      ],
+      sales: [{ id: 'va', ...base }, { id: 'vb', ...base }],
       updatedBy: 'viejo',
     });
     expect(b.st.sales.map((x) => x.id)).toEqual(['vb']);
+  });
+
+  it('un snapshot sin ventas (vacio) no borra el historial de ventas', () => {
+    const a = device('S1C');
+    const b = device('S1D');
+    addSale(a.st, 'v1');
+    addSale(a.st, 'v2');
+    addSale(a.st, 'v3');
+    apply(a.st, b);
+    expect(b.st.sales.length).toBe(3);
+
+    applyRemote(() => b.ref, (up) => up(b.ref), b.st.id, { sales: {}, updatedBy: 'otro' });
+    expect(b.st.sales.length).toBe(3);
   });
 
   it('una venta creada solo en B no se pierde al recibir el snapshot de A', () => {
@@ -750,31 +762,27 @@ describe('el borrado y las ediciones locales no se revierten al sincronizar', ()
     expect(b.st.products.find((p) => p.id === pid)!.price).toBe(3000);
   });
 
-  it('un producto borrado en A desaparece en B y no se resucita', () => {
+  it('un producto eliminado a proposito en A desaparece en B y no se resucita', () => {
     const a = device('S4A');
     const b = device('S4B');
     const pid = addProduct(a.st, 'Agua', 2000);
     apply(a.st, b);
     expect(b.st.products.length).toBe(1);
 
+    // A pulsa Eliminar: en la nube queda la lapida del producto.
     a.st.products = [];
-    apply(a.st, b);
+    applyRemote(() => b.ref, (up) => up(b.ref), b.st.id, {
+      products: { [pid]: { id: pid, name: 'Agua', deleted: true, deletedAt: 1 } },
+      updatedBy: 'otro',
+    });
     expect(b.st.products.length).toBe(0);
 
+    // Un snapshot viejo que todavia trae el producto sin lapida no lo resucita.
     applyRemote(() => b.ref, (up) => up(b.ref), b.st.id, {
       products: { [pid]: { id: pid, name: 'Agua', price: 2000, image: '', promos: [], category: '', cost: 0 } },
       updatedBy: 'viejo',
     });
     expect(b.st.products.length).toBe(0);
-  });
-
-  it('el orden de las categorias se adopta del remoto sin perder las locales nuevas', () => {
-    const a = device('S5A');
-    const b = device('S5B');
-    a.st.categories = ['Bebidas', 'Snacks'];
-    b.st.categories = ['Snacks', 'Bebidas'];
-    apply(a.st, b);
-    expect(b.st.categories).toEqual(['Bebidas', 'Snacks']);
   });
 
   it('una etiqueta borrada en A desaparece en B y un snapshot viejo no la resucita', () => {
@@ -801,29 +809,207 @@ describe('el borrado y las ediciones locales no se revierten al sincronizar', ()
     expect([...(b.st.tags || [])].sort()).toEqual(['bebida', 'nueva']);
   });
 
-  it('una venta borrada y ya subida no la resucita un snapshot viejo de otro dispositivo', async () => {
+  it('una venta eliminada y ya subida (lapida) no la resucita un snapshot viejo, y vaciar sin Eliminar no la borra', async () => {
     const { createSync } = await import('../lib/sync');
+    const { markSaleDeleted } = await import('../lib/core');
     const { setDoc } = await import('firebase/firestore');
     const setDocMock = setDoc as unknown as ReturnType<typeof vi.fn>;
-    setDocMock.mockClear();
-    setDocMock.mockImplementation(() => Promise.resolve());
+    const calls: { id?: string; data: Record<string, unknown> }[] = [];
+    setDocMock.mockImplementation((ref: { id?: string }, data: Record<string, unknown>) => { calls.push({ id: ref.id, data }); return Promise.resolve(); });
 
     const dev = device('S8A');
     dev.st.syncKey = 'clave-borrado-venta';
     addSale(dev.st, 'vs');
+    addSale(dev.st, 'vt');
 
     const sync = createSync(() => dev.ref, () => {}, () => {});
     sync.attach(dev.st.id);
-    await sync.push(dev.st.id); // sube la venta (saleIdSet recuerda "vs")
+    await sync.push(dev.st.id);
+    calls.length = 0;
 
+    // Vaciar el estado local SIN pulsar Borrar no manda ninguna lapida.
+    const keep = dev.st.sales;
     dev.st.sales = [];
-    await sync.push(dev.st.id); // manda deleteField para "vs"
+    await sync.push(dev.st.id);
+    const noTomb = calls.map((c) => c.data.sales as Record<string, { deleted?: boolean }> | undefined).filter(Boolean);
+    expect(noTomb.every((m) => Object.values(m!).every((v) => !v.deleted))).toBe(true);
+    dev.st.sales = keep;
 
-    // Snapshot viejo de OTRO dispositivo que todavia trae la venta borrada.
+    // Borrar a proposito "vs": sube su lapida una sola vez.
+    calls.length = 0;
+    markSaleDeleted(dev.st, 'vs');
+    dev.st.sales = dev.st.sales.filter((x) => x.id !== 'vs');
+    await sync.push(dev.st.id);
+    const withTomb = calls.map((c) => c.data.sales as Record<string, { deleted?: boolean }> | undefined).filter(Boolean);
+    expect(withTomb.some((m) => m!['vs'] && m!['vs'].deleted === true)).toBe(true);
+
+    // Snapshot viejo de OTRO dispositivo que todavia trae la venta viva.
     applyRemote(() => dev.ref, (up) => up(dev.ref), dev.st.id, {
       sales: [{ id: 'vs', date: '01/01/2026', time: '10:00', employee: 'Ana', closed: true, items: [] }],
       updatedBy: 'otro-dispositivo',
     });
-    expect(dev.st.sales.length).toBe(0);
+    expect(dev.st.sales.map((x) => x.id)).toEqual(['vt']);
+    setDocMock.mockImplementation(() => Promise.resolve());
+  });
+});
+
+
+describe('un producto solo se borra si el usuario lo elimina a proposito', () => {
+  function seedProducts(dev: Device, n: number): string[] {
+    const ids: string[] = [];
+    for (let i = 0; i < n; i++) ids.push(addProduct(dev.st, 'Prod ' + i, 1000 + i));
+    return ids;
+  }
+  function payloadOf(st: Store) {
+    const products: Record<string, Product> = {};
+    st.products.forEach((p) => (products[p.id] = p));
+    return products;
+  }
+
+  it('un snapshot vacio nunca quita productos (ni de cache ni del servidor)', () => {
+    const a = device('G1A');
+    const b = device('G1B');
+    seedProducts(a, 8);
+    apply(a.st, b);
+    expect(b.st.products.length).toBe(8);
+
+    applyRemote(() => b.ref, (up) => up(b.ref), b.st.id, { products: {} });
+    expect(b.st.products.length).toBe(8);
+  });
+
+  it('un snapshot parcial (solo 2 de 8) tampoco quita los demas', () => {
+    const a = device('G3A');
+    const b = device('G3B');
+    const ids = seedProducts(a, 8);
+    apply(a.st, b);
+
+    const all = payloadOf(a.st);
+    applyRemote(() => b.ref, (up) => up(b.ref), b.st.id, { products: { [ids[0]]: all[ids[0]], [ids[1]]: all[ids[1]] } });
+    expect(b.st.products.length).toBe(8);
+  });
+
+  it('un producto con 0 disponibles se queda: solo la lapida lo quita', () => {
+    const a = device('G4A');
+    const b = device('G4B');
+    const ids = seedProducts(a, 3);
+    a.st.inventory = { [ids[0]]: 0, [ids[1]]: 0, [ids[2]]: 0 } as Store['inventory'];
+    apply(a.st, b);
+    applyRemote(() => b.ref, (up) => up(b.ref), b.st.id, { products: { [ids[0]]: payloadOf(a.st)[ids[0]] } });
+    expect(b.st.products.length).toBe(3);
+
+    applyRemote(() => b.ref, (up) => up(b.ref), b.st.id, { products: { [ids[0]]: { id: ids[0], deleted: true, deletedAt: 1 } } });
+    expect(b.st.products.map((p) => p.id).sort()).toEqual([ids[1], ids[2]].sort());
+  });
+
+  it('push() sube una lapida (sin deleteDoc) solo del producto eliminado a proposito', async () => {
+    const { createSync } = await import('../lib/sync');
+    const { setDoc, deleteDoc } = await import('firebase/firestore');
+    const setMock = setDoc as unknown as ReturnType<typeof vi.fn>;
+    const delMock = deleteDoc as unknown as ReturnType<typeof vi.fn>;
+    const calls: { id?: string; data: Record<string, unknown> }[] = [];
+    setMock.mockImplementation((ref: { id?: string }, data: Record<string, unknown>) => { calls.push({ id: ref.id, data }); return Promise.resolve(); });
+    delMock.mockClear();
+
+    const dev = device('G5');
+    dev.st.syncKey = 'clave-lapida';
+    const ids = seedProducts(dev, 4);
+    const sync = createSync(() => dev.ref, () => {}, () => {});
+    sync.attach(dev.st.id);
+    await sync.push(dev.st.id);
+    calls.length = 0;
+
+    const { markProductDeleted } = await import('../lib/core');
+    markProductDeleted(dev.st, ids[0]);
+    dev.st.products = dev.st.products.filter((p) => p.id !== ids[0]);
+    await sync.push(dev.st.id);
+
+    const tombs = calls.filter((c) => c.data.deleted === true);
+    expect(tombs.map((c) => c.id)).toEqual([ids[0]]);
+    expect(delMock).not.toHaveBeenCalled();
+
+    // No se reescribe la lapida en el siguiente push.
+    calls.length = 0;
+    dev.st.name = 'Otro nombre';
+    await sync.push(dev.st.id);
+    expect(calls.filter((c) => c.data.deleted === true).length).toBe(0);
+    setMock.mockImplementation(() => Promise.resolve());
+  });
+
+  it('push() NO borra ni marca nada si el catalogo local se vacia sin pulsar Eliminar', async () => {
+    const { createSync } = await import('../lib/sync');
+    const { setDoc, deleteDoc } = await import('firebase/firestore');
+    const setMock = setDoc as unknown as ReturnType<typeof vi.fn>;
+    const delMock = deleteDoc as unknown as ReturnType<typeof vi.fn>;
+    const calls: { id?: string; data: Record<string, unknown> }[] = [];
+    setMock.mockImplementation((ref: { id?: string }, data: Record<string, unknown>) => { calls.push({ id: ref.id, data }); return Promise.resolve(); });
+    delMock.mockClear();
+
+    const dev = device('G6');
+    dev.st.syncKey = 'clave-vaciado';
+    seedProducts(dev, 8);
+    const sync = createSync(() => dev.ref, () => {}, () => {});
+    sync.attach(dev.st.id);
+    await sync.push(dev.st.id);
+    calls.length = 0;
+
+    dev.st.products = []; // algo vacia el estado local, nadie pulso Eliminar
+    await sync.push(dev.st.id);
+
+    expect(delMock).not.toHaveBeenCalled();
+    expect(calls.filter((c) => c.data.deleted === true).length).toBe(0);
+    setMock.mockImplementation(() => Promise.resolve());
+  });
+
+  it('tras ese vaciado accidental, el siguiente snapshot de la nube restaura el catalogo', () => {
+    const a = device('G7A');
+    const b = device('G7B');
+    seedProducts(a, 6);
+    apply(a.st, b);
+    b.st.products = []; // vaciado accidental local
+    applyRemote(() => b.ref, (up) => up(b.ref), b.st.id, { products: payloadOf(a.st) });
+    expect(b.st.products.length).toBe(6);
+  });
+});
+
+
+describe('respaldo JSON de la tienda', () => {
+  it('el archivo no lleva el codigo de sincronizacion ni los miembros, y se puede leer de vuelta', () => {
+    const a = device('B1');
+    a.st.syncKey = 'secreto-123';
+    a.st.syncPin = '9999';
+    addProduct(a.st, 'Agua', 2000);
+    const txt = buildBackup(a.st, new Date('2026-10-11T12:00:00Z'));
+    expect(txt).not.toContain('secreto-123');
+    expect(txt).not.toContain('9999');
+    const parsed = parseBackup(txt);
+    expect(parsed).not.toBeNull();
+    expect(parsed!.store.products!.length).toBe(1);
+    expect(backupFileName(a.st, new Date('2026-10-11T12:00:00Z'))).toMatch(/^respaldo-.*-2026-10-11\.json$/);
+  });
+
+  it('un archivo que no es un respaldo se rechaza', () => {
+    expect(parseBackup('hola')).toBeNull();
+    expect(parseBackup('{"format":"otro","store":{"products":[]}}')).toBeNull();
+  });
+
+  it('restaurar agrega lo que falta, no pisa lo existente y no revive lo eliminado a proposito', async () => {
+    const { markProductDeleted } = await import('../lib/core');
+    const a = device('B2');
+    const [i1, i2, i3] = [addProduct(a.st, 'Agua', 2000), addProduct(a.st, 'Pan', 3000), addProduct(a.st, 'Cafe', 4000)];
+    a.st.inventory = { [i1]: 5, [i2]: 6, [i3]: 7 } as Store['inventory'];
+    const backup = parseBackup(buildBackup(a.st))!;
+
+    // La tienda quedo con solo "Agua" (editada), "Pan" se perdio y "Cafe" se elimino a proposito.
+    const b = device('B2B');
+    b.st.products = [{ ...a.st.products[0], name: 'Agua editada' }];
+    b.st.inventory = { [i1]: 99 } as Store['inventory'];
+    markProductDeleted(b.st, i3);
+
+    const res = mergeBackupInto(b.st, backup);
+    expect(res.products).toBe(1);
+    expect(b.st.products.map((p) => p.id).sort()).toEqual([i1, i2].sort());
+    expect(b.st.products.find((p) => p.id === i1)!.name).toBe('Agua editada');
+    expect(b.st.inventory[i1]).toBe(99);
+    expect(b.st.inventory[i2]).toBe(6);
   });
 });

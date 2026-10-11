@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import type { PointerEvent as ReactPointerEvent } from 'react';
 import { useStore } from '../store';
-import { money, esc, reorderCategoryProducts, groupedByCategory, storeCats, promoText, DEFAULT_PRODUCT_IMAGE, productTags, productPromos, productLedger } from '../lib/core';
+import { money, esc, reorderCategoryProducts, groupedByCategory, storeCats, promoText, DEFAULT_PRODUCT_IMAGE, productTags, productPromos, productLedger, markProductDeleted } from '../lib/core';
 import { customConfirm } from '../lib/dialog';
 import { GearMenu, Image, StorefrontIcon, CaretIcon, Modal, CargoIcon, CloseIcon, HScroll } from '../ui';
 import { CategoryModal } from './CategoryModal';
@@ -91,6 +91,8 @@ export function Catalog() {
     if (!(await customConfirm(`¿Eliminar el producto "${p.name}"?`))) return;
     replace((d) => {
       const st = d.stores.find((x) => x.id === s.id)!;
+      // Unica via que borra un producto tambien en la nube (ver markProductDeleted).
+      markProductDeleted(st, p.id);
       st.products = st.products.filter((x) => x.id !== p.id);
       if (st.inventory) delete st.inventory[p.id];
     });

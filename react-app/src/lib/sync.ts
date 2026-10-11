@@ -1,7 +1,7 @@
 import { initializeApp, FirebaseApp } from 'firebase/app';
 import { initializeFirestore, Firestore, collection, doc, query, onSnapshot, setDoc, getDoc, getDocs, deleteDoc, deleteField } from 'firebase/firestore';
 import type { AppState, Member, NotifCat, Product, Role, Sale, Store } from '../types';
-import { toProductsArr, toSalesArr, toInvLogArr, toNoteLogArr, toNoteBoardArr, mergeItems, mergeInvLog, mergeNoteLog, syncKeyOf, syncGenPin, syncClientId, syncName, normalizeStore, DEFAULT_STORE_IMAGE, uid, isNoteDeleted, markNoteDeleted, deletedNoteIdsOf, clearDeletedNotes, rememberDeletedStore, deletedStores, forgetDeletedStore, toCostArr, mergeCostEntries, writerId } from './core';
+import { toProductsArr, toSalesArr, toInvLogArr, toNoteLogArr, toNoteBoardArr, mergeItems, mergeInvLog, mergeNoteLog, syncKeyOf, syncGenPin, syncClientId, syncName, normalizeStore, DEFAULT_STORE_IMAGE, uid, isNoteDeleted, markNoteDeleted, deletedNoteIdsOf, clearDeletedNotes, markProductDeleted, isProductDeleted, deletedProductIdsOf, clearDeletedProducts, markSaleDeleted, isSaleDeleted, deletedSaleIdsOf, clearDeletedSales, saleTombIds, rememberDeletedStore, deletedStores, forgetDeletedStore, toCostArr, mergeCostEntries, writerId } from './core';
 import type { DeletedStoreRecord } from './core';
 import { customAlert, customConfirm } from './dialog';
 
@@ -80,7 +80,7 @@ function clearSeenNoteIds(storeId: string): void {
 // Reconciliacion de PRODUCTOS y VENTAS al recibir snapshots. Mismo espiritu que
 // seenNoteIds (ver arriba), pero sin depender de que Firestore sepa borrar
 // entradas de un mapa:
-//  - productIdSet / saleIdSet: ids que este cliente YA conocio (los subio o
+//  - tagIdSet: ids que este cliente YA conocio (los subio o
 //    los vio llegar en un snapshot). Sirven para distinguir, al recibir un
 //    snapshot, un elemento que este dispositivo creo y AUN no subio (no estaba
 //    en el set: se conserva) de uno que otro dispositivo BORRO (estaba en el
@@ -117,11 +117,19 @@ function idSetStore(prefix: string) {
     },
   };
 }
-const productIdSet = idSetStore('mt_seen_products_');
-const saleIdSet = idSetStore('mt_seen_sales_');
+// ids de productos cuya lapida ya se subio a la nube (evita reescribirla en cada arranque).
+const tombIdSet = idSetStore('mt_pushed_tombs_');
+// ids de ventas cuya lapida ya se subio a la nube.
+const saleTombIdSet = idSetStore('mt_pushed_sale_tombs_');
 const tagIdSet = idSetStore('mt_seen_tags_');
 // storeId -> (productId -> JSON del ultimo valor confirmado en la nube).
 const remoteProducts = new Map<string, Map<string, string>>();
+
+// Una "lapida" es el documento de un producto eliminado a proposito:
+// { id, deleted: true, deletedAt, ...datos del producto }.
+function isTomb(p: unknown): boolean {
+  return !!p && (p as { deleted?: unknown }).deleted === true;
+}
 
 export function syncReady(): boolean {
   if (DB) return true;
@@ -372,11 +380,10 @@ export function createSync(
       // eliminaron localmente.
       const prevProd = lastPushedProducts.get(storeId) || new Map<string, string>();
       const nextProd = new Map<string, string>();
-      const seenNow = new Set<string>();
       for (const p of s.products) {
+        if (isProductDeleted(s, p.id)) continue;
         const j = JSON.stringify(p);
         nextProd.set(p.id, j);
-        seenNow.add(p.id);
         if (prevProd.get(p.id) !== j) {
           // setDoc con merge escribe/actualiza el documento del producto.
           // El push falla de a un producto a la vez: si un catalogo tiene un
@@ -385,26 +392,34 @@ export function createSync(
           await setDoc(productDocRef(s.syncKey!, p.id), JSON.parse(JSON.stringify(p)), { merge: true });
         }
       }
-      // Productos que existian en la nube (estaban en prevProd) y ya no
-      // estan en el catalogo local: se borran de la subcoleccion.
-      for (const pid of prevProd.keys()) {
-        if (!seenNow.has(pid)) await deleteDoc(productDocRef(s.syncKey!, pid));
+      // Eliminacion EXPLICITA: solo los productos que el usuario borro con el
+      // boton Eliminar (markProductDeleted) se marcan como borrados en la nube,
+      // y se hace con una lapida (deleted: true) que conserva sus datos, no con
+      // deleteDoc. Que un producto simplemente falte en el estado local (un
+      // snapshot vacio, un error, una carga parcial...) NUNCA lo borra de la nube.
+      const tombsPushed = tombIdSet.get(storeId);
+      const newTombs: string[] = [];
+      for (const pid of deletedProductIdsOf(s)) {
+        if (tombsPushed.has(pid)) continue;
+        await setDoc(productDocRef(s.syncKey!, pid), { id: pid, deleted: true, deletedAt: Date.now() }, { merge: true });
+        newTombs.push(pid);
       }
 
       const sales: Record<string, Sale> = {};
       s.sales.forEach((x) => (sales[x.id] = x));
-      // Las ventas viajan como mapa con merge, y merge NUNCA borra una clave
-      // que no venga en el nuevo valor. Por eso, cuando una venta se elimina
-      // en este dispositivo, hay que mandarla explicitamente con deleteField()
-      // usando el set de ids ya conocidos (saleIdSet). Sin esto la venta
-      // quedaba viva en Firestore y reaparecia aqui y en los demas
-      // dispositivos.
-      const prevSeenSales = saleIdSet.get(storeId);
-      let removedSales = 0;
+      // Las ventas viajan como mapa con merge. Una venta solo se elimina de la
+      // nube si el usuario la borro a proposito (markSaleDeleted): entonces se
+      // sube una lapida { id, deleted: true } en su clave del mapa. Que una venta
+      // simplemente falte en el estado local NUNCA la borra.
+      const saleTombsPushed = saleTombIdSet.get(storeId);
+      const newSaleTombs: string[] = [];
       const salesPatch: Record<string, unknown> = { ...sales };
-      prevSeenSales.forEach((id) => { if (!sales[id]) { salesPatch[id] = deleteField(); removedSales++; } });
+      for (const id of deletedSaleIdsOf(s)) {
+        if (sales[id]) delete salesPatch[id]; // una venta eliminada no se sube viva
+        if (!saleTombsPushed.has(id)) { salesPatch[id] = { id, deleted: true, deletedAt: Date.now() }; newSaleTombs.push(id); }
+      }
       const main: Record<string, unknown> = {
-        sales: removedSales ? salesPatch : sales,
+        sales: salesPatch,
         categories: s.categories || [],
         tags: s.tags || [],
         categoryPricing: s.categoryPricing || {},
@@ -484,19 +499,12 @@ export function createSync(
       lastPushedProducts.set(storeId, nextProd);
       lastPushedNotes.set(storeId, nextNotes);
       setSeenNoteIds(storeId, currentNoteIds);
-      // Ya confirmado en la nube: se recuerda que estos productos y ventas
-      // existen (para distinguir despues un borrado remoto de un elemento
-      // local todavia sin subir) y se fija el ultimo valor confirmado de cada
-      // producto (para saber si la copia local tiene una edicion sin subir).
-      // Se UNE con lo ya visto (no se reemplaza): un id borrado y ya subido
-      // como deleteField debe seguir recordandose para que un snapshot viejo
-      // de OTRO dispositivo (que todavia lo trae) no lo resucite aqui.
-      const seenProductsPrev = productIdSet.get(storeId);
-      seenNow.forEach((id) => seenProductsPrev.add(id));
-      productIdSet.set(storeId, seenProductsPrev);
-      const nextSeenSales = new Set(prevSeenSales);
-      Object.keys(sales).forEach((id) => nextSeenSales.add(id));
-      saleIdSet.set(storeId, nextSeenSales);
+      // Ya confirmado en la nube: se recuerdan las lapidas de producto y de
+      // venta subidas (no se reescriben en cada push).
+      newTombs.forEach((id) => tombsPushed.add(id));
+      tombIdSet.set(storeId, tombsPushed);
+      newSaleTombs.forEach((id) => saleTombsPushed.add(id));
+      saleTombIdSet.set(storeId, saleTombsPushed);
       // Igual que con productos/ventas: se recuerda que estas etiquetas ya
       // estuvieron en la nube. Se UNE con lo ya visto (no se reemplaza) para
       // que una etiqueta borrada localmente y luego subida no vuelva a
@@ -616,6 +624,8 @@ export function createSync(
       // El snapshot de productos no trae updatedBy, asi que applyRemote lo
       // aplica siempre. El merge es por id y no duplica: aplicar el mismo
       // catalogo dos veces da el mismo resultado (idempotente).
+      // Un snapshot (de cache, vacio o parcial) nunca quita productos: solo una
+      // lapida explicita (deleted: true) lo hace, ver applyRemote.
       applyRemote(storeId, { products: remoteProducts });
     }, (e) => {
       console.warn('Suscripción productos:', e);
@@ -669,12 +679,12 @@ export function createSync(
     // desactiva la sincronizacion), no en cada re-suscripcion normal - ver
     // el comentario junto a getSeenNoteIds/setSeenNoteIds.
     clearSeenNoteIds(storeId);
-    productIdSet.clear(storeId);
-    saleIdSet.clear(storeId);
+    tombIdSet.clear(storeId);
+    saleTombIdSet.clear(storeId);
     tagIdSet.clear(storeId);
     remoteProducts.delete(storeId);
     const s = getState().stores.find((x) => x.id === storeId);
-    if (s) clearDeletedNotes(s);
+    if (s) { clearDeletedNotes(s); clearDeletedProducts(s); clearDeletedSales(s); }
   }
 
   // Firestore no deja fusionar paths de mapa (noteLog.<id>) cuando el campo es
@@ -726,69 +736,55 @@ export function applyRemote(getState: () => AppState, mutate: (fn: (d: AppState)
 
     // Productos: solo se reconcilia cuando el snapshot de verdad trae el
     // catalogo (el listener de la subcoleccion). Un snapshot del documento
-    // principal (que ya no lleva "products") deja el catalogo intacto. Se
-    // conservan las ediciones locales que AUN no se suben (comparando con el
-    // ultimo valor recibido de la nube, remoteProducts) y se quitan los
-    // productos que otro dispositivo borro de verdad (estaban en productIdSet
-    // y ya no vienen).
+    // principal (que ya no lleva "products") deja el catalogo intacto.
+    //  - Un producto SOLO se quita si llega su lapida (deleted: true, la deja el
+    //    boton Eliminar de otro dispositivo). Que un producto no venga en el
+    //    snapshot NUNCA lo quita: un snapshot vacio o parcial no borra nada.
+    //  - Un producto eliminado aqui a proposito no se resucita con una copia vieja.
+    //  - Se conservan las ediciones locales que AUN no se suben (comparando con
+    //    el ultimo valor recibido de la nube, remoteProducts).
     if (remote.products !== undefined) {
       const remoteArr = toProductsArr(remote.products);
-      const seen = productIdSet.get(storeId);
       const lastRemote = remoteProducts.get(storeId) || new Map<string, string>();
       const localById = new Map(st.products.map((p) => [p.id, p]));
       const result = new Map(st.products.map((p) => [p.id, p]));
-      const remoteIds = new Set<string>();
       const applied = new Set<string>();
       remoteArr.forEach((p) => {
         if (!p || !p.id) return;
-        remoteIds.add(p.id);
+        if (isTomb(p)) {
+          // Eliminado a proposito en otro dispositivo: borrar gana.
+          markProductDeleted(st, p.id);
+          result.delete(p.id);
+          return;
+        }
+        if (isProductDeleted(st, p.id)) return; // eliminado aqui: no resucitar
         const local = localById.get(p.id);
         const prev = lastRemote.get(p.id);
         const localJson = local ? JSON.stringify(local) : null;
         const same = localJson !== null && localJson === JSON.stringify(p);
-        // "locallyDeleted": la nube ya lo tenia antes (lo vimos en productIdSet
-        // o en el ultimo snapshot) y ahora no esta local: lo borro este
-        // dispositivo y aun no se subio, asi que no hay que resucitarlo.
-        const locallyDeleted = !local && (seen.has(p.id) || prev !== undefined);
         // Edicion local sin subir: la copia local cambio desde el ultimo valor
         // recibido de la nube. Si el remoto ya alcanzo ese mismo valor (same),
         // no hay conflicto: se acepta y se limpia el estado "sucio".
         const dirtyEdit = !!local && !same && prev !== undefined && localJson !== prev;
-        if (!locallyDeleted && !dirtyEdit) { result.set(p.id, p); applied.add(p.id); }
-      });
-      lastRemote.forEach((prev, id) => {
-        if (remoteIds.has(id)) return;
-        const local = localById.get(id);
-        // Se borro en otro dispositivo: si aqui no habia una edicion sin subir,
-        // se quita tambien; si la habia, se conserva (y este push la re-sube).
-        if (local && JSON.stringify(local) === prev) result.delete(id);
+        if (!dirtyEdit) { result.set(p.id, p); applied.add(p.id); }
       });
       st.products = Array.from(result.values());
       remoteProductsApplied = applied;
-      // Se recuerdan los ids vistos en la nube (igual que hace push() al
-      // confirmar): asi un snapshot viejo que todavia traiga un producto ya
-      // borrado aqui no lo resucita (ver "locallyDeleted" arriba).
-      const nextSeen = new Set(seen);
-      remoteIds.forEach((id) => nextSeen.add(id));
-      productIdSet.set(storeId, nextSeen);
     }
 
-    // Ventas: tambien se reconcilian los borrados (estaban en saleIdSet y ya no
-    // vienen en el remoto) para que una venta borrada en otro dispositivo no
-    // quede pegada aqui y se vuelva a subir. Solo cuando el snapshot trae
-    // "sales" (documento principal); los snapshots de productos no lo tocan.
+    // Ventas: igual que los productos, una venta SOLO se quita si llega su lapida
+    // (borrada a proposito en otro dispositivo); que no venga en el snapshot
+    // nunca la quita. Una venta borrada aqui no se resucita con una copia vieja.
+    // Solo cuando el snapshot trae "sales" (documento principal).
     if (remote.sales !== undefined) {
+      saleTombIds(remote.sales).forEach((id) => markSaleDeleted(st, id));
       const remoteArr = toSalesArr(remote.sales);
-      const remoteIds = new Set(remoteArr.map((x) => x.id));
-      const seen = saleIdSet.get(storeId);
       const localById = new Map(st.sales.map((x) => [x.id, x]));
-      const result = new Map(st.sales.filter((x) => remoteIds.has(x.id) || !seen.has(x.id)).map((x) => [x.id, x]));
+      const result = new Map(st.sales.filter((x) => !isSaleDeleted(st, x.id)).map((x) => [x.id, x]));
       remoteArr.forEach((rs) => {
+        if (isSaleDeleted(st, rs.id)) return;
         const ls = localById.get(rs.id);
         if (!ls) {
-          // Si ya lo conocia y no esta local, lo borraron aqui a proposito:
-          // no resucitarlo con una copia vieja del remoto.
-          if (seen.has(rs.id)) return;
           result.set(rs.id, JSON.parse(JSON.stringify(rs)));
           return;
         }
@@ -799,9 +795,6 @@ export function applyRemote(getState: () => AppState, mutate: (fn: (d: AppState)
         }));
       });
       st.sales = Array.from(result.values());
-      const nextSeen = new Set(seen);
-      remoteIds.forEach((id) => nextSeen.add(id));
-      saleIdSet.set(storeId, nextSeen);
     }
 
     // El orden de las categorias ahora importa (se puede arrastrar en el
@@ -916,12 +909,14 @@ export function applyRemote(getState: () => AppState, mutate: (fn: (d: AppState)
 // Lee todos los productos de la subcoleccion de una tienda (un documento por
 // producto). El modelo nuevo guarda cada producto en su propio documento para
 // que el limite de ~1 MiB de Firestore no limite el tamaño del catalogo.
-async function loadProducts(key: string): Promise<Product[]> {
+async function loadProducts(key: string, includeTombs = false): Promise<Product[]> {
   if (!DB) return [];
   const q = query(productsColRef(key));
   const snap = await getDocs(q);
   const out: Product[] = [];
-  snap.forEach((pd) => { const d = pd.data(); if (d) out.push(d as Product); });
+  // Las lapidas (productos eliminados) no son productos: solo se incluyen
+  // cuando se pide expresamente (purga de una tienda vencida).
+  snap.forEach((pd) => { const d = pd.data(); if (d && (includeTombs || !isTomb(d))) out.push(d as Product); });
   return out;
 }
 
@@ -1258,7 +1253,7 @@ export const DELETE_GRACE_MS = 14 * 24 * 60 * 60 * 1000;
 async function purgeDeletedStore(key: string): Promise<void> {
   if (!DB) return;
   try {
-    const products = await loadProducts(key);
+    const products = await loadProducts(key, true);
     await Promise.all(products.map((p) => deleteDoc(productDocRef(key, p.id))));
     const purge: Record<string, unknown> = { deleted: true, deletedAt: Date.now() };
     ['members', 'memberIds', 'pushTokens', 'pushPrefs', 'sales', 'noteBoard', 'noteLog', 'invLog', 'notes', 'inventory', 'categories', 'tags', 'categoryPricing', 'events', 'image', 'createdBy', 'updatedBy', 'products'].forEach((k) => { purge[k] = deleteField(); });

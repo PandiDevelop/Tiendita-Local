@@ -14,6 +14,7 @@ import type { ThemePref } from '../lib/theme';
 import { exportNotesArchiveTxt, exportObjectivesArchiveTxt } from '../lib/notesArchive';
 import { DownloadIcon, Modal, CloseIcon, EyeIcon, EyeOffIcon } from '../ui';
 import { useInstallable } from '../lib/install';
+import { downloadBackup, parseBackup, mergeBackupInto } from '../lib/backup';
 import type { NotifCat } from '../types';
 
 const NOTIF_CAT_LABELS: { cat: NotifCat; label: string }[] = [
@@ -43,6 +44,7 @@ export function SettingsModal({ onClose }: { onClose: () => void }) {
   const [notif, setNotif] = useState(notifyEnabled());
   const [cats, setCats] = useState(notifCats());
   const [busy, setBusy] = useState(false);
+  const backupInput = useRef<HTMLInputElement>(null);
   const [permDenied, setPermDenied] = useState(false);
   const [pushState, setPushState] = useState<string | null>(null);
   const [theme, setTheme] = useState<ThemePref>(themePref());
@@ -394,6 +396,36 @@ async function doResetPass() {
           <p className="muted">Instalada abre en su propia ventana, sin la barra de Chrome.</p>
         </div>
       </div>
+
+      {store && (
+        <div className="settings-block">
+          <div className="label">Respaldo de la tienda</div>
+          <p className="muted">Guarda un archivo con productos, ventas e inventario de "{store.name}" fuera de la nube. Restaurar solo agrega lo que falte; no pisa ni borra lo que ya hay.</p>
+          <div className="settings-row">
+            <button className="button outline" onClick={() => { downloadBackup(store); toast('Respaldo descargado.'); }}>Exportar respaldo</button>
+            <button className="button secondary" onClick={() => backupInput.current?.click()}>Restaurar desde archivo</button>
+            <input
+              ref={backupInput}
+              type="file"
+              accept="application/json,.json"
+              style={{ display: 'none' }}
+              onChange={async (e) => {
+                const f = e.target.files && e.target.files[0];
+                e.target.value = '';
+                if (!f) return;
+                const parsed = parseBackup(await f.text());
+                if (!parsed) { toast('Ese archivo no es un respaldo válido de la tienda.'); return; }
+                let res = { products: 0, sales: 0 };
+                replace((d) => {
+                  const st = d.stores.find((x) => x.id === store.id);
+                  if (st) res = mergeBackupInto(st, parsed);
+                });
+                toast(res.products || res.sales ? `Se recuperaron ${res.products} producto(s) y ${res.sales} venta(s).` : 'No faltaba nada: la tienda ya tiene todo lo del respaldo.');
+              }}
+            />
+          </div>
+        </div>
+      )}
 
       <div className="settings-block">
         <div className="label">Restaurar tienda borrada</div>

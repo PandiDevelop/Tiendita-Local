@@ -109,10 +109,22 @@ export function toProductsArr(src: unknown): Product[] {
   if (Array.isArray(src)) return JSON.parse(JSON.stringify(src));
   return Object.keys(src as Record<string, Product>).map((k) => JSON.parse(JSON.stringify((src as Record<string, Product>)[k])));
 }
+// Devuelve solo ventas VIVAS: las lapidas (deleted: true, ventas eliminadas a
+// proposito, ver markSaleDeleted) no son ventas y se descartan aqui.
 export function toSalesArr(src: unknown): Sale[] {
   if (!src) return [];
-  if (Array.isArray(src)) return JSON.parse(JSON.stringify(src));
-  return Object.keys(src as Record<string, Sale>).map((k) => JSON.parse(JSON.stringify((src as Record<string, Sale>)[k])));
+  const all: Sale[] = Array.isArray(src)
+    ? JSON.parse(JSON.stringify(src))
+    : Object.keys(src as Record<string, Sale>).map((k) => JSON.parse(JSON.stringify((src as Record<string, Sale>)[k])));
+  return all.filter((x) => x && (x as { deleted?: unknown }).deleted !== true);
+}
+// Ids de las lapidas de venta que trae un campo "sales" remoto.
+export function saleTombIds(src: unknown): string[] {
+  if (!src || typeof src !== 'object') return [];
+  const vals: unknown[] = Array.isArray(src) ? src : Object.keys(src as Record<string, unknown>).map((k) => (src as Record<string, unknown>)[k]);
+  const out: string[] = [];
+  vals.forEach((v) => { const o = v as { id?: unknown; deleted?: unknown } | null; if (o && o.deleted === true && o.id) out.push(String(o.id)); });
+  return out;
 }
 
 // Safe counter merge: per row (product+promo) wins the higher quantity; per-user
@@ -581,6 +593,94 @@ export function clearDeletedNotes(store: Store): void {
   const k = deletedNotesKey(store);
   deletedNoteIds.delete(k);
   try { localStorage.removeItem(DELETED_NOTES_KEY + k); } catch { /* ignorar */ }
+}
+
+// Registro de productos ELIMINADOS A PROPOSITO por el usuario (boton Eliminar),
+// por tienda, persistido en localStorage. Un producto solo se borra de la nube
+// si su id esta aqui: que un producto "no aparezca" en un snapshot (vacio,
+// parcial, de cache...) NUNCA cuenta como borrado. En la nube se guarda como
+// "lapida" (deleted: true) conservando los datos del producto, para que los
+// demas dispositivos lo quiten y para poder recuperarlo desde la consola.
+const DELETED_PRODUCTS_KEY = 'mt_deleted_products_';
+const deletedProductIds = new Map<string, Set<string>>();
+
+function getDeletedProductIds(store: Store): Set<string> {
+  const k = store.syncKey || store.id;
+  let cur = deletedProductIds.get(k);
+  if (!cur) {
+    cur = new Set<string>();
+    try {
+      const raw = localStorage.getItem(DELETED_PRODUCTS_KEY + k);
+      const arr = raw ? JSON.parse(raw) : null;
+      if (Array.isArray(arr)) arr.forEach((id) => cur!.add(String(id)));
+    } catch { /* errores de storage no son criticos */ }
+    deletedProductIds.set(k, cur);
+  }
+  return cur;
+}
+
+export function markProductDeleted(store: Store, productId: string): void {
+  if (!productId) return;
+  const ids = getDeletedProductIds(store);
+  ids.add(productId);
+  try { localStorage.setItem(DELETED_PRODUCTS_KEY + (store.syncKey || store.id), JSON.stringify(Array.from(ids))); } catch { /* ignorar */ }
+}
+
+export function isProductDeleted(store: Store, productId: string): boolean {
+  return getDeletedProductIds(store).has(productId);
+}
+
+export function deletedProductIdsOf(store: Store): string[] {
+  return Array.from(getDeletedProductIds(store));
+}
+
+export function clearDeletedProducts(store: Store): void {
+  const k = store.syncKey || store.id;
+  deletedProductIds.delete(k);
+  try { localStorage.removeItem(DELETED_PRODUCTS_KEY + k); } catch { /* ignorar */ }
+}
+
+// Igual que con los productos: una venta solo se borra de la nube si el usuario
+// la elimino a proposito (boton "Borrar" del Historial). Que falte en un
+// snapshot (vacio, parcial, de cache) NUNCA la borra. En la nube queda como
+// lapida (deleted: true) dentro del mapa "sales".
+const DELETED_SALES_KEY = 'mt_deleted_sales_';
+const deletedSaleIds = new Map<string, Set<string>>();
+
+function getDeletedSaleIds(store: Store): Set<string> {
+  const k = store.syncKey || store.id;
+  let cur = deletedSaleIds.get(k);
+  if (!cur) {
+    cur = new Set<string>();
+    try {
+      const raw = localStorage.getItem(DELETED_SALES_KEY + k);
+      const arr = raw ? JSON.parse(raw) : null;
+      if (Array.isArray(arr)) arr.forEach((id) => cur!.add(String(id)));
+    } catch { /* errores de storage no son criticos */ }
+    deletedSaleIds.set(k, cur);
+  }
+  return cur;
+}
+
+export function markSaleDeleted(store: Store, saleId: string): void {
+  if (!saleId) return;
+  const ids = getDeletedSaleIds(store);
+  ids.add(saleId);
+  try { localStorage.setItem(DELETED_SALES_KEY + (store.syncKey || store.id), JSON.stringify(Array.from(ids))); } catch { /* ignorar */ }
+}
+
+export function isSaleDeleted(store: Store, saleId: string): boolean {
+  return getDeletedSaleIds(store).has(saleId);
+}
+
+export function deletedSaleIdsOf(store: Store): string[] {
+  return Array.from(getDeletedSaleIds(store));
+}
+
+export function clearDeletedSales(store: Store): void {
+  const k = store.syncKey || store.id;
+  deletedSaleIds.delete(k);
+  try { localStorage.removeItem(DELETED_SALES_KEY + k); } catch { /* ignorar */ }
 }
 
 // Registro de tiendas borradas CON sincronización: el borrado ahora es "suave"
