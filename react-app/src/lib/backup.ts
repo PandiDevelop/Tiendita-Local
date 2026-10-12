@@ -1,5 +1,6 @@
 import type { Store, Product, Sale, CostEntry } from '../types';
 import { isProductDeleted, isSaleDeleted, normalizeStore } from './core';
+import { isNativeApp } from './nativeBack';
 
 // Respaldo de una tienda en un archivo JSON, para tener SIEMPRE una copia fuera
 // de la nube. Restaurar es aditivo: solo agrega lo que falta (por id) y nunca
@@ -31,14 +32,40 @@ interface SaveFileHandle {
   createWritable(): Promise<{ write(data: string): Promise<void>; close(): Promise<void> }>;
 }
 
+// ¿Estamos dentro de la app nativa (Android, Capacitor)? Ahí el WebView no
+// soporta la descarga clásica (<a download>) ni showSaveFilePicker: lo único
+// que funciona es escribir el archivo con el plugin nativo de archivos.
+
+// En la app nativa escribe el respaldo en la carpeta pública Documentos del
+// teléfono (visible en cualquier explorador de archivos) y devuelve la ruta.
+async function saveNativeBackup(data: string, name: string): Promise<{ ok: boolean; path?: string }> {
+  try {
+    const { Filesystem, Directory, Encoding } = await import('@capacitor/filesystem');
+    await Filesystem.writeFile({
+      path: name,
+      data,
+      directory: Directory.Documents,
+      encoding: Encoding.UTF8,
+    });
+    const { uri } = await Filesystem.getUri({ path: name, directory: Directory.Documents });
+    return { ok: true, path: uri.replace(/^file:\/\//, '') || name };
+  } catch (e) {
+    console.error('No se pudo guardar el respaldo en Documentos:', e);
+    return { ok: false };
+  }
+}
+
 // Guarda el respaldo como archivo. En escritorio abre el diálogo "Guardar
 // como" del sistema para que el usuario ELIJA la carpeta y el nombre (antes
 // caía directo en Descargas y era fácil no encontrarlo). Si el navegador no
-// trae esa API (móvil, por ejemplo), usa la descarga clásica. Devuelve false
-// solo si el usuario cancela el diálogo; true si el archivo se guardó.
-export async function downloadBackup(s: Store): Promise<boolean> {
+// trae esa API (móvil, por ejemplo), usa la descarga clásica. En la app
+// nativa lo escribe en la carpeta pública Documentos. Devuelve { ok: false }
+// solo si el usuario cancela el diálogo o falla el guardado; { ok: true }
+// (con path en la app nativa) si el archivo se guardó.
+export async function downloadBackup(s: Store): Promise<{ ok: boolean; path?: string }> {
   const data = buildBackup(s);
   const name = backupFileName(s);
+  if (isNativeApp()) return saveNativeBackup(data, name);
   const picker = (window as unknown as {
     showSaveFilePicker?: (opts: {
       suggestedName?: string;
@@ -54,9 +81,9 @@ export async function downloadBackup(s: Store): Promise<boolean> {
       const w = await handle.createWritable();
       await w.write(data);
       await w.close();
-      return true;
+      return { ok: true };
     } catch (e) {
-      if ((e as { name?: string })?.name === 'AbortError') return false;
+      if ((e as { name?: string })?.name === 'AbortError') return { ok: false };
       // Otro fallo del diálogo: se intenta la descarga clásica como respaldo.
     }
   }
@@ -66,7 +93,7 @@ export async function downloadBackup(s: Store): Promise<boolean> {
   a.download = name;
   a.click();
   URL.revokeObjectURL(a.href);
-  return true;
+  return { ok: true };
 }
 
 export function parseBackup(text: string): ParsedBackup | null {

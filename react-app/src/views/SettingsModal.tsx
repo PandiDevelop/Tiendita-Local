@@ -367,7 +367,7 @@ async function doResetPass() {
           <div className="label">Respaldo de la tienda</div>
           <p className="muted">Guarda un archivo con productos, ventas e inventario de "{store.name}" fuera de la nube: al exportar eliges dónde dejarlo. Restaurar solo agrega lo que falte; no pisa ni borra lo que ya hay.</p>
           <div className="settings-row">
-            <button className="button outline" style={{ flex: 1 }} onClick={async () => { const ok = await downloadBackup(store); if (ok) toast('Respaldo guardado.'); }}>Exportar</button>
+            <button className="button outline" style={{ flex: 1 }} onClick={async () => { const r = await downloadBackup(store); if (r.ok) toast(r.path ? 'Respaldo guardado: ' + r.path : 'Respaldo guardado.'); }}>Exportar</button>
             <button className="button secondary" style={{ flex: 1 }} onClick={() => backupInput.current?.click()}>Restaurar</button>
             <input
               ref={backupInput}

@@ -8,6 +8,7 @@ import { initAccountAuth } from './lib/account';
 import { initNativeBack } from './lib/nativeBack';
 import { initCapUpdater } from './lib/capUpdater';
 import { initOtaUpdate } from './lib/otaUpdate';
+import { initNativePlugins } from './lib/nativePlugins';
 
 // Se aplica el tema guardado (o el automático del teléfono) antes del primer
 // render, para que no haya un "destello" con el tema por defecto.
@@ -25,14 +26,19 @@ createRoot(document.getElementById('root')!).render(
 // que la identidad vuelva a ser la de la cuenta). No bloquea el arranque.
 initAccountAuth().catch(() => {});
 
-// En la app nativa, conecta el botón/gesto atrás con las ventanas abiertas
-// para que no cierre la app a la primera.
-initNativeBack();
+// En la app nativa se registran primero los plugins (App, CapacitorUpdater);
+// solo así existen en window.Capacitor.Plugins para los inits de abajo.
+// En el navegador no hace nada al instante.
+void initNativePlugins().then(() => {
+  // En la app nativa, conecta el botón/gesto atrás con las ventanas abiertas
+  // para que no cierre la app a la primera.
+  initNativeBack();
 
-// En la app nativa, avisa al plugin de updates que la versión cargada arrancó
-// bien (para el rollback OTA). En el navegador no hace nada.
-initCapUpdater();
+  // En la app nativa, avisa al plugin de updates que la versión cargada
+  // arrancó bien (para el rollback OTA). En el navegador no hace nada.
+  initCapUpdater();
 
-// En la app nativa, revisa si hay un bundle más nuevo en el GitHub Pages
-// propio y lo aplica en silencio (OTA gratis, sin servicio externo).
-initOtaUpdate();
+  // En la app nativa, revisa si hay un bundle más nuevo en el GitHub Pages
+  // propio y lo aplica en silencio (OTA gratis, sin servicio externo).
+  initOtaUpdate();
+});
