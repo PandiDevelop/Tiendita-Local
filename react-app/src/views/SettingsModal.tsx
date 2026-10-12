@@ -13,7 +13,6 @@ import { themePref, setThemePref, themeOptions } from '../lib/theme';
 import type { ThemePref } from '../lib/theme';
 import { exportNotesArchiveTxt, exportObjectivesArchiveTxt } from '../lib/notesArchive';
 import { DownloadIcon, Modal, CloseIcon, EyeIcon, EyeOffIcon } from '../ui';
-import { useInstallable } from '../lib/install';
 import { downloadBackup, parseBackup, mergeBackupInto } from '../lib/backup';
 import type { NotifCat } from '../types';
 
@@ -49,7 +48,6 @@ export function SettingsModal({ onClose }: { onClose: () => void }) {
   const [pushState, setPushState] = useState<string | null>(null);
   const [theme, setTheme] = useState<ThemePref>(themePref());
   const [deleted, setDeleted] = useState(deletedStores());
-  const installable = useInstallable();
   const [acct, setAcct] = useState<boolean>(sessionActive());
   const [showAccount, setShowAccount] = useState(false);
   const [acctEmail, setAcctEmail] = useState<string | null>(accountEmail());
@@ -364,46 +362,13 @@ async function doResetPass() {
         </div>
       </div>
 
-      <div className="settings-block">
-        <div className="label">Registros</div>
-        <div className="field">
-          {store && canManageNotes(store) ? (
-            <>
-              <div className="settings-row" style={{ flexWrap: 'wrap' }}>
-                <button className="button outline" onClick={() => exportNotesArchiveTxt(store.id, store.name)} title="Descarga lo que este dispositivo registró de notas y respuestas de hilos, incluidas las que ya desaparecieron"><DownloadIcon /> Descargar registros de notas</button>
-                <button className="button outline" onClick={() => exportObjectivesArchiveTxt(store.id, store.name)} title="Descarga lo que este dispositivo registró de listas de objetivos"><DownloadIcon /> Descargar registros de objetivos</button>
-              </div>
-              <p className="muted">Solo llegan los registros que este dispositivo alcanzó a ver; cada equipo descarga los suyos.</p>
-            </>
-          ) : (
-            <p className="muted">Los registros de notas y objetivos están disponibles para el dueño y los administradores.</p>
-          )}
-        </div>
-      </div>
-
-      <div className="settings-block">
-        <div className="label">App instalada</div>
-        <div className="field">
-          {installable.installed ? (
-            <p className="muted">Ya está instalada como app en este dispositivo.</p>
-          ) : installable.ready ? (
-            <div className="settings-row">
-              <button className="button outline" onClick={installable.install} title="Instala la app en el escritorio o pantalla de inicio para que abra como una app normal, sin la barra del navegador">Instalar la app</button>
-            </div>
-          ) : (
-            <p className="muted">Abre el sitio en Chrome y toca "Instalar app" (icono de monitor con flecha en la barra): queda como una app normal, con su icono en el escritorio y la pantalla de inicio.</p>
-          )}
-          <p className="muted">Instalada abre en su propia ventana, sin la barra de Chrome.</p>
-        </div>
-      </div>
-
       {store && (
         <div className="settings-block">
           <div className="label">Respaldo de la tienda</div>
-          <p className="muted">Guarda un archivo con productos, ventas e inventario de "{store.name}" fuera de la nube. Restaurar solo agrega lo que falte; no pisa ni borra lo que ya hay.</p>
+          <p className="muted">Guarda un archivo con productos, ventas e inventario de "{store.name}" fuera de la nube: al exportar eliges dónde dejarlo. Restaurar solo agrega lo que falte; no pisa ni borra lo que ya hay.</p>
           <div className="settings-row">
-            <button className="button outline" onClick={() => { downloadBackup(store); toast('Respaldo descargado.'); }}>Exportar respaldo</button>
-            <button className="button secondary" onClick={() => backupInput.current?.click()}>Restaurar desde archivo</button>
+            <button className="button outline" style={{ flex: 1 }} onClick={async () => { const ok = await downloadBackup(store); if (ok) toast('Respaldo guardado.'); }}>Exportar</button>
+            <button className="button secondary" style={{ flex: 1 }} onClick={() => backupInput.current?.click()}>Restaurar</button>
             <input
               ref={backupInput}
               type="file"
@@ -426,6 +391,23 @@ async function doResetPass() {
           </div>
         </div>
       )}
+
+      <div className="settings-block">
+        <div className="label">Registros</div>
+        <div className="field">
+          {store && canManageNotes(store) ? (
+            <>
+              <div className="settings-row" style={{ flexWrap: 'wrap' }}>
+                <button className="button outline" onClick={() => exportNotesArchiveTxt(store.id, store.name)} title="Descarga lo que este dispositivo registró de notas y respuestas de hilos, incluidas las que ya desaparecieron"><DownloadIcon /> Descargar registros de notas</button>
+                <button className="button outline" onClick={() => exportObjectivesArchiveTxt(store.id, store.name)} title="Descarga lo que este dispositivo registró de listas de objetivos"><DownloadIcon /> Descargar registros de objetivos</button>
+              </div>
+              <p className="muted">Solo llegan los registros que este dispositivo alcanzó a ver; cada equipo descarga los suyos.</p>
+            </>
+          ) : (
+            <p className="muted">Los registros de notas y objetivos están disponibles para el dueño y los administradores.</p>
+          )}
+        </div>
+      </div>
 
       <div className="settings-block">
         <div className="label">Restaurar tienda borrada</div>

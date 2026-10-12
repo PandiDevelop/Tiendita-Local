@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useStore } from '../store';
-import { DEFAULT_STORE_IMAGE, compressImage, esc, myRole, syncClientId, syncGenPin, syncName, syncSetName, uid } from '../lib/core';
+import { DEFAULT_STORE_IMAGE, compressImage, esc, myRole, syncClientId, syncGenPin, uid } from '../lib/core';
 import { deactivateSyncFn, leaveStoreFn, deleteStoreFn, removeMemberFn, setMemberRoleFn, isValidStorePin } from '../lib/sync';
 import { CloseIcon, ImagePicker, Modal, SaveIcon } from '../ui';
 import type { Member, Role } from '../types';
@@ -18,7 +18,6 @@ export function StoreModal({ editing, onClose }: { editing?: boolean; onClose: (
 
   const [name, setName] = useState(s?.name || '');
   const [image, setImage] = useState(s?.image || '');
-  const [myName, setMyName] = useState(syncName() === 'Trabajador' ? '' : syncName());
   const [pin, setPin] = useState(s?.syncPin || s?.syncKey || syncGenPin());
   const [, force] = useState(0);
 
@@ -33,7 +32,6 @@ export function StoreModal({ editing, onClose }: { editing?: boolean; onClose: (
   function renderAgain() { force((n) => n + 1); }
 
   async function save() {
-    if (myName.trim()) syncSetName(myName.trim());
     const target = s;
     if (isEmployee) {
       saveClose();
@@ -79,7 +77,6 @@ export function StoreModal({ editing, onClose }: { editing?: boolean; onClose: (
   // la tienda ya existe (para una tienda nueva se activa al guardarla).
   async function activateSyncNow() {
     if (!s) return;
-    if (myName.trim()) syncSetName(myName.trim());
     const code = pin.trim();
     if (!code) return toast('Escribe el código de sincronización.');
     await activate(s.id, code);
@@ -128,9 +125,6 @@ export function StoreModal({ editing, onClose }: { editing?: boolean; onClose: (
           <div className="label">Sincronización activa</div>
           <div className="image-picker">
             <div style={{ minWidth: 0, flex: 1, display: 'grid', gap: 12 }}>
-              <div><div className="label" style={{ margin: '0 0 6px' }}>Tu nombre</div>
-                <input id="sync-name" maxLength={30} placeholder="Tu nombre" value={myName} onChange={(e) => setMyName(e.target.value)} />
-              </div>
               <div><div className="label" style={{ margin: '0 0 6px' }}>Código de sincronización</div>
                 <div className="pin-box"><strong style={{ letterSpacing: '1.5px' }}>{esc(s.syncPin || s.syncKey)}</strong></div>
                 {!isValidStorePin(s.syncPin) && (
@@ -176,9 +170,6 @@ export function StoreModal({ editing, onClose }: { editing?: boolean; onClose: (
           <div className="label">Sincronización en tiempo real (opcional)</div>
           <div className="image-picker">
             <div style={{ minWidth: 0, flex: 1, display: 'grid', gap: 12 }}>
-              <div><div className="label" style={{ margin: '0 0 6px' }}>Tu nombre</div>
-                <input id="sync-name" maxLength={30} placeholder="Tu nombre" value={myName} onChange={(e) => setMyName(e.target.value)} />
-              </div>
               <div><div className="label" style={{ margin: '0 0 6px' }}>Código de vinculación</div>
                 <input id="sync-pin" maxLength={6} autoCapitalize="characters" autoCorrect="off" spellCheck={false} placeholder="Código de 6 caracteres" value={pin} onChange={(e) => setPin(e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 6))} />
               </div>

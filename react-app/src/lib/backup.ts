@@ -27,13 +27,46 @@ export function backupFileName(s: Store, now: Date = new Date()): string {
   return 'respaldo-' + (s.name || 'tienda').toLowerCase().replace(/[^a-z0-9]+/gi, '-').replace(/^-+|-+$/g, '') + '-' + day + '.json';
 }
 
-export function downloadBackup(s: Store): void {
-  const blob = new Blob([buildBackup(s)], { type: 'application/json;charset=utf-8;' });
+interface SaveFileHandle {
+  createWritable(): Promise<{ write(data: string): Promise<void>; close(): Promise<void> }>;
+}
+
+// Guarda el respaldo como archivo. En escritorio abre el diálogo "Guardar
+// como" del sistema para que el usuario ELIJA la carpeta y el nombre (antes
+// caía directo en Descargas y era fácil no encontrarlo). Si el navegador no
+// trae esa API (móvil, por ejemplo), usa la descarga clásica. Devuelve false
+// solo si el usuario cancela el diálogo; true si el archivo se guardó.
+export async function downloadBackup(s: Store): Promise<boolean> {
+  const data = buildBackup(s);
+  const name = backupFileName(s);
+  const picker = (window as unknown as {
+    showSaveFilePicker?: (opts: {
+      suggestedName?: string;
+      types?: { description?: string; accept: Record<string, string[]> }[];
+    }) => Promise<SaveFileHandle>;
+  }).showSaveFilePicker;
+  if (typeof picker === 'function') {
+    try {
+      const handle = await picker({
+        suggestedName: name,
+        types: [{ description: 'Respaldo de la tienda', accept: { 'application/json': ['.json'] } }],
+      });
+      const w = await handle.createWritable();
+      await w.write(data);
+      await w.close();
+      return true;
+    } catch (e) {
+      if ((e as { name?: string })?.name === 'AbortError') return false;
+      // Otro fallo del diálogo: se intenta la descarga clásica como respaldo.
+    }
+  }
+  const blob = new Blob([data], { type: 'application/json;charset=utf-8;' });
   const a = document.createElement('a');
   a.href = URL.createObjectURL(blob);
-  a.download = backupFileName(s);
+  a.download = name;
   a.click();
   URL.revokeObjectURL(a.href);
+  return true;
 }
 
 export function parseBackup(text: string): ParsedBackup | null {

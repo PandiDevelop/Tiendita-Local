@@ -1512,7 +1512,10 @@ export function productLedger(s: Store): Record<string, ProductLedgerRow> {
     out[id] = {
       sold: sold[id] || 0,
       acquired: acquired[id] || 0,
-      available: Math.max(0, Math.round(inv[id] || 0)),
+      // Disponible = lo adquirido menos lo ya vendido (mismo calculo que la
+      // pestaña Inventario). Antes se mostraba el inventario crudo, asi que el
+      // catálogo no descontaba las ventas.
+      available: Math.max(0, Math.round(inv[id] || 0) - (sold[id] || 0)),
       revenue: rev,
       cost: cst,
       profit: rev - cst,
@@ -1559,6 +1562,25 @@ export function runMigrations(s: Store): boolean {
     });
     (s.costs || []).forEach((c) => { if (c && c.at === t && movedCosts.has(c.id)) { c.at = y; } });
     s.datesFixed = true;
+    changed = true;
+  }
+  //  3) legacyNamesFixed: correccion puntual de la tienda Sakoco, donde los
+  //     registros viejos quedaron firmados como "Panda" o "Trabajador" ademas
+  //     del nombre real del dueño ("Pandi"). Se unifican esos dos en el nombre
+  //     del dueño para que el equipo muestre un solo miembro. Alcance limitado
+  //     a esta tienda (por su syncKey) para no tocar los nombres por defecto
+  //     ("Trabajador") de otras tiendas.
+  if (!s.legacyNamesFixed) {
+    if (s.syncKey === 'stb1e32fe3') {
+      const owner = Object.values(s.members || {}).find((m) => m.role === 'owner');
+      const target = (owner?.name || '').trim();
+      const aliases = new Set(['Panda', 'Trabajador']);
+      if (target && target.toLowerCase() !== 'trabajador') {
+        (s.sales || []).forEach((x) => { if (aliases.has((x.employee || '').trim())) { x.employee = target; changed = true; } });
+        (s.invLog || []).forEach((e) => { if (aliases.has((e.byName || '').trim())) { e.byName = target; changed = true; } });
+      }
+    }
+    s.legacyNamesFixed = true;
     changed = true;
   }
   return changed;

@@ -291,6 +291,7 @@ export interface Store {
   // categoria y las fechas de la noche ya se corrigieron.
   promosCategoryOnly?: boolean;
   datesFixed?: boolean;
+  legacyNamesFixed?: boolean;
 }
 
 export type Tab = 'inicio' | 'productos' | 'ganancias' | 'notas' | 'empleados' | 'eventos';
