@@ -118,7 +118,7 @@
       "file_type": "code",
       "norm_label": "appstate",
       "source_file": "react-app/src/types.ts",
-      "source_location": "L309"
+      "source_location": "L311"
     },
     {
       "id": "react_app_src_types_categorypricing",
@@ -287,7 +287,7 @@
       "file_type": "code",
       "norm_label": "saledraft",
       "source_file": "react-app/src/types.ts",
-      "source_location": "L301"
+      "source_location": "L303"
     },
     {
       "id": "react_app_src_types_storeevent",
@@ -326,7 +326,7 @@
       "file_type": "code",
       "norm_label": "tab",
       "source_file": "react-app/src/types.ts",
-      "source_location": "L299"
+      "source_location": "L301"
     },
     {
       "id": "react_app_src_views_employees_empacc",
@@ -5193,7 +5193,7 @@
       "file_type": "code",
       "norm_label": "runmigrations()",
       "source_file": "react-app/src/lib/core.ts",
-      "source_location": "L1544"
+      "source_location": "L1548"
     },
     {
       "id": "react_app_src_lib_core_shiftday",
@@ -11598,7 +11598,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "react-app/src/lib/core.ts",
-      "source_location": "L1552",
+      "source_location": "L1556",
       "weight": 1.0
     },
     {
@@ -11610,7 +11610,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "react-app/src/lib/core.ts",
-      "source_location": "L1553",
+      "source_location": "L1557",
       "weight": 1.0
     },
     {
@@ -33418,7 +33418,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "react-app/src/lib/core.ts",
-      "source_location": "L1544",
+      "source_location": "L1548",
       "weight": 1.0
     },
     {
@@ -36520,7 +36520,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "react-app/src/types.ts",
-      "source_location": "L299",
+      "source_location": "L301",
       "weight": 1.0
     },
     {
@@ -36531,7 +36531,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "react-app/src/types.ts",
-      "source_location": "L301",
+      "source_location": "L303",
       "weight": 1.0
     },
     {
@@ -36542,7 +36542,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "react-app/src/types.ts",
-      "source_location": "L309",
+      "source_location": "L311",
       "weight": 1.0
     },
     {
@@ -38826,5 +38826,5 @@
     }
   ],
   "hyperedges": [],
-  "built_at_commit": "e804355bea2a88d900f36291f1b5d11195c5736b"
+  "built_at_commit": "d74daa172ee6e8c7c324b751e005642872b85b63"
 }

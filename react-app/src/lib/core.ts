@@ -1541,6 +1541,10 @@ export function productLedger(s: Store): Record<string, ProductLedgerRow> {
 //     ventas registradas el 13/10/2026 se pasan al 11/10/2026. Solo el campo
 //     "date" de las ventas; idempotente (tras moverlas no queda ninguna con la
 //     fecha origen).
+//  5) salesShifted1210: correccion puntual de Sakoco: la venta que quedo con
+//     fecha 13/10/2026 se pasa al 12/10/2026 (corre despues de la 4; en un
+//     equipo que nunca corrio la 4, esa la absorbe primero y aqui no queda
+//     nada que mover).
 export function runMigrations(s: Store): boolean {
   let changed = false;
   if (!s.promosCategoryOnly) {
@@ -1599,6 +1603,17 @@ export function runMigrations(s: Store): boolean {
       });
     }
     s.salesShifted1110 = true;
+    changed = true;
+  }
+  //  5) salesShifted1210: la venta de Sakoco que siguio con fecha 2026-10-13
+  //     se pasa al 2026-10-12 (pedido del dueño). Corre despues de la 4.
+  if (!s.salesShifted1210) {
+    if (s.syncKey === 'stb1e32fe3') {
+      (s.sales || []).forEach((x) => {
+        if (x && x.date === '2026-10-13') { x.date = '2026-10-12'; changed = true; }
+      });
+    }
+    s.salesShifted1210 = true;
     changed = true;
   }
   return changed;

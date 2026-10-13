@@ -294,6 +294,8 @@ export interface Store {
   legacyNamesFixed?: boolean;
   // Correccion puntual de Sakoco: las ventas del 13/10/2026 pasaron al 11/10/2026.
   salesShifted1110?: boolean;
+  // Correccion puntual de Sakoco: la venta que quedo en 13/10/2026 pasa al 12/10/2026.
+  salesShifted1210?: boolean;
 }
 
 export type Tab = 'inicio' | 'productos' | 'ganancias' | 'notas' | 'empleados' | 'eventos';

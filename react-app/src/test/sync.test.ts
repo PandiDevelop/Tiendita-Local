@@ -1043,4 +1043,13 @@ describe('runMigrations: salesShifted1110 (solo Sakoco)', () => {
     runMigrations(sak);
     expect(sak.sales[0].date).toBe('2026-10-11');
   });
+
+  it('salesShifted1210: en un equipo ya migrado, la venta que quedó en 13/10 pasa a 12/10', () => {
+    const sak = newStore('sak3');
+    sak.syncKey = 'stb1e32fe3';
+    sak.salesShifted1110 = true;
+    sak.sales = [sale('v1', '2026-10-13')];
+    runMigrations(sak);
+    expect(sak.sales[0].date).toBe('2026-10-12');
+  });
 });
