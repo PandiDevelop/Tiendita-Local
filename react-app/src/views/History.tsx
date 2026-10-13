@@ -2,10 +2,11 @@ import { Fragment, ReactNode, useState } from 'react';
 import { CaretIcon, CloseIcon, DownloadIcon, PencilIcon, confirmDialog } from '../ui';
 import { useStore } from '../store';
 import { money, esc, total, shortDate, saleUnits, priceFor, formatDate, catLabel, findActivePromo, productPromos, canManageTeam, markSaleDeleted } from '../lib/core';
+import { saveTextFile } from '../lib/saveFile';
 import type { Sale } from '../types';
 
 export function History() {
-  const { store, replace, setModal } = useStore();
+  const { store, replace, setModal, toast } = useStore();
   const s = store!;
   const [open, setOpen] = useState<Record<string, boolean>>({});
   const manage = canManageTeam(s);
@@ -31,35 +32,32 @@ export function History() {
     });
   }
 
-  function exportTxt(sales: Sale[]) {
-    const lines: string[] = [];
-    lines.push('HISTORIAL DE VENTAS');
-    lines.push('Tienda: ' + s.name);
-    lines.push('Exportado: ' + new Date().toLocaleString('es'));
-    lines.push('');
-    sales.forEach((x) => x.items.forEach((i) => {
-      const p = s.products.find((pp) => pp.id === i.productId);
-      const pr = p && p.promos.find((z) => z.id === i.promotionId);
-      const name = pr ? pr.label : (p ? p.name : 'Producto eliminado');
-      const parent = pr ? p!.name : 'Producto';
-      lines.push(
-        'Fecha: ' + x.date + '  Hora: ' + (x.time || '—') +
-        '  Producto: ' + parent +
-        '  Categoría: ' + (p ? catLabel(p) : 'Sin categoría') +
-        '  Ítem: ' + name +
-        '  Precio: ' + money(priceFor(i, s)) +
-        '  Cantidad: ' + i.qty +
-        '  Total: ' + money(priceFor(i, s) * i.qty) +
-        '  Empleado: ' + (x.employee || '—')
-      );
+  // Exporta el historial a un archivo JSON: cada venta con sus ítems sueltos
+  // (producto, categoría, promoción aplicada, precio, cantidad y total).
+  // En la app nativa se guarda en Documentos y el toast avisa dónde quedó.
+  async function exportJson(sales: Sale[]) {
+    const ventas = sales.map((x) => ({
+      fecha: x.date,
+      hora: x.time || '',
+      empleado: x.employee || '',
+      items: x.items.map((i) => {
+        const p = s.products.find((pp) => pp.id === i.productId);
+        const pr = p && p.promos.find((z) => z.id === i.promotionId);
+        return {
+          producto: p ? p.name : 'Producto eliminado',
+          categoria: p ? catLabel(p) : 'Sin categoría',
+          item: pr ? pr.label : (p ? p.name : 'Producto eliminado'),
+          promocion: pr ? pr.label : null,
+          precio: priceFor(i, s),
+          cantidad: i.qty,
+          total: priceFor(i, s) * i.qty,
+        };
+      }),
     }));
-    const txt = '\ufeff' + lines.join('\n') + '\n';
-    const blob = new Blob([txt], { type: 'text/plain;charset=utf-8;' });
-    const a = document.createElement('a');
-    a.href = URL.createObjectURL(blob);
-    a.download = 'ventas-' + s.name.toLowerCase().replace(/[^a-z0-9]+/gi, '-') + '.txt';
-    a.click();
-    URL.revokeObjectURL(a.href);
+    const data = JSON.stringify({ formato: 'mi-tiendita-ventas', tienda: s.name, exportado: new Date().toISOString(), ventas }, null, 2);
+    const name = 'ventas-' + s.name.toLowerCase().replace(/[^a-z0-9]+/gi, '-') + '.json';
+    const r = await saveTextFile(data, name, 'application/json;charset=utf-8;');
+    if (r.path) toast('Ventas guardadas: ' + r.path);
   }
 
   const sales = [...s.sales].sort((a, b) => (b.date || '').localeCompare(a.date || '') || (b.time || '').localeCompare(a.time || ''));
@@ -106,7 +104,7 @@ export function History() {
     <div className="panel">
       <div className="panel-head">
         <div><h2>Historial de ventas</h2><p className="muted">Cada venta con su fecha, hora y quién la registró.</p></div>
-        <button className="button secondary" onClick={() => exportTxt(s.sales)}><DownloadIcon /> Exportar a texto</button>
+        <button className="button secondary" onClick={() => exportJson(s.sales)}><DownloadIcon /> Exportar a JSON</button>
       </div>
       {!dates.length ? <div className="empty"><div className="emoji">
         <svg viewBox="0 0 24 24" width="40" height="40" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" style={{ color: 'var(--brand-line)', display: 'block', margin: '0 auto' }}>

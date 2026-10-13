@@ -11,6 +11,7 @@ export async function initNativePlugins(): Promise<void> {
   if (!isNativeApp()) return;
   try {
     await import('@capacitor/app');
+    await import('@capacitor/push-notifications');
     await import('@capgo/capacitor-updater');
   } catch (e) {
     console.error('No se pudieron cargar los plugins nativos:', e);

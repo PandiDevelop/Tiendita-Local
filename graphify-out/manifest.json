@@ -1,8 +1,8 @@
 {
   "react-app/package.json": {
-    "mtime": 1791811488.7220633,
-    "seen": 1791812726.669787,
-    "ast_hash": "98d6d96be993161fbf1702a87336c4d8",
+    "mtime": 1791874114.897053,
+    "seen": 1791875208.8639884,
+    "ast_hash": "a790a744f2cdc3c568cc3ce325e33142",
     "semantic_hash": ""
   },
   "react-app/public/sw.js": {
@@ -48,9 +48,9 @@
     "semantic_hash": ""
   },
   "react-app/src/main.tsx": {
-    "mtime": 1790052240.2856133,
-    "seen": 1790053024.50464,
-    "ast_hash": "ba88ee4bd308b7b9dc3449704304f360",
+    "mtime": 1791813448.1789382,
+    "seen": 1791875208.8639884,
+    "ast_hash": "3d0ef9b83de579d10686c3be05abcfb3",
     "semantic_hash": ""
   },
   "react-app/src/store.tsx": {
@@ -96,9 +96,9 @@
     "semantic_hash": ""
   },
   "react-app/src/views/History.tsx": {
-    "mtime": 1791795645.5861785,
-    "seen": 1791812726.669787,
-    "ast_hash": "f177c861c7c315d17fcf3c4aed9e8253",
+    "mtime": 1791874087.6245153,
+    "seen": 1791875208.8639884,
+    "ast_hash": "051c23f718b011b95942932e47fd7e94",
     "semantic_hash": ""
   },
   "react-app/src/views/Inventory.tsx": {
@@ -126,9 +126,9 @@
     "semantic_hash": ""
   },
   "react-app/src/views/Profit.tsx": {
-    "mtime": 1791537897.3233533,
-    "seen": 1791537959.5353897,
-    "ast_hash": "86869c28c358bca94aa84d9ec3b237ac",
+    "mtime": 1791874017.3031983,
+    "seen": 1791875208.8639884,
+    "ast_hash": "f5022d7a1f658f17a235bda464149a55",
     "semantic_hash": ""
   },
   "react-app/src/views/SaleRegistration.tsx": {
@@ -162,9 +162,9 @@
     "semantic_hash": ""
   },
   "sw.js": {
-    "mtime": 1791810422.6768534,
-    "seen": 1791812726.669787,
-    "ast_hash": "b78f6618e914f2fd4ef506e09aeb3903",
+    "mtime": 1791874191.952369,
+    "seen": 1791875208.8639884,
+    "ast_hash": "934cb7de39f3f692a2a4eb397be463e6",
     "semantic_hash": ""
   },
   "AGENTS.md": {
@@ -180,9 +180,9 @@
     "semantic_hash": ""
   },
   "index.html": {
-    "mtime": 1791810421.9620228,
-    "seen": 1791812726.669787,
-    "ast_hash": "45905ceeea5744caf9ada8f801ea4f30",
+    "mtime": 1791874191.2711585,
+    "seen": 1791875208.8639884,
+    "ast_hash": "d12859ccdb990e3ffa9901a3f944ff36",
     "semantic_hash": ""
   },
   "react-app/index.html": {
@@ -240,9 +240,9 @@
     "semantic_hash": ""
   },
   "react-app/src/lib/notesArchive.ts": {
-    "mtime": 1789065895.6860647,
-    "seen": 1789065953.4481668,
-    "ast_hash": "a13b31cc258f2356b193705620886be0",
+    "mtime": 1791874041.6441517,
+    "seen": 1791875208.8639884,
+    "ast_hash": "43fcc605c6aa433f0156d148e1561298",
     "semantic_hash": ""
   },
   "react-app/src/lib/push.ts": {
@@ -276,9 +276,9 @@
     "semantic_hash": ""
   },
   "react-app/src/views/SettingsModal.tsx": {
-    "mtime": 1791811622.2370882,
-    "seen": 1791812726.669787,
-    "ast_hash": "fda638b4ee016ba365f0a56c7f0e2c8c",
+    "mtime": 1791874100.928548,
+    "seen": 1791875208.8639884,
+    "ast_hash": "2874bcc4d3c7abe83232462311ebb599",
     "semantic_hash": ""
   },
   "react-app/src/test/settings.test.ts": {
@@ -336,9 +336,9 @@
     "semantic_hash": ""
   },
   "react-app/src/lib/version.ts": {
-    "mtime": 1791811630.9312084,
-    "seen": 1791812726.669787,
-    "ast_hash": "54858d6f1d35b09e39844f0eba37d9d6",
+    "mtime": 1791874156.940364,
+    "seen": 1791875208.8639884,
+    "ast_hash": "2d1f4baf28d97b6c7a80aa5958245205",
     "semantic_hash": ""
   },
   "react-app/src/lib/account.ts": {
@@ -564,9 +564,9 @@
     "semantic_hash": ""
   },
   "bundles/latest.json": {
-    "mtime": 1791810433.735063,
-    "seen": 1791812726.669787,
-    "ast_hash": "eb85828f7667df6094953288b50a58f1",
+    "mtime": 1791875179.6480367,
+    "seen": 1791875208.8639884,
+    "ast_hash": "ffd537d7a5544a4a7052640ad51a2430",
     "semantic_hash": ""
   },
   "react-app/src/lib/otaUpdate.ts": {
@@ -588,9 +588,21 @@
     "semantic_hash": ""
   },
   "react-app/src/lib/backup.ts": {
-    "mtime": 1791811619.1655948,
-    "seen": 1791812726.669787,
-    "ast_hash": "6c4ecdc3ab01b7b21c59d8a1a14c12d4",
+    "mtime": 1791813454.8057222,
+    "seen": 1791875208.8639884,
+    "ast_hash": "dafd2dbeb7dd8c36f0e65d063864cabc",
+    "semantic_hash": ""
+  },
+  "react-app/src/lib/nativePlugins.ts": {
+    "mtime": 1791874106.1826618,
+    "seen": 1791875208.8639884,
+    "ast_hash": "cd8f05e3b00cb3343f47a658b26de3f6",
+    "semantic_hash": ""
+  },
+  "react-app/src/lib/saveFile.ts": {
+    "mtime": 1791874028.138303,
+    "seen": 1791875208.8639884,
+    "ast_hash": "82bcbb7a38792254ad98f3843109bc28",
     "semantic_hash": ""
   }
 }

@@ -148,7 +148,7 @@ export function Profit() {
                       <div className="cat-group" key={c.name}>
                         <div className={'cat-head' + (closed ? ' closed' : '')} onClick={() => setFolded((f) => ({ ...f, [c.name]: !closed }))}>
                           <b>{esc(c.name)}</b>
-                          <span className="cat-head-counts muted">· {c.rows.length} producto{c.rows.length === 1 ? '' : 's'} · {catBought} adquirido{catBought === 1 ? '' : 's'} · {catSold} vendido{catSold === 1 ? '' : 's'} · {money(catRev)} ingresos · {money(c.profit)} ganancia</span>
+                          <span className="cat-head-counts muted">{c.rows.length} producto{c.rows.length === 1 ? '' : 's'} · {catBought} adquirido{catBought === 1 ? '' : 's'} · {catSold} vendido{catSold === 1 ? '' : 's'} · {money(catRev)} ingresos · {money(c.profit)} ganancia</span>
                           <span className="sale-caret"><CaretIcon size={13} /></span>
                         </div>
                         {!closed && (

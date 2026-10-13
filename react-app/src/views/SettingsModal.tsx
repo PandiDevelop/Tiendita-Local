@@ -11,7 +11,7 @@ import { enablePushForStore, disablePushForStore, pushConfigured } from '../lib/
 import { setPushPrefs, restoreStoreFn } from '../lib/sync';
 import { themePref, setThemePref, themeOptions } from '../lib/theme';
 import type { ThemePref } from '../lib/theme';
-import { exportNotesArchiveTxt, exportObjectivesArchiveTxt } from '../lib/notesArchive';
+import { exportNotesArchiveJson, exportObjectivesArchiveJson } from '../lib/notesArchive';
 import { DownloadIcon, Modal, CloseIcon, EyeIcon, EyeOffIcon } from '../ui';
 import { downloadBackup, parseBackup, mergeBackupInto } from '../lib/backup';
 import type { NotifCat } from '../types';
@@ -398,8 +398,8 @@ async function doResetPass() {
           {store && canManageNotes(store) ? (
             <>
               <div className="settings-row" style={{ flexWrap: 'wrap' }}>
-                <button className="button outline" onClick={() => exportNotesArchiveTxt(store.id, store.name)} title="Descarga lo que este dispositivo registró de notas y respuestas de hilos, incluidas las que ya desaparecieron"><DownloadIcon /> Descargar registros de notas</button>
-                <button className="button outline" onClick={() => exportObjectivesArchiveTxt(store.id, store.name)} title="Descarga lo que este dispositivo registró de listas de objetivos"><DownloadIcon /> Descargar registros de objetivos</button>
+                <button className="button outline" onClick={async () => { const r = await exportNotesArchiveJson(store.id, store.name); if (r.path) toast('Registros de notas guardados en: ' + r.path); }} title="Descarga lo que este dispositivo registró de notas y respuestas de hilos, incluidas las que ya desaparecieron"><DownloadIcon /> Descargar registros de notas</button>
+                <button className="button outline" onClick={async () => { const r = await exportObjectivesArchiveJson(store.id, store.name); if (r.path) toast('Registros de objetivos guardados en: ' + r.path); }} title="Descarga lo que este dispositivo registró de listas de objetivos"><DownloadIcon /> Descargar registros de objetivos</button>
               </div>
               <p className="muted">Solo llegan los registros que este dispositivo alcanzó a ver; cada equipo descarga los suyos.</p>
             </>

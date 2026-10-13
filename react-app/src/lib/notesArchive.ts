@@ -6,6 +6,7 @@
 // acumulando lo que vio pasar; las exportaciones de Opciones > Registros
 // descargan lo que ESE dispositivo alcanzó a registrar.
 import type { Note, NoteArchiveEntry, NoteReply } from '../types';
+import { saveTextFile } from './saveFile';
 
 const KEY_PREFIX = 'mi-tiendita-note-archive:';
 // Tope de entradas guardadas por tienda para que esto no crezca sin limite
@@ -94,18 +95,21 @@ export function archiveMarkGone(storeId: string, id: string, status: 'eliminada'
   saveArchive(storeId, list);
 }
 
-// Texto plano legible (igual que el export de ventas, ver views/History.tsx):
-// se prefiere un .txt antes que Excel para revisar registros.
-function buildTxt(rows: (string | number)[][], filenameBase: string): void {
-  const headers = rows[0] || [];
-  const lines = rows.slice(1).map((r) => headers.map((hd, i) => hd + ': ' + String(r[i] == null ? '' : r[i])).join('  '));
-  const txt = '\ufeff' + lines.join('\n') + '\n';
-  const blob = new Blob([txt], { type: 'text/plain;charset=utf-8;' });
-  const a = document.createElement('a');
-  a.href = URL.createObjectURL(blob);
-  a.download = filenameBase + '.txt';
-  a.click();
-  URL.revokeObjectURL(a.href);
+// Log descargable de Notas y Objetivos como JSON: se arma lo que este
+// dispositivo registró (fechas, autores, estados, textos) y se descarga en
+// un archivo .json. Ver exportNotesArchivesJson/exportObjectivesArchiveJson.
+function buildJson(storeName: string, kind: string, records: (string | number)[][]): string {
+  const headers = records[0] || [];
+  const items = records.slice(1).map((r) =>
+    Object.fromEntries(headers.map((hd, i) => [String(hd), r[i] == null ? '' : r[i]])),
+  );
+  return JSON.stringify({
+    formato: 'mi-tiendita-registros',
+    tipo: kind,
+    tienda: storeName,
+    exportado: new Date().toISOString(),
+    registros: items,
+  }, null, 2);
 }
 
 function archiveRows(storeId: string, kinds: ('nota' | 'respuesta' | 'checklist')[]): (string | number)[][] {
@@ -122,13 +126,16 @@ function slugName(storeName: string): string {
 }
 
 // "Descargar registros de notas" (Opciones > Registros): notas y respuestas
-// de hilos (los objetivos van por separado, ver abajo).
-export function exportNotesArchiveTxt(storeId: string, storeName: string): void {
-  buildTxt(archiveRows(storeId, ['nota', 'respuesta']), 'notas-log-' + slugName(storeName));
+// de hilos (los objetivos van por separado, ver abajo). En la app nativa
+// devuelve la ruta donde quedó guardado.
+export async function exportNotesArchiveJson(storeId: string, storeName: string): Promise<{ ok: boolean; path?: string }> {
+  const name = 'notas-log-' + slugName(storeName) + '.json';
+  return saveTextFile(buildJson(storeName, 'notas-y-respuestas', archiveRows(storeId, ['nota', 'respuesta'])), name, 'application/json;charset=utf-8;');
 }
 
 // "Descargar registros de objetivos" (Opciones > Registros): solo las listas
 // de objetivos/checklist.
-export function exportObjectivesArchiveTxt(storeId: string, storeName: string): void {
-  buildTxt(archiveRows(storeId, ['checklist']), 'objetivos-log-' + slugName(storeName));
+export async function exportObjectivesArchiveJson(storeId: string, storeName: string): Promise<{ ok: boolean; path?: string }> {
+  const name = 'objetivos-log-' + slugName(storeName) + '.json';
+  return saveTextFile(buildJson(storeName, 'objetivos', archiveRows(storeId, ['checklist'])), name, 'application/json;charset=utf-8;');
 }
