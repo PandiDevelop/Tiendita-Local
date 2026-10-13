@@ -389,6 +389,18 @@ describe('Ganancias: íconos SVG en vez de emoji, ícono antes que texto', () =>
     // eslint-disable-next-line no-misleading-character-class
     expect(container.textContent).not.toMatch(/[\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}]/u);
   });
+
+  it('la tarjeta de Ingresos muestra las ventas y las unidades vendidas', () => {
+    const store = makeStore({
+      products: [makeProduct({ id: 'p1', name: 'Refresco', price: 1000 })],
+      sales: [
+        { id: 'a', date: '2026-10-13', time: '10:00', at: 1000, employee: 'Ana', closed: false, items: [{ productId: 'p1', promotionId: null, qty: 2 }] },
+        { id: 'b', date: '2026-10-13', time: '11:00', at: 2000, employee: 'Beto', closed: false, items: [{ productId: 'p1', promotionId: null, qty: 3 }] },
+      ],
+    });
+    const { container } = render(<TestProvider initialState={makeState(store)}><Profit /></TestProvider>);
+    expect(container.querySelector('.card.stat.stat-h')?.textContent).toContain('2 ventas · 5 unidades');
+  });
 });
 
 describe('Historial de ventas: orden por marca exacta y buscador de productos', () => {

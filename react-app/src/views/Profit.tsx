@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useStore } from '../store';
-import { costFor, esc, money, priceFor, today, DEFAULT_PRODUCT_IMAGE, inventorySold, groupedByCategory, productTags, productLedger } from '../lib/core';
+import { costFor, esc, money, priceFor, today, saleUnits, DEFAULT_PRODUCT_IMAGE, inventorySold, groupedByCategory, productTags, productLedger } from '../lib/core';
 import { CaretIcon, Image, HScroll } from '../ui';
 import { History } from './History';
 import type { Sale, Store as IStore } from '../types';
@@ -56,6 +56,7 @@ export function Profit() {
   const revenue = filtered.reduce((a, x) => a + x.items.reduce((b, i) => b + priceFor(i, s) * i.qty, 0), 0);
   const cost = filtered.reduce((a, x) => a + x.items.reduce((b, i) => b + costFor(i, s) * i.qty, 0), 0);
   const profit = revenue - cost;
+  const units = filtered.reduce((a, x) => a + saleUnits(x), 0);
   const margin = revenue > 0 ? (profit / revenue) * 100 : 0;
   const lines = profitLines(s, filtered);
   const topProfit = lines.length ? lines[0].profit : 0;
@@ -97,7 +98,7 @@ export function Profit() {
             <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M12 2v20" /><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" /></svg>
           </div>
           <div className="captioned-stat"><div>Ingresos</div><div className="value">{money(revenue)}</div></div>
-          <div className="small">{filtered.length} venta{filtered.length === 1 ? '' : 's'}</div>
+          <div className="small">{filtered.length} venta{filtered.length === 1 ? '' : 's'} · {units} unidad{units === 1 ? '' : 'es'}</div>
         </div>
         <div className="card stat stat-h stat-panel">
           <div className="stat-icon">
