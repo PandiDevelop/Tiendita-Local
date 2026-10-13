@@ -195,7 +195,10 @@ th,td{text-align:left;vertical-align:middle}
 .card.stat.stat-h .captioned-stat>div:first-child{color:var(--muted);font-size:13px;font-weight:500}
 .card.stat.stat-h .captioned-stat .value{font:700 27px 'Nunito',sans-serif;margin:0;overflow-wrap:break-word}
 .card.stat.stat-h .small{flex-basis:100%}
+.profit-panel{margin-top:0}
+.profit-view-modes{width:100%;margin:0 0 16px}
 .profit-grid{gap:14px;margin-bottom:4px}
+.profit-section{margin-top:20px;padding-top:18px;border-top:1px solid var(--line)}
 .profit-grid .card{padding:13px 16px;border-radius:18px}
 .profit-grid .stat-icon{width:30px;height:30px;border-radius:9px}
 .profit-grid .card.stat.stat-h .captioned-stat .value{font-size:21px}

@@ -117,6 +117,11 @@ export interface Sale {
   id: string;
   date: string;
   time: string;
+  // Marca de tiempo exacta (ms) de cuando se registro la venta. `time` solo
+  // guarda HH:MM, asi que varias ventas del mismo minuto no tenian un orden
+  // fiable; `at` desempata para ordenarlas por el momento real. Las ventas
+  // viejas no lo tienen (se ordenan por fecha y hora).
+  at?: number;
   employee: string;
   by?: string;
   closed: boolean;

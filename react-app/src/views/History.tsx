@@ -1,15 +1,29 @@
 import { Fragment, ReactNode, useState } from 'react';
 import { CaretIcon, CloseIcon, DownloadIcon, PencilIcon, confirmDialog } from '../ui';
 import { useStore } from '../store';
-import { money, esc, total, shortDate, saleUnits, priceFor, formatDate, catLabel, findActivePromo, productPromos, canManageTeam, markSaleDeleted } from '../lib/core';
+import { money, esc, total, shortDate, saleUnits, priceFor, formatDate, catLabel, findActivePromo, productPromos, productTags, canManageTeam, markSaleDeleted } from '../lib/core';
 import { saveTextFile } from '../lib/saveFile';
 import type { Sale } from '../types';
 
-export function History() {
+export function History({ embedded = false }: { embedded?: boolean }) {
   const { store, replace, setModal, toast } = useStore();
   const s = store!;
   const [open, setOpen] = useState<Record<string, boolean>>({});
   const manage = canManageTeam(s);
+
+  // Buscador de productos dentro de las ventas: sirve para confirmar o
+  // encontrar un registro concreto (por nombre del producto o por su tag).
+  const [query, setQuery] = useState('');
+  const q = query.trim().toLowerCase();
+  const searching = q.length > 0;
+  function saleHasProduct(x: Sale) {
+    return x.items.some((i) => {
+      if (!(i.qty > 0)) return false;
+      const p = s.products.find((pp) => pp.id === i.productId);
+      if (!p) return false;
+      return p.name.toLowerCase().includes(q) || productTags(p).some((t) => t.toLowerCase().includes(q));
+    });
+  }
 
   // Abre la venta en el registro (modal 'sale') precargada para corregirla.
   // Se marca en editingSaleId para que SaleRegistration reemplace esa venta
@@ -60,7 +74,11 @@ export function History() {
     if (r.path) toast('Ventas guardadas: ' + r.path);
   }
 
-  const sales = [...s.sales].sort((a, b) => (b.date || '').localeCompare(a.date || '') || (b.time || '').localeCompare(a.time || ''));
+  // Ordena por fecha y hora y, cuando coincide el minuto, por la marca exacta
+  // `at` (mas reciente primero): asi varias ventas del mismo minuto conservan
+  // el orden en que se hicieron.
+  const allSales = [...s.sales].sort((a, b) => (b.date || '').localeCompare(a.date || '') || (b.time || '').localeCompare(a.time || '') || (b.at || 0) - (a.at || 0));
+  const sales = searching ? allSales.filter(saleHasProduct) : allSales;
   const groups: Record<string, typeof sales> = {};
   sales.forEach((x) => { const d = x.date || ''; (groups[d] = groups[d] || []).push(x); });
   const dates = Object.keys(groups).sort((a, b) => b.localeCompare(a));
@@ -101,16 +119,21 @@ export function History() {
   }
 
   return (
-    <div className="panel">
+    <div className={embedded ? undefined : 'panel'}>
       <div className="panel-head">
         <div><h2>Historial de ventas</h2><p className="muted">Cada venta con su fecha, hora y quién la registró.</p></div>
         <button className="button secondary" onClick={() => exportJson(s.sales)}><DownloadIcon /> Exportar a JSON</button>
       </div>
-      {!dates.length ? <div className="empty"><div className="emoji">
+      <div className="panel-search">
+        <input type="search" inputMode="search" placeholder="Buscar producto en las ventas…" value={query} onChange={(e) => setQuery(e.target.value)} />
+        {searching && <button type="button" className="panel-search-clear" title="Limpiar búsqueda" onClick={() => setQuery('')}>×</button>}
+      </div>
+      {searching && <p className="muted panel-search-info">{sales.length} venta{sales.length === 1 ? '' : 's'} con «{esc(query.trim())}».</p>}
+      {!dates.length ? (searching ? <div className="notice">No se encontraron ventas con «{esc(query.trim())}».</div> : <div className="empty"><div className="emoji">
         <svg viewBox="0 0 24 24" width="40" height="40" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" style={{ color: 'var(--brand-line)', display: 'block', margin: '0 auto' }}>
           <rect x="3" y="4.5" width="18" height="16" rx="3" /><path d="M8 2.5v4M16 2.5v4M3 9.5h18" /><path d="M8.5 14.8l2.4 2.4 4.6-4.8" strokeWidth="2" />
         </svg>
-      </div><b>Aún no hay ventas registradas</b><p>Registra tu primera venta desde la pestaña Inicio.</p></div> : dates.map((d) => {
+      </div><b>Aún no hay ventas registradas</b><p>Registra tu primera venta desde la pestaña Inicio.</p></div>) : dates.map((d) => {
         const list = groups[d];
         const dayUnits = list.reduce((a, x) => a + saleUnits(x), 0);
         const dayMoney = list.reduce((a, x) => a + total(x, s), 0);

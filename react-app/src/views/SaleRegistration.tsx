@@ -227,7 +227,7 @@ export function SaleRegistration({ onClose }: { onClose: () => void }) {
         }
         x.editingSaleId = null;
       } else {
-        st.sales.push({ id: uid(), by: syncClientId(), date: today(), time: now.toTimeString().slice(0, 5), employee: emp, items: JSON.parse(JSON.stringify(items)), closed: false, event: ev ? ev.name : undefined });
+        st.sales.push({ id: uid(), by: syncClientId(), date: today(), time: now.toTimeString().slice(0, 5), at: now.getTime(), employee: emp, items: JSON.parse(JSON.stringify(items)), closed: false, event: ev ? ev.name : undefined });
         x.saleDraft = null;
       }
     });

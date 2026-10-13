@@ -6,6 +6,7 @@ import { Inventory } from '../views/Inventory';
 import { ProductForm } from '../views/ProductForm';
 import { Employees } from '../views/Employees';
 import { Profit } from '../views/Profit';
+import { History } from '../views/History';
 import { Notes } from '../views/Notes';
 import { VirtualCatalog } from '../views/VirtualCatalog';
 import { CargoModal } from '../views/CargoModal';
@@ -387,6 +388,39 @@ describe('Ganancias: íconos SVG en vez de emoji, ícono antes que texto', () =>
 
     // eslint-disable-next-line no-misleading-character-class
     expect(container.textContent).not.toMatch(/[\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}]/u);
+  });
+});
+
+describe('Historial de ventas: orden por marca exacta y buscador de productos', () => {
+  function saleStore() {
+    return makeStore({
+      products: [
+        makeProduct({ id: 'p1', name: 'Refresco', category: 'Bebidas' }),
+        makeProduct({ id: 'p2', name: 'Galletas', category: 'Snacks' }),
+      ],
+      sales: [
+        { id: 'a', date: '2026-10-13', time: '10:00', at: 1000, employee: 'Primero', closed: false, items: [{ productId: 'p2', promotionId: null, qty: 1 }] },
+        { id: 'b', date: '2026-10-13', time: '10:00', at: 2000, employee: 'Segundo', closed: false, items: [{ productId: 'p1', promotionId: null, qty: 1 }] },
+      ],
+    });
+  }
+
+  it('ordena las ventas del mismo minuto por su marca exacta (más reciente primero)', () => {
+    const { container } = render(<TestProvider initialState={makeState(saleStore())}><History /></TestProvider>);
+    const rows = Array.from(container.querySelectorAll('.history-table tbody tr'));
+    expect(rows.length).toBe(2);
+    expect(rows[0].children[4].textContent).toBe('Segundo');
+    expect(rows[1].children[4].textContent).toBe('Primero');
+  });
+
+  it('filtra las ventas por el nombre del producto', () => {
+    render(<TestProvider initialState={makeState(saleStore())}><History /></TestProvider>);
+    const input = screen.getByPlaceholderText('Buscar producto en las ventas…') as HTMLInputElement;
+    fireEvent.change(input, { target: { value: 'refresco' } });
+    expect(screen.getByText(/1 venta con/)).toBeInTheDocument();
+    const rows = document.querySelectorAll('.history-table tbody tr');
+    expect(rows.length).toBe(1);
+    expect(rows[0].children[4].textContent).toBe('Segundo');
   });
 });
 

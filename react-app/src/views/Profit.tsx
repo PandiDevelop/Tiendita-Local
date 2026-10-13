@@ -66,8 +66,32 @@ export function Profit() {
   const stockTotal = s.products.reduce((a, p) => a + Math.max(0, (inv[p.id] || 0) - (sold[p.id] || 0)), 0);
 
   return (
-    <>
-      <div className="grid profit-grid">
+    <div className="panel profit-panel">
+      <div className="inv-modes profit-view-modes">
+        <button type="button" className={'inv-mode' + (view === 'resumen' ? ' on' : '')} onClick={() => setView('resumen')}>Resumen</button>
+        <button type="button" className={'inv-mode' + (view === 'historial' ? ' on' : '')} onClick={() => setView('historial')}>Historial de ventas</button>
+      </div>
+
+      {view === 'resumen' ? (
+        <>
+          <div className="day-tabs">
+            <button className={'day-tab ' + (mode === 'hoy' ? 'active' : '')} onClick={() => setMode('hoy')}>Hoy</button>
+            <button className={'day-tab ' + (mode === 'mes' ? 'active' : '')} onClick={() => setMode('mes')}>Este mes</button>
+            <button className={'day-tab ' + (mode === 'todo' ? 'active' : '')} onClick={() => setMode('todo')}>Todo</button>
+            <button className={'day-tab ' + (mode === 'rango' ? 'active' : '')} onClick={() => setMode('rango')}>Rango de fechas</button>
+          </div>
+          {mode === 'rango' && (
+            <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', margin: '2px 0 4px' }}>
+              <div className="field" style={{ flex: '1 1 140px', margin: 0 }}><label>Desde</label>
+                <input type="date" value={from} onChange={(e) => setFrom(e.target.value)} />
+              </div>
+              <div className="field" style={{ flex: '1 1 140px', margin: 0 }}><label>Hasta</label>
+                <input type="date" value={to} onChange={(e) => setTo(e.target.value)} />
+              </div>
+            </div>
+          )}
+
+          <div className="grid profit-grid">
         <div className="card stat stat-h stat-panel">
           <div className="stat-icon">
             <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M12 2v20" /><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" /></svg>
@@ -89,41 +113,10 @@ export function Profit() {
           <div className="captioned-stat"><div>Ganancia</div><div className="value">{money(profit)}</div></div>
           <div className="small">{revenue > 0 ? margin.toFixed(1) + '% de margen' : 'Sin ventas en este periodo'}</div>
         </div>
-      </div>
-
-      <div className="panel">
-        <div className="panel-head">
-          <div><h2>Ganancias</h2><p className="muted">Ingresos, costo y ganancia.</p></div>
-          <div className="inv-modes">
-            <button type="button" className={'inv-mode' + (view === 'resumen' ? ' on' : '')} onClick={() => setView('resumen')}>Resumen</button>
-            <button type="button" className={'inv-mode' + (view === 'historial' ? ' on' : '')} onClick={() => setView('historial')}>Historial de ventas</button>
           </div>
-        </div>
-        {view === 'resumen' && (
-          <>
-            <div className="day-tabs">
-              <button className={'day-tab ' + (mode === 'todo' ? 'active' : '')} onClick={() => setMode('todo')}>Todo</button>
-              <button className={'day-tab ' + (mode === 'hoy' ? 'active' : '')} onClick={() => setMode('hoy')}>Hoy</button>
-              <button className={'day-tab ' + (mode === 'mes' ? 'active' : '')} onClick={() => setMode('mes')}>Este mes</button>
-              <button className={'day-tab ' + (mode === 'rango' ? 'active' : '')} onClick={() => setMode('rango')}>Rango de fechas</button>
-            </div>
-            {mode === 'rango' && (
-              <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', margin: '2px 0 4px' }}>
-                <div className="field" style={{ flex: '1 1 140px', margin: 0 }}><label>Desde</label>
-                  <input type="date" value={from} onChange={(e) => setFrom(e.target.value)} />
-                </div>
-                <div className="field" style={{ flex: '1 1 140px', margin: 0 }}><label>Hasta</label>
-                  <input type="date" value={to} onChange={(e) => setTo(e.target.value)} />
-                </div>
-              </div>
-            )}
-          </>
-        )}
-      </div>
 
-      {view === 'historial' ? <History /> : (
-        <div className="panel">
-          <div className="panel-head"><div><h2>Ganancia por producto</h2><p className="muted">De mayor a menor ganancia: la categoría que más gana arriba y, dentro de cada una, el producto que más gana primero. “Vendido” y “Adquirido” son el total histórico.</p></div></div>
+          <div className="profit-section">
+            <div className="panel-head"><div><h2>Ganancia por producto</h2><p className="muted">De mayor a menor ganancia: la categoría que más gana arriba y, dentro de cada una, el producto que más gana primero. “Vendido” y “Adquirido” son el total histórico.</p></div></div>
           {s.products.length ? (
             (() => {
               const ledger = productLedger(s);
@@ -186,8 +179,11 @@ export function Profit() {
               );
             })()
           ) : <div className="notice">No hay productos todavía.</div>}
-        </div>
+          </div>
+        </>
+      ) : (
+        <History embedded />
       )}
-    </>
+    </div>
   );
 }
