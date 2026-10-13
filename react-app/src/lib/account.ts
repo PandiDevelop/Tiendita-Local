@@ -162,6 +162,30 @@ export async function signOutAccount(): Promise<{ ok: boolean; message: string }
   }
 }
 
+// Asocia el nombre de usuario a la CUENTA. El nombre vive localmente en
+// syncName() y es el que firma notas/ventas/inventario en TODAS las tiendas del
+// dispositivo; aquí además se escribe en el displayName de Firebase Auth para
+// que cada teléfono que inicie sesión adopte el mismo nombre (ver
+// initAccountAuth/signInAccount). Si no hay sesión, solo queda local.
+export async function updateAccountName(name: string): Promise<{ ok: boolean; synced: boolean; message: string }> {
+  const n = (name || '').trim();
+  if (!n) return { ok: false, synced: false, message: 'Escribe un nombre de usuario.' };
+  setAccountName(n);
+  syncSetName(n);
+  try {
+    const { getAuth, updateProfile } = await import('firebase/auth');
+    const user = getAuth(firebaseApp()!).currentUser;
+    if (user) {
+      await updateProfile(user, { displayName: n });
+      return { ok: true, synced: true, message: 'Nombre guardado en tu cuenta: se usará en todas tus tiendas y teléfonos.' };
+    }
+  } catch (e) {
+    console.warn('No se pudo guardar el nombre en la cuenta:', e);
+    return { ok: true, synced: false, message: 'Nombre guardado en este teléfono, pero no se pudo sincronizar con tu cuenta.' };
+  }
+  return { ok: true, synced: false, message: 'Nombre actualizado en este teléfono. Inicia sesión para que se use en todas tus tiendas.' };
+}
+
 export interface LinkResult { stores: number; remote: number; }
 
 // Re-vincula las tiendas locales que esta persona tenía con el id "from" para

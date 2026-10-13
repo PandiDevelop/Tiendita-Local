@@ -1,14 +1,14 @@
 import { useEffect, useRef, useState } from 'react';
 import { useStore } from '../store';
-import { syncName, syncSetName, resetClientId, deletedStores, canManageNotes } from '../lib/core';
+import { syncName, resetClientId, deletedStores, canManageNotes } from '../lib/core';
 import type { DeletedStoreRecord } from '../lib/core';
 import { accountEmail, setAccountEmail, setAccountId, sessionActive } from '../lib/accountStore';
-import { currentIdentity, linkStoresToAccount, onAccountChange, registerAccount, sendPasswordReset, signInAccount, signOutAccount } from '../lib/account';
+import { currentIdentity, linkStoresToAccount, onAccountChange, registerAccount, sendPasswordReset, signInAccount, signOutAccount, updateAccountName } from '../lib/account';
 import { useAppVersion } from '../lib/appVersion';
 import { notifyEnabled, setNotifyEnabled, notifCats, setNotifCat } from '../lib/settings';
 import { requestNotifyPermission } from '../lib/sound';
 import { enablePushForStore, disablePushForStore, pushConfigured } from '../lib/push';
-import { setPushPrefs, restoreStoreFn } from '../lib/sync';
+import { setPushPrefs, restoreStoreFn, renameMeInAllStoresFn } from '../lib/sync';
 import { themePref, setThemePref, themeOptions } from '../lib/theme';
 import type { ThemePref } from '../lib/theme';
 import { exportNotesArchiveJson, exportObjectivesArchiveJson } from '../lib/notesArchive';
@@ -183,9 +183,17 @@ async function doResetPass() {
     }
   }
 
-  function saveName() {
-    syncSetName(name.trim());
-    toast('Nombre actualizado. Se mostrará en notas, ventas e inventario.');
+  async function saveName() {
+    if (busy) return;
+    setBusy(true);
+    try {
+      const r = await updateAccountName(name);
+      if (!r.ok) { toast(r.message); return; }
+      await renameMeInAllStoresFn(name, () => state, replace);
+      toast(r.message);
+    } finally {
+      setBusy(false);
+    }
   }
 
   async function toggleNotifications(on: boolean) {

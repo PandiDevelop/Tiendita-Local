@@ -1535,6 +1535,12 @@ export function productLedger(s: Store): Record<string, ProductLedgerRow> {
 //     con fecha de hoy y hora >= 19:00, o con fecha estrictamente futura,
 //     en realidad era de ayer. NUNCA toca eventos: sus fechas futuras son
 //     legitimas.
+//  3) legacyNamesFixed: unifica los nombres viejos de Sakoco (ver el detalle
+//     junto a su codigo).
+//  4) salesShifted1110: correccion puntual de Sakoco pedida por el dueño: las
+//     ventas registradas el 13/10/2026 se pasan al 11/10/2026. Solo el campo
+//     "date" de las ventas; idempotente (tras moverlas no queda ninguna con la
+//     fecha origen).
 export function runMigrations(s: Store): boolean {
   let changed = false;
   if (!s.promosCategoryOnly) {
@@ -1581,6 +1587,18 @@ export function runMigrations(s: Store): boolean {
       }
     }
     s.legacyNamesFixed = true;
+    changed = true;
+  }
+  //  4) salesShifted1110: correccion puntual pedida por el dueño de Sakoco:
+  //     todas las ventas con fecha 2026-10-13 (hoy) se pasan al 2026-10-11.
+  //     Solo el campo "date"; alcance limitado a esa tienda (por syncKey).
+  if (!s.salesShifted1110) {
+    if (s.syncKey === 'stb1e32fe3') {
+      (s.sales || []).forEach((x) => {
+        if (x && x.date === '2026-10-13') { x.date = '2026-10-11'; changed = true; }
+      });
+    }
+    s.salesShifted1110 = true;
     changed = true;
   }
   return changed;

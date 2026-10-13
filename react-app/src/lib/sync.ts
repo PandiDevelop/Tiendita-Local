@@ -1,7 +1,7 @@
 import { initializeApp, FirebaseApp } from 'firebase/app';
 import { initializeFirestore, Firestore, collection, doc, query, onSnapshot, setDoc, getDoc, getDocs, deleteDoc, deleteField } from 'firebase/firestore';
 import type { AppState, Member, NotifCat, Product, Role, Sale, Store } from '../types';
-import { toProductsArr, toSalesArr, toInvLogArr, toNoteLogArr, toNoteBoardArr, mergeItems, mergeInvLog, mergeNoteLog, syncKeyOf, syncGenPin, syncClientId, syncName, normalizeStore, DEFAULT_STORE_IMAGE, uid, isNoteDeleted, markNoteDeleted, deletedNoteIdsOf, clearDeletedNotes, markProductDeleted, isProductDeleted, deletedProductIdsOf, clearDeletedProducts, markSaleDeleted, isSaleDeleted, deletedSaleIdsOf, clearDeletedSales, saleTombIds, rememberDeletedStore, deletedStores, forgetDeletedStore, toCostArr, mergeCostEntries, writerId } from './core';
+import { toProductsArr, toSalesArr, toInvLogArr, toNoteLogArr, toNoteBoardArr, mergeItems, mergeInvLog, mergeNoteLog, syncKeyOf, syncGenPin, syncClientId, syncName, normalizeStore, DEFAULT_STORE_IMAGE, uid, isNoteDeleted, markNoteDeleted, deletedNoteIdsOf, clearDeletedNotes, markProductDeleted, isProductDeleted, deletedProductIdsOf, clearDeletedProducts, markSaleDeleted, isSaleDeleted, deletedSaleIdsOf, clearDeletedSales, saleTombIds, rememberDeletedStore, deletedStores, forgetDeletedStore, toCostArr, mergeCostEntries, writerId, SYNC_DEFAULT_NAME } from './core';
 import type { DeletedStoreRecord } from './core';
 import { customAlert, customConfirm } from './dialog';
 
@@ -1204,6 +1204,37 @@ export async function setMemberRoleFn(storeId: string, memberId: string, role: R
     await setDoc(doc(collection(DB, 'stores'), s.syncKey), { members: { [memberId]: updated }, memberIds: Object.keys(members) }, { merge: true });
     toast(role === 'admin' ? 'Ahora es administrador.' : 'Ya no es administrador.');
   } catch (e) { console.warn(e); toast('No se pudo actualizar el permiso.'); }
+}
+
+// Cambiar el nombre con el que firmas es un ajuste de la PERSONA, no de una
+// tienda: syncName() ya es un valor global del dispositivo, pero hasta ahora
+// cada tienda guardaba una copia del nombre en su "members" al unirse y esa
+// copia se quedaba congelada. Esto recorre TODAS las tiendas del usuario y
+// reescribe su entrada en el equipo (local y, si está sincronizada, en la
+// nube) para que notas, ventas y la lista de Equipo muestren siempre el mismo
+// nombre en todas partes. Devuelve cuántas tiendas cambió.
+export async function renameMeInAllStoresFn(name: string, getState: () => AppState, mutate: (fn: (d: AppState) => void) => void): Promise<number> {
+  const me = syncClientId();
+  const clean = (name && name.trim()) || SYNC_DEFAULT_NAME;
+  let changed = 0;
+  for (const st of getState().stores) {
+    const cur = st.members && st.members[me];
+    if (!cur) continue;
+    if ((cur.name || '').trim() === clean) continue;
+    const updated: Member = { ...cur, name: clean };
+    mutate((d) => {
+      const s = d.stores.find((x) => x.id === st.id);
+      if (s && s.members) s.members = { ...s.members, [me]: updated };
+    });
+    changed += 1;
+    if (st.syncKey && DB) {
+      try {
+        const members = { ...(st.members || {}), [me]: updated };
+        await setDoc(doc(collection(DB, 'stores'), st.syncKey), { members: { [me]: updated }, memberIds: Object.keys(members) }, { merge: true });
+      } catch (e) { console.warn('No se pudo subir el nombre a la tienda', st.id, e); }
+    }
+  }
+  return changed;
 }
 
 export function deactivateSyncFn(id: string, getState: () => AppState, mutate: (fn: (d: AppState) => void) => void, detach: (storeId: string) => void) {

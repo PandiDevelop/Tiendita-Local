@@ -292,6 +292,8 @@ export interface Store {
   promosCategoryOnly?: boolean;
   datesFixed?: boolean;
   legacyNamesFixed?: boolean;
+  // Correccion puntual de Sakoco: las ventas del 13/10/2026 pasaron al 11/10/2026.
+  salesShifted1110?: boolean;
 }
 
 export type Tab = 'inicio' | 'productos' | 'ganancias' | 'notas' | 'empleados' | 'eventos';

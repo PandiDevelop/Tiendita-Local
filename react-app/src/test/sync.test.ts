@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import type { AppState, Product, Store, CostEntry, SaleItem, Sale } from '../types';
-import { makeDraft, normalizeStore, addNote, addNoteMsg, deleteNoteMsg, adoptInvLog, sortByOrder, uid, costFor, priceFor, total, costTotal, profitTotal, setCategoryPricing, groupedByCategory, syncClientId, toggleNotePin, ensureCost, findCostId, mergeCostEntries } from '../lib/core';
+import { makeDraft, normalizeStore, addNote, addNoteMsg, deleteNoteMsg, adoptInvLog, sortByOrder, uid, costFor, priceFor, total, costTotal, profitTotal, setCategoryPricing, groupedByCategory, syncClientId, toggleNotePin, ensureCost, findCostId, mergeCostEntries, runMigrations } from '../lib/core';
 import { applyRemote } from '../lib/sync';
 import { buildBackup, parseBackup, mergeBackupInto, backupFileName } from '../lib/backup';
 
@@ -1011,5 +1011,36 @@ describe('respaldo JSON de la tienda', () => {
     expect(b.st.products.find((p) => p.id === i1)!.name).toBe('Agua editada');
     expect(b.st.inventory[i1]).toBe(99);
     expect(b.st.inventory[i2]).toBe(6);
+  });
+});
+
+describe('runMigrations: salesShifted1110 (solo Sakoco)', () => {
+  function sale(id: string, date: string): Sale {
+    return { id, date, time: '12:00', employee: 'Pandi', closed: true, items: [] };
+  }
+
+  it('pasa las ventas del 13/10 al 11/10 en Sakoco', () => {
+    const sak = newStore('sak');
+    sak.syncKey = 'stb1e32fe3';
+    sak.sales = [sale('v1', '2026-10-13'), sale('v2', '2026-10-12')];
+    runMigrations(sak);
+    expect(sak.sales.find((x) => x.id === 'v1')!.date).toBe('2026-10-11');
+    expect(sak.sales.find((x) => x.id === 'v2')!.date).toBe('2026-10-12');
+  });
+
+  it('no toca las ventas del 13/10 de otra tienda', () => {
+    const otra = newStore('otra');
+    otra.sales = [sale('v1', '2026-10-13')];
+    runMigrations(otra);
+    expect(otra.sales[0].date).toBe('2026-10-13');
+  });
+
+  it('es idempotente: correrla dos veces deja la fecha en 11/10', () => {
+    const sak = newStore('sak2');
+    sak.syncKey = 'stb1e32fe3';
+    sak.sales = [sale('v1', '2026-10-13')];
+    runMigrations(sak);
+    runMigrations(sak);
+    expect(sak.sales[0].date).toBe('2026-10-11');
   });
 });
