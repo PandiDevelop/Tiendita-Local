@@ -5,6 +5,7 @@ import type { DeletedStoreRecord } from '../lib/core';
 import { accountEmail, setAccountEmail, setAccountId, sessionActive } from '../lib/accountStore';
 import { currentIdentity, linkStoresToAccount, onAccountChange, registerAccount, sendPasswordReset, signInAccount, signOutAccount, updateAccountName } from '../lib/account';
 import { useAppVersion } from '../lib/appVersion';
+import { checkForUpdate } from '../lib/otaUpdate';
 import { notifyEnabled, setNotifyEnabled, notifCats, setNotifCat } from '../lib/settings';
 import { requestNotifyPermission } from '../lib/sound';
 import { enablePushForStore, disablePushForStore, pushConfigured } from '../lib/push';
@@ -43,6 +44,8 @@ export function SettingsModal({ onClose }: { onClose: () => void }) {
   const [notif, setNotif] = useState(notifyEnabled());
   const [cats, setCats] = useState(notifCats());
   const [busy, setBusy] = useState(false);
+  const [updBusy, setUpdBusy] = useState(false);
+  const [updMsg, setUpdMsg] = useState<string | null>(null);
   const backupInput = useRef<HTMLInputElement>(null);
   const [permDenied, setPermDenied] = useState(false);
   const [pushState, setPushState] = useState<string | null>(null);
@@ -193,6 +196,24 @@ async function doResetPass() {
       toast(r.message);
     } finally {
       setBusy(false);
+    }
+  }
+
+  // Comprobacion manual de actualizacion (OTA). En la app nativa busca un
+  // bundle mas nuevo que el cargado y lo aplica; en el navegador no aplica.
+  async function checkUpdates() {
+    if (updBusy) return;
+    setUpdBusy(true);
+    setUpdMsg('Buscando actualizaciones…');
+    try {
+      const r = await checkForUpdate();
+      if (r.kind === 'up-to-date') setUpdMsg('Ya tienes la última versión (' + r.current + ').');
+      else if (r.kind === 'updated') setUpdMsg('Descargando la versión ' + r.version + '… la app se reiniciará sola.');
+      else if (r.kind === 'busy') setUpdMsg('Ya hay una comprobación en curso.');
+      else if (r.kind === 'unsupported') setUpdMsg('En el navegador la app se actualiza sola al recargar.');
+      else setUpdMsg('No se pudo actualizar: ' + r.message + '.');
+    } finally {
+      setUpdBusy(false);
     }
   }
 
@@ -436,7 +457,16 @@ async function doResetPass() {
         <p className="muted">Las tiendas borradas aparecerán aquí durante 14 días.</p>
       </div>
 
-      <p className="muted settings-version">Versión {version}</p>
+      <div className="settings-block">
+        <div className="label">Actualizaciones</div>
+        <div className="field">
+          <div className="settings-row">
+            <button className="button outline" disabled={updBusy} onClick={checkUpdates} title="Buscar si hay una versión nueva de la app y aplicarla">{updBusy ? 'Buscando…' : 'Buscar actualización'}</button>
+          </div>
+          {updMsg && <p className="muted" role="status">{updMsg}</p>}
+          <p className="muted settings-version">Versión {version}</p>
+        </div>
+      </div>
     </Modal>
   );
 }

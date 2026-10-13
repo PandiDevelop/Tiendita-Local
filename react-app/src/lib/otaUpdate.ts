@@ -10,13 +10,23 @@
 // una version vieja o falla), y los telefonos suspenden la app en segundo
 // plano. Por eso se reintenta: al volver a primer plano (resume del Capacitor
 // y visibilitychange) y con un loop cada 1 minuto, hasta que baja.
+//
+// Ademas del intento silencioso, checkForUpdate() permite disparar la
+// comprobacion a mano (desde Ajustes) y DEVUELVE que paso, para poder
+// diagnosticar en el propio telefono por que no llegaba una version.
 
 import { APP_VERSION } from './version';
+import { isNativeApp } from './nativeBack';
 
 type Updater = {
   download?: (opts: { url: string; version: string }) => Promise<{ id: string }>;
   set?: (opts: { id: string }) => Promise<void>;
   reload?: () => Promise<void>;
+};
+type ReadyUpdater = {
+  download: (opts: { url: string; version: string }) => Promise<{ id: string }>;
+  set: (opts: { id: string }) => Promise<void>;
+  reload: () => Promise<void>;
 };
 type CapgoGlobal = {
   isNativePlatform?: () => boolean;
@@ -28,6 +38,14 @@ const LATEST_URL = 'https://pandidevelop.github.io/Tiendita-Local/bundles/latest
 
 type LatestBundle = { version?: string; url?: string };
 
+// Resultado de una comprobacion de actualizacion (para el aviso de Ajustes).
+export type UpdateCheckResult =
+  | { kind: 'unsupported' } // navegador: la PWA se actualiza sola
+  | { kind: 'up-to-date'; current: string } // ya estamos al dia
+  | { kind: 'updated'; version: string } // se descargo y se va a aplicar (recarga)
+  | { kind: 'busy' } // ya habia una comprobacion en curso
+  | { kind: 'error'; message: string }; // fallo (red, servidor o plugin)
+
 function cmpVersions(a: string, b: string): number {
   const pa = a.split('.').map((n) => parseInt(n, 10) || 0);
   const pb = b.split('.').map((n) => parseInt(n, 10) || 0);
@@ -38,56 +56,80 @@ function cmpVersions(a: string, b: string): number {
   return 0;
 }
 
+function getCapacitor(): CapgoGlobal | undefined {
+  return (globalThis as unknown as { Capacitor?: CapgoGlobal }).Capacitor;
+}
+
+function getUpdater(): ReadyUpdater | null {
+  const updater = getCapacitor()?.Plugins?.CapacitorUpdater;
+  if (!updater?.download || !updater.set || !updater.reload) return null;
+  return updater as ReadyUpdater;
+}
+
 let checking = false;
 let lastCheck = 0;
 let appliedVersion = '';
 
-function trigger(): void {
-  const now = Date.now();
-  if (now - lastCheck < 8000) return;
-  lastCheck = now;
-  void applyOnce();
-}
-
-async function applyOnce(): Promise<void> {
-  if (checking) return;
+async function runCheck(): Promise<UpdateCheckResult> {
+  if (!isNativeApp()) return { kind: 'unsupported' };
+  if (checking) return { kind: 'busy' };
   checking = true;
   try {
-    const res = await fetch(LATEST_URL, { cache: 'no-store' });
-    if (!res.ok) return;
-    const latest = (await res.json()) as LatestBundle;
-    if (!latest.version || !latest.url) return;
-    if (cmpVersions(latest.version, APP_VERSION) <= 0) return;
-    if (appliedVersion === latest.version) return;
+    let res: Response;
+    try {
+      res = await fetch(LATEST_URL, { cache: 'no-store' });
+    } catch {
+      return { kind: 'error', message: 'no se pudo conectar con el servidor' };
+    }
+    if (!res.ok) return { kind: 'error', message: 'el servidor respondió ' + res.status };
 
-    const cap = (globalThis as unknown as { Capacitor?: CapgoGlobal }).Capacitor;
-    const updater = cap?.Plugins?.CapacitorUpdater;
-    if (!updater?.download || !updater.set || !updater.reload) return;
+    let latest: LatestBundle;
+    try {
+      latest = (await res.json()) as LatestBundle;
+    } catch {
+      return { kind: 'error', message: 'la respuesta del servidor no se pudo leer' };
+    }
+    if (!latest.version || !latest.url) return { kind: 'error', message: 'la respuesta del servidor está incompleta' };
+    if (cmpVersions(latest.version, APP_VERSION) <= 0) return { kind: 'up-to-date', current: APP_VERSION };
+    if (appliedVersion === latest.version) return { kind: 'up-to-date', current: latest.version };
 
-    const { id } = await updater.download({ url: latest.url, version: latest.version });
-    await updater.set({ id });
-    // set() ya aplica y recarga; este reload es idempotente por si el primer
-    // set no llego a recargar.
-    appliedVersion = latest.version;
-    await updater.reload();
-  } catch {
-    // Silencioso: si no hay red o algo falla, se continua con la version actual.
+    const updater = getUpdater();
+    if (!updater) return { kind: 'error', message: 'hay una versión nueva (' + latest.version + ') pero el actualizador aún no está listo' };
+
+    try {
+      const { id } = await updater.download({ url: latest.url, version: latest.version });
+      await updater.set({ id });
+      // set() ya aplica y recarga; el reload es idempotente por si el primer
+      // set no llego a recargar.
+      appliedVersion = latest.version;
+      await updater.reload?.();
+      return { kind: 'updated', version: latest.version };
+    } catch {
+      return { kind: 'error', message: 'se encontró la versión ' + latest.version + ' pero no se pudo aplicar' };
+    }
   } finally {
     checking = false;
   }
 }
 
-function initOtaUpdate(attempt = 0): void {
-  const cap = (globalThis as unknown as { Capacitor?: CapgoGlobal }).Capacitor;
-  if (!cap) return;
-  const native = typeof cap.isNativePlatform === 'function' ? cap.isNativePlatform() : !!cap.isNative;
-  if (!native) return;
+function trigger(): void {
+  const now = Date.now();
+  if (now - lastCheck < 8000) return;
+  lastCheck = now;
+  void runCheck();
+}
 
-  const updater = cap.Plugins?.CapacitorUpdater;
-  const download = updater?.download;
-  const set = updater?.set;
-  const reload = updater?.reload;
-  if (!download || !set || !reload) {
+// Comprobacion manual (Ajustes): no aplica el throttle entre intentos y
+// devuelve el resultado para poder mostrarlo.
+export function checkForUpdate(): Promise<UpdateCheckResult> {
+  lastCheck = Date.now();
+  return runCheck();
+}
+
+function initOtaUpdate(attempt = 0): void {
+  if (!isNativeApp()) return;
+
+  if (!getUpdater()) {
     // El plugin puede tardar un instante en estar listo; reintenta un poco.
     if (attempt < 15) window.setTimeout(() => initOtaUpdate(attempt + 1), 300);
     return;
@@ -96,7 +138,7 @@ function initOtaUpdate(attempt = 0): void {
   trigger();
   window.setInterval(trigger, 60_000);
   try {
-    cap.Plugins?.App?.addListener?.('appStateChange', (s) => { if (s.isActive) window.setTimeout(trigger, 1500); });
+    getCapacitor()?.Plugins?.App?.addListener?.('appStateChange', (s) => { if (s.isActive) window.setTimeout(trigger, 1500); });
   } catch { /* plugin App ausente: no es crítico */ }
   document.addEventListener('visibilitychange', () => {
     if (document.visibilityState === 'visible') window.setTimeout(trigger, 1500);
