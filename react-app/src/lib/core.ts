@@ -1663,13 +1663,9 @@ export function runMigrations(s: Store): boolean {
     const inv = s.inventory || {};
     const ids = new Set<string>([...s.products.map((p) => p.id), ...Object.keys(inv), ...Object.keys(soldMap)]);
     ids.forEach((id) => {
-      const curAvail = getAvailable(s, id);
-      // Initialize from computed if not set
-      if (!Object.prototype.hasOwnProperty.call(s.available || {}, id) && !Object.prototype.hasOwnProperty.call(s.stock || {}, id)) {
-        const computed = Math.max(0, Math.round(inv[id] || 0) - Math.round(soldMap[id] || 0));
-        setAvailable(s, id, computed);
-        changed = true;
-      }
+      const computed = Math.max(0, Math.round(inv[id] || 0) - Math.round(soldMap[id] || 0));
+      setAvailable(s, id, computed);
+      changed = true;
     });
     s.stockMigrated = true;
     changed = true;
