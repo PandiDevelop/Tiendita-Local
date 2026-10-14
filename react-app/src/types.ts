@@ -279,6 +279,9 @@ export interface Store {
   categoryPricing?: Record<string, CategoryPricing>;
   suppliers?: Record<string, SupplierInfo>;
   inventory: Record<string, number>;
+  stock?: Record<string, number>;
+  // disponible calculado o independiente (usa stock como fuente primaria)
+  available?: Record<string, number>;
   notes: string;
   noteLog: NoteEntry[];
   noteBoard: Note[];
@@ -301,6 +304,7 @@ export interface Store {
   salesShifted1110?: boolean;
   // Correccion puntual de Sakoco: la venta que quedo en 13/10/2026 pasa al 12/10/2026.
   salesShifted1210?: boolean;
+  stockMigrated?: boolean;
 }
 
 export type Tab = 'inicio' | 'productos' | 'ganancias' | 'notas' | 'empleados' | 'eventos';

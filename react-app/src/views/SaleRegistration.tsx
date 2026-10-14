@@ -223,11 +223,17 @@ export function SaleRegistration({ onClose }: { onClose: () => void }) {
         // El borrador de una venta nueva en curso queda intacto.
         const idx = st.sales.findIndex((z) => z.id === editingSaleId);
         if (idx >= 0) {
+          const oldSale = st.sales[idx];
+          if (oldSale) {
+            oldSale.items.forEach((oi) => { if (oi.qty) incAvailable(st, oi.productId, oi.qty); });
+          }
           st.sales[idx] = { ...st.sales[idx], employee: emp, items: JSON.parse(JSON.stringify(items)) };
+          items.forEach((it) => decAvailable(st, it.productId, it.qty));
         }
         x.editingSaleId = null;
       } else {
         st.sales.push({ id: uid(), by: syncClientId(), date: today(), time: now.toTimeString().slice(0, 5), at: now.getTime(), employee: emp, items: JSON.parse(JSON.stringify(items)), closed: false, event: ev ? ev.name : undefined });
+        items.forEach((it) => decAvailable(st, it.productId, it.qty));
         x.saleDraft = null;
       }
     });

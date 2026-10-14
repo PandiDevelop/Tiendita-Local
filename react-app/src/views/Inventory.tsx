@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import type { PointerEvent as ReactPointerEvent } from 'react';
 import { useStore } from '../store';
-import { DEFAULT_PRODUCT_IMAGE, esc, inventorySold, adoptInvLog, syncName, groupedByCategory, storeCats, reorderCategoryProducts, productTags, recordSupplierPrice, getSupplierCost, getSupplierInfo, setSupplierCost, ensureCost, money } from '../lib/core';
+import { DEFAULT_PRODUCT_IMAGE, esc, inventorySold, adoptInvLog, syncName, groupedByCategory, storeCats, reorderCategoryProducts, productTags, recordSupplierPrice, getSupplierCost, getSupplierInfo, setSupplierCost, ensureCost, money, getAvailable } from '../lib/core';
 import { customConfirm } from '../lib/dialog';
 import { GearMenu, Image, Modal, PencilIcon, CargoIcon, CaretIcon } from '../ui';
 import { notifyStorePush } from '../lib/push';
@@ -295,7 +295,7 @@ export function Inventory() {
                             const has = base[p.id] != null;
                             const buy = has ? Math.round(base[p.id]) : null;
                             const soldQty = sold[p.id] || 0;
-                            const avail = has ? Math.max(0, buy! - soldQty) : null;
+                            const avail = has ? getAvailable(s, p.id) : getAvailable(s, p.id);
                             return (
                               <tr key={p.id} data-pid={p.id} className={prodDrag?.pid === p.id ? 'dragging' : ''}>
                                 <td className="drag-cell">{!searching && <button type="button" className="icon-btn drag-handle" title="Arrastrar para reordenar" onPointerDown={(e) => startProdDrag(e, g.name, p.id, g.list)}>⠿</button>}</td>

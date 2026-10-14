@@ -418,6 +418,7 @@ export function adoptInvLog(s: Store, productId: string, delta: number, supplier
     costId: costId || '',
   });
   s.inventory[productId] = total;
+  incAvailable(s, productId, d);
 }
 
 export function mergeInvLog(a: InventoryLogEntry[] | undefined, b: InventoryLogEntry[]): InventoryLogEntry[] {
@@ -427,6 +428,47 @@ export function mergeInvLog(a: InventoryLogEntry[] | undefined, b: InventoryLogE
   return Array.from(map.values())
     .sort((x, y) => (y.date || '').localeCompare(x.date || '') || (y.time || '').localeCompare(x.time || ''));
 }
+
+
+export function getAvailable(s: Store, productId: string): number {
+  s.available = s.available || {};
+  s.stock = s.stock || {};
+  if (Object.prototype.hasOwnProperty.call(s.available, productId)) {
+    const val = s.available[productId];
+    if (val !== null && val !== undefined && !isNaN(Number(val))) {
+      return Math.max(0, Math.round(Number(val)));
+    }
+  }
+  if (Object.prototype.hasOwnProperty.call(s.stock, productId)) {
+    const val = s.stock[productId];
+    if (val !== null && val !== undefined && !isNaN(Number(val))) {
+      return Math.max(0, Math.round(Number(val)));
+    }
+  }
+  const inv = Math.round((s.inventory || {})[productId] || 0);
+  const soldv = Math.round((inventorySold(s))[productId] || 0);
+  return Math.max(0, inv - soldv);
+}
+
+export function setAvailable(s: Store, productId: string, qty: number): void {
+  s.available = s.available || {};
+  s.stock = s.stock || {};
+  const v = Math.max(0, Math.round(qty));
+  s.available[productId] = v;
+  s.stock[productId] = v;
+}
+
+export function incAvailable(s: Store, productId: string, delta: number): void {
+  const cur = getAvailable(s, productId);
+  setAvailable(s, productId, cur + Math.round(delta));
+}
+
+export function decAvailable(s: Store, productId: string, delta: number): void {
+  // delta positive means subtract delta
+  const cur = getAvailable(s, productId);
+  setAvailable(s, productId, cur - Math.round(delta));
+}
+
 
 export function toInvLogArr(src: unknown): InventoryLogEntry[] {
   if (Array.isArray(src)) return JSON.parse(JSON.stringify(src));
@@ -1515,7 +1557,7 @@ export function productLedger(s: Store): Record<string, ProductLedgerRow> {
       // Disponible = lo adquirido menos lo ya vendido (mismo calculo que la
       // pestaña Inventario). Antes se mostraba el inventario crudo, asi que el
       // catálogo no descontaba las ventas.
-      available: Math.max(0, Math.round(inv[id] || 0) - (sold[id] || 0)),
+      available: getAvailable(s, id),
       revenue: rev,
       cost: cst,
       profit: rev - cst,
@@ -1614,6 +1656,22 @@ export function runMigrations(s: Store): boolean {
       });
     }
     s.salesShifted1210 = true;
+    changed = true;
+  }
+  if (!s.stockMigrated) {
+    const soldMap = inventorySold(s);
+    const inv = s.inventory || {};
+    const ids = new Set<string>([...s.products.map((p) => p.id), ...Object.keys(inv), ...Object.keys(soldMap)]);
+    ids.forEach((id) => {
+      const curAvail = getAvailable(s, id);
+      // Initialize from computed if not set
+      if (!Object.prototype.hasOwnProperty.call(s.available || {}, id) && !Object.prototype.hasOwnProperty.call(s.stock || {}, id)) {
+        const computed = Math.max(0, Math.round(inv[id] || 0) - Math.round(soldMap[id] || 0));
+        setAvailable(s, id, computed);
+        changed = true;
+      }
+    });
+    s.stockMigrated = true;
     changed = true;
   }
   return changed;

@@ -40,6 +40,7 @@ export function History({ embedded = false }: { embedded?: boolean }) {
         const st = d.stores.find((y) => y.id === s.id);
         if (!st) return;
         // Unica via que borra una venta tambien en la nube (ver markSaleDeleted).
+        x.items.forEach((oi) => { if (oi.qty) incAvailable(st, oi.productId, oi.qty); });
         markSaleDeleted(st, x.id);
         st.sales = st.sales.filter((z) => z.id !== x.id);
       });

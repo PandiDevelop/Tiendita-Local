@@ -341,7 +341,7 @@ export function createSync(
       name: s.name, image: s.image, products: s.products, sales: s.sales,
       categories: s.categories || [], categoryPricing: s.categoryPricing || {},
       notes: s.notes || '', noteLog: s.noteLog || [],
-      invLog: s.invLog || [], inventory: s.inventory || {},
+      invLog: s.invLog || [], inventory: s.inventory || {}, stock: s.stock || {}, available: s.available || {},
       noteBoard: s.noteBoard || [],
       costs: s.costs || [],
     }));
@@ -477,6 +477,8 @@ export function createSync(
       deletedNoteIdsOf(s).forEach((id) => { if (!currentNoteIds.has(id)) noteBoardPatch[id] = deleteField(); });
       if (Object.keys(noteBoardPatch).length) main.noteBoard = noteBoardPatch;
       main.inventory = s.inventory || {};
+      if (s.stock) main.stock = s.stock;
+      if (s.available) main.available = s.available;
       if (!s.createdBy || s.createdBy === cid()) { main.name = s.name; main.image = s.image; }
       // Indice de membresía (array de ids, incluido este dispositivo o la
       // cuenta): permite a la nube contestar "¿en qué tiendas está el usuario
@@ -887,6 +889,21 @@ export function applyRemote(getState: () => AppState, mutate: (fn: (d: AppState)
         st.inventory![pid] = st.inventory![pid] == null || n > st.inventory![pid] ? n : st.inventory![pid];
       });
     }
+    if (remote.available && typeof remote.available === 'object') {
+      st.available = st.available || {};
+      Object.keys(remote.available).forEach((pid) => {
+        const n = Math.round(Number((remote.available as any)[pid]) || 0);
+        st.available![pid] = st.available![pid] == null || n > st.available![pid] ? n : st.available![pid];
+      });
+    }
+    if (remote.stock && typeof remote.stock === 'object') {
+      st.stock = st.stock || {};
+      Object.keys(remote.stock).forEach((pid) => {
+        const n = Math.round(Number((remote.stock as any)[pid]) || 0);
+        st.stock![pid] = st.stock![pid] == null || n > st.stock![pid] ? n : st.stock![pid];
+      });
+    }
+
     const metaOk = !remote.createdBy || (remote.updatedBy && String(remote.updatedBy).indexOf(remote.createdBy as string) === 0);
     if (metaOk && remote.name && remote.name !== st.name) st.name = remote.name as string;
     if (metaOk && remote.image && remote.image !== st.image) st.image = remote.image as string;
