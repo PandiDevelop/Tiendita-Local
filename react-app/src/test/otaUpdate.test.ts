@@ -62,4 +62,44 @@ describe('Actualización OTA (comprobación manual)', () => {
     expect(r.kind).toBe('error');
     if (r.kind === 'error') expect(r.message).toContain('98.0.0');
   });
+
+  it('si el bundle en ejecución ya es la última, no reinstala (evita el bucle)', async () => {
+    const download = vi.fn();
+    const set = vi.fn();
+    installCapacitor(true, { download, set, current: vi.fn().mockResolvedValue({ bundle: { version: '50.0.0' } }) });
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue(jsonResponse({ version: '50.0.0', url: 'https://x/latest.zip' })));
+    const r = await checkForUpdate();
+    expect(r).toEqual({ kind: 'up-to-date', current: '50.0.0' });
+    expect(download).not.toHaveBeenCalled();
+    expect(set).not.toHaveBeenCalled();
+  });
+
+  it('si falla la descarga lo explica con el detalle', async () => {
+    const download = vi.fn().mockRejectedValue(new Error('boom-42'));
+    const set = vi.fn();
+    installCapacitor(true, { download, set, current: vi.fn().mockResolvedValue({ bundle: { version: '1.0.0' } }) });
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue(jsonResponse({ version: '51.0.0', url: 'https://x/latest.zip' })));
+    const r = await checkForUpdate();
+    expect(r.kind).toBe('error');
+    if (r.kind === 'error') {
+      expect(r.message).toContain('51.0.0');
+      expect(r.message).toContain('descarga');
+      expect(r.message).toContain('boom-42');
+    }
+    expect(set).not.toHaveBeenCalled();
+  });
+
+  it('si falla la activación lo explica con el detalle', async () => {
+    const download = vi.fn().mockResolvedValue({ id: 'b9' });
+    const set = vi.fn().mockRejectedValue(new Error('reload failed'));
+    installCapacitor(true, { download, set, current: vi.fn().mockResolvedValue({ bundle: { version: '1.0.0' } }) });
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue(jsonResponse({ version: '52.0.0', url: 'https://x/latest.zip' })));
+    const r = await checkForUpdate();
+    expect(r.kind).toBe('error');
+    if (r.kind === 'error') {
+      expect(r.message).toContain('52.0.0');
+      expect(r.message).toContain('activar');
+      expect(r.message).toContain('reload failed');
+    }
+  });
 });

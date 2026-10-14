@@ -120,9 +120,12 @@ export function ProductForm({ editingId, onClose }: { editingId?: string; onClos
           } else {
             // Editar: ajusta las existencias por la diferencia con lo que
             // había al abrir el formulario (adoptInvLog con el delta).
-            const cur = Math.round(st.inventory[editingId] || 0);
-            const delta = q - cur;
-            if (delta !== 0) adoptInvLog(st, editingId, delta, sup, syncName());
+            const curAcq = Math.round(st.inventory[editingId] || 0);
+            setAvailable(st, editingId, q);
+            if (q > curAcq) {
+              const delta = q - curAcq;
+              if (delta !== 0) adoptInvLog(st, editingId, delta, sup, syncName());
+            }
           }
         }
       }

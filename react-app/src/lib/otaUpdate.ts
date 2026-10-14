@@ -22,11 +22,12 @@ type Updater = {
   download?: (opts: { url: string; version: string }) => Promise<{ id: string }>;
   set?: (opts: { id: string }) => Promise<void>;
   reload?: () => Promise<void>;
+  current?: () => Promise<{ bundle?: { version?: string } }>;
 };
 type ReadyUpdater = {
   download: (opts: { url: string; version: string }) => Promise<{ id: string }>;
   set: (opts: { id: string }) => Promise<void>;
-  reload: () => Promise<void>;
+  current?: () => Promise<{ bundle?: { version?: string } }>;
 };
 type CapgoGlobal = {
   isNativePlatform?: () => boolean;
@@ -62,8 +63,34 @@ function getCapacitor(): CapgoGlobal | undefined {
 
 function getUpdater(): ReadyUpdater | null {
   const updater = getCapacitor()?.Plugins?.CapacitorUpdater;
-  if (!updater?.download || !updater.set || !updater.reload) return null;
+  if (!updater?.download || !updater.set) return null;
   return updater as ReadyUpdater;
+}
+
+function errText(e: unknown): string {
+  if (e instanceof Error) return e.message;
+  if (typeof e === 'string') return e;
+  try {
+    return JSON.stringify(e);
+  } catch {
+    return String(e);
+  }
+}
+
+// Version del bundle que se ESTA ejecutando ahora mismo (la que recuerda el
+// plugin), no la compilada en el APK: tras un OTA la APP_VERSION compilada no
+// cambia, asi que comparar contra ella volveria a "aplicar" la misma version en
+// bucle. Si el plugin no expone current(), se cae de vuelta a APP_VERSION.
+async function getRunningVersion(updater: ReadyUpdater): Promise<string> {
+  if (!updater.current) return APP_VERSION;
+  try {
+    const info = await updater.current();
+    const v = info?.bundle?.version;
+    if (typeof v === 'string' && v) return v;
+  } catch {
+    /* plugin viejo o sin permiso: usamos la compilada */
+  }
+  return APP_VERSION;
 }
 
 let checking = false;
@@ -90,23 +117,31 @@ async function runCheck(): Promise<UpdateCheckResult> {
       return { kind: 'error', message: 'la respuesta del servidor no se pudo leer' };
     }
     if (!latest.version || !latest.url) return { kind: 'error', message: 'la respuesta del servidor está incompleta' };
-    if (cmpVersions(latest.version, APP_VERSION) <= 0) return { kind: 'up-to-date', current: APP_VERSION };
-    if (appliedVersion === latest.version) return { kind: 'up-to-date', current: latest.version };
 
     const updater = getUpdater();
     if (!updater) return { kind: 'error', message: 'hay una versión nueva (' + latest.version + ') pero el actualizador aún no está listo' };
 
+    const running = await getRunningVersion(updater);
+    if (cmpVersions(latest.version, running) <= 0) return { kind: 'up-to-date', current: running };
+    if (appliedVersion === latest.version) return { kind: 'up-to-date', current: latest.version };
+
+    let id: string;
     try {
-      const { id } = await updater.download({ url: latest.url, version: latest.version });
-      await updater.set({ id });
-      // set() ya aplica y recarga; el reload es idempotente por si el primer
-      // set no llego a recargar.
-      appliedVersion = latest.version;
-      await updater.reload?.();
-      return { kind: 'updated', version: latest.version };
-    } catch {
-      return { kind: 'error', message: 'se encontró la versión ' + latest.version + ' pero no se pudo aplicar' };
+      const bundle = await updater.download({ url: latest.url, version: latest.version });
+      id = bundle.id;
+    } catch (e) {
+      return { kind: 'error', message: 'se encontró la versión ' + latest.version + ' pero falló la descarga: ' + errText(e) };
     }
+
+    // set() aplica y recarga, y DESTRUYE el contexto JS actual: no hay que
+    // ejecutar nada fiable despues. Por eso appliedVersion se marca antes.
+    appliedVersion = latest.version;
+    try {
+      await updater.set({ id });
+    } catch (e) {
+      return { kind: 'error', message: 'se descargó la versión ' + latest.version + ' pero no se pudo activar: ' + errText(e) };
+    }
+    return { kind: 'updated', version: latest.version };
   } finally {
     checking = false;
   }
