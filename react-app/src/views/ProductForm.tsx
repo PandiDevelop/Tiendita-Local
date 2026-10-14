@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { useStore } from '../store';
-import { DEFAULT_PRODUCT_IMAGE, DEFAULT_PRODUCT_TAG, esc, compressImage, storeCats, adoptInvLog, setCategoryPricing, insertProductAlphabetically, insertCatSorted, uid, syncClientId, syncName, productTags, nextSuppTag, recordSupplierPrice, setSupplierCost, ensureCost, promoText } from '../lib/core';
+import { DEFAULT_PRODUCT_IMAGE, DEFAULT_PRODUCT_TAG, esc, compressImage, storeCats, adoptInvLog, setCategoryPricing, insertProductAlphabetically, insertCatSorted, uid, syncClientId, syncName, productTags, nextSuppTag, recordSupplierPrice, setSupplierCost, ensureCost, promoText, setAvailable } from '../lib/core';
 import { notifyStorePush } from '../lib/push';
 import { ImagePicker, Modal, CategorySuggest, SaveIcon, CloseIcon } from '../ui';
 
@@ -15,7 +15,7 @@ export function ProductForm({ editingId, onClose }: { editingId?: string; onClos
   const [cost, setCost] = useState(p?.cost != null ? String(p.cost) : '');
   const [supplier, setSupplier] = useState(p?.supplier || '');
   const [image, setImage] = useState(p?.image || '');
-  // Unidades en existencias: en un producto nuevo es lo que se recibe hoy; al
+  // Cargamento Inicial: en un producto nuevo es lo que se recibe hoy; al
   // editar arranca con lo que hay y guardar ajusta la diferencia (delta).
   const [qty, setQty] = useState(editingId ? String(Math.round((s.inventory || {})[editingId] || 0)) : '');
   // Los tags son opcionales y editables (hasta 3). En un producto nuevo el
@@ -116,6 +116,7 @@ export function ProductForm({ editingId, onClose }: { editingId?: string; onClos
           if (!editingId) {
             const pid = st.products[st.products.length - 1].id;
             adoptInvLog(st, pid, q, 'Catálogo', undefined, undefined, cst > 0 ? cst : undefined, cid);
+            setAvailable(st, pid, q);
           } else {
             // Editar: ajusta las existencias por la diferencia con lo que
             // había al abrir el formulario (adoptInvLog con el delta).
@@ -197,9 +198,9 @@ export function ProductForm({ editingId, onClose }: { editingId?: string; onClos
       <div className="field"><label>Imagen del producto</label>
         <ImagePicker id="product-image" src={image || DEFAULT_PRODUCT_IMAGE} cls="image-preview product-preview" hint="Foto o logo opcional del producto." onFile={onFile} />
       </div>
-      <div className="field"><label>Unidades en existencias</label>
+      <div className="field"><label>Cargamento Inicial</label>
         <input min={0} step={1} type="number" inputMode="numeric" placeholder="0" value={qty} onChange={(e) => setQty(e.target.value)} />
-        <p className="muted">{editingId ? 'Lo que hay hoy. Al guardar se ajustan las existencias por la diferencia.' : 'Lo que recibes al crear el producto.'}</p>
+        <p className="muted">{editingId ? 'Unidades adquiridas totales. Al guardar se ajusta la diferencia. Disponible se puede editar en Catálogo/Inventario.' : 'Unidades que tienes al registrar el producto (se copiarán a unidades disponibles).'}</p>
       </div>
       <div className="field"><label>Promociones <span className="muted">(se configuran en la categoría)</span></label>
         {(cat && s.categoryPricing && s.categoryPricing[cat] && s.categoryPricing[cat].promos && s.categoryPricing[cat].promos.length) ? (
