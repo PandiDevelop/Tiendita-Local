@@ -1669,6 +1669,17 @@ export function runMigrations(s: Store): boolean {
     });
     s.stockMigrated = true;
     changed = true;
+  } else {
+    // Always ensure consistency for existing stores that might have bad values
+    const soldMap = inventorySold(s);
+    const inv = s.inventory || {};
+    const ids = new Set<string>([...s.products.map((p) => p.id), ...Object.keys(inv), ...Object.keys(soldMap)]);
+    ids.forEach((id) => {
+      const computed = Math.max(0, Math.round(inv[id] || 0) - Math.round(soldMap[id] || 0));
+      // For now, force sync to computed to fix inconsistencies
+      setAvailable(s, id, computed);
+      changed = true;
+    });
   }
   return changed;
 }
