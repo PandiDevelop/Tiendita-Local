@@ -1658,28 +1658,26 @@ export function runMigrations(s: Store): boolean {
     s.salesShifted1210 = true;
     changed = true;
   }
-  if (!s.stockMigrated) {
-    const soldMap = inventorySold(s);
-    const inv = s.inventory || {};
-    const ids = new Set<string>([...s.products.map((p) => p.id), ...Object.keys(inv), ...Object.keys(soldMap)]);
-    ids.forEach((id) => {
-      const computed = Math.max(0, Math.round(inv[id] || 0) - Math.round(soldMap[id] || 0));
-      setAvailable(s, id, computed);
-      changed = true;
-    });
-    s.stockMigrated = true;
+  // Re-sincroniza available = adquirido - vendido siempre (corrige datos antiguos)
+  const soldMap = inventorySold(s);
+  const inv = s.inventory || {};
+  const ids = new Set<string>([...s.products.map((p) => p.id), ...Object.keys(inv), ...Object.keys(soldMap)]);
+  ids.forEach((id) => {
+    const computed = Math.max(0, Math.round(inv[id] || 0) - Math.round(soldMap[id] || 0));
+    setAvailable(s, id, computed);
     changed = true;
-  } else {
-    // Always ensure consistency for existing stores that might have bad values
-    const soldMap = inventorySold(s);
-    const inv = s.inventory || {};
-    const ids = new Set<string>([...s.products.map((p) => p.id), ...Object.keys(inv), ...Object.keys(soldMap)]);
-    ids.forEach((id) => {
-      const computed = Math.max(0, Math.round(inv[id] || 0) - Math.round(soldMap[id] || 0));
-      // For now, force sync to computed to fix inconsistencies
-      setAvailable(s, id, computed);
-      changed = true;
-    });
+  });
+  // Re-sincroniza available = adquirido - vendido siempre (corrige datos antiguos)
+  const soldMap = inventorySold(s);
+  const inv = s.inventory || {};
+  const ids = new Set<string>([...s.products.map((p) => p.id), ...Object.keys(inv), ...Object.keys(soldMap)]);
+  ids.forEach((id) => {
+    const computed = Math.max(0, Math.round(inv[id] || 0) - Math.round(soldMap[id] || 0));
+    setAvailable(s, id, computed);
+    changed = true;
+  });
+  s.stockMigrated = true;
   }
+
   return changed;
 }
