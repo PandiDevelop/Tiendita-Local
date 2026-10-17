@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import type { AppState, Product, Store, CostEntry, SaleItem, Sale } from '../types';
-import { makeDraft, normalizeStore, addNote, addNoteMsg, deleteNoteMsg, adoptInvLog, sortByOrder, uid, costFor, priceFor, total, costTotal, profitTotal, setCategoryPricing, groupedByCategory, syncClientId, toggleNotePin, ensureCost, findCostId, mergeCostEntries, runMigrations } from '../lib/core';
+import { makeDraft, normalizeStore, addNote, addNoteMsg, deleteNoteMsg, adoptInvLog, sortByOrder, uid, costFor, priceFor, total, costTotal, profitTotal, setCategoryPricing, groupedByCategory, syncClientId, toggleNotePin, ensureCost, findCostId, mergeCostEntries, runMigrations, getAvailable, setAvailable } from '../lib/core';
 import { applyRemote } from '../lib/sync';
 import { buildBackup, parseBackup, mergeBackupInto, backupFileName } from '../lib/backup';
 
@@ -86,6 +86,9 @@ function makePayload(st: Store) {
     name: st.name,
     image: st.image,
     inventory: st.inventory,
+    stock: st.stock,
+    available: st.available,
+    stockUpdatedAt: st.stockUpdatedAt,
     invLog,
     noteLog,
     noteBoard,
@@ -128,6 +131,37 @@ describe('sync de inventario y notas entre dos dispositivos', () => {
     apply(a.st, b);
 
     expect(b.st.inventory[pid]).toBe(5);
+  });
+
+  it('bajar el disponible en A se propaga a B (gana el mas reciente, no el mayor)', () => {
+    const a = device('A');
+    const b = device('B');
+    const pid = addProduct(a.st, 'Cereal', 5000);
+    b.st.products.push({ ...a.st.products[0], id: pid });
+    // A tenia 10 y el usuario lo baja a 3 (p.ej. desde Catálogo/Inventario).
+    setAvailable(a.st, pid, 10);
+    setAvailable(a.st, pid, 3);
+
+    apply(a.st, b);
+
+    expect(getAvailable(b.st, pid)).toBe(3);
+  });
+
+  it('un snapshot viejo (mas alto) de A no revierte el disponible bajado localmente en B', () => {
+    const a = device('A');
+    const b = device('B');
+    const pid = addProduct(a.st, 'Cereal', 5000);
+    b.st.products.push({ ...a.st.products[0], id: pid });
+    // B bajo su disponible hace poco: es la edicion mas nueva.
+    setAvailable(b.st, pid, 4);
+    b.st.stockUpdatedAt = 2000;
+    // A trae un valor viejo y mas alto.
+    setAvailable(a.st, pid, 50);
+    a.st.stockUpdatedAt = 1000;
+
+    apply(a.st, b);
+
+    expect(getAvailable(b.st, pid)).toBe(4);
   });
 
   it('las notas publicadas por A llegan a B con autor', () => {
@@ -1044,6 +1078,15 @@ describe('runMigrations: salesShifted1110 (solo Sakoco)', () => {
     expect(sak.sales[0].date).toBe('2026-10-11');
   });
 
+  it('es idempotente: correrla dos veces deja la fecha en 11/10', () => {
+    const sak = newStore('sak2');
+    sak.syncKey = 'stb1e32fe3';
+    sak.sales = [sale('v1', '2026-10-13')];
+    runMigrations(sak);
+    runMigrations(sak);
+    expect(sak.sales[0].date).toBe('2026-10-11');
+  });
+
   it('salesShifted1210: en un equipo ya migrado, la venta que quedó en 13/10 pasa a 12/10', () => {
     const sak = newStore('sak3');
     sak.syncKey = 'stb1e32fe3';
@@ -1051,5 +1094,38 @@ describe('runMigrations: salesShifted1110 (solo Sakoco)', () => {
     sak.sales = [sale('v1', '2026-10-13')];
     runMigrations(sak);
     expect(sak.sales[0].date).toBe('2026-10-12');
+  });
+});
+
+describe('runMigrations: stockRealigned (corrige disponible de productos viejos)', () => {
+  it('en un equipo ya migrado (stockMigrated=true) re-alinea available = adquirido - vendido', () => {
+    const st = newStore('sak');
+    const pid = 'p1';
+    st.products = [{ id: pid, name: 'Chicle', price: 1000, image: '', promos: [], category: '' }];
+    st.inventory = { [pid]: 30 };
+    st.sales = [{ id: 'v1', date: '2026-10-10', time: '10:00', employee: 'Pandi', closed: true, items: [{ productId: pid, qty: 12, price: 1000, promotionId: null }] }];
+    // Estado "roto": available quedo en un valor que no coincide.
+    st.available = { [pid]: 999 };
+    st.stockMigrated = true; // ya se habia corrido la migracion vieja
+
+    runMigrations(st);
+
+    expect(getAvailable(st, pid)).toBe(18); // 30 - 12
+    expect(st.inventory[pid]).toBe(30); // no se toca lo adquirido
+  });
+
+  it('es idempotente: no reescribe ni vuelve a correr tras marcar stockRealigned', () => {
+    const st = newStore('sak2');
+    const pid = 'p1';
+    st.products = [{ id: pid, name: 'Chicle', price: 1000, image: '', promos: [], category: '' }];
+    st.inventory = { [pid]: 30 };
+    st.available = { [pid]: 999 };
+
+    runMigrations(st);
+    expect(st.stockRealigned).toBe(true);
+    // Una edicion manual posterior a available no debe revertirse en el siguiente arranque.
+    setAvailable(st, pid, 5);
+    runMigrations(st);
+    expect(getAvailable(st, pid)).toBe(5);
   });
 });

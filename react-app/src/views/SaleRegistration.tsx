@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { useStore } from '../store';
-import { DEFAULT_PRODUCT_IMAGE, activeEvent, catLabel, findActivePromo, money, productPromos, saleCatsOf, saleUnitPrice, shortTag, sortProducts, syncClientId, syncName, today, uid, productTags, ensureCost } from '../lib/core';
+import { DEFAULT_PRODUCT_IMAGE, activeEvent, catLabel, findActivePromo, money, productPromos, saleCatsOf, saleUnitPrice, shortTag, sortProducts, syncClientId, syncName, today, uid, productTags, ensureCost, incAvailable, decAvailable } from '../lib/core';
 import { notifyStorePush } from '../lib/push';
 import { Dropdown } from '../Dropdown';
 import { CloseIcon, Image, Modal, ReceiptIcon, UndoIcon } from '../ui';

@@ -342,6 +342,7 @@ export function createSync(
       categories: s.categories || [], categoryPricing: s.categoryPricing || {},
       notes: s.notes || '', noteLog: s.noteLog || [],
       invLog: s.invLog || [], inventory: s.inventory || {}, stock: s.stock || {}, available: s.available || {},
+      stockUpdatedAt: s.stockUpdatedAt || 0,
       noteBoard: s.noteBoard || [],
       costs: s.costs || [],
     }));
@@ -479,6 +480,7 @@ export function createSync(
       main.inventory = s.inventory || {};
       if (s.stock) main.stock = s.stock;
       if (s.available) main.available = s.available;
+      if (s.stockUpdatedAt) main.stockUpdatedAt = s.stockUpdatedAt;
       if (!s.createdBy || s.createdBy === cid()) { main.name = s.name; main.image = s.image; }
       // Indice de membresía (array de ids, incluido este dispositivo o la
       // cuenta): permite a la nube contestar "¿en qué tiendas está el usuario
@@ -889,19 +891,44 @@ export function applyRemote(getState: () => AppState, mutate: (fn: (d: AppState)
         st.inventory![pid] = st.inventory![pid] == null || n > st.inventory![pid] ? n : st.inventory![pid];
       });
     }
-    if (remote.available && typeof remote.available === 'object') {
-      st.available = st.available || {};
-      Object.keys(remote.available).forEach((pid) => {
-        const n = Math.round(Number((remote.available as any)[pid]) || 0);
-        st.available![pid] = st.available![pid] == null || n > st.available![pid] ? n : st.available![pid];
-      });
-    }
-    if (remote.stock && typeof remote.stock === 'object') {
-      st.stock = st.stock || {};
-      Object.keys(remote.stock).forEach((pid) => {
-        const n = Math.round(Number((remote.stock as any)[pid]) || 0);
-        st.stock![pid] = st.stock![pid] == null || n > st.stock![pid] ? n : st.stock![pid];
-      });
+    // available/stock ya no se unen por el mayor (eso impedia BAJAR el
+    // disponible: el remoto viejo, mas alto, volvia). Ahora gana el lado con
+    // stockUpdatedAt mas reciente (last-write-wins); si el remoto es mas nuevo
+    // se adopta su mapa completo, y si el local es mas nuevo se conserva el
+    // local pero se rellenan los productos que aun no existan aqui.
+    const remoteStockTs = Math.round(Number((remote as any).stockUpdatedAt) || 0);
+    const localStockTs = Math.round(Number(st.stockUpdatedAt) || 0);
+    const remoteAvailable = remote.available && typeof remote.available === 'object' ? remote.available as Record<string, unknown> : null;
+    const remoteStockMap = remote.stock && typeof remote.stock === 'object' ? remote.stock as Record<string, unknown> : null;
+    if (remoteStockTs >= localStockTs) {
+      if (remoteAvailable) {
+        st.available = {};
+        Object.keys(remoteAvailable).forEach((pid) => {
+          const n = Math.round(Number(remoteAvailable[pid]) || 0);
+          st.available![pid] = Math.max(0, n);
+        });
+      }
+      if (remoteStockMap) {
+        st.stock = {};
+        Object.keys(remoteStockMap).forEach((pid) => {
+          const n = Math.round(Number(remoteStockMap[pid]) || 0);
+          st.stock![pid] = Math.max(0, n);
+        });
+      }
+      st.stockUpdatedAt = remoteStockTs;
+    } else {
+      if (remoteAvailable) {
+        st.available = st.available || {};
+        Object.keys(remoteAvailable).forEach((pid) => {
+          if (st.available![pid] == null) st.available![pid] = Math.max(0, Math.round(Number(remoteAvailable[pid]) || 0));
+        });
+      }
+      if (remoteStockMap) {
+        st.stock = st.stock || {};
+        Object.keys(remoteStockMap).forEach((pid) => {
+          if (st.stock![pid] == null) st.stock![pid] = Math.max(0, Math.round(Number(remoteStockMap[pid]) || 0));
+        });
+      }
     }
 
     const metaOk = !remote.createdBy || (remote.updatedBy && String(remote.updatedBy).indexOf(remote.createdBy as string) === 0);

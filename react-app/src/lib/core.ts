@@ -456,6 +456,9 @@ export function setAvailable(s: Store, productId: string, qty: number): void {
   const v = Math.max(0, Math.round(qty));
   s.available[productId] = v;
   s.stock[productId] = v;
+  // Marca local del cambio para que el sync resuelva available/stock por
+  // "gana el mas reciente" (no por el mayor), permitiendo bajar el disponible.
+  s.stockUpdatedAt = Date.now();
 }
 
 export function incAvailable(s: Store, productId: string, delta: number): void {
@@ -1658,26 +1661,22 @@ export function runMigrations(s: Store): boolean {
     s.salesShifted1210 = true;
     changed = true;
   }
-  // Re-sincroniza available = adquirido - vendido siempre (corrige datos antiguos)
-  const soldMap = inventorySold(s);
-  const inv = s.inventory || {};
-  const ids = new Set<string>([...s.products.map((p) => p.id), ...Object.keys(inv), ...Object.keys(soldMap)]);
-  ids.forEach((id) => {
-    const computed = Math.max(0, Math.round(inv[id] || 0) - Math.round(soldMap[id] || 0));
-    setAvailable(s, id, computed);
+  // Correccion unica (flag nuevo para que corra aun si stockMigrated ya era true):
+  // deja available = adquirido - vendido sin tocar las cantidades adquiridas.
+  // Despues de esto, available vuelve a ser independiente (solo cambia con
+  // ventas, cargamentos y ediciones manuales).
+  if (!s.stockRealigned) {
+    const soldMap = inventorySold(s);
+    const inv = s.inventory || {};
+    const ids = new Set<string>([...s.products.map((p) => p.id), ...Object.keys(inv), ...Object.keys(soldMap)]);
+    ids.forEach((id) => {
+      const computed = Math.max(0, Math.round(inv[id] || 0) - Math.round(soldMap[id] || 0));
+      setAvailable(s, id, computed);
+      changed = true;
+    });
+    s.stockRealigned = true;
     changed = true;
-  });
-  // Re-sincroniza available = adquirido - vendido siempre (corrige datos antiguos)
-  const soldMap = inventorySold(s);
-  const inv = s.inventory || {};
-  const ids = new Set<string>([...s.products.map((p) => p.id), ...Object.keys(inv), ...Object.keys(soldMap)]);
-  ids.forEach((id) => {
-    const computed = Math.max(0, Math.round(inv[id] || 0) - Math.round(soldMap[id] || 0));
-    setAvailable(s, id, computed);
-    changed = true;
-  });
-  s.stockMigrated = true;
   }
-
+  s.stockMigrated = true;
   return changed;
 }

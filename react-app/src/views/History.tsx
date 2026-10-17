@@ -1,7 +1,7 @@
 import { Fragment, ReactNode, useState } from 'react';
 import { CaretIcon, CloseIcon, DownloadIcon, PencilIcon, confirmDialog } from '../ui';
 import { useStore } from '../store';
-import { money, esc, total, shortDate, saleUnits, priceFor, formatDate, catLabel, findActivePromo, productPromos, productTags, canManageTeam, markSaleDeleted } from '../lib/core';
+import { money, esc, total, shortDate, saleUnits, priceFor, formatDate, catLabel, findActivePromo, productPromos, productTags, canManageTeam, markSaleDeleted, incAvailable } from '../lib/core';
 import { saveTextFile } from '../lib/saveFile';
 import type { Sale } from '../types';
 

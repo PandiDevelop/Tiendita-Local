@@ -305,6 +305,14 @@ export interface Store {
   // Correccion puntual de Sakoco: la venta que quedo en 13/10/2026 pasa al 12/10/2026.
   salesShifted1210?: boolean;
   stockMigrated?: boolean;
+  // Correccion unica posterior: re-alinea available = adquirido - vendido una vez
+  // (aun si stockMigrated ya estaba puesto), y luego available vuelve a ser
+  // independiente. Sirve para arreglar productos antiguos (p.ej. Sakoco).
+  stockRealigned?: boolean;
+  // Marca de tiempo (ms) del ultimo cambio de available/stock EN ESTE dispositivo.
+  // El sync la usa para decidir quien gana (last-write-wins) en vez de quedarse
+  // siempre con el mayor, que impedia bajar el disponible.
+  stockUpdatedAt?: number;
 }
 
 export type Tab = 'inicio' | 'productos' | 'ganancias' | 'notas' | 'empleados' | 'eventos';
